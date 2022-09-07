@@ -23,10 +23,10 @@ def hasFile(filename, files):
     return b
 
 
-def formatSize(filename):
+def formatSize(size_in_bytes):
     try:
-        bytes = float(filename)
-        kb = filename / 1024
+        size_in_bytes = float(size_in_bytes)
+        kb = size_in_bytes / 1024
     except TypeError:
         print("传入的字节格式不对")
         return "Error"

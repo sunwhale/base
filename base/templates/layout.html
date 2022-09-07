@@ -11,8 +11,9 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
   <!-- Theme style -->
   <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/dist/css/adminlte.min.css') }}">
-  {% block css %}
-  {% endblock css %}
+    {% block css %}
+
+    {% endblock css %}
   {% endblock head %}
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -36,6 +37,10 @@
       {% if current_user.is_authenticated %}
       <li class="nav-item d-none d-sm-inline-block">
         <a href="{{ url_for('auth.logout') }}" class="nav-link">登出</a>
+      </li>
+      {% else %}
+      <li class="nav-item d-none d-sm-inline-block">
+        <a href="{{ url_for('auth.login') }}" class="nav-link">登录</a>
       </li>
       {% endif %}
     </ul>
@@ -97,7 +102,7 @@
         </div>
         <div class="info">
           {% if current_user.is_authenticated %}
-          <a class="d-block"><small>{{ current_user.role.name }}<small></a>
+          <a class="d-block"><small>{{ current_user.role.name }}</small></a>
           {% endif %}
         </div>
       </div>
@@ -178,7 +183,7 @@
   <footer class="main-footer">
     <strong>Jingyu Sun &copy; 2020-2022</strong>
     <div class="float-right d-none d-sm-inline-block">
-      <b>固体力学</b> 1.1
+      <b>固体力学</b> 0.1
     </div>
   </footer>
 
