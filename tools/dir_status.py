@@ -46,7 +46,7 @@ def sub_dirs(path):
     sub_dirs = []
     for root, dirs, files in os.walk(path):
         if root != path:
-            sub_dirs.append(int(root.replace(path, '').replace('\\', '')))
+            sub_dirs.append(int(root.replace(path, '').replace(os.sep, '')))
     return sub_dirs
 
 
@@ -65,10 +65,11 @@ def packing_models_detail(path):
     for model_id in model_id_list[::-1]:
         status = {}
         status['model_id'] = model_id
-        npy_file = os.path.join(path, str(model_id)+'\\'+'model.npy')
-        args_file = os.path.join(path, str(model_id)+'\\'+'args.json')
-        log_file = os.path.join(path, str(model_id)+'\\'+'model.log')
-        msg_file = os.path.join(path, str(model_id)+'\\'+'model.msg')
+        model_path = os.path.join(path, str(model_id))
+        npy_file = os.path.join(model_path, 'model.npy')
+        args_file = os.path.join(model_path, 'args.json')
+        log_file = os.path.join(model_path, 'model.log')
+        msg_file = os.path.join(model_path, 'model.msg')
         try:
             npy_modified_time = os.path.getmtime(npy_file)
             with open(args_file, 'r', encoding='utf-8') as f:

@@ -23,10 +23,11 @@ class Operations:
 
 class BaseConfig:
     # ADMIN_EMAIL = os.getenv('ALBUMY_ADMIN', 'admin@helloflask.com')
-    UPLOAD_PATH = os.path.join(basedir, 'files\\uploads')
     FILE_PATH = os.path.join(basedir, 'files')
-    PROPELLANT_PACKING_MODEL_PATH = os.path.join(basedir, 'files\\propellant\\packing\\models')
-    PROPELLANT_PACKING_SUBMODEL_PATH = os.path.join(basedir, 'files\\propellant\\packing\\submodels')
+    UPLOAD_PATH = os.path.join(FILE_PATH, 'uploads')
+    PROPELLANT_PATH = os.path.join(FILE_PATH, 'propellant')
+    PROPELLANT_PACKING_MODEL_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'models')
+    PROPELLANT_PACKING_SUBMODEL_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'submodels')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv('SECRET_KEY', 'secret string')
 

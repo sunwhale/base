@@ -88,11 +88,11 @@ def get_packing_models(filename):
 
 @propellant_bp.route('/view_packing_models/<int:model_id>')
 def view_packing_models(model_id):
-    path = current_app.config['PROPELLANT_PACKING_MODEL_PATH']
-    npy_file = os.path.join(path, str(model_id)+'\\'+'model.npy')
-    args_file = os.path.join(path, str(model_id)+'\\'+'args.json')
-    log_file = os.path.join(path, str(model_id)+'\\'+'model.log')
-    msg_file = os.path.join(path, str(model_id)+'\\'+'model.msg')
+    model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
+    npy_file = os.path.join(model_path, 'model.npy')
+    args_file = os.path.join(model_path, 'args.json')
+    log_file = os.path.join(model_path, 'model.log')
+    msg_file = os.path.join(model_path, 'model.msg')
     status = {}
     npy_modified_time = os.path.getmtime(npy_file)
     with open(args_file, 'r', encoding='utf-8') as f:
@@ -167,9 +167,9 @@ def create_packing_submodels():
 def view_packing_submodels(model_id, submodel_id):
     submodel_path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
 
-    npy_file = os.path.join(submodel_path, str(submodel_id)+'\\'+'model.npy')
-    args_file = os.path.join(submodel_path, str(submodel_id)+'\\'+'args.json')
-    msg_file = os.path.join(submodel_path, str(submodel_id)+'\\'+'model.msg')
+    npy_file = os.path.join(submodel_path, str(submodel_id), 'model.npy')
+    args_file = os.path.join(submodel_path, str(submodel_id), 'args.json')
+    msg_file = os.path.join(submodel_path, str(submodel_id), 'model.msg')
     status = {}
     npy_modified_time = os.path.getmtime(npy_file)
     with open(args_file, 'r', encoding='utf-8') as f:
