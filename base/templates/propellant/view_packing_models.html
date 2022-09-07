@@ -1,0 +1,87 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}{{ model_id }}号球体填充模型{% endblock title %}
+
+{% block pageheader %}模型信息{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item">球体填充模型管理</li>
+<li class="breadcrumb-item active">模型信息</li>
+{% endblock level %}
+
+{% block nav_propellant %}
+<li class="nav-item menu-open">
+  <a href="#" class="nav-link active">
+    <i class="nav-icon fas fa-th"></i>
+    <p>
+      固体推进剂
+      <i class="right fas fa-angle-left"></i>
+    </p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item">
+      <a href="{{ url_for('propellant.create_packing_models') }}" class="nav-link">
+        <i class="far fa-circle nav-icon"></i>
+        <p>球体填充建模</p>
+      </a>
+    </li>
+    <li class="nav-item active">
+      <a href="{{ url_for('propellant.manage_packing_models') }}" class="nav-link active">
+        <i class="far fa-circle nav-icon"></i>
+        <p>球体填充模型管理</p>
+      </a>
+    </li>
+  </ul>
+</li>
+{% endblock nav_propellant %}
+
+{% block content %}
+    <section class="content">
+      <div class="card card-primary">
+        <div class="card-header">
+          <h3 class="card-title">{{ model_id }}号球体填充模型</h3>
+          <div class="card-tools">
+            <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+              <i class="fas fa-minus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-6">
+              <h5 class="text-primary">模型信息</h5>
+              <ul class="list-unstyled">
+                <li> 日期：{{status['npy_time']}} </li>
+                <li> 球体数量：{{status['num_ball']}} </li>
+                <li> 体积分数：{{status['fraction']}} </li>
+                <li> 区域大小：{{status['size']}} </li>
+                <li> 模型文件大小：{{status['npy_size']}} </li>
+                <li> 参数列表：{{status['args']}} </li>
+              </ul>
+
+              <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png"></a>
+              <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png"></a>
+
+            </div>
+            <div class="col-6">
+
+              <h5 class="text-primary">文件</h5>
+              <ul class="list-unstyled">
+                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.npy" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.npy</a></li>
+                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.log" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.log</a></li>
+                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/args.json" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a></li>
+                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.msg" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a></li>
+                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a></li>
+                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a></li>
+              </ul>
+
+              <h5 class="text-primary">日志</h5>
+              <textarea class="form-control" rows="12">{{status['log']}}</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock content %}

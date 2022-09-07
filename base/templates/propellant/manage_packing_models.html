@@ -1,0 +1,139 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}球体填充模型管理{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+{% endblock css %}
+
+{% block pageheader %}球体填充模型管理{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item active">球体填充模型管理</li>
+{% endblock level %}
+
+{% block nav_propellant %}
+<li class="nav-item menu-open">
+  <a href="#" class="nav-link active">
+    <i class="nav-icon fas fa-th"></i>
+    <p>
+      固体推进剂
+      <i class="right fas fa-angle-left"></i>
+    </p>
+  </a>
+  <ul class="nav nav-treeview">
+    <li class="nav-item">
+      <a href="{{ url_for('propellant.create_packing_models') }}" class="nav-link">
+        <i class="far fa-circle nav-icon"></i>
+        <p>球体填充建模</p>
+      </a>
+    </li>
+    <li class="nav-item active">
+      <a href="{{ url_for('propellant.manage_packing_models') }}" class="nav-link active">
+        <i class="far fa-circle nav-icon"></i>
+        <p>球体填充模型管理</p>
+      </a>
+    </li>
+  </ul>
+</li>
+{% endblock nav_propellant %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- left column -->
+          <div class="col-12">
+            <div class="card card-primary">
+              <!-- /.card-header -->
+              <div class="card-header">
+                <h3 class="card-title">已生成的模型列表</h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body">
+                <table id="data" class="table table-bordered table-striped">
+                  <thead>
+                    <tr>
+                      <th width="6%">ID</th>
+                      <th width="12%">时间</th>
+                      <th width="8%">模型大小</th>
+                      <th width="12%">区域大小</th>
+                      <th width="8%">球体数量</th>
+                      <th width="8%">体积分数</th>
+                      <th width="36%">模型参数</th>
+                      <th width="10%">操作</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          </div>
+
+
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+{% endblock content %}
+
+{% block script %}
+
+<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+
+<script type="text/javascript">
+
+  $.fn.dataTable.defaults.oLanguage = {
+    "sProcessing": "处理中...",
+    "sLengthMenu": "显示 _MENU_ 项结果",
+    "sZeroRecords": "没有匹配结果",
+    "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+    "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+    "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+    "sInfoPostFix": "",
+    "sSearch": "搜索：",
+    "sUrl": "",
+    "sEmptyTable": "表中数据为空",
+    "sLoadingRecords": "载入中...",
+    "sInfoThousands": ",",
+    "oPaginate": {
+      "sFirst": "首页",
+      "sPrevious": "上页",
+      "sNext": "下页",
+      "sLast": "末页"
+    },
+    "oAria": {
+      "sSortAscending": ": 以升序排列此列",
+      "sSortDescending": ": 以降序排列此列"
+    }
+  };
+
+  $(function () {
+    $('#data').DataTable({
+      "paging": true,
+      "pageLength": 10,
+      "ordering": true,
+      "info": true,
+      "autoWidth": false,
+      "responsive": true,
+      "ajax": "{{ url_for('propellant.packing_models_status') }}",
+      "columns": [
+          { data: 'model_id' },
+          { data: 'npy_time' },
+          { data: 'npy_size' },
+          { data: 'size' },
+          { data: 'num_ball' },
+          { data: 'fraction' },
+          { data: 'args' },
+          { data: 'download' },
+      ],
+    });
+  });
+
+</script>
+{% endblock script %}
+

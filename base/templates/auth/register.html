@@ -1,0 +1,19 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form %}
+
+{% block title %}注册{% endblock title %}
+
+{% block pageheader %}注册{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="#">主页</a></li>
+<li class="breadcrumb-item active">注册</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        {{ render_form(form) }}
+      </div>
+    </section>
+{% endblock content %}
