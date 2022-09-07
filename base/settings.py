@@ -27,7 +27,6 @@ class BaseConfig:
     FILE_PATH = os.path.join(basedir, 'files')
     PROPELLANT_PACKING_MODEL_PATH = os.path.join(basedir, 'files\\propellant\\packing\\models')
     PROPELLANT_PACKING_SUBMODEL_PATH = os.path.join(basedir, 'files\\propellant\\packing\\submodels')
-    # MANAGE_USER_PER_PAGE = 30
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv('SECRET_KEY', 'secret string')
 

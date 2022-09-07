@@ -15,7 +15,7 @@ from flask_login import login_required, current_user
 from psic.packing_spheres_in_cube import create_model
 from psic.create_submodel import create_submodel
 
-from base.forms.propellant import PackingForm, SubmodelForm
+from base.forms.propellant import PackingForm, SubmodelForm, UploadForm
 from base.global_var import exporting_threads
 
 from tools.dir_status import create_id, packing_models_detail, formatSize
@@ -186,6 +186,16 @@ def view_packing_submodels(model_id, submodel_id):
     return render_template('propellant/view_packing_submodels.html', model_id=model_id, submodel_id=submodel_id, status=status)
 
 
+@propellant_bp.route('/upload/', methods=['GET', 'POST'])
+def upload():
+    form = UploadForm()
+    if form.validate_on_submit():
+        f = form.filename.file
+        print(type(f))
+        # f.save(os.path.join(current_app.config['UPLOAD_PATH']))
+    return render_template('propellant/upload.html', form=form)
+
+
 @propellant_bp.route('/get_packing_submodels/<path:filename>')
 def get_packing_submodels(filename):
     return send_from_directory(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], filename)
@@ -208,5 +218,3 @@ def thread_clear():
         if exporting_threads[thread_id]['status'] == 'Done':
             del exporting_threads[thread_id]
     return jsonify(exporting_threads)
-
-

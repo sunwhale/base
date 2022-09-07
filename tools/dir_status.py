@@ -3,10 +3,9 @@
 
 """
 
-import pandas as pd
+import json
 import os
 import time
-import json
 
 
 def getFiles(path):
@@ -24,11 +23,11 @@ def hasFile(filename, files):
     return b
 
 
-def formatSize(bytes):
+def formatSize(filename):
     try:
-        bytes = float(bytes)
-        kb = bytes / 1024
-    except:
+        bytes = float(filename)
+        kb = filename / 1024
+    except TypeError:
         print("传入的字节格式不对")
         return "Error"
 
