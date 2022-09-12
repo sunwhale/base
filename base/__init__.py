@@ -59,7 +59,10 @@ def register_shell_context(app):
 
 
 def register_template_context(app):
-    pass
+    @app.context_processor
+    def make_template_context():
+        env = {'service': 'server'}
+        return dict(env=env)
 
 
 def register_commands(app):
