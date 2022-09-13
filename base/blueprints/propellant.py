@@ -18,7 +18,7 @@ from psic.create_submodel import create_submodel
 from base.forms.propellant import PackingForm, SubmodelForm, UploadForm
 from base.global_var import exporting_threads
 
-from tools.dir_status import create_id, packing_models_detail, formatSize
+from tools.dir_status import create_id, sub_dirs, packing_models_detail, packing_submodels_detail, formatSize
 
 
 propellant_bp = Blueprint('propellant', __name__)
@@ -135,32 +135,49 @@ def create_packing_submodels():
         model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
         model_msg_file = os.path.join(model_path, 'model.msg')
         model_npy_file = os.path.join(model_path, 'model.npy')
-        with open(model_msg_file, 'r', encoding='utf-8') as f:
-            message = json.load(f)
-        size = message['size']
-        out_path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
-        
-        num_of_threads = len(exporting_threads.keys())
+        if os.path.exists(model_npy_file):
+            with open(model_msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            size = message['size']
+            out_path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
 
-        if num_of_threads == 0:
-            thread_id = 1
+            if os.path.exists(out_path):
+                shutil.rmtree(out_path)
+                
+            num_of_threads = len(exporting_threads.keys())
+
+            if num_of_threads == 0:
+                thread_id = 1
+            else:
+                thread_id = max(num_of_threads, max(list(exporting_threads.keys())))+1
+
+            exporting_threads[thread_id] = {}
+            status = exporting_threads[thread_id]
+            status['class'] = '生成子模型'
+            status['class_id'] = model_id
+            status['progress'] = 0
+            status['status'] = 'Submit'
+            status['log'] = ''
+
+            args = (model_npy_file, model_id, size, ndiv, gap, out_path, status)
+
+            thread = threading.Thread(target=create_submodel, args=args)
+            thread.start()
         else:
-            thread_id = max(num_of_threads, max(list(exporting_threads.keys())))+1
-
-        exporting_threads[thread_id] = {}
-        status = exporting_threads[thread_id]
-        status['class'] = '生成子模型'
-        status['class_id'] = model_id
-        status['progress'] = 0
-        status['status'] = 'Submit'
-        status['log'] = ''
-
-        args = (model_npy_file, model_id, size, ndiv, gap, out_path, status)
-
-        thread = threading.Thread(target=create_submodel, args=args)
-        thread.start()
+            flash('主模型%s不存在。' % model_id, 'danger')
 
     return render_template('propellant/create_packing_submodels.html', form=form)
+
+
+@propellant_bp.route('/manage_packing_submodels/<int:model_id>')
+def manage_packing_submodels(model_id):
+    return render_template('propellant/manage_packing_submodels.html', model_id=model_id)
+
+
+@propellant_bp.route('/packing_submodels_status/<int:model_id>')
+def packing_submodels_status(model_id):
+    data = packing_submodels_detail(os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id)), model_id)
+    return jsonify(data)
 
 
 @propellant_bp.route('/view_packing_submodels/<int:model_id>/<int:submodel_id>')

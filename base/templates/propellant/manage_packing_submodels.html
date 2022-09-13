@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
 
-{% block title %}球体填充模型管理{% endblock title %}
+{% block title %}{{ model_id }}号球体填充模型的子模型{% endblock title %}
 
 {% block css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
@@ -11,7 +11,8 @@
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
-<li class="breadcrumb-item active">球体填充模型管理</li>
+<li class="breadcrumb-item"><a href="{{ url_for('propellant.manage_packing_models') }}">球体填充模型管理</a></li>
+<li class="breadcrumb-item active">{{ model_id }}号球体填充模型的子模型</li>
 {% endblock level %}
 
 {% block content %}
@@ -23,21 +24,23 @@
             <div class="card card-primary">
               <!-- /.card-header -->
               <div class="card-header">
-                <h3 class="card-title">已生成的模型列表</h3>
+                <h3 class="card-title">{{ model_id }}号球体填充模型的子模型列表</h3>
               </div>
               <!-- /.card-header -->
               <div class="card-body">
                 <table id="data" class="table table-bordered table-striped">
                   <thead>
                     <tr>
-                      <th width="10%">主模型ID</th>
+                      <th width="8%">子模型ID</th>
+                      <th width="8%">主模型ID</th>
                       <th width="15%">创建时间</th>
-                      <th width="10%">模型大小</th>
+                      <th width="8%">模型大小</th>
+                      <th width="8%">各向等分</th>
                       <th width="15%">区域大小</th>
-                      <th width="10%">球间距</th>
-                      <th width="10%">球体数量</th>
-                      <th width="10%">体积分数</th>
-                      <th width="20%">操作</th>
+                      <th width="8%">球间距</th>
+                      <th width="8%">球体数量</th>
+                      <th width="8%">体积分数</th>
+                      <th width="14%">操作</th>
                     </tr>
                   </thead>
                 </table>
@@ -47,8 +50,6 @@
             <!-- /.card -->
           </div>
           </div>
-
-
         </div>
       </div><!-- /.container-fluid -->
     </section>
@@ -94,16 +95,18 @@
       "info": true,
       "autoWidth": false,
       "responsive": true,
-      "ajax": "{{ url_for('propellant.packing_models_status') }}",
+      "ajax": "{{ url_for('propellant.packing_submodels_status', model_id=model_id) }}",
       "columns": [
-          { data: 'model_id' },
-          { data: 'npy_time' },
-          { data: 'npy_size' },
-          { data: 'size' },
-          { data: 'gap' },
-          { data: 'num_ball' },
-          { data: 'fraction' },
-          { data: 'download' },
+        { data: 'submodel_id' },
+        { data: 'model_id' },
+        { data: 'npy_time' },
+        { data: 'npy_size' },
+        { data: 'ndiv' },
+        { data: 'location' },
+        { data: 'gap' },
+        { data: 'num_ball' },
+        { data: 'fraction' },
+        { data: 'download' },
       ],
     });
   });

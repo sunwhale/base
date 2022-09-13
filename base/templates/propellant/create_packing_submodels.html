@@ -10,32 +10,6 @@
 <li class="breadcrumb-item active">生成球体填充子模型</li>
 {% endblock level %}
 
-{% block nav_propellant %}
-<li class="nav-item menu-open">
-  <a href="#" class="nav-link active">
-    <i class="nav-icon fas fa-th"></i>
-    <p>
-      固体推进剂
-      <i class="right fas fa-angle-left"></i>
-    </p>
-  </a>
-  <ul class="nav nav-treeview">
-    <li class="nav-item active">
-      <a href="{{ url_for('propellant.create_packing_models') }}" class="nav-link active">
-        <i class="far fa-circle nav-icon"></i>
-        <p>球体填充建模</p>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a href="{{ url_for('propellant.manage_packing_models') }}" class="nav-link">
-        <i class="far fa-circle nav-icon"></i>
-        <p>球体填充模型管理</p>
-      </a>
-    </li>
-  </ul>
-</li>
-{% endblock nav_propellant %}
-
 {% block content %}
     <section class="content">
       <div class="container-fluid">
@@ -44,11 +18,11 @@
           <div class="col-md-4">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">根据模型参数提交作业</h3>
+                <h3 class="card-title">对主模型分区生成子模型</h3>
               </div>
               <div class="card-body">
                 <form action="" method="post" class="form" role="form">
-                {{ render_form(form) }}
+                  {{ render_form(form) }}
                 </form>
               </div>
             </div>
@@ -148,6 +122,9 @@
       update_table(threads)
     })
   }
+
+  document.getElementById("propellant").className = "nav-item menu-open"
+  document.getElementById("create_packing_submodels").className = "nav-link active"
 
 </script>
 {% endblock script %}
