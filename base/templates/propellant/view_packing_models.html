@@ -46,7 +46,7 @@
                     <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png"></a>
 
                   </div>
-                  <div class="col-2">
+                  <div class="col-6">
                     <h5 class="text-primary">文件</h5>
                     <ul class="list-unstyled">
                       <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.npy" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.npy</a></li>
@@ -56,14 +56,14 @@
                       <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a></li>
                       <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a></li>
                     </ul>
-
-                    <h5 class="text-primary">子模型</h5>
-                    生成当前主模型的<a href="{{ url_for('propellant.create_packing_submodels', model_id=model_id) }}">子模型</a>
-                  </div>
-                  <div class="col-4">
                     <h5 class="text-primary">日志</h5>
-                    <textarea class="form-control" rows="21">{{status['log']}}</textarea>
+                    <textarea class="form-control" rows="10">{{status['log']}}</textarea>
+                    <p></p>
+                    <h5 class="text-primary">子模型</h5>
+                    通过对当前主模型在每个坐标轴方向等分，生成当前主模型的子模型，点击<a href="{{ url_for('propellant.create_packing_submodels', model_id=model_id) }}">这里</a>进入子模型生成界面。
+                    
                   </div>
+
                 </div>
               </div>
             </div>

@@ -61,7 +61,7 @@ def register_shell_context(app):
 def register_template_context(app):
     @app.context_processor
     def make_template_context():
-        env = {'service': 'server'}
+        env = {'service': 'client'}
         return dict(env=env)
 
 

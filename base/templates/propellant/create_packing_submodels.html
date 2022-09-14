@@ -15,20 +15,22 @@
       <div class="container-fluid">
         <div class="row">
           <!-- left column -->
-          <div class="col-md-4">
+          <div class="col-md-12">
             <div class="card card-primary">
               <div class="card-header">
                 <h3 class="card-title">{{ model_id }}号主模型分区参数</h3>
               </div>
               <div class="card-body">
-                <form action="" method="post" class="form" role="form">
-                  {{ render_form(form) }}
+                <form action="" method="post" class="form" role="form" onsubmit="return sumbit_sure()">
+                  {{ form.csrf_token() }}
+                  {{ render_form_row([form.gap, form.ndiv]) }}
+                  {{ render_field(form.submit, button_style='btn btn-primary') }}
                 </form>
               </div>
             </div>
           </div>
 
-          <div class="col-md-8">
+          <div class="col-md-12">
             <div class="card card-primary">
               <div class="card-header">
                 <h3 class="card-title">进程查看</h3>
@@ -123,8 +125,17 @@
     })
   }
 
+
+  function sumbit_sure(){
+    var gnl=confirm("如果已经存在子模型，该操作将会删除已有的子模型，重新生成它们，确定要继续提交？");
+    if (gnl==true){
+      return true;
+    }else{
+      return false;
+    }
+  }
+
   document.getElementById("propellant").className = "nav-item menu-open"
-  document.getElementById("manage_packing_models").className = "nav-link active"
 
 </script>
 {% endblock script %}

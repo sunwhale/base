@@ -128,14 +128,14 @@ def delete_packing_models(model_id):
 
 @propellant_bp.route('/create_packing_submodels/<int:model_id>', methods=['GET', 'POST'])
 def create_packing_submodels(model_id):
+    model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
+    model_msg_file = os.path.join(model_path, 'model.msg')
+    model_npy_file = os.path.join(model_path, 'model.npy')
     form = SubmodelForm()
-    if form.validate_on_submit():
-        gap = float(form.gap.data)
-        ndiv = int(form.ndiv.data)
-        model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
-        model_msg_file = os.path.join(model_path, 'model.msg')
-        model_npy_file = os.path.join(model_path, 'model.npy')
-        if os.path.exists(model_npy_file):
+    if os.path.exists(model_npy_file):
+        if form.validate_on_submit():
+            gap = float(form.gap.data)
+            ndiv = int(form.ndiv.data)
             with open(model_msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
             size = message['size']
@@ -163,11 +163,10 @@ def create_packing_submodels(model_id):
 
             thread = threading.Thread(target=create_submodel, args=args)
             thread.start()
-        else:
-            flash('主模型%s不存在。' % model_id, 'danger')
-
-    return render_template('propellant/create_packing_submodels.html', form=form, model_id=model_id)
-
+        return render_template('propellant/create_packing_submodels.html', form=form, model_id=model_id)
+    else:
+        flash('主模型%s不存在。' % model_id, 'danger')
+        return render_template('propellant/create_packing_submodels.html', form=form, model_id=model_id)
 
 @propellant_bp.route('/manage_packing_submodels/<int:model_id>')
 def manage_packing_submodels(model_id):
@@ -202,6 +201,10 @@ def view_packing_submodels(model_id, submodel_id):
     status['npy_size'] = formatSize(os.path.getsize(npy_file))
     return render_template('propellant/view_packing_submodels.html', model_id=model_id, submodel_id=submodel_id, status=status)
 
+
+@propellant_bp.route('/create_packing_meshes/')
+def create_packing_meshes():
+    return 'create_packing_meshes'
 
 @propellant_bp.route('/upload/', methods=['GET', 'POST'])
 def upload():
