@@ -1,32 +1,29 @@
 {% extends 'layout.html' %}
 {% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
 
-{% block title %}{{ model_id }}号球体填充模型的子模型{% endblock title %}
+{% block title %}{{ model_id }}号球体填充主模型的子模型{% endblock title %}
 
 {% block css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 {% endblock css %}
 
-{% block pageheader %}球体填充模型管理{% endblock pageheader %}
+{% block pageheader %}子模型管理{% endblock pageheader %}
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
 <li class="breadcrumb-item"><a href="{{ url_for('propellant.manage_packing_models') }}">球体填充模型管理</a></li>
-<li class="breadcrumb-item active">{{ model_id }}号球体填充模型的子模型</li>
+<li class="breadcrumb-item active">子模型管理</li>
 {% endblock level %}
 
 {% block content %}
     <section class="content">
       <div class="container-fluid">
         <div class="row">
-          <!-- left column -->
           <div class="col-12">
             <div class="card card-primary">
-              <!-- /.card-header -->
               <div class="card-header">
-                <h3 class="card-title">{{ model_id }}号球体填充模型的子模型列表</h3>
+                <h3 class="card-title">{{ model_id }}号球体填充主模型的子模型列表</h3>
               </div>
-              <!-- /.card-header -->
               <div class="card-body">
                 <table id="data" class="table table-bordered table-striped">
                   <thead>
@@ -45,13 +42,10 @@
                   </thead>
                 </table>
               </div>
-              <!-- /.card-body -->
             </div>
-            <!-- /.card -->
-          </div>
           </div>
         </div>
-      </div><!-- /.container-fluid -->
+      </div>
     </section>
 {% endblock content %}
 

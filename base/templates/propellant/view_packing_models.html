@@ -1,87 +1,167 @@
 {% extends 'layout.html' %}
 {% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
 
-{% block title %}{{ model_id }}号球体填充模型{% endblock title %}
+{% block title %}{{ model_id }}号球体填充主模型{% endblock title %}
 
-{% block pageheader %}模型信息{% endblock pageheader %}
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+{% endblock css %}
+
+{% block pageheader %}主模型信息{% endblock pageheader %}
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
-<li class="breadcrumb-item">球体填充模型管理</li>
-<li class="breadcrumb-item active">模型信息</li>
+<li class="breadcrumb-item"><a href="{{ url_for('propellant.manage_packing_models') }}">球体填充模型管理</a></li>
+<li class="breadcrumb-item active">主模型信息</li>
 {% endblock level %}
-
-{% block nav_propellant %}
-<li class="nav-item menu-open">
-  <a href="#" class="nav-link active">
-    <i class="nav-icon fas fa-th"></i>
-    <p>
-      固体推进剂
-      <i class="right fas fa-angle-left"></i>
-    </p>
-  </a>
-  <ul class="nav nav-treeview">
-    <li class="nav-item">
-      <a href="{{ url_for('propellant.create_packing_models') }}" class="nav-link">
-        <i class="far fa-circle nav-icon"></i>
-        <p>球体填充建模</p>
-      </a>
-    </li>
-    <li class="nav-item active">
-      <a href="{{ url_for('propellant.manage_packing_models') }}" class="nav-link active">
-        <i class="far fa-circle nav-icon"></i>
-        <p>球体填充模型管理</p>
-      </a>
-    </li>
-  </ul>
-</li>
-{% endblock nav_propellant %}
 
 {% block content %}
     <section class="content">
-      <div class="card card-primary">
-        <div class="card-header">
-          <h3 class="card-title">{{ model_id }}号球体填充模型</h3>
-          <div class="card-tools">
-            <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-              <i class="fas fa-minus"></i>
-            </button>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <div class="col-6">
-              <h5 class="text-primary">模型信息</h5>
-              <ul class="list-unstyled">
-                <li> 日期：{{status['npy_time']}} </li>
-                <li> 球体数量：{{status['num_ball']}} </li>
-                <li> 体积分数：{{status['fraction']}} </li>
-                <li> 区域大小：{{status['size']}} </li>
-                <li> 模型文件大小：{{status['npy_size']}} </li>
-                <li> 参数列表：{{status['args']}} </li>
-              </ul>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ model_id }}号球体填充主模型</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-6">
+                    <h5 class="text-primary">模型信息</h5>
+                    <ul class="list-unstyled">
+                      <li> 日期时间：{{status['npy_time']}} </li>
+                      <li> 球体数量：{{status['num_ball']}} </li>
+                      <li> 体积分数：{{status['fraction']}} </li>
+                      <li> 区域大小：{{status['size']}} </li>
+                      <li> 模型文件大小：{{status['npy_size']}} </li>
+                      <li> 参数列表：{{status['args']}} </li>
+                    </ul>
 
-              <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png"></a>
-              <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png"></a>
+                    <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png"></a>
+                    <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png"></a>
 
+                  </div>
+                  <div class="col-2">
+                    <h5 class="text-primary">文件</h5>
+                    <ul class="list-unstyled">
+                      <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.npy" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.npy</a></li>
+                      <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.log" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.log</a></li>
+                      <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/args.json" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a></li>
+                      <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.msg" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a></li>
+                      <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a></li>
+                      <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a></li>
+                    </ul>
+
+                    <h5 class="text-primary">子模型</h5>
+                    生成当前主模型的<a href="{{ url_for('propellant.create_packing_submodels', model_id=model_id) }}">子模型</a>
+                  </div>
+                  <div class="col-4">
+                    <h5 class="text-primary">日志</h5>
+                    <textarea class="form-control" rows="21">{{status['log']}}</textarea>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="col-6">
-
-              <h5 class="text-primary">文件</h5>
-              <ul class="list-unstyled">
-                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.npy" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.npy</a></li>
-                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.log" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.log</a></li>
-                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/args.json" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a></li>
-                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.msg" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a></li>
-                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a></li>
-                <li><a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a></li>
-              </ul>
-
-              <h5 class="text-primary">日志</h5>
-              <textarea class="form-control" rows="12">{{status['log']}}</textarea>
+          </div>
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ model_id }}号球体填充主模型的子模型列表</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <table id="data" class="table table-bordered table-striped">
+                  <thead>
+                    <tr>
+                      <th width="8%">子模型ID</th>
+                      <th width="8%">主模型ID</th>
+                      <th width="15%">创建时间</th>
+                      <th width="8%">模型大小</th>
+                      <th width="8%">各向等分</th>
+                      <th width="21%">区域大小</th>
+                      <th width="8%">球间距</th>
+                      <th width="8%">球体数量</th>
+                      <th width="8%">体积分数</th>
+                      <th width="8%">操作</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
+
 {% endblock content %}
+
+{% block script %}
+
+<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+
+<script type="text/javascript">
+
+  $.fn.dataTable.defaults.oLanguage = {
+    "sProcessing": "处理中...",
+    "sLengthMenu": "显示 _MENU_ 项结果",
+    "sZeroRecords": "没有匹配结果",
+    "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+    "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+    "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+    "sInfoPostFix": "",
+    "sSearch": "搜索：",
+    "sUrl": "",
+    "sEmptyTable": "表中数据为空",
+    "sLoadingRecords": "载入中...",
+    "sInfoThousands": ",",
+    "oPaginate": {
+      "sFirst": "首页",
+      "sPrevious": "上页",
+      "sNext": "下页",
+      "sLast": "末页"
+    },
+    "oAria": {
+      "sSortAscending": ": 以升序排列此列",
+      "sSortDescending": ": 以降序排列此列"
+    }
+  };
+
+  $(function () {
+    $('#data').DataTable({
+      "paging": true,
+      "pageLength": 10,
+      "ordering": true,
+      "info": true,
+      "autoWidth": false,
+      "responsive": true,
+      "ajax": "{{ url_for('propellant.packing_submodels_status', model_id=model_id) }}",
+      "columns": [
+        { data: 'submodel_id' },
+        { data: 'model_id' },
+        { data: 'npy_time' },
+        { data: 'npy_size' },
+        { data: 'ndiv' },
+        { data: 'location' },
+        { data: 'gap' },
+        { data: 'num_ball' },
+        { data: 'fraction' },
+        { data: 'download' },
+      ],
+    });
+  });
+
+  document.getElementById("propellant").className = "nav-item menu-open"
+  document.getElementById("manage_packing_models").className = "nav-link active"
+
+</script>
+{% endblock script %}

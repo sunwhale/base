@@ -24,10 +24,9 @@ class PackingForm(FlaskForm):
 
 
 class SubmodelForm(FlaskForm):
-    model_id = IntegerField('主模型编号', default=1, validators=[DataRequired()])
     gap = DecimalField('两球间距', default=0.0, validators=[NumberRange(0, 0.1)])
-    ndiv = IntegerField('每个坐标轴方向等分数', default=2, validators=[DataRequired(), NumberRange(2, 100)])
-    submit = SubmitField(u'提交')
+    ndiv = IntegerField('每个坐标轴方向等分数', default=2, validators=[DataRequired(), NumberRange(1, 100)])
+    submit = SubmitField(u'生成子模型')
 
 
 class UploadForm(FlaskForm):

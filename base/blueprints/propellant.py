@@ -101,13 +101,14 @@ def view_packing_models(model_id):
         message = json.load(f)
     with open(log_file, 'r', encoding='utf-8') as f:
         status['log'] = f.read()
-    status['args'] = str(args[:-1])
+    status['args'] = str(args)
     status['size'] = message['size']
     status['num_ball'] = message['num_ball']
     status['gap'] = message['gap']
     status['fraction'] = '%.4f' % message['fraction']
     status['npy_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(npy_modified_time))
     status['npy_size'] = formatSize(os.path.getsize(npy_file))
+
     return render_template('propellant/view_packing_models.html', model_id=model_id, status=status)
 
 
@@ -125,11 +126,10 @@ def delete_packing_models(model_id):
     return redirect(url_for('.manage_packing_models'))
 
 
-@propellant_bp.route('/create_packing_submodels/', methods=['GET', 'POST'])
-def create_packing_submodels():
+@propellant_bp.route('/create_packing_submodels/<int:model_id>', methods=['GET', 'POST'])
+def create_packing_submodels(model_id):
     form = SubmodelForm()
     if form.validate_on_submit():
-        model_id = int(form.model_id.data)
         gap = float(form.gap.data)
         ndiv = int(form.ndiv.data)
         model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
@@ -166,7 +166,7 @@ def create_packing_submodels():
         else:
             flash('主模型%s不存在。' % model_id, 'danger')
 
-    return render_template('propellant/create_packing_submodels.html', form=form)
+    return render_template('propellant/create_packing_submodels.html', form=form, model_id=model_id)
 
 
 @propellant_bp.route('/manage_packing_submodels/<int:model_id>')
@@ -193,7 +193,7 @@ def view_packing_submodels(model_id, submodel_id):
         args = json.load(f)
     with open(msg_file, 'r', encoding='utf-8') as f:
         message = json.load(f)
-    status['args'] = str(args[1:-1])
+    status['args'] = str(args)
     status['size'] = message['size']
     status['num_ball'] = message['num_ball']
     status['gap'] = message['gap']

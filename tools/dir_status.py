@@ -84,7 +84,7 @@ def packing_models_detail(path):
                 args = json.load(f)
             with open(msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
-            status['args'] = str(args[:-1])
+            status['args'] = str(args)
             status['size'] = str(message['size'])
             status['num_ball'] = message['num_ball']
             status['fraction'] = '%.4f' % message['fraction']
@@ -130,7 +130,7 @@ def packing_submodels_detail(path, model_id):
                 args = json.load(f)
             with open(msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
-            status['args'] = str(args[1:-1])
+            status['args'] = str(args)
             status['location'] = str(message['location'])
             status['subsize'] = str(message['subsize'])
             status['gap'] = message['gap']
@@ -139,7 +139,7 @@ def packing_submodels_detail(path, model_id):
             status['fraction'] = '%.4f' % message['fraction']
             status['npy_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(npy_modified_time))
             status['npy_size'] = formatSize(os.path.getsize(npy_file))
-            status['download'] = "<a href='%s'>查看</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_packing_submodels/'+str(model_id)+'/'+str(submodel_id), '../delete_packing_submodels/'+str(model_id))
+            status['download'] = "<a href='%s'>查看</a>" % ('../view_packing_submodels/'+str(model_id)+'/'+str(submodel_id))
         except:
             status['npy_time'] = 'None'
             status['npy_size'] = 'None'    

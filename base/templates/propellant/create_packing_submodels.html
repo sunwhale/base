@@ -1,13 +1,13 @@
 {% extends 'layout.html' %}
 {% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
 
-{% block title %}生成球体填充子模型{% endblock title %}
+{% block title %}生成{{ model_id }}号球体填充主模型的子模型{% endblock title %}
 
-{% block pageheader %}生成球体填充子模型{% endblock pageheader %}
+{% block pageheader %}生成{{ model_id }}号球体填充主模型的子模型{% endblock pageheader %}
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
-<li class="breadcrumb-item active">生成球体填充子模型</li>
+<li class="breadcrumb-item active">生成{{ model_id }}号球体填充主模型的子模型</li>
 {% endblock level %}
 
 {% block content %}
@@ -18,7 +18,7 @@
           <div class="col-md-4">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">对主模型分区生成子模型</h3>
+                <h3 class="card-title">{{ model_id }}号主模型分区参数</h3>
               </div>
               <div class="card-body">
                 <form action="" method="post" class="form" role="form">
@@ -124,7 +124,7 @@
   }
 
   document.getElementById("propellant").className = "nav-item menu-open"
-  document.getElementById("create_packing_submodels").className = "nav-link active"
+  document.getElementById("manage_packing_models").className = "nav-link active"
 
 </script>
 {% endblock script %}

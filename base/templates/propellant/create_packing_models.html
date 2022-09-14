@@ -22,14 +22,14 @@
               </div>
               <div class="card-body">
                 <form action="" method="post" class="form" role="form">
-                {{ form.csrf_token() }}
-                {{ render_form_row([form.ncircle, form.gap]) }}
-                {{ render_form_row([form.num_add, form.dt0]) }}
-                {{ render_form_row([form.dt_interval, form.max_iter]) }}
-                {{ render_form_row([form.rayleigh_para, form.num_ball]) }}
-                {{ render_form_row([form.rad_min, form.rad_max]) }}
-                {{ render_form_row([form.size]) }}
-                {{ render_field(form.submit, button_style='btn btn-primary') }}
+                  {{ form.csrf_token() }}
+                  {{ render_form_row([form.ncircle, form.gap]) }}
+                  {{ render_form_row([form.num_add, form.dt0]) }}
+                  {{ render_form_row([form.dt_interval, form.max_iter]) }}
+                  {{ render_form_row([form.rayleigh_para, form.num_ball]) }}
+                  {{ render_form_row([form.rad_min, form.rad_max]) }}
+                  {{ render_form_row([form.size]) }}
+                  {{ render_field(form.submit, button_style='btn btn-primary') }}
                 </form>
               </div>
             </div>
