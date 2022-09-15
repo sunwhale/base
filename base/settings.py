@@ -22,7 +22,7 @@ class Operations:
 
 
 class BaseConfig:
-    # ADMIN_EMAIL = os.getenv('ALBUMY_ADMIN', 'admin@helloflask.com')
+    ADMIN_EMAIL = os.getenv('BASE_ADMIN', 'sunjingyu@imech.ac.cn')
     FILE_PATH = os.path.join(basedir, 'files')
     UPLOAD_PATH = os.path.join(FILE_PATH, 'uploads')
     PROPELLANT_PATH = os.path.join(FILE_PATH, 'propellant')
@@ -34,10 +34,10 @@ class BaseConfig:
 
 
 class DevelopmentConfig(BaseConfig):
-    SQLALCHEMY_DATABASE_URI = \
-        prefix + os.path.join(basedir, 'data.db')
+    SQLALCHEMY_DATABASE_URI = prefix + os.path.join(basedir, 'data.db')
     REDIS_URL = "redis://localhost"
-
+    SERVICE = 'client'
+    
 
 class TestingConfig(BaseConfig):
     TESTING = True
@@ -46,8 +46,7 @@ class TestingConfig(BaseConfig):
 
 
 class ProductionConfig(BaseConfig):
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL',
-                                        prefix + os.path.join(basedir, 'data.db'))
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', prefix + os.path.join(basedir, 'data.db'))
 
 
 config = {

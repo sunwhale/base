@@ -5,6 +5,7 @@
 from flask import render_template, flash, redirect, url_for, Blueprint
 from flask_login import login_user, logout_user, login_required, current_user, login_fresh, confirm_login
 
+from base.decorators import admin_required, permission_required
 from base.extensions import db
 from base.forms.auth import LoginForm, RegisterForm, ForgetPasswordForm, ResetPasswordForm
 from base.models import User
@@ -55,10 +56,9 @@ def logout():
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
+@login_required
+@admin_required
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
-
     form = RegisterForm()
     if form.validate_on_submit():
         name = form.name.data

@@ -18,15 +18,15 @@ class LoginForm(FlaskForm):
 
 
 class RegisterForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired(), Length(1, 30)])
-    email = StringField('Email', validators=[DataRequired(), Length(1, 254), Email()])
-    username = StringField('Username', validators=[DataRequired(), Length(1, 20),
+    name = StringField('姓名/Name', validators=[DataRequired(), Length(1, 30)])
+    email = StringField('邮箱/Email', validators=[DataRequired(), Length(1, 254), Email()])
+    username = StringField('用户名/Username', validators=[DataRequired(), Length(1, 20),
                                                    Regexp('^[a-zA-Z0-9]*$',
                                                           message='The username should contain only a-z, A-Z and 0-9.')])
-    password = PasswordField('Password', validators=[
+    password = PasswordField('密码/Password', validators=[
         DataRequired(), Length(8, 128), EqualTo('password2')])
-    password2 = PasswordField('Confirm password', validators=[DataRequired()])
-    submit = SubmitField()
+    password2 = PasswordField('确认密码/Confirm password', validators=[DataRequired()])
+    submit = SubmitField('提交/Submit')
 
     def validate_email(self, field):
         if User.query.filter_by(email=field.data.lower()).first():

@@ -6,14 +6,26 @@
 {% block pageheader %}注册{% endblock pageheader %}
 
 {% block level %}
-<li class="breadcrumb-item"><a href="#">主页</a></li>
+<li class="breadcrumb-item"><a href="/">主页</a></li>
 <li class="breadcrumb-item active">注册</li>
 {% endblock level %}
 
 {% block content %}
     <section class="content">
       <div class="container-fluid">
-        {{ render_form(form) }}
-      </div>
+        <div class="row">
+          <!-- left column -->
+          <div class="col-md-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">添加新用户</h3>
+              </div>
+              <div class="card-body">
+                {{ render_form(form) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
     </section>
 {% endblock content %}

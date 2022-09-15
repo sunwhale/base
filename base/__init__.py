@@ -58,10 +58,10 @@ def register_shell_context(app):
 def register_template_context(app):
     @app.context_processor
     def make_template_context():
-        if app.config['ENV'] == 'production':
-            env = {'service': 'server'}
-        else:
+        if app.config['SERVICE'] == 'client':
             env = {'service': 'client'}
+        else:
+            env = {'service': 'server'}
         return dict(env=env)
 
 
