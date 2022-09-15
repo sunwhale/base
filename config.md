@@ -2,6 +2,7 @@
 
 ## 1. 挂载数据盘
 sudo wget -O auto_disk.sh http://download.bt.cn/tools/auto_disk.sh && sudo bash auto_disk.sh
+sudo chmod 777 /www
 
 ## 2. 安装miniconda
 sudo wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
@@ -19,6 +20,7 @@ git clone https://github.com/sunwhale/base.git
 cd base
 conda activate flask
 pip install -r requirements.txt
+-i https://pypi.org/simple #官方源
 
 ## 5. 安装Nginx
 sudo apt-get install nginx
@@ -33,6 +35,11 @@ server {
     access_log  /var/log/nginx/access.log;
     error_log  /var/log/nginx/error.log;
     
+    # SSL configuration
+    listen 443 ssl default_server;
+    include snippets/ssl-sunjingyu.com.conf;
+    include snippets/ssl-params.conf;
+    
     location / {
         proxy_pass http://127.0.0.1:8000;  # 转发的地址，即Gunicorn运行的地址
         proxy_redirect     off;
@@ -44,8 +51,30 @@ server {
     }
 }
 ```
+sudo vim /etc/nginx/snippets/ssl-sunjingyu.com.conf
+```
+ssl_certificate /www/ssl/sunjingyu.com_bundle.crt;
+ssl_certificate_key /www/ssl/sunjingyu.com.key;
+```
+sudo vim /etc/nginx/snippets/ssl-params.conf
+```
+​ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+ssl_prefer_server_ciphers on;
+ssl_ciphers "EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH";
+ssl_ecdh_curve secp384r1;
+ssl_session_cache shared:SSL:10m;
+ssl_session_tickets off;
+ssl_stapling on;
+ssl_stapling_verify on;
+resolver 8.8.8.8 8.8.4.4 valid=300s;
+resolver_timeout 5s;
+add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
+add_header X-Frame-Options DENY;
+add_header X-Content-Type-Options nosniff;
+```
 查看配置文件状态
 sudo nginx -t
+sudo service nginx restart
 
 ## 6. 安装gunicorn
 pip install gunicorn
@@ -68,5 +97,9 @@ sudo service supervisor restart
 sudo supervisorctl
 sudo supervisorctl reread  # 重新读取配置
 sudo supervisorctl update  # 更新以便让配置生效
-sudo supervisorctl bluelog stop  # 停止bluelog
-sudo supervisorctl bluelog start  # 启动bluelog
+
+## 8. 使用bypy上传文件
+pip install bypy
+bypy list
+bypy downdir /
+[https://github.com/houtianze/bypy](https://github.com/houtianze/bypy)
