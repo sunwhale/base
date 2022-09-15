@@ -28,6 +28,7 @@ class BaseConfig:
     PROPELLANT_PATH = os.path.join(FILE_PATH, 'propellant')
     PROPELLANT_PACKING_MODEL_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'models')
     PROPELLANT_PACKING_SUBMODEL_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'submodels')
+    PROPELLANT_MESH_PATH = os.path.join(PROPELLANT_PATH, 'mesh')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv('SECRET_KEY', 'secret string')
 

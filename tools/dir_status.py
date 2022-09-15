@@ -47,7 +47,7 @@ def sub_dirs(path):
     for root, dirs, files in os.walk(path):
         if root != path:
             sub_dirs.append(int(root.replace(path, '').replace(os.sep, '')))
-    return sub_dirs
+    return sorted(sub_dirs)
 
 
 def sub_2level_dirs(path):
@@ -69,7 +69,6 @@ def create_id(path):
 def packing_models_detail(path):
     data_list = []
     model_id_list = sub_dirs(path)
-    model_id_list.sort()
     for model_id in model_id_list[::-1]:
         status = {}
         status['model_id'] = model_id
@@ -114,7 +113,6 @@ def packing_models_detail(path):
 def packing_submodels_detail(path, model_id):
     data_list = []
     submodel_id_list = sub_dirs(path)
-    submodel_id_list.sort()
     for submodel_id in submodel_id_list[::-1]:
         status = {}
         status['model_id'] = model_id

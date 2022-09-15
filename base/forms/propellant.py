@@ -29,6 +29,13 @@ class SubmodelForm(FlaskForm):
     submit = SubmitField(u'生成子模型')
 
 
+class MeshForm(FlaskForm):
+    gap = DecimalField('两圆间距，gap', default=0.0, validators=[NumberRange(0, 0.1)])
+    node_shape = StringField('划分网格节点维度',default='[128,128]',validators=[DataRequired()])
+    element_type = StringField('单元类型，CPE4/C3D8等',default='CPE4T',validators=[DataRequired()])
+    submit = SubmitField(u'提交')
+
+
 class UploadForm(FlaskForm):
     filename = FileField(u'上传文件')
     submit = SubmitField(u'提交')

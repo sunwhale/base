@@ -14,9 +14,10 @@ from flask_login import login_required, current_user
 
 from psic.packing_spheres_in_cube import create_model
 from psic.create_submodel import create_submodel
+from psic.create_mesh import create_mesh
 
-from base.forms.propellant import PackingForm, SubmodelForm, UploadForm
-from base.global_var import exporting_threads
+from base.forms.propellant import PackingForm, SubmodelForm, MeshForm, UploadForm
+from base.global_var import exporting_threads, create_thread_id
 
 from tools.dir_status import create_id, sub_dirs, packing_models_detail, packing_submodels_detail, formatSize
 
@@ -46,12 +47,7 @@ def create_packing_models():
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
 
-        num_of_threads = len(exporting_threads.keys())
-
-        if num_of_threads == 0:
-            thread_id = 1
-        else:
-            thread_id = max(num_of_threads, max(list(exporting_threads.keys())))+1
+        thread_id = create_thread_id()
 
         exporting_threads[thread_id] = {}
         status = exporting_threads[thread_id]
@@ -66,8 +62,8 @@ def create_packing_models():
         thread = threading.Thread(target=create_model, args=args)
         thread.start()
 
-        return render_template('propellant/create_packing_models.html', form=form, exporting_threads=exporting_threads)
-    return render_template('propellant/create_packing_models.html', form=form, exporting_threads=exporting_threads)
+        return render_template('propellant/create_packing_models.html', form=form)
+    return render_template('propellant/create_packing_models.html', form=form)
 
 
 @propellant_bp.route('/manage_packing_models/')
@@ -144,12 +140,7 @@ def create_packing_submodels(model_id):
             if os.path.exists(out_path):
                 shutil.rmtree(out_path)
                 
-            num_of_threads = len(exporting_threads.keys())
-
-            if num_of_threads == 0:
-                thread_id = 1
-            else:
-                thread_id = max(num_of_threads, max(list(exporting_threads.keys())))+1
+            thread_id = create_thread_id()
 
             exporting_threads[thread_id] = {}
             status = exporting_threads[thread_id]
@@ -167,6 +158,7 @@ def create_packing_submodels(model_id):
     else:
         flash('主模型%s不存在。' % model_id, 'danger')
         return render_template('propellant/create_packing_submodels.html', form=form, model_id=model_id)
+
 
 @propellant_bp.route('/manage_packing_submodels/<int:model_id>')
 def manage_packing_submodels(model_id):
@@ -202,9 +194,63 @@ def view_packing_submodels(model_id, submodel_id):
     return render_template('propellant/view_packing_submodels.html', model_id=model_id, submodel_id=submodel_id, status=status)
 
 
-@propellant_bp.route('/create_packing_meshes/')
-def create_packing_meshes():
-    return 'create_packing_meshes'
+@propellant_bp.route('/create_meshes/<int:model_id>', methods=['GET', 'POST'])
+def create_meshes(model_id):
+    form = MeshForm()
+    submodel_path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
+    mesh_path = os.path.join(current_app.config['PROPELLANT_MESH_PATH'], str(model_id))
+    submodel_ids = sub_dirs(submodel_path)
+    if os.path.isdir(submodel_path):
+        if form.validate_on_submit():
+            gap = float(form.gap.data)
+            node_shape = eval(form.node_shape.data)
+            element_type = form.element_type.data
+
+            if os.path.exists(mesh_path):
+                shutil.rmtree(mesh_path)
+
+            if not os.path.isdir(mesh_path):
+                os.makedirs(mesh_path)
+
+            thread_id = create_thread_id()
+            exporting_threads[thread_id] = {}
+            status = exporting_threads[thread_id]
+            status['class'] = '划分网格'
+            status['class_id'] = model_id
+            status['progress'] = 0
+            status['status'] = 'Submit'
+            status['log'] = ''
+
+            def create_mesh_all(gap, node_shape, element_type, submodel_ids, mesh_path, status):
+                status['status'] = 'Running'
+                for submodel_id in submodel_ids:
+                    status['progress'] = 100*submodel_id/len(submodel_ids)
+                    msg_file = os.path.join(submodel_path, str(submodel_id), 'model.msg')
+                    with open(msg_file, 'r', encoding='utf-8') as f:
+                        message = json.load(f)
+                    size = message['subsize']
+                    if len(size) > 3:
+                        size = size[:3]
+                    dimension = [s[1] for s in size]
+                    submesh_path = os.path.join(mesh_path, str(submodel_id))
+                    if not os.path.isdir(submesh_path):
+                        os.makedirs(submesh_path)
+                    substatus = {'status': 'Submit', 'log': '', 'progress': 0}
+                    model_path = os.path.join(submodel_path, str(submodel_id))
+                    args = (gap, size, dimension, node_shape, element_type, model_path, submesh_path, substatus)
+                    create_mesh(*args)
+                status['progress'] = 100
+                status['status'] = 'Done'
+
+            args = (gap, node_shape, element_type, submodel_ids, mesh_path, status)
+            thread = threading.Thread(target=create_mesh_all, args=args)
+            thread.start()
+        return render_template('propellant/create_meshes.html', form=form, model_id=model_id)
+    else:
+        flash('主模型%s不存在，或尚未生成子模型。' % model_id, 'danger')
+        return render_template('propellant/create_meshes.html', form=form, model_id=model_id)
+
+
 
 @propellant_bp.route('/upload/', methods=['GET', 'POST'])
 def upload():

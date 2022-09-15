@@ -1,0 +1,142 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}生成{{ model_id }}号球体填充主模型的子模型网格{% endblock title %}
+
+{% block pageheader %}生成{{ model_id }}号球体填充主模型的子模型网格{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item active">生成{{ model_id }}号球体填充主模型的子模型网格</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- left column -->
+          <div class="col-md-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">网格划分参数</h3>
+              </div>
+              <div class="card-body">
+                <form action="" method="post" class="form" role="form" onsubmit="return sumbit_sure()">
+                  {{ form.csrf_token() }}
+                  {{ render_form_row([form.gap, form.node_shape, form.element_type]) }}
+                  {{ render_field(form.submit, button_style='btn btn-primary') }}
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">进程查看</h3>
+              </div>
+              <div class="card-body">
+                <table class="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th width="10%">进程ID</th>
+                      <th width="15%">进程类型</th>
+                      <th width="10%">类型ID</th>
+                      <th width="10%">状态</th>
+                      <th width="45%">当前进度</th>
+                      <th width="10%">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="thread_progress">
+                  </tbody>
+                </table>
+                <p></p>
+                <button type="button" class="btn btn-btn btn-primary btn-md" onclick="clear_query()">清除已完成进程</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+{% endblock content %}
+
+{% block script %}
+<script type="text/javascript">
+  var refreshID = setInterval(function(){
+    var prog_url = "{{ url_for('propellant.thread') }}"
+    $.get(prog_url, function(threads){
+
+      is_fresh = false
+
+      for(var id in threads){
+        if(threads[id]['status'] == 'Running'){
+          is_fresh = true
+        }
+      }
+
+      update_table(threads)
+
+      if(is_fresh == false){
+        clearInterval(refreshID)
+      }
+      
+    })
+  }, 1000);
+
+  function update_table(threads){
+    $("#thread_progress").empty();
+    var tbody = document.getElementById('thread_progress')
+    for(var id in threads){
+      var tr = document.createElement('tr');
+      tbody.appendChild(tr)
+
+      var td = document.createElement('td');
+      td.innerHTML = id
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = threads[id]['class']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = threads[id]['class_id']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = threads[id]['status']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = "<div class=\"progress\"><div class=\"progress-bar bg-primary progress-bar-striped\" role=\"progressbar\" aria-valuenow=\"40\" aria-valuemin=\"0\" aria-valuemax=\"100\" style=\"width: " + threads[id]['progress'] + "%\"></div></div>"
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      if(threads[id]['status'] == 'Done'){
+        td.innerHTML = "<a href='../view_packing_models/" + threads[id]['class_id'] + "'> 查看模型 </a>"
+      }
+      tr.appendChild(td)
+    } 
+  }
+
+  function clear_query(btn){
+    var prog_url = "{{ url_for('propellant.thread_clear') }}";
+    $.get(prog_url, function(threads){
+      update_table(threads)
+    })
+  }
+
+
+  function sumbit_sure(){
+    var gnl=confirm("如果已经存在子模型，该操作将会删除已有的子模型，重新生成它们，确定要继续提交？");
+    if (gnl==true){
+      return true;
+    }else{
+      return false;
+    }
+  }
+
+  document.getElementById("propellant").className = "nav-item menu-open"
+
+</script>
+{% endblock script %}
+
