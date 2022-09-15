@@ -35,7 +35,7 @@ class BaseConfig:
 
 class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = \
-        prefix + os.path.join(basedir, 'data-dev.db')
+        prefix + os.path.join(basedir, 'data.db')
     REDIS_URL = "redis://localhost"
 
 

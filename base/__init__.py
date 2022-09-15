@@ -5,16 +5,14 @@
 import os
 
 import click
-from flask import Flask, render_template
-from flask_login import current_user
-from flask_wtf.csrf import CSRFError
+from flask import Flask
 
 from base.blueprints.main import main_bp
 from base.blueprints.propellant import propellant_bp
 from base.blueprints.auth import auth_bp
 from base.blueprints.admin import admin_bp
-from base.extensions import bootstrap, db, login_manager, csrf
-from base.models import Role, User, Permission
+from base.extensions import bootstrap, db, login_manager
+from base.models import Role
 from base.settings import config
 
 
@@ -40,14 +38,13 @@ def register_extensions(app):
     bootstrap.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
-    pass
 
 
 def register_blueprints(app):
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(propellant_bp, url_prefix='/propellant')
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(propellant_bp, url_prefix='/propellant')
 
 
 def register_errorhandlers(app):
@@ -61,7 +58,10 @@ def register_shell_context(app):
 def register_template_context(app):
     @app.context_processor
     def make_template_context():
-        env = {'service': 'client'}
+        if app.config['ENV'] == 'production':
+            env = {'service': 'server'}
+        else:
+            env = {'service': 'client'}
         return dict(env=env)
 
 
