@@ -195,7 +195,8 @@ def view_packing_submodels(model_id, submodel_id):
     with open(msg_file, 'r', encoding='utf-8') as f:
         message = json.load(f)
     status['args'] = str(args)
-    status['size'] = message['size']
+    status['subsize'] = message['subsize']
+    status['location'] = message['location']
     status['num_ball'] = message['num_ball']
     status['gap'] = message['gap']
     status['fraction'] = '%.4f' % message['fraction']
