@@ -1,5 +1,5 @@
 # ABAQUS安装
-参考：[GitHub - franaudo/abaqus-ubuntu: Guide for the installation of Abaqus on Ubuntu](https://github.com/franaudo/abaqus-ubuntu)
+
 ## 1. 挂载数据盘
 ```shell
 sudo wget -O auto_disk.sh http://download.bt.cn/tools/auto_disk.sh && sudo bash auto_disk.sh
@@ -59,4 +59,7 @@ source /etc/profile
 sudo bash /opt/abaqus2020/4/SIMULIA_EstablishedProducts_CAA_API/Linux64/1/StartTUI.sh # 接口安装
 /var/DassaultSystemes/SIMULIA/Commands/abaqus verify -std -user_std -user_exp # 验证
 ```
+
+## 参考文献
+[GitHub - franaudo/abaqus-ubuntu: Guide for the installation of Abaqus on Ubuntu](https://github.com/franaudo/abaqus-ubuntu)
  

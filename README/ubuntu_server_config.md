@@ -79,6 +79,7 @@ sudo service nginx restart
 ## 6. 安装gunicorn
 pip install gunicorn
 gunicorn -w 1 wsgi:app
+gunicorn -w 1 -b 0.0.0.0 wsgi:app
 
 ## 7. 使用Supervisor管理进程
 sudo apt install supervisor
@@ -103,3 +104,10 @@ pip install bypy
 bypy list
 bypy downdir /
 [https://github.com/houtianze/bypy](https://github.com/houtianze/bypy)
+
+## 9. 虚拟图形界面
+```shell
+sudo apt install xvfb
+Xvfb :5 -screen 0 800x600x24 &
+export DISPLAY=:5
+```
