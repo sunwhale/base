@@ -2,7 +2,8 @@
 
 ## 1. 挂载数据盘
 ```shell
-sudo wget -O auto_disk.sh http://download.bt.cn/tools/auto_disk.sh && sudo bash auto_disk.sh
+sudo wget -O auto_disk.sh http://download.bt.cn/tools/auto_disk.sh
+sudo bash auto_disk.sh
 sudo chmod 777 /www
 sudo yum install wget git libX11 libGL libXrender
 ```
@@ -10,10 +11,9 @@ sudo yum install wget git libX11 libGL libXrender
 ## 2. 安装miniconda
 ```shell
 sudo wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
-sudo bash Miniconda3-latest-Linux-x86_64.sh
-修改安装目录：/opt/miniconda3
-sudo vim ~/.bashrc # 打开环境变量文件
-在文件末尾添加：export PATH="/opt/miniconda3/bin:$PATH"
+sudo bash Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda3
+sudo sed -i '$aexport PATH=/opt/miniconda3/bin:$PATH' /etc/profile # 写入环境变量
+sudo source /etc/profile
 sudo conda init
 ```
 
