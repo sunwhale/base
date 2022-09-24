@@ -42,8 +42,10 @@ def create_packing_model():
         rad_min = float(form.rad_min.data)
         rad_max = float(form.rad_max.data)
 
-        model_id = create_id(current_app.config['PROPELLANT_PACKING_MODEL_PATH'])
-        model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
+        model_id = create_id(
+            current_app.config['PROPELLANT_PACKING_MODEL_PATH'])
+        model_path = os.path.join(
+            current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
 
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
@@ -58,7 +60,8 @@ def create_packing_model():
         status['status'] = 'Submit'
         status['log'] = ''
 
-        args = (ncircle, size, gap, num_add, max_iter, dt0, dt_interval, rayleigh_para, num_ball, rad_min, rad_max, model_path, status)
+        args = (ncircle, size, gap, num_add, max_iter, dt0, dt_interval,
+                rayleigh_para, num_ball, rad_min, rad_max, model_path, status)
 
         thread = threading.Thread(target=create_model, args=args)
         thread.start()
@@ -67,52 +70,11 @@ def create_packing_model():
     return render_template('propellant/create_packing_model.html', form=form)
 
 
-@propellant_bp.route('/manage_packing_models/')
-@login_required
-def manage_packing_models():
-    return render_template('propellant/manage_packing_models.html')
-
-
-@propellant_bp.route('/packing_models_status/')
-@login_required
-def packing_models_status():
-    data = packing_models_detail(current_app.config['PROPELLANT_PACKING_MODEL_PATH'])
-    return jsonify(data)
-
-
-@propellant_bp.route('/get_packing_models/<path:filename>')
-@login_required
-def get_packing_models(filename):
-    return send_from_directory(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], filename)
-
-
-@propellant_bp.route('/view_packing_model/<int:model_id>')
-@login_required
-def view_packing_model(model_id):
-    path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'])
-    status = get_model_status(path, model_id)
-    return render_template('propellant/view_packing_model.html', model_id=model_id, status=status)
-
-
-@propellant_bp.route('/delete_packing_models/<int:model_id>')
-@login_required
-def delete_packing_models(model_id):
-    if not current_user.can('MODERATE'):
-        flash('您的权限不能删除该模型！', 'danger')
-        return redirect(url_for('.manage_packing_models'))
-    model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
-    if os.path.exists(model_path):
-        shutil.rmtree(model_path)
-        flash('模型%s删除成功。' % model_id, 'info')
-    else:
-        flash('模型%s不存在。' % model_id, 'info')
-    return redirect(url_for('.manage_packing_models'))
-
-
 @propellant_bp.route('/create_packing_submodel/<int:model_id>', methods=['GET', 'POST'])
 @login_required
 def create_packing_submodel(model_id):
-    model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
+    model_path = os.path.join(
+        current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
     model_msg_file = os.path.join(model_path, 'model.msg')
     model_npy_file = os.path.join(model_path, 'model.npy')
     form = SubmodelForm()
@@ -123,11 +85,12 @@ def create_packing_submodel(model_id):
             with open(model_msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
             size = message['size']
-            out_path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
+            out_path = os.path.join(
+                current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
 
             if os.path.exists(out_path):
                 shutil.rmtree(out_path)
-                
+
             thread_id = create_thread_id()
 
             exporting_threads[thread_id] = {}
@@ -138,7 +101,8 @@ def create_packing_submodel(model_id):
             status['status'] = 'Submit'
             status['log'] = ''
 
-            args = (model_npy_file, model_id, size, ndiv, gap, out_path, status)
+            args = (model_npy_file, model_id, size,
+                    ndiv, gap, out_path, status)
 
             thread = threading.Thread(target=create_submodel, args=args)
             thread.start()
@@ -148,33 +112,14 @@ def create_packing_submodel(model_id):
         return render_template('propellant/create_packing_submodel.html', form=form, model_id=model_id)
 
 
-@propellant_bp.route('/manage_packing_submodels/<int:model_id>')
-@login_required
-def manage_packing_submodels(model_id):
-    return render_template('propellant/manage_packing_submodels.html', model_id=model_id)
-
-
-@propellant_bp.route('/packing_submodels_status/<int:model_id>')
-@login_required
-def packing_submodels_status(model_id):
-    data = packing_submodels_detail(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], model_id)
-    return jsonify(data)
-
-
-@propellant_bp.route('/view_packing_submodel/<int:model_id>/<int:submodel_id>')
-@login_required
-def view_packing_submodel(model_id, submodel_id):
-    path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'])
-    status = get_submodel_status(path, model_id, submodel_id)
-    return render_template('propellant/view_packing_submodel.html', model_id=model_id, submodel_id=submodel_id, status=status)
-
-
 @propellant_bp.route('/create_meshes/<int:model_id>', methods=['GET', 'POST'])
 @login_required
 def create_meshes(model_id):
     form = MeshForm()
-    submodel_path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
-    mesh_path = os.path.join(current_app.config['PROPELLANT_MESH_PATH'], str(model_id))
+    submodel_path = os.path.join(
+        current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
+    mesh_path = os.path.join(
+        current_app.config['PROPELLANT_MESH_PATH'], str(model_id))
     submodel_ids = sub_dirs_int(submodel_path)
     if os.path.isdir(submodel_path):
         if form.validate_on_submit():
@@ -201,7 +146,8 @@ def create_meshes(model_id):
                 status['status'] = 'Running'
                 for submodel_id in submodel_ids:
                     status['progress'] = 100*submodel_id/len(submodel_ids)
-                    msg_file = os.path.join(submodel_path, str(submodel_id), 'model.msg')
+                    msg_file = os.path.join(
+                        submodel_path, str(submodel_id), 'model.msg')
                     with open(msg_file, 'r', encoding='utf-8') as f:
                         message = json.load(f)
                     size = message['subsize']
@@ -213,12 +159,14 @@ def create_meshes(model_id):
                         os.makedirs(submesh_path)
                     substatus = {'status': 'Submit', 'log': '', 'progress': 0}
                     model_path = os.path.join(submodel_path, str(submodel_id))
-                    args = (gap, size, dimension, node_shape, element_type, model_path, submesh_path, substatus)
+                    args = (gap, size, dimension, node_shape,
+                            element_type, model_path, submesh_path, substatus)
                     create_mesh(*args)
                 status['progress'] = 100
                 status['status'] = 'Done'
 
-            args = (gap, node_shape, element_type, submodel_ids, mesh_path, status)
+            args = (gap, node_shape, element_type,
+                    submodel_ids, mesh_path, status)
             thread = threading.Thread(target=create_mesh_all, args=args)
             thread.start()
         return render_template('propellant/create_meshes.html', form=form, model_id=model_id)
@@ -227,10 +175,76 @@ def create_meshes(model_id):
         return render_template('propellant/create_meshes.html', form=form, model_id=model_id)
 
 
+@propellant_bp.route('/manage_packing_models/')
+@login_required
+def manage_packing_models():
+    return render_template('propellant/manage_packing_models.html')
+
+
+@propellant_bp.route('/manage_packing_submodels/<int:model_id>')
+@login_required
+def manage_packing_submodels(model_id):
+    return render_template('propellant/manage_packing_submodels.html', model_id=model_id)
+
+
+@propellant_bp.route('/packing_models_status/')
+@login_required
+def packing_models_status():
+    data = packing_models_detail(
+        current_app.config['PROPELLANT_PACKING_MODEL_PATH'])
+    return jsonify(data)
+
+
+@propellant_bp.route('/packing_submodels_status/<int:model_id>')
+@login_required
+def packing_submodels_status(model_id):
+    data = packing_submodels_detail(
+        current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], model_id)
+    return jsonify(data)
+
+
+@propellant_bp.route('/get_packing_models/<path:filename>')
+@login_required
+def get_packing_models(filename):
+    return send_from_directory(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], filename)
+
+
 @propellant_bp.route('/get_packing_submodels/<path:filename>')
 @login_required
 def get_packing_submodels(filename):
     return send_from_directory(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], filename)
+
+
+@propellant_bp.route('/view_packing_model/<int:model_id>')
+@login_required
+def view_packing_model(model_id):
+    path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'])
+    status = get_model_status(path, model_id)
+    return render_template('propellant/view_packing_model.html', model_id=model_id, status=status)
+
+
+@propellant_bp.route('/view_packing_submodel/<int:model_id>/<int:submodel_id>')
+@login_required
+def view_packing_submodel(model_id, submodel_id):
+    path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'])
+    status = get_submodel_status(path, model_id, submodel_id)
+    return render_template('propellant/view_packing_submodel.html', model_id=model_id, submodel_id=submodel_id, status=status)
+
+
+@propellant_bp.route('/delete_packing_models/<int:model_id>')
+@login_required
+def delete_packing_models(model_id):
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该模型！', 'danger')
+        return redirect(url_for('.manage_packing_models'))
+    model_path = os.path.join(
+        current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
+    if os.path.exists(model_path):
+        shutil.rmtree(model_path)
+        flash('模型%s删除成功。' % model_id, 'info')
+    else:
+        flash('模型%s不存在。' % model_id, 'info')
+    return redirect(url_for('.manage_packing_models'))
 
 
 @propellant_bp.route('/thread/<thread_id>')
