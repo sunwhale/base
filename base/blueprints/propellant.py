@@ -42,16 +42,13 @@ def create_packing_model():
         rad_min = float(form.rad_min.data)
         rad_max = float(form.rad_max.data)
 
-        model_id = create_id(
-            current_app.config['PROPELLANT_PACKING_MODEL_PATH'])
-        model_path = os.path.join(
-            current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
+        model_id = create_id(current_app.config['PROPELLANT_PACKING_MODEL_PATH'])
+        model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
 
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
 
         thread_id = create_thread_id()
-
         exporting_threads[thread_id] = {}
         status = exporting_threads[thread_id]
         status['class'] = '球体填充'
@@ -92,7 +89,6 @@ def create_packing_submodel(model_id):
                 shutil.rmtree(out_path)
 
             thread_id = create_thread_id()
-
             exporting_threads[thread_id] = {}
             status = exporting_threads[thread_id]
             status['class'] = '生成子模型'
@@ -116,12 +112,9 @@ def create_packing_submodel(model_id):
 @login_required
 def create_packing_mesh(model_id):
     form = MeshForm()
-    submodel_path = os.path.join(
-        current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
-    mesh_path = os.path.join(
-        current_app.config['PROPELLANT_PACKING_MESH_PATH'], str(model_id))
-    submodel_ids = sub_dirs_int(submodel_path)
-    if os.path.isdir(submodel_path):
+    model_path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
+    mesh_path = os.path.join(current_app.config['PROPELLANT_PACKING_MESH_PATH'], str(model_id))
+    if os.path.isdir(model_path):
         if form.validate_on_submit():
             gap = float(form.gap.data)
             node_shape = eval(form.node_shape.data)
@@ -142,32 +135,35 @@ def create_packing_mesh(model_id):
             status['status'] = 'Submit'
             status['log'] = ''
 
-            def create_mesh_all(gap, node_shape, element_type, submodel_ids, mesh_path, status):
+            def create_meshes(gap, node_shape, element_type, model_path, mesh_path, status):
+                submodel_ids = sub_dirs_int(model_path)
                 status['status'] = 'Running'
                 for submodel_id in submodel_ids:
-                    status['progress'] = 100*submodel_id/len(submodel_ids)
-                    msg_file = os.path.join(
-                        submodel_path, str(submodel_id), 'model.msg')
+                    submesh_path = os.path.join(mesh_path, str(submodel_id))
+                    submodel_path = os.path.join(model_path, str(submodel_id))
+                    msg_file = os.path.join(model_path, str(submodel_id), 'model.msg')
+
                     with open(msg_file, 'r', encoding='utf-8') as f:
                         message = json.load(f)
                     size = message['subsize']
                     if len(size) > 3:
                         size = size[:3]
                     dimension = [s[1] for s in size]
-                    submesh_path = os.path.join(mesh_path, str(submodel_id))
+                    
                     if not os.path.isdir(submesh_path):
                         os.makedirs(submesh_path)
+
+                    status['progress'] = 100*submodel_id/len(submodel_ids)
                     substatus = {'status': 'Submit', 'log': '', 'progress': 0}
-                    model_path = os.path.join(submodel_path, str(submodel_id))
-                    args = (gap, size, dimension, node_shape,
-                            element_type, model_path, submesh_path, substatus)
+
+                    args = (gap, size, dimension, node_shape, element_type, submodel_path, submesh_path, substatus)
                     create_mesh(*args)
+
                 status['progress'] = 100
                 status['status'] = 'Done'
 
-            args = (gap, node_shape, element_type,
-                    submodel_ids, mesh_path, status)
-            thread = threading.Thread(target=create_mesh_all, args=args)
+            args = (gap, node_shape, element_type, model_path, mesh_path, status)
+            thread = threading.Thread(target=create_meshes, args=args)
             thread.start()
         return render_template('propellant/create_packing_mesh.html', form=form, model_id=model_id)
     else:
@@ -245,13 +241,12 @@ def delete_packing_models(model_id):
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该模型！', 'danger')
         return redirect(url_for('.manage_packing_models'))
-    model_path = os.path.join(
-        current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
+    model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
     if os.path.exists(model_path):
         shutil.rmtree(model_path)
         flash('模型%s删除成功。' % model_id, 'info')
     else:
-        flash('模型%s不存在。' % model_id, 'info')
+        flash('模型%s不存在。' % model_id, 'danger')
     return redirect(url_for('.manage_packing_models'))
 
 
