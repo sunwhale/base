@@ -43,7 +43,10 @@ def formatSize(size_in_bytes):
 
 
 def sub_dirs_int(path):
-    sub_dirs = [int(sub_dir) for sub_dir in next(os.walk(path))[1]]
+    try:
+        sub_dirs = [int(sub_dir) for sub_dir in next(os.walk(path))[1]]
+    except StopIteration:
+        sub_dirs = []
     return sorted(sub_dirs)
 
 
@@ -116,15 +119,42 @@ def get_submodel_status(path, model_id, submodel_id):
         status['npy_size'] = formatSize(os.path.getsize(npy_file))
         status['ndiv'] = message['ndiv']
         status['location'] = str(message['location'])
+        status['subsize'] = str(message['subsize'])
         status['gap'] = message['gap']
         status['num_ball'] = message['num_ball']
         status['fraction'] = '%.4f' % message['fraction']
         status['operation'] = "<a href='%s'>查看</a>" % ('../view_packing_submodel/'+str(model_id)+'/'+str(submodel_id))
     except FileNotFoundError:
-        for key in ['npy_time', 'npy_size', 'ndiv', 'location', 'gap', 'num_ball', 'fraction', 'operation']:
+        for key in ['npy_time', 'npy_size', 'ndiv', 'location', 'subsize', 'gap', 'num_ball', 'fraction', 'operation']:
             status[key] = 'None'
     return status
-    
+
+
+def get_mesh_status(path, model_id, submodel_id):
+    inp_file = os.path.join(path, str(model_id), str(submodel_id), 'Model-1.inp')
+    args_file = os.path.join(path, str(model_id), str(submodel_id), 'args.json')
+    msg_file = os.path.join(path, str(model_id), str(submodel_id), 'model.msg')
+    status = {}
+    status['model_id'] = model_id
+    status['submodel_id'] = submodel_id
+    if os.path.exists(inp_file):
+        inp_modified_time = os.path.getmtime(inp_file)
+        with open(args_file, 'r', encoding='utf-8') as f:
+            args = json.load(f)
+        with open(msg_file, 'r', encoding='utf-8') as f:
+            message = json.load(f)
+        status['args'] = str(args)
+        status['gap'] = message['gap']
+        status['nodes_number'] = message['nodes_number']
+        status['elements_number'] = message['elements_number']
+        status['node_shape'] = message['node_shape']
+        status['dimension'] = message['dimension']
+        status['size'] = message['size']
+        status['element_type'] = message['element_type']        
+        status['inp_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(inp_modified_time))
+        status['inp_size'] = formatSize(os.path.getsize(inp_file))
+    return status        
+        
     
 def packing_models_detail(path):
     data_list = []
@@ -155,5 +185,5 @@ def packing_submodels_detail(path, model_id):
 
 
 if __name__ == '__main__':
-    path = '..\\files\\propellant\\packing\\submodels\\'
-    print(packing_submodels_detail(path,1))
+    path = '..\\files\\propellant\\packing\\mesh\\'
+    print(get_mesh_status(path, 1, 1))

@@ -38,28 +38,29 @@
                       <li> 球体数量：{{status['num_ball']}} </li>
                       <li> 体积分数：{{status['fraction']}} </li>
                       <li> 区域大小：{{status['size']}} </li>
+                      <li> 球体间距：{{status['gap']}} </li>
                       <li> 模型文件大小：{{status['npy_size']}} </li>
                       <li> 参数列表：{{status['args']}} </li>
                     </ul>
 
-                    <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png"></a>
-                    <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png"></a>
+                    <a href="{{ url_for('propellant.get_packing_model', filename='') }}/{{ model_id }}/model.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_model', filename='') }}/{{ model_id }}/model.png"></a>
+                    <a href="{{ url_for('propellant.get_packing_model', filename='') }}/{{ model_id }}/density.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_model', filename='') }}/{{ model_id }}/density.png"></a>
 
                   </div>
                   <div class="col-6">
                     <h5 class="text-primary">文件</h5>
-                    <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.npy" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.npy</a>
-                    <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.log" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.log</a>
-                    <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/args.json" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a>
-                    <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.msg" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a>
-                    <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/model.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a>
-                    <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a>
+                    <a href="{{ url_for('propellant.get_packing_model', filename='') }}/{{ model_id }}/model.npy" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.npy</a>
+                    <a href="{{ url_for('propellant.get_packing_model', filename='') }}/{{ model_id }}/model.log" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.log</a>
+                    <a href="{{ url_for('propellant.get_packing_model', filename='') }}/{{ model_id }}/args.json" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a>
+                    <a href="{{ url_for('propellant.get_packing_model', filename='') }}/{{ model_id }}/model.msg" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a>
+                    <a href="{{ url_for('propellant.get_packing_model', filename='') }}/{{ model_id }}/model.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a>
+                    <a href="{{ url_for('propellant.get_packing_model', filename='') }}/{{ model_id }}/density.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a>
                     <p></p>
                     <h5 class="text-primary">子模型</h5>
                     通过对当前主模型在每个坐标轴方向等分，生成当前主模型的子模型，点击<a href="{{ url_for('propellant.create_packing_submodel', model_id=model_id) }}">这里</a>进入子模型生成界面。
                     <p></p>
                     <h5 class="text-primary">子模型划分网格</h5>
-                    生成所有子模型对应的网格文件，点击<a href="{{ url_for('propellant.create_meshes', model_id=model_id) }}">这里</a>进入网格生成界面。
+                    生成所有子模型对应的网格文件，点击<a href="{{ url_for('propellant.create_packing_mesh', model_id=model_id) }}">这里</a>进入网格生成界面。
                     <p></p>
                     <h5 class="text-primary">日志</h5>
                     <textarea class="form-control" rows="12">{{status['log']}}</textarea>

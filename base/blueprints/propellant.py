@@ -19,7 +19,7 @@ from psic.create_mesh import create_mesh
 from base.forms.propellant import PackingForm, SubmodelForm, MeshForm, UploadForm
 from base.global_var import exporting_threads, create_thread_id
 
-from tools.dir_status import create_id, sub_dirs_int, get_model_status, get_submodel_status, packing_models_detail, packing_submodels_detail, formatSize
+from tools.dir_status import create_id, sub_dirs_int, get_model_status, get_submodel_status, get_mesh_status, packing_models_detail, packing_submodels_detail, formatSize
 
 
 propellant_bp = Blueprint('propellant', __name__)
@@ -112,14 +112,14 @@ def create_packing_submodel(model_id):
         return render_template('propellant/create_packing_submodel.html', form=form, model_id=model_id)
 
 
-@propellant_bp.route('/create_meshes/<int:model_id>', methods=['GET', 'POST'])
+@propellant_bp.route('/create_packing_mesh/<int:model_id>', methods=['GET', 'POST'])
 @login_required
-def create_meshes(model_id):
+def create_packing_mesh(model_id):
     form = MeshForm()
     submodel_path = os.path.join(
         current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
     mesh_path = os.path.join(
-        current_app.config['PROPELLANT_MESH_PATH'], str(model_id))
+        current_app.config['PROPELLANT_PACKING_MESH_PATH'], str(model_id))
     submodel_ids = sub_dirs_int(submodel_path)
     if os.path.isdir(submodel_path):
         if form.validate_on_submit():
@@ -169,10 +169,10 @@ def create_meshes(model_id):
                     submodel_ids, mesh_path, status)
             thread = threading.Thread(target=create_mesh_all, args=args)
             thread.start()
-        return render_template('propellant/create_meshes.html', form=form, model_id=model_id)
+        return render_template('propellant/create_packing_mesh.html', form=form, model_id=model_id)
     else:
         flash('主模型%s不存在，或尚未生成子模型。' % model_id, 'danger')
-        return render_template('propellant/create_meshes.html', form=form, model_id=model_id)
+        return render_template('propellant/create_packing_mesh.html', form=form, model_id=model_id)
 
 
 @propellant_bp.route('/manage_packing_models/')
@@ -203,16 +203,22 @@ def packing_submodels_status(model_id):
     return jsonify(data)
 
 
-@propellant_bp.route('/get_packing_models/<path:filename>')
+@propellant_bp.route('/get_packing_model/<path:filename>')
 @login_required
-def get_packing_models(filename):
+def get_packing_model(filename):
     return send_from_directory(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], filename)
 
 
-@propellant_bp.route('/get_packing_submodels/<path:filename>')
+@propellant_bp.route('/get_packing_submodel/<path:filename>')
 @login_required
-def get_packing_submodels(filename):
+def get_packing_submodel(filename):
     return send_from_directory(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], filename)
+
+
+@propellant_bp.route('/get_packing_mesh/<path:filename>')
+@login_required
+def get_packing_mesh(filename):
+    return send_from_directory(current_app.config['PROPELLANT_PACKING_MESH_PATH'], filename)
 
 
 @propellant_bp.route('/view_packing_model/<int:model_id>')
@@ -228,7 +234,9 @@ def view_packing_model(model_id):
 def view_packing_submodel(model_id, submodel_id):
     path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'])
     status = get_submodel_status(path, model_id, submodel_id)
-    return render_template('propellant/view_packing_submodel.html', model_id=model_id, submodel_id=submodel_id, status=status)
+    path = os.path.join(current_app.config['PROPELLANT_PACKING_MESH_PATH'])
+    status_mesh = get_mesh_status(path, model_id, submodel_id)
+    return render_template('propellant/view_packing_submodel.html', model_id=model_id, submodel_id=submodel_id, status=status, status_mesh=status_mesh)
 
 
 @propellant_bp.route('/delete_packing_models/<int:model_id>')

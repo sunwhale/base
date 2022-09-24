@@ -14,44 +14,80 @@
 
 {% block content %}
     <section class="content">
-      <div class="card card-primary">
-        <div class="card-header">
-          <h3 class="card-title">{{ model_id }}号球体填充模型：{{ submodel_id }}号子模型</h3>
-          <div class="card-tools">
-            <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-              <i class="fas fa-minus"></i>
-            </button>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <div class="col-6">
-              <h5 class="text-primary">模型信息</h5>
-              <ul class="list-unstyled">
-                <li> 日期时间：{{status['npy_time']}} </li>
-                <li> 球体数量：{{status['num_ball']}} </li>
-                <li> 体积分数：{{status['fraction']}} </li>
-                <li> 区域大小：{{status['subsize']}} </li>
-                <li> 球体间距：{{status['gap']}} </li>
-                <li> 主模型位置：{{status['location']}} </li>
-                <li> 模型文件大小：{{status['npy_size']}} </li>
-                <li> 参数列表：{{status['args']}} </li>
-              </ul>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-6">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ model_id }}号球体填充模型：{{ submodel_id }}号子模型</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12">
+                    <h5 class="text-primary">模型信息</h5>
+                    <ul class="list-unstyled">
+                      <li> 日期时间：{{status['npy_time']}} </li>
+                      <li> 球体数量：{{status['num_ball']}} </li>
+                      <li> 体积分数：{{status['fraction']}} </li>
+                      <li> 区域大小：{{status['subsize']}} </li>
+                      <li> 位于主模型：{{status['location']}} </li>
+                      <li> 球体间距：{{status['gap']}} </li>
+                      <li> 模型文件大小：{{status['npy_size']}} </li>
+                      <li> 参数列表：{{status['args']}} </li>
+                    </ul>
+                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.png"></a>
+                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/density.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/density.png"></a>
 
-              <a href="{{ url_for('propellant.get_packing_submodels', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_submodels', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.png"></a>
-              <a href="{{ url_for('propellant.get_packing_submodels', filename='') }}/{{ model_id }}/{{ submodel_id }}/density.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_submodels', filename='') }}/{{ model_id }}/{{ submodel_id }}/density.png"></a>
-
+                    <h5 class="text-primary">文件</h5>
+                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.npy" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.npy</a>
+                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/args.json" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a>
+                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.msg" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a>
+                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a>
+                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/density.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="col-6">
+          </div>
+          <div class="col-6">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ model_id }}号球体填充模型：{{ submodel_id }}号子模型/有限元网格</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12">
+                    <h5 class="text-primary">模型信息</h5>
+                    <ul class="list-unstyled">
+                      <li> 日期时间：{{status_mesh['inp_time']}} </li>
+                      <li> 节点数量：{{status_mesh['nodes_number']}} </li>
+                      <li> 单元数量：{{status_mesh['elements_number']}} </li>
+                      <li> 单元类型：{{status_mesh['element_type']}} </li>
+                      <li> 节点形状：{{status_mesh['node_shape']}} </li>
+                      <li> 模型尺寸：{{status_mesh['size']}} </li>
+                      <li> 球体间距：{{status_mesh['gap']}} </li>
+                      <li> 网格文件大小：{{status_mesh['inp_size']}} </li>
+                      <li> 参数列表：{{status_mesh['args']}} </li>
+                    </ul>
 
-              <h5 class="text-primary">文件</h5>
-              <ul class="list-unstyled">
-                <li><a href="{{ url_for('propellant.get_packing_submodels', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.npy" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.npy</a></li>
-                <li><a href="{{ url_for('propellant.get_packing_submodels', filename='') }}/{{ model_id }}/{{ submodel_id }}/args.json" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a></li>
-                <li><a href="{{ url_for('propellant.get_packing_submodels', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.msg" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a></li>
-                <li><a href="{{ url_for('propellant.get_packing_submodels', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a></li>
-                <li><a href="{{ url_for('propellant.get_packing_submodels', filename='') }}/{{ model_id }}/{{ submodel_id }}/density.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a></li>
-              </ul>
+                    <h5 class="text-primary">文件</h5>
+                    <a href="{{ url_for('propellant.get_packing_mesh', filename='') }}/{{ model_id }}/{{ submodel_id }}/Model-1.inp" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> Model-1.inp</a>
+                    <a href="{{ url_for('propellant.get_packing_mesh', filename='') }}/{{ model_id }}/{{ submodel_id }}/args.json" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a>
+                    <a href="{{ url_for('propellant.get_packing_mesh', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.msg" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a>
+                    <a href="{{ url_for('propellant.get_packing_mesh', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
