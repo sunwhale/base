@@ -8,7 +8,7 @@
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
 <li class="breadcrumb-item"><a href="{{ url_for('propellant.manage_packing_models') }}">球体填充模型管理</a></li>
-<li class="breadcrumb-item"><a href="{{ url_for('propellant.view_packing_models', model_id=model_id) }}">{{ model_id }}号球体填充模型</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('propellant.view_packing_model', model_id=model_id) }}">{{ model_id }}号球体填充模型</a></li>
 <li class="breadcrumb-item active">子模型信息</li>
 {% endblock level %}
 

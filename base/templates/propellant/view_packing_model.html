@@ -56,7 +56,7 @@
                     <a href="{{ url_for('propellant.get_packing_models', filename='') }}/{{ model_id }}/density.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a>
                     <p></p>
                     <h5 class="text-primary">子模型</h5>
-                    通过对当前主模型在每个坐标轴方向等分，生成当前主模型的子模型，点击<a href="{{ url_for('propellant.create_packing_submodels', model_id=model_id) }}">这里</a>进入子模型生成界面。
+                    通过对当前主模型在每个坐标轴方向等分，生成当前主模型的子模型，点击<a href="{{ url_for('propellant.create_packing_submodel', model_id=model_id) }}">这里</a>进入子模型生成界面。
                     <p></p>
                     <h5 class="text-primary">子模型划分网格</h5>
                     生成所有子模型对应的网格文件，点击<a href="{{ url_for('propellant.create_meshes', model_id=model_id) }}">这里</a>进入网格生成界面。
@@ -155,7 +155,7 @@
         { data: 'gap' },
         { data: 'num_ball' },
         { data: 'fraction' },
-        { data: 'download' },
+        { data: 'operation' },
       ],
     });
   });

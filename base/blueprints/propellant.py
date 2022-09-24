@@ -19,15 +19,15 @@ from psic.create_mesh import create_mesh
 from base.forms.propellant import PackingForm, SubmodelForm, MeshForm, UploadForm
 from base.global_var import exporting_threads, create_thread_id
 
-from tools.dir_status import create_id, sub_dirs, packing_models_detail, packing_submodels_detail, formatSize
+from tools.dir_status import create_id, sub_dirs_int, get_model_status, get_submodel_status, packing_models_detail, packing_submodels_detail, formatSize
 
 
 propellant_bp = Blueprint('propellant', __name__)
 
 
-@propellant_bp.route('/create_packing_models/', methods=['GET', 'POST'])
+@propellant_bp.route('/create_packing_model/', methods=['GET', 'POST'])
 @login_required
-def create_packing_models():
+def create_packing_model():
     form = PackingForm()
     if form.validate_on_submit():
         ncircle = int(form.ncircle.data)
@@ -63,8 +63,8 @@ def create_packing_models():
         thread = threading.Thread(target=create_model, args=args)
         thread.start()
 
-        return render_template('propellant/create_packing_models.html', form=form)
-    return render_template('propellant/create_packing_models.html', form=form)
+        return render_template('propellant/create_packing_model.html', form=form)
+    return render_template('propellant/create_packing_model.html', form=form)
 
 
 @propellant_bp.route('/manage_packing_models/')
@@ -86,31 +86,12 @@ def get_packing_models(filename):
     return send_from_directory(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], filename)
 
 
-@propellant_bp.route('/view_packing_models/<int:model_id>')
+@propellant_bp.route('/view_packing_model/<int:model_id>')
 @login_required
-def view_packing_models(model_id):
-    model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
-    npy_file = os.path.join(model_path, 'model.npy')
-    args_file = os.path.join(model_path, 'args.json')
-    log_file = os.path.join(model_path, 'model.log')
-    msg_file = os.path.join(model_path, 'model.msg')
-    status = {}
-    npy_modified_time = os.path.getmtime(npy_file)
-    with open(args_file, 'r', encoding='utf-8') as f:
-        args = json.load(f)
-    with open(msg_file, 'r', encoding='utf-8') as f:
-        message = json.load(f)
-    with open(log_file, 'r', encoding='utf-8') as f:
-        status['log'] = f.read()
-    status['args'] = str(args)
-    status['size'] = message['size']
-    status['num_ball'] = message['num_ball']
-    status['gap'] = message['gap']
-    status['fraction'] = '%.4f' % message['fraction']
-    status['npy_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(npy_modified_time))
-    status['npy_size'] = formatSize(os.path.getsize(npy_file))
-
-    return render_template('propellant/view_packing_models.html', model_id=model_id, status=status)
+def view_packing_model(model_id):
+    path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'])
+    status = get_model_status(path, model_id)
+    return render_template('propellant/view_packing_model.html', model_id=model_id, status=status)
 
 
 @propellant_bp.route('/delete_packing_models/<int:model_id>')
@@ -128,9 +109,9 @@ def delete_packing_models(model_id):
     return redirect(url_for('.manage_packing_models'))
 
 
-@propellant_bp.route('/create_packing_submodels/<int:model_id>', methods=['GET', 'POST'])
+@propellant_bp.route('/create_packing_submodel/<int:model_id>', methods=['GET', 'POST'])
 @login_required
-def create_packing_submodels(model_id):
+def create_packing_submodel(model_id):
     model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
     model_msg_file = os.path.join(model_path, 'model.msg')
     model_npy_file = os.path.join(model_path, 'model.npy')
@@ -161,10 +142,10 @@ def create_packing_submodels(model_id):
 
             thread = threading.Thread(target=create_submodel, args=args)
             thread.start()
-        return render_template('propellant/create_packing_submodels.html', form=form, model_id=model_id)
+        return render_template('propellant/create_packing_submodel.html', form=form, model_id=model_id)
     else:
         flash('主模型%s不存在。' % model_id, 'danger')
-        return render_template('propellant/create_packing_submodels.html', form=form, model_id=model_id)
+        return render_template('propellant/create_packing_submodel.html', form=form, model_id=model_id)
 
 
 @propellant_bp.route('/manage_packing_submodels/<int:model_id>')
@@ -176,33 +157,16 @@ def manage_packing_submodels(model_id):
 @propellant_bp.route('/packing_submodels_status/<int:model_id>')
 @login_required
 def packing_submodels_status(model_id):
-    data = packing_submodels_detail(os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id)), model_id)
+    data = packing_submodels_detail(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], model_id)
     return jsonify(data)
 
 
-@propellant_bp.route('/view_packing_submodels/<int:model_id>/<int:submodel_id>')
+@propellant_bp.route('/view_packing_submodel/<int:model_id>/<int:submodel_id>')
 @login_required
-def view_packing_submodels(model_id, submodel_id):
-    submodel_path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
-
-    npy_file = os.path.join(submodel_path, str(submodel_id), 'model.npy')
-    args_file = os.path.join(submodel_path, str(submodel_id), 'args.json')
-    msg_file = os.path.join(submodel_path, str(submodel_id), 'model.msg')
-    status = {}
-    npy_modified_time = os.path.getmtime(npy_file)
-    with open(args_file, 'r', encoding='utf-8') as f:
-        args = json.load(f)
-    with open(msg_file, 'r', encoding='utf-8') as f:
-        message = json.load(f)
-    status['args'] = str(args)
-    status['subsize'] = message['subsize']
-    status['location'] = message['location']
-    status['num_ball'] = message['num_ball']
-    status['gap'] = message['gap']
-    status['fraction'] = '%.4f' % message['fraction']
-    status['npy_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(npy_modified_time))
-    status['npy_size'] = formatSize(os.path.getsize(npy_file))
-    return render_template('propellant/view_packing_submodels.html', model_id=model_id, submodel_id=submodel_id, status=status)
+def view_packing_submodel(model_id, submodel_id):
+    path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'])
+    status = get_submodel_status(path, model_id, submodel_id)
+    return render_template('propellant/view_packing_submodel.html', model_id=model_id, submodel_id=submodel_id, status=status)
 
 
 @propellant_bp.route('/create_meshes/<int:model_id>', methods=['GET', 'POST'])
@@ -211,7 +175,7 @@ def create_meshes(model_id):
     form = MeshForm()
     submodel_path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
     mesh_path = os.path.join(current_app.config['PROPELLANT_MESH_PATH'], str(model_id))
-    submodel_ids = sub_dirs(submodel_path)
+    submodel_ids = sub_dirs_int(submodel_path)
     if os.path.isdir(submodel_path):
         if form.validate_on_submit():
             gap = float(form.gap.data)

@@ -42,124 +42,118 @@ def formatSize(size_in_bytes):
         return "%.2fKB" % (kb)
 
 
-def sub_dirs(path):
-    sub_dirs = []
-    for root, dirs, files in os.walk(path):
-        if root != path:
-            sub_dirs.append(int(root.replace(path, '').replace(os.sep, '')))
+def sub_dirs_int(path):
+    sub_dirs = [int(sub_dir) for sub_dir in next(os.walk(path))[1]]
     return sorted(sub_dirs)
 
 
-def sub_2level_dirs(path):
-    sub_dirs = []
-    for root, dirs, files in os.walk(path):
-        if root != path:
-            sub_dirs.append(root.replace(path, '').split(os.sep))
+def get_current_dir_int(path):
+    abs_dir = next(os.walk(path))[0].split(os.sep)
+    if abs_dir[-1] == '':
+        return abs_dir[-2]
+    else:
+        return abs_dir[-1]
+
+
+def sub_dirs(path):
+    sub_dirs = next(os.walk(path))[1]
     return sub_dirs
 
 
 def create_id(path):
-    old_id_list = sub_dirs(path)
+    old_id_list = sub_dirs_int(path)
     if len(old_id_list) == 0:
         return 1
     else:
         return max(old_id_list)+1
 
 
+def get_model_status(path, model_id):
+    npy_file = os.path.join(path, str(model_id), 'model.npy')
+    msg_file = os.path.join(path, str(model_id), 'model.msg')
+    args_file = os.path.join(path, str(model_id), 'args.json')
+    log_file = os.path.join(path, str(model_id), 'model.log')
+    status = {}
+    status['model_id'] = model_id
+    try:
+        npy_modified_time = os.path.getmtime(npy_file)
+        with open(msg_file, 'r', encoding='utf-8') as f:
+            message = json.load(f)
+        with open(args_file, 'r', encoding='utf-8') as f:
+            args = json.load(f)
+            status['args'] = str(args)
+        with open(log_file, 'r', encoding='utf-8') as f:
+            status['log'] = f.read()        
+        status['npy_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(npy_modified_time))
+        status['npy_size'] = formatSize(os.path.getsize(npy_file))
+        status['size'] = str(message['size'])
+        status['gap'] = message['gap']
+        status['num_ball'] = message['num_ball']
+        status['fraction'] = '%.4f' % message['fraction']
+        status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>子模型</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_packing_model/'+str(model_id), '../manage_packing_submodels/'+str(model_id), '../delete_packing_models/'+str(model_id))
+    except FileNotFoundError:
+        for key in ['npy_time', 'npy_size', 'size', 'gap', 'num_ball', 'fraction']:
+            status[key] = 'None'
+        status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../delete_packing_models/'+str(model_id))
+    return status
+
+
+def get_submodel_status(path, model_id, submodel_id):
+    npy_file = os.path.join(path, str(model_id), str(submodel_id), 'model.npy')
+    msg_file = os.path.join(path, str(model_id), str(submodel_id), 'model.msg')
+    args_file = os.path.join(path, str(model_id), str(submodel_id), 'args.json')
+    status = {}
+    status['model_id'] = model_id
+    status['submodel_id'] = submodel_id
+    try:
+        npy_modified_time = os.path.getmtime(npy_file)
+        with open(msg_file, 'r', encoding='utf-8') as f:
+            message = json.load(f)
+        with open(args_file, 'r', encoding='utf-8') as f:
+            args = json.load(f)
+            status['args'] = str(args)
+        status['npy_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(npy_modified_time))
+        status['npy_size'] = formatSize(os.path.getsize(npy_file))
+        status['ndiv'] = message['ndiv']
+        status['location'] = str(message['location'])
+        status['gap'] = message['gap']
+        status['num_ball'] = message['num_ball']
+        status['fraction'] = '%.4f' % message['fraction']
+        status['operation'] = "<a href='%s'>查看</a>" % ('../view_packing_submodel/'+str(model_id)+'/'+str(submodel_id))
+    except FileNotFoundError:
+        for key in ['npy_time', 'npy_size', 'ndiv', 'location', 'gap', 'num_ball', 'fraction', 'operation']:
+            status[key] = 'None'
+    return status
+    
+    
 def packing_models_detail(path):
     data_list = []
-    model_id_list = sub_dirs(path)
-    for model_id in model_id_list[::-1]:
-        status = {}
-        status['model_id'] = model_id
-        model_path = os.path.join(path, str(model_id))
-        npy_file = os.path.join(model_path, 'model.npy')
-        args_file = os.path.join(model_path, 'args.json')
-        log_file = os.path.join(model_path, 'model.log')
-        msg_file = os.path.join(model_path, 'model.msg')
-        try:
-            npy_modified_time = os.path.getmtime(npy_file)
-            with open(args_file, 'r', encoding='utf-8') as f:
-                args = json.load(f)
-            with open(msg_file, 'r', encoding='utf-8') as f:
-                message = json.load(f)
-            status['args'] = str(args)
-            status['size'] = str(message['size'])
-            status['num_ball'] = message['num_ball']
-            status['fraction'] = '%.4f' % message['fraction']
-            status['gap'] = message['gap']
-            status['npy_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(npy_modified_time))
-            status['npy_size'] = formatSize(os.path.getsize(npy_file))
-            status['download'] = "<a href='%s'>查看</a> | <a href='%s'>子模型</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_packing_models/'+str(model_id), '../manage_packing_submodels/'+str(model_id), '../delete_packing_models/'+str(model_id))
-        except:
-            status['npy_time'] = 'None'
-            status['npy_size'] = 'None'    
-            status['download'] = 'None'
-            status['args'] = 'None'
-            status['size'] = 'None'
-            status['num_ball'] = 'None'
-            status['fraction'] = 'None'
-            status['gap'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../delete_packing_models/'+str(model_id))
-            
+    model_id_list = sub_dirs_int(path)
+    for model_id in model_id_list:
+        status = get_model_status(path, model_id)
         data_list.append(status)
-    
+
     data = {
         "data": data_list
     }
-    
+
     return data
 
 
 def packing_submodels_detail(path, model_id):
     data_list = []
-    submodel_id_list = sub_dirs(path)
-    for submodel_id in submodel_id_list[::-1]:
-        status = {}
-        status['model_id'] = model_id
-        status['submodel_id'] = submodel_id
-        submodel_path = os.path.join(path, str(submodel_id))
-        npy_file = os.path.join(submodel_path, 'model.npy')
-        args_file = os.path.join(submodel_path, 'args.json')
-        log_file = os.path.join(submodel_path, 'model.log')
-        msg_file = os.path.join(submodel_path, 'model.msg')
-        try:
-            npy_modified_time = os.path.getmtime(npy_file)
-            with open(args_file, 'r', encoding='utf-8') as f:
-                args = json.load(f)
-            with open(msg_file, 'r', encoding='utf-8') as f:
-                message = json.load(f)
-            status['args'] = str(args)
-            status['location'] = str(message['location'])
-            status['subsize'] = str(message['subsize'])
-            status['gap'] = message['gap']
-            status['ndiv'] = message['ndiv']
-            status['num_ball'] = message['num_ball']
-            status['fraction'] = '%.4f' % message['fraction']
-            status['npy_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(npy_modified_time))
-            status['npy_size'] = formatSize(os.path.getsize(npy_file))
-            status['download'] = "<a href='%s'>查看</a>" % ('../view_packing_submodels/'+str(model_id)+'/'+str(submodel_id))
-        except:
-            status['npy_time'] = 'None'
-            status['npy_size'] = 'None'    
-            status['download'] = 'None'
-            status['args'] = 'None'
-            status['location'] = 'None'
-            status['subsize'] = 'None'
-            status['gap'] = 'None'
-            status['ndiv'] = 'None'
-            status['num_ball'] = 'None'
-            status['fraction'] = 'None'
-            
+    submodel_id_list = sub_dirs_int(os.path.join(path, str(model_id)))
+    for submodel_id in submodel_id_list:
+        status = get_submodel_status(path, model_id, submodel_id)
         data_list.append(status)
-    
+        
     data = {
         "data": data_list
     }
-    
+
     return data
 
 
 if __name__ == '__main__':
-    path = '..\\files\\propellant\\packing\\models\\'
-    
-    dir_status_detail(path,'#')
+    path = '..\\files\\propellant\\packing\\submodels\\'
+    print(packing_submodels_detail(path,1))

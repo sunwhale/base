@@ -1,13 +1,13 @@
 {% extends 'layout.html' %}
 {% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
 
-{% block title %}球体填充建模{% endblock title %}
+{% block title %}生成{{ model_id }}号球体填充主模型的子模型{% endblock title %}
 
-{% block pageheader %}球体填充建模{% endblock pageheader %}
+{% block pageheader %}生成{{ model_id }}号球体填充主模型的子模型{% endblock pageheader %}
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
-<li class="breadcrumb-item active">球体填充建模</li>
+<li class="breadcrumb-item active">生成{{ model_id }}号球体填充主模型的子模型</li>
 {% endblock level %}
 
 {% block content %}
@@ -15,27 +15,22 @@
       <div class="container-fluid">
         <div class="row">
           <!-- left column -->
-          <div class="col-md-4">
+          <div class="col-md-12">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">根据模型参数提交作业</h3>
+                <h3 class="card-title">{{ model_id }}号主模型分区参数</h3>
               </div>
               <div class="card-body">
-                <form action="" method="post" class="form" role="form">
+                <form action="" method="post" class="form" role="form" onsubmit="return sumbit_sure()">
                   {{ form.csrf_token() }}
-                  {{ render_form_row([form.ncircle, form.gap]) }}
-                  {{ render_form_row([form.num_add, form.dt0]) }}
-                  {{ render_form_row([form.dt_interval, form.max_iter]) }}
-                  {{ render_form_row([form.rayleigh_para, form.num_ball]) }}
-                  {{ render_form_row([form.rad_min, form.rad_max]) }}
-                  {{ render_form_row([form.size]) }}
+                  {{ render_form_row([form.gap, form.ndiv]) }}
                   {{ render_field(form.submit, button_style='btn btn-primary') }}
                 </form>
               </div>
             </div>
           </div>
 
-          <div class="col-md-8">
+          <div class="col-md-12">
             <div class="card card-primary">
               <div class="card-header">
                 <h3 class="card-title">进程查看</h3>
@@ -117,7 +112,7 @@
 
       var td = document.createElement('td');
       if(threads[id]['status'] == 'Done'){
-        td.innerHTML = "<a href='../view_packing_models/" + threads[id]['class_id'] + "'> 查看模型 </a>"
+        td.innerHTML = "<a href='../view_packing_model/" + threads[id]['class_id'] + "'> 查看模型 </a>"
       }
       tr.appendChild(td)
     } 
@@ -130,9 +125,18 @@
     })
   }
 
+
+  function sumbit_sure(){
+    var gnl=confirm("如果已经存在子模型，该操作将会删除已有的子模型，重新生成它们，确定要继续提交？");
+    if (gnl==true){
+      return true;
+    }else{
+      return false;
+    }
+  }
+
   document.getElementById("propellant").className = "nav-item menu-open"
-  document.getElementById("create_packing_models").className = "nav-link active"
-  
+
 </script>
 {% endblock script %}
 
