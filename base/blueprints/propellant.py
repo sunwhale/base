@@ -245,9 +245,9 @@ def delete_packing_models(model_id):
     submodel_path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
     mesh_path = os.path.join(current_app.config['PROPELLANT_PACKING_MESH_PATH'], str(model_id))
     if os.path.exists(model_path):
-        # shutil.rmtree(model_path)
-        # shutil.rmtree(submodel_path)
-        # shutil.rmtree(mesh_path)
+        shutil.rmtree(model_path)
+        shutil.rmtree(submodel_path)
+        shutil.rmtree(mesh_path)
         flash('模型%s删除成功。' % model_id, 'success')
     else:
         flash('模型%s不存在。' % model_id, 'danger')

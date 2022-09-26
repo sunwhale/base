@@ -7,10 +7,11 @@ import os
 import click
 from flask import Flask
 
-from base.blueprints.main import main_bp
-from base.blueprints.propellant import propellant_bp
 from base.blueprints.auth import auth_bp
 from base.blueprints.admin import admin_bp
+from base.blueprints.doc import doc_bp
+from base.blueprints.main import main_bp
+from base.blueprints.propellant import propellant_bp
 from base.extensions import bootstrap, db, login_manager
 from base.models import Role
 from base.settings import config
@@ -44,6 +45,7 @@ def register_blueprints(app):
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
+    app.register_blueprint(doc_bp, url_prefix='/doc')
     app.register_blueprint(propellant_bp, url_prefix='/propellant')
 
 
