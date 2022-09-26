@@ -1,0 +1,64 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}{{ model_id }}号球体填充主模型{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='editormd/css/editormd.css') }}"/>
+{% endblock css %}
+
+{% block pageheader %}主模型信息{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('propellant.manage_packing_models') }}">球体填充模型管理</a></li>
+<li class="breadcrumb-item active">主模型信息</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-body">
+                <form method="post" class="form">
+                  <button type="submit" class="btn btn-default">保存</button>
+                  <div id="text-editormd">
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+{% endblock content %}
+
+{% block script %}
+
+<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+
+<script src="{{ url_for('static', filename='editormd/examples/js/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='editormd/editormd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='editormd/lib/marked.min.js') }}"></script>
+<script src="{{ url_for('static', filename='editormd/lib/prettify.min.js') }}"></script>
+<script type="text/javascript">
+  var textEditor;
+  $(function() {
+    $.get("{{ url_for('static', filename=filename) }}", function(md) {
+      textEditor = editormd("text-editormd", {
+        width: "100%",
+        height: "100%",
+        path: "{{ url_for('static', filename='editormd/lib/') }}",
+        markdown: md,
+        tex: true,
+        saveHTMLToTextarea: true
+      });
+    });
+  });
+</script>
+{% endblock script %}

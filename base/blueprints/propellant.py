@@ -16,7 +16,7 @@ from psic.packing_spheres_in_cube import create_model
 from psic.create_submodel import create_submodel
 from psic.create_mesh import create_mesh
 
-from base.forms.propellant import PackingForm, SubmodelForm, MeshForm, UploadForm
+from base.forms.propellant import PackingForm, SubmodelForm, MeshForm, UploadForm, PostForm
 from base.global_var import exporting_threads, create_thread_id
 
 from tools.dir_status import create_id, sub_dirs_int, get_model_status, get_submodel_status, get_mesh_status, packing_models_detail, packing_submodels_detail, formatSize
@@ -242,9 +242,13 @@ def delete_packing_models(model_id):
         flash('您的权限不能删除该模型！', 'danger')
         return redirect(url_for('.manage_packing_models'))
     model_path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'], str(model_id))
+    submodel_path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'], str(model_id))
+    mesh_path = os.path.join(current_app.config['PROPELLANT_PACKING_MESH_PATH'], str(model_id))
     if os.path.exists(model_path):
-        shutil.rmtree(model_path)
-        flash('模型%s删除成功。' % model_id, 'info')
+        # shutil.rmtree(model_path)
+        # shutil.rmtree(submodel_path)
+        # shutil.rmtree(mesh_path)
+        flash('模型%s删除成功。' % model_id, 'success')
     else:
         flash('模型%s不存在。' % model_id, 'danger')
     return redirect(url_for('.manage_packing_models'))
@@ -270,3 +274,29 @@ def thread_clear():
         if exporting_threads[thread_id]['status'] == 'Done':
             del exporting_threads[thread_id]
     return jsonify(exporting_threads)
+
+
+@propellant_bp.route('/status')
+@login_required
+def status():
+    return str(threading.active_count()) +  str([t.current_thread() for t in threading.enumerate()])
+
+
+@propellant_bp.route('/editormd', methods=['GET', 'POST'])
+@login_required
+def editormd():
+    filename = 'abaqus_on_ubuntu.md'
+    if request.method == 'POST':
+        data = request.form.to_dict()
+        content = data['text-editormd-markdown-doc'].replace('\n','')
+
+        with open(os.path.join(current_app.config['STATIC_PATH'], filename), 'w', encoding='utf-8') as f:
+            f.write(content)
+        return render_template('propellant/editormd.html', filename=filename)
+    return render_template('propellant/editormd.html', filename=filename)
+
+
+@propellant_bp.route('/previewmd')
+@login_required
+def previewmd():
+    return render_template('propellant/previewmd.html')

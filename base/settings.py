@@ -24,6 +24,7 @@ class Operations:
 class BaseConfig:
     ADMIN_EMAIL = os.getenv('BASE_ADMIN', 'sunjingyu@imech.ac.cn')
     FILE_PATH = os.path.join(basedir, 'files')
+    STATIC_PATH = os.path.join(basedir, 'base', 'static')
     UPLOAD_PATH = os.path.join(FILE_PATH, 'uploads')
     PROPELLANT_PATH = os.path.join(FILE_PATH, 'propellant')
     PROPELLANT_PACKING_MODEL_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'models')

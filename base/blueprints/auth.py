@@ -25,12 +25,12 @@ def login():
         user = User.query.filter_by(email=form.email.data.lower()).first()
         if user is not None and user.validate_password(form.password.data):
             if login_user(user, form.remember_me.data):
-                flash('Login success.', 'info')
+                flash('登录成功。', 'success')
                 return redirect_back()
             else:
-                flash('Your account is blocked.', 'warning')
+                flash('您的账号已被锁定。', 'warning')
                 return redirect(url_for('main.index'))
-        flash('Invalid email or password.', 'warning')
+        flash('无效的邮箱或密码。', 'warning')
     return render_template('auth/login.html', form=form)
 
 
@@ -51,7 +51,7 @@ def re_authenticate():
 @login_required
 def logout():
     logout_user()
-    flash('Logout success.', 'info')
+    flash('登出成功。', 'success')
     return redirect(url_for('main.index'))
 
 
@@ -69,6 +69,6 @@ def register():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        flash('Register success.', 'info')
+        flash('注册成功。', 'success')
         return redirect(url_for('.login'))
     return render_template('auth/register.html', form=form)

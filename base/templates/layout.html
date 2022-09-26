@@ -173,14 +173,14 @@
       </div><!-- /.container-fluid -->
     </div>
     <!-- /.content-header -->
-    <div class="container-fluid">
+    <!--<div class="container-fluid">
     {% for message in get_flashed_messages(with_categories=True) %}
       <div class="alert alert-{{ message[0] }}">
         <button type="button" class="close" data-dismiss="alert">&times;</button>
           {{ message[1] }}
       </div>
     {% endfor %}
-    </div>
+    </div>-->
     <!-- Main content -->
     {% block content %}
     {% endblock content %}
@@ -222,6 +222,15 @@
   <!-- AdminLTE App -->
   <script src="{{ url_for('static', filename='AdminLTE/dist/js/adminlte.min.js') }}"></script>
 {% endif %}
+
+{% for message in get_flashed_messages(with_categories=True) %}
+<script>
+  $(document).Toasts('create', {
+    class: 'bg-{{ message[0] }}',
+    title: '{{ message[1] }}'
+  })
+</script>
+{% endfor %}
 
 {% block script %}
 {% endblock script %}
