@@ -8,32 +8,22 @@
   <link type="image-icon" href="{{ url_for('static', filename='imgs/faveicon.png') }}" rel="icon"/>
   <!-- Google Font: Source Sans Pro -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-
   {% if env['service'] == 'server' %}
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- Theme style -->
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
   {% else %}
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
-    <!-- Theme style -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/dist/css/adminlte.min.css') }}">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/dist/css/adminlte.min.css') }}">
   {% endif %}
-
-  {% block css %}
-  {% endblock css %}
-
+  {% block css %}{% endblock css %}
   {% endblock head %}
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
-
-  <!-- Preloader -->
-  <!--<div class="preloader flex-column justify-content-center align-items-center">
-    <img class="animation__shake" src="{{ url_for('static', filename='AdminLTE/dist/img/AdminLTELogo.png') }}" alt="AdminLTELogo" height="60" width="60">
-  </div>-->
-
   <!-- Navbar -->
   <nav class="main-header navbar navbar-expand navbar-white navbar-light">
     <!-- Left navbar links -->
@@ -96,12 +86,10 @@
   <!-- Main Sidebar Container -->
   <aside class="main-sidebar sidebar-dark-primary elevation-4">
     <!-- Brand Logo -->
-
     <!-- Sidebar -->
     <div class="sidebar">
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-        
         <div class="info">
           {% if current_user.is_authenticated %}
           <a href="#" class="d-block">{{ current_user.name }}</a>
@@ -147,6 +135,31 @@
             </ul>
           </li>
           {% endblock nav_propellant %}
+          {% block nav_doc %}
+          <li class="nav-item" id="docs">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-copy"></i>
+              <p>
+                文章
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('doc.createmd') }}" class="nav-link" id="createmd">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>新建文章</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('doc.manage_docs') }}" class="nav-link" id="manage_docs">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>文章管理</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endblock nav_doc %}
         </ul>
       </nav>
       <!-- /.sidebar-menu -->
@@ -197,23 +210,23 @@
 <!-- ./wrapper -->
 
 {% if env['service'] == 'server' %}
-  <!-- jQuery -->
-  <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <!-- jQuery UI 1.11.4 -->
-  <script src="https://cdn.bootcdn.net/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
-  <!-- Bootstrap 4 -->
-  <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.1/js/bootstrap.bundle.min.js"></script>
-  <!-- AdminLTE App -->
-  <script src="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+<!-- jQuery -->
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<!-- jQuery UI 1.11.4 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.1/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE App -->
+<script src="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
 {% else %}
-  <!-- jQuery -->
-  <script src="{{ url_for('static', filename='AdminLTE/plugins/jquery/jquery.min.js') }}"></script>
-  <!-- jQuery UI 1.11.4 -->
-  <script src="{{ url_for('static', filename='AdminLTE/plugins/jquery-ui/jquery-ui.min.js') }}"></script>
-  <!-- Bootstrap 4 -->
-  <script src="{{ url_for('static', filename='AdminLTE/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
-  <!-- AdminLTE App -->
-  <script src="{{ url_for('static', filename='AdminLTE/dist/js/adminlte.min.js') }}"></script>
+<!-- jQuery -->
+<script src="{{ url_for('static', filename='AdminLTE/plugins/jquery/jquery.min.js') }}"></script>
+<!-- jQuery UI 1.11.4 -->
+<script src="{{ url_for('static', filename='AdminLTE/plugins/jquery-ui/jquery-ui.min.js') }}"></script>
+<!-- Bootstrap 4 -->
+<script src="{{ url_for('static', filename='AdminLTE/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+<!-- AdminLTE App -->
+<script src="{{ url_for('static', filename='AdminLTE/dist/js/adminlte.min.js') }}"></script>
 {% endif %}
 
 {% for message in get_flashed_messages(with_categories=True) %}

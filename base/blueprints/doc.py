@@ -9,7 +9,7 @@ import json
 
 from flask import render_template, flash, redirect, url_for, current_app, jsonify, request, Blueprint, send_from_directory
 from flask_login import login_required, current_user
-from tools.dir_status import create_id
+from tools.dir_status import create_id, docs_detail
 
 
 doc_bp = Blueprint('doc', __name__)
@@ -31,15 +31,25 @@ def createmd():
 @login_required
 def editmd(doc_id):
     doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
-    filename = os.path.join(doc_path, 'article.md')
+    md_file = os.path.join(doc_path, 'article.md')
+    msg_file = os.path.join(doc_path, 'article.msg')
+    try:
+        with open(msg_file, 'r', encoding='utf-8') as f:
+            message = json.load(f)
+    except:
+        message = {}
     if request.method == 'POST':
         data = request.form.to_dict()
+        message = {}
+        message['title'] = data['title']
         content = data['editormd-markdown-doc'].replace('\n', '')
-        with open(filename, 'w', encoding='utf-8') as f:
+        with open(md_file, 'w', encoding='utf-8') as f:
             f.write(content)
-        return render_template('doc/editmd.html', doc_id=doc_id)
-    if os.path.isdir(doc_path):
-        return render_template('doc/editmd.html', doc_id=doc_id)
+        with open(msg_file, 'w', encoding='utf-8') as f:
+            json.dump(message, f, ensure_ascii=False)
+        return render_template('doc/editmd.html', doc_id=doc_id, message=message)
+    if os.path.exists(md_file):
+        return render_template('doc/editmd.html', doc_id=doc_id, message=message)
     else:
         return '页面不存在！'
 
@@ -47,7 +57,14 @@ def editmd(doc_id):
 @doc_bp.route('/viewmd/<int:doc_id>')
 @login_required
 def viewmd(doc_id):
-    return render_template('doc/viewmd.html', doc_id=doc_id)
+    doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
+    msg_file = os.path.join(doc_path, 'article.msg')
+    try:
+        with open(msg_file, 'r', encoding='utf-8') as f:
+            message = json.load(f)
+    except:
+        message = {}
+    return render_template('doc/viewmd.html', doc_id=doc_id, message=message)
 
 
 @doc_bp.route('/getmd/<int:doc_id>')
@@ -79,3 +96,31 @@ def upload(doc_id):
 @doc_bp.route('/<int:doc_id>/image/<filename>')
 def image(doc_id, filename):
     return send_from_directory(os.path.join(current_app.config['DOC_PATH'], str(doc_id)), filename)
+
+
+@doc_bp.route('/docs_status/')
+@login_required
+def docs_status():
+    data = docs_detail(current_app.config['DOC_PATH'])
+    return jsonify(data)
+
+
+@doc_bp.route('/manage_docs/')
+@login_required
+def manage_docs():
+    return render_template('doc/manage_docs.html')
+
+
+@doc_bp.route('/deletemd/<int:doc_id>')
+@login_required
+def deletemd(doc_id):
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该文章！', 'danger')
+        return redirect(url_for('.manage_docs'))
+    doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
+    if os.path.exists(doc_path):
+        shutil.rmtree(doc_path)
+        flash('文章%s删除成功。' % doc_id, 'success')
+    else:
+        flash('文章%s不存在！' % doc_id, 'warning')
+    return redirect(url_for('.manage_docs'))

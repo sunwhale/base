@@ -155,7 +155,27 @@ def get_mesh_status(path, model_id, submodel_id):
         status['inp_size'] = formatSize(os.path.getsize(inp_file))
     return status        
         
-    
+
+def get_doc_status(path, doc_id):
+    md_file = os.path.join(path, str(doc_id), 'article.md')
+    msg_file = os.path.join(path, str(doc_id), 'article.msg')
+    status = {}
+    if os.path.exists(md_file):
+        md_modified_time = os.path.getmtime(md_file)
+        status['doc_id'] = doc_id
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            status['title'] = message['title']
+            status['md_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(md_modified_time))
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../viewmd/'+str(doc_id), '../editmd/'+str(doc_id), '../deletemd/'+str(doc_id))
+        except FileNotFoundError:
+            for key in ['title', 'md_time']:
+                status[key] = 'None'
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../viewmd/'+str(doc_id), '../editmd/'+str(doc_id), '../deletemd/'+str(doc_id))
+    return status 
+
+
 def packing_models_detail(path):
     data_list = []
     model_id_list = sub_dirs_int(path)
@@ -175,6 +195,20 @@ def packing_submodels_detail(path, model_id):
     submodel_id_list = sub_dirs_int(os.path.join(path, str(model_id)))
     for submodel_id in submodel_id_list:
         status = get_submodel_status(path, model_id, submodel_id)
+        data_list.append(status)
+        
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def docs_detail(path):
+    data_list = []
+    doc_id_list = sub_dirs_int(path)
+    for doc_id in doc_id_list:
+        status = get_doc_status(path, doc_id)
         data_list.append(status)
         
     data = {

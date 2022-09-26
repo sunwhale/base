@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 {% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
 
-{% block title %}{{ doc_id }}号文章{% endblock title %}
+{% block title %}编辑-{{ message['title'] }}{% endblock title %}
 
 {% block css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
@@ -12,8 +12,8 @@
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
-<li class="breadcrumb-item"><a href="#">文章</a></li>
-<li class="breadcrumb-item active">{{ doc_id }}号文章</li>
+<li class="breadcrumb-item"><a href="{{ url_for('.manage_docs') }}">文章管理</a></li>
+<li class="breadcrumb-item active">{{ message['title'] }}</li>
 {% endblock level %}
 
 {% block content %}
@@ -24,8 +24,15 @@
             <div class="card card-primary">
               <div class="card-body">
                 <form method="post" class="form">
+                  {% if message['title'] %}
+                  <input type="text" class="form-control" id="title" name="title" required value="{{ message['title'] }}"/>
+                  {% else %}
+                  <input type="text" class="form-control" id="title" name="title" required value="请输入标题..."/>
+                  {% endif %}
                   <div id="editormd"></div>                  
                   <button type="submit" class="btn btn-default">保存</button>
+                  <a class='btn btn-default' href="{{ url_for('.manage_docs') }}">返回</a>
+                  <a class='btn btn-default' href="{{ url_for('.viewmd', doc_id=doc_id) }}">查看文章</a>
                 </form>
               </div>
             </div>
@@ -37,16 +44,22 @@
 {% endblock content %}
 
 {% block script %}
+{% if env['service'] == 'server' %}
+<script src="https://cdn.bootcdn.net/ajax/libs/editor-md/1.5.0/editormd.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/marked/0.3.3/marked.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/prettify/r298/prettify.min.js"></script>
+{% else %}
 <script src="{{ url_for('static', filename='editormd/editormd.min.js') }}"></script>
 <script src="{{ url_for('static', filename='editormd/lib/marked.min.js') }}"></script>
 <script src="{{ url_for('static', filename='editormd/lib/prettify.min.js') }}"></script>
+{% endif %}
 <script type="text/javascript">
   var textEditor;
   $(function() {
     $.get("{{ url_for('.getmd', doc_id=doc_id) }}", function(md) {
       textEditor = editormd("editormd", {
         width: "100%",
-        height: 600,
+        height: 800,
         path: "{{ url_for('static', filename='editormd/lib/') }}",
         markdown: md,
         tex: true,
@@ -57,5 +70,8 @@
       });
     });
   });
+
+  document.getElementById("docs").className = "nav-item menu-open"
+
 </script>
 {% endblock script %}
