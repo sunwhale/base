@@ -9,7 +9,7 @@ import threading
 import time
 import json
 
-from flask import render_template, flash, redirect, url_for, current_app, jsonify, request, Blueprint, send_from_directory
+from flask import abort, render_template, flash, redirect, url_for, current_app, jsonify, request, Blueprint, send_from_directory
 from flask_login import login_required, current_user
 
 from psic.packing_spheres_in_cube import create_model
@@ -221,18 +221,24 @@ def get_packing_mesh(filename):
 @login_required
 def view_packing_model(model_id):
     path = os.path.join(current_app.config['PROPELLANT_PACKING_MODEL_PATH'])
-    status = get_model_status(path, model_id)
-    return render_template('propellant/view_packing_model.html', model_id=model_id, status=status)
+    if os.path.exists(os.path.join(path, str(model_id))):
+        status = get_model_status(path, model_id)
+        return render_template('propellant/view_packing_model.html', model_id=model_id, status=status)
+    else:
+        abort(404)
 
 
 @propellant_bp.route('/view_packing_submodel/<int:model_id>/<int:submodel_id>')
 @login_required
 def view_packing_submodel(model_id, submodel_id):
     path = os.path.join(current_app.config['PROPELLANT_PACKING_SUBMODEL_PATH'])
-    status = get_submodel_status(path, model_id, submodel_id)
-    path = os.path.join(current_app.config['PROPELLANT_PACKING_MESH_PATH'])
-    status_mesh = get_mesh_status(path, model_id, submodel_id)
-    return render_template('propellant/view_packing_submodel.html', model_id=model_id, submodel_id=submodel_id, status=status, status_mesh=status_mesh)
+    if os.path.exists(os.path.join(path, str(model_id), str(submodel_id))):
+        status = get_submodel_status(path, model_id, submodel_id)
+        path = os.path.join(current_app.config['PROPELLANT_PACKING_MESH_PATH'])
+        status_mesh = get_mesh_status(path, model_id, submodel_id)
+        return render_template('propellant/view_packing_submodel.html', model_id=model_id, submodel_id=submodel_id, status=status, status_mesh=status_mesh)
+    else:
+        abort(404)
 
 
 @propellant_bp.route('/delete_packing_models/<int:model_id>')
@@ -246,8 +252,10 @@ def delete_packing_models(model_id):
     mesh_path = os.path.join(current_app.config['PROPELLANT_PACKING_MESH_PATH'], str(model_id))
     if os.path.exists(model_path):
         shutil.rmtree(model_path)
-        shutil.rmtree(submodel_path)
-        shutil.rmtree(mesh_path)
+        if os.path.exists(submodel_path):
+            shutil.rmtree(submodel_path)
+        if os.path.exists(submodel_path):
+            shutil.rmtree(mesh_path)
         flash('模型%s删除成功。' % model_id, 'success')
     else:
         flash('模型%s不存在。' % model_id, 'danger')

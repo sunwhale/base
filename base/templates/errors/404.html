@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+
+{% block title %}404 Error{% endblock %}
+
+{% block content %}
+    <section class="content">
+      <div class="error-page">
+        <h2 class="headline text-warning"> 404</h2>
+
+        <div class="error-content">
+          <h3><i class="fas fa-exclamation-triangle text-warning"></i> 该页面不存在！</h3>
+
+          <p>
+            我们没有找到您要访问的页面。
+            您可以尝试返回上级菜单或<a href="/">点击这里返回主页。</a>
+          </p>
+
+        </div>
+        <!-- /.error-content -->
+      </div>
+      <!-- /.error-page -->
+    </section>
+{% endblock %}

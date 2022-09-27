@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+
+{% block title %}500 Error{% endblock %}
+
+{% block content %}
+    <section class="content">
+      <div class="error-page">
+        <h2 class="headline text-warning"> 500</h2>
+
+        <div class="error-content">
+          <h3><i class="fas fa-exclamation-triangle text-warning"></i> 内部服务错误！</h3>
+
+          <p>
+            您可以尝试返回上级菜单或<a href="/">点击这里返回主页。</a>
+          </p>
+
+        </div>
+        <!-- /.error-content -->
+      </div>
+      <!-- /.error-page -->
+    </section>
+{% endblock %}

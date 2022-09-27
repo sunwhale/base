@@ -7,7 +7,7 @@ import shutil
 import time
 import json
 
-from flask import render_template, flash, redirect, url_for, current_app, jsonify, request, Blueprint, send_from_directory
+from flask import abort, render_template, flash, redirect, url_for, current_app, jsonify, request, Blueprint, send_from_directory
 from flask_login import login_required, current_user
 from tools.dir_status import create_id, docs_detail
 
@@ -23,7 +23,7 @@ def createmd():
     if not os.path.isdir(doc_path):
         os.makedirs(doc_path)
     with open(os.path.join(doc_path, 'article.md'), 'w', encoding='utf-8') as f:
-        f.write('')
+        f.write(' ')
     return redirect(url_for('.editmd', doc_id=doc_id))
 
 
@@ -51,11 +51,10 @@ def editmd(doc_id):
     if os.path.exists(md_file):
         return render_template('doc/editmd.html', doc_id=doc_id, message=message)
     else:
-        return '页面不存在！'
+        abort(404)
 
 
 @doc_bp.route('/viewmd/<int:doc_id>')
-@login_required
 def viewmd(doc_id):
     doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
     msg_file = os.path.join(doc_path, 'article.msg')
@@ -68,7 +67,6 @@ def viewmd(doc_id):
 
 
 @doc_bp.route('/getmd/<int:doc_id>')
-@login_required
 def getmd(doc_id):
     return send_from_directory(os.path.join(current_app.config['DOC_PATH'], str(doc_id)), 'article.md')
 

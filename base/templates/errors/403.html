@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+
+{% block title %}403 Error{% endblock %}
+
+{% block content %}
+    <section class="content">
+      <div class="error-page">
+        <h2 class="headline text-warning"> 403</h2>
+
+        <div class="error-content">
+          <h3><i class="fas fa-exclamation-triangle text-warning"></i> 访问拒绝！</h3>
+
+          <p>
+            您的权限不足。
+            您可以尝试<a href="/auth/login">登录</a>或<a href="/">点击这里返回主页。</a>
+          </p>
+
+        </div>
+        <!-- /.error-content -->
+      </div>
+      <!-- /.error-page -->
+    </section>
+{% endblock %}

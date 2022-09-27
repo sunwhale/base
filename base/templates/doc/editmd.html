@@ -25,9 +25,9 @@
               <div class="card-body">
                 <form method="post" class="form">
                   {% if message['title'] %}
-                  <input type="text" class="form-control" id="title" name="title" required value="{{ message['title'] }}"/>
+                  <input type="text" class="form-control" id="title" name="title" required placeholder="标题" value="{{ message['title'] }}"/>
                   {% else %}
-                  <input type="text" class="form-control" id="title" name="title" required value="请输入标题..."/>
+                  <input type="text" class="form-control" id="title" name="title" required placeholder="标题"/>
                   {% endif %}
                   <div id="editormd"></div>                  
                   <button type="submit" class="btn btn-default">保存</button>
@@ -59,7 +59,7 @@
     $.get("{{ url_for('.getmd', doc_id=doc_id) }}", function(md) {
       textEditor = editormd("editormd", {
         width: "100%",
-        height: 800,
+        height: 650,
         path: "{{ url_for('static', filename='editormd/lib/') }}",
         markdown: md,
         tex: true,
