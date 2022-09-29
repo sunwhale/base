@@ -1,0 +1,63 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form %}
+
+{% block title %}固体力学知识分享{% endblock title %}
+
+{% block css %}
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css' />
+{% endblock css %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">文章列表</h3>
+              </div>
+              <div class="card-body">
+                <div id="luckysheet" style="width:100%;height:800px;left:0px;top:0px;"></div>
+                <button class="btn btn-default" onclick="uploadExcelData()">保存</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock content %}
+
+{% block script %}
+{% if env['service'] == 'server' %}
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
+{% else %}
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
+{% endif %}
+<script type="text/javascript">
+  $(function () {
+    //配置项
+    var options = {
+      container: "luckysheet",
+      title: "参数列表",
+      lang: "zh",
+      showinfobar: false,
+      loadUrl: "{{ url_for('main.readdata') }}",
+    }
+    luckysheet.create(options)
+  })
+
+  function uploadExcelData() {
+    $.post("{{ url_for('main.data') }}", {
+        exceldata: JSON.stringify(luckysheet.getAllSheets()),
+    }, function (data) {
+        alert("保存成功！")
+    });
+  }
+
+</script>
+{% endblock script %}
