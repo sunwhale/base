@@ -12,18 +12,15 @@ from base.models import User
 
 
 class EditProfileForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired(), Length(1, 30)])
-    username = StringField('Username', validators=[DataRequired(), Length(1, 20),
+    name = StringField('姓名/Name', validators=[DataRequired(), Length(1, 30)])
+    username = StringField('用户名/Username', validators=[DataRequired(), Length(1, 20),
                                                    Regexp('^[a-zA-Z0-9]*$',
                                                           message='The username should contain only a-z, A-Z and 0-9.')])
-    website = StringField('Website', validators=[Optional(), Length(0, 255)])
-    location = StringField('City', validators=[Optional(), Length(0, 50)])
-    bio = TextAreaField('Bio', validators=[Optional(), Length(0, 120)])
-    submit = SubmitField()
+    submit = SubmitField('提交/Submit')
 
     def validate_username(self, field):
         if field.data != current_user.username and User.query.filter_by(username=field.data).first():
-            raise ValidationError('The username is already in use.')
+            raise ValidationError('该用户名已经存在。/The username is already in use.')
 
 
 class ChangeEmailForm(FlaskForm):
@@ -32,7 +29,7 @@ class ChangeEmailForm(FlaskForm):
 
     def validate_email(self, field):
         if User.query.filter_by(email=field.data.lower()).first():
-            raise ValidationError('The email is already in use.')
+            raise ValidationError('该邮箱已经存在。/The email is already in use.')
 
 
 class ChangePasswordForm(FlaskForm):

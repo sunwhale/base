@@ -14,7 +14,7 @@ from base.blueprints.doc import doc_bp
 from base.blueprints.sheet import sheet_bp
 from base.blueprints.main import main_bp
 from base.blueprints.propellant import propellant_bp
-from base.extensions import bootstrap, db, login_manager
+from base.extensions import bootstrap, db, login_manager, moment, csrf
 from base.models import Role
 from base.settings import config
 
@@ -39,8 +39,10 @@ def create_app(config_name=None):
 
 def register_extensions(app):
     bootstrap.init_app(app)
+    csrf.init_app(app)
     db.init_app(app)
     login_manager.init_app(app)
+    moment.init_app(app)
 
 
 def register_blueprints(app):

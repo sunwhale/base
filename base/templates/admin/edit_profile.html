@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}编辑用户信息{% endblock title %}
+
+{% block pageheader %}编辑用户信息{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item active">编辑用户信息</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">用户信息</h3>
+              </div>
+              <div class="card-body">
+                {{ render_form(form) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock content %}

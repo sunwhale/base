@@ -1,5 +1,4 @@
-% extends 'layout.html' %}
-{% from 'bootstrap4/form.html' import render_form %}
+{% extends 'layout.html' %}
 {% from 'bootstrap4/pagination.html' import render_pagination %}
 
 {% block title %}用户管理{% endblock title %}
@@ -12,157 +11,111 @@
 {% endblock level %}
 
 {% block content %}
-    <div class="wrapper wrapper-content animated fadeInRight">
+    <section class="content">
+      <div class="container-fluid">
         <div class="row">
-            <div class="col-lg-12">
-            <div class="ibox float-e-margins">
-                <div class="ibox-title">
-                    <h5>用户管理</h5>
-                    <div class="ibox-tools">
-                        <a class="collapse-link">
-                            <i class="fa fa-chevron-up"></i>
-                        </a>
-                        <a class="close-link">
-                            <i class="fa fa-times"></i>
-                        </a>
-                    </div>
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">用户管理</h3>
+              </div>
+              <div class="card-body">
+                <div>
+                  用户总数：{{ pagination.total }}
+                  <p></p>
+                  <ul class="nav nav-pills">
+                    <li class="nav-item">
+                      <a class="nav-link disabled" href="#">Filter </a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link {% if request.args.get('filter', 'all') == 'all' %}active{% endif %}" href="{{ url_for('admin.manage_user', filter='all') }}">All</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link {% if request.args.get('filter') == 'locked' %}active{% endif %}" href="{{ url_for('admin.manage_user', filter='locked') }}">Locked</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link {% if request.args.get('filter') == 'blocked' %}active{% endif %}" href="{{ url_for('admin.manage_user', filter='blocked') }}">Blocked</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link {% if request.args.get('filter') == 'administrator' %}active{% endif %}" href="{{ url_for('admin.manage_user', filter='administrator') }}">Administrator</a>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link {% if request.args.get('filter') == 'moderator' %}active{% endif %}" href="{{ url_for('admin.manage_user', filter='moderator') }}">Moderator</a>
+                    </li>
+                  </ul>
                 </div>
-                <div class="ibox-content">
-{#                    <div>#}
-{#                        <h5>用户总数：#}
-{#                            <small class="text-muted">{{ pagination.total }}</small>#}
-{#                        </h5>#}
-{#                        <ul class="nav nav-pills">#}
-{#                            <li class="nav-item">#}
-{#                                <a class="nav-link disabled" href="#">Filter </a>#}
-{#                            </li>#}
-{#                            <li class="nav-item">#}
-{#                                <a class="nav-link {% if request.args.get('filter', 'all') == 'all' %}active{% endif %}"#}
-{#                                   href="{{ url_for('admin.manage_user', filter='all') }}">All</a>#}
-{#                            </li>#}
-{#                            <li class="nav-item">#}
-{#                                <a class="nav-link {% if request.args.get('filter') == 'locked' %}active{% endif %}"#}
-{#                                   href="{{ url_for('admin.manage_user', filter='locked') }}">Locked</a>#}
-{#                            </li>#}
-{#                            <li class="nav-item">#}
-{#                                <a class="nav-link {% if request.args.get('filter') == 'blocked' %}active{% endif %}"#}
-{#                                   href="{{ url_for('admin.manage_user', filter='blocked') }}">Blocked</a>#}
-{#                            </li>#}
-{#                            <li class="nav-item">#}
-{#                                <a class="nav-link {% if request.args.get('filter') == 'administrator' %}active{% endif %}"#}
-{#                                   href="{{ url_for('admin.manage_user', filter='administrator') }}">Administrator</a>#}
-{#                            </li>#}
-{#                            <li class="nav-item">#}
-{#                                <a class="nav-link {% if request.args.get('filter') == 'moderator' %}active{% endif %}"#}
-{#                                   href="{{ url_for('admin.manage_user', filter='moderator') }}">Moderator</a>#}
-{#                            </li>#}
-{#                        </ul>#}
-{#                    </div>#}
-                    {% if users %}
-                        <table class="table table-striped">
-                            <thead>
-                            <tr>
-                                <th>姓名/用户名</th>
-                                <th>权限</th>
-{#                                <th>Bio</th>#}
-{#                                <th>City</th>#}
-                                <th>注册日期</th>
-{#                                <th>Photos</th>#}
-                                <th>操作</th>
-                            </tr>
-                            </thead>
-                            {% for user in users %}
-                                <tr>
-                                    <td>{{ user.name }}<br>{{ user.username }}</td>
-                                    <td>{{ user.role.name }}</td>
-{#                                    <td>{{ user.bio }}</td>#}
-{#                                    <td>{{ user.location }}</td>#}
-                                    <td>{{ moment(user.member_since).format('LL') }}</td>
-{#                                    <td>#}
-{#                                        <a href="{{ url_for('user.index', username=user.username) }}">{{ user.photos|length }}</a>#}
-{#                                    </td>#}
-                                    <td>
-                                        {% if user.locked %}
-                                            <form class="inline" action="{{ url_for('admin.unlock_user', user_id=user.id) }}"
-                                                  method="post">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="submit" onclick="return confirm('是否确定?');"
-                                                       class="btn btn-secondary btn-sm" value="解锁">
-                                            </form>
-                                        {% else %}
-                                            <form class="inline" action="{{ url_for('admin.lock_user', user_id=user.id) }}"
-                                                  method="post">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="submit" onclick="return confirm('是否确定?');"
-                                                       class="btn btn-warning btn-sm" value="锁定">
-                                            </form>
-                                        {% endif %}
-                                        {% if user.active %}
-                                            <form class="inline" action="{{ url_for('admin.block_user', user_id=user.id) }}"
-                                                  method="post">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="submit" onclick="return confirm('是否确定?');"
-                                                       class="btn btn-warning btn-sm" value="冻结">
-                                            </form>
-                                        {% else %}
-                                            <form class="inline" action="{{ url_for('admin.unblock_user', user_id=user.id) }}"
-                                                  method="post">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="submit" onclick="return confirm('是否确定?');"
-                                                       class="btn btn-secondary btn-sm" value="解冻">
-                                            </form>
-                                        {% endif %}
-                                        <a class="btn btn-light btn-sm" href="mailto:{{ user.email }}">Email</a>
-                                        {% if current_user.is_admin %}
-                                            <a class="btn btn-warning btn-sm"
-                                               href="{{ url_for('admin.edit_profile_admin', user_id=user.id) }}">编辑</a>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </table>
-                        <div class="page-footer">{{ render_pagination(pagination) }}</div>
-                    {% else %}
-                        <div class="tip"><h5>No users.</h5></div>
-                    {% endif %}
-                </div>
+                {% if users %}
+                  <table class="table table-bordered">
+                    <thead>
+                    <tr>
+                      <th width="10%">用户ID</th>
+                      <th width="15%">姓名</th>
+                      <th width="15%">用户名</th>
+                      <th width="15%">邮箱</th>
+                      <th width="15%">权限</th>
+                      <th width="15%">注册日期</th>
+                      <th width="5%">锁定</th>
+                      <th width="5%">冻结</th>
+                      <th width="5%">编辑</th>
+                    </tr>
+                    </thead>
+                    {% for user in users %}
+                      <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.role.name }}</td>
+                        <td>{{ moment(user.member_since).format('LL') }}</td>
+                        <td>
+                          {% if user.locked %}
+                          <form class="form-inline" action="{{ url_for('admin.unlock_user', user_id=user.id) }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="submit" onclick="return confirm('是否确定?');" class="btn btn-secondary btn-sm" value="解锁">
+                          </form>
+                          {% else %}
+                          <form class="form-inline" action="{{ url_for('admin.lock_user', user_id=user.id) }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="submit" onclick="return confirm('是否确定?');" class="btn btn-warning btn-sm" value="锁定">
+                          </form>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if user.active %}
+                          <form class="form-inline" action="{{ url_for('admin.block_user', user_id=user.id) }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="submit" onclick="return confirm('是否确定?');" class="btn btn-warning btn-sm" value="冻结">
+                          </form>
+                          {% else %}
+                          <form class="form-inline" action="{{ url_for('admin.unblock_user', user_id=user.id) }}" method="post">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="submit" onclick="return confirm('是否确定?');" class="btn btn-secondary btn-sm" value="解冻">
+                          </form>
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if current_user.is_admin %}
+                          <a class="btn btn-warning btn-sm" href="{{ url_for('admin.edit_profile_admin', user_id=user.id) }}">编辑</a>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </table>
+                  <div class="page-footer">{{ render_pagination(pagination) }}</div>
+                {% else %}
+                  <div class="tip"><h5>No users.</h5></div>
+                {% endif %}
+              </div>
             </div>
+          </div>
         </div>
-        </div>
-    </div>
+      </div>
+    </section>
 {% endblock content %}
 
-{% block nav_user %}
-                    <li id="nav_user" class="active">
-{% endblock nav_user %}
-
 {% block script %}
-    <!-- Mainly scripts -->
-    <script src="{{ url_for('static', filename='inspinia/js/jquery-3.1.1.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='inspinia/js/bootstrap.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='inspinia/js/plugins/metisMenu/jquery.metisMenu.js') }}"></script>
-    <script src="{{ url_for('static', filename='inspinia/js/plugins/slimscroll/jquery.slimscroll.min.js') }}"></script>
-
-    <script src="{{ url_for('static', filename='inspinia/js/plugins/dataTables/datatables.min.js') }}"></script>
-
-    <!-- Custom and plugin javascript -->
-    <script src="{{ url_for('static', filename='inspinia/js/inspinia.js') }}"></script>
-    <script src="{{ url_for('static', filename='inspinia/js/plugins/pace/pace.min.js') }}"></script>
-
-    <script src="{{ url_for('static', filename='js/popper.min.js') }}"></script>
-    {{ moment.include_moment(local_js=url_for('static', filename='js/moment-with-locales.min.js')) }}
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <script type="text/javascript">
-        var csrf_token = "{{ csrf_token() }}";
-        {% if current_user.is_authenticated %}
-            var is_authenticated = true;
-        {% else %}
-            var is_authenticated = false;
-        {% endif %}
-    </script>
-        <script>
-        $(document).ready(function() {
-            $("#manage_user").addClass("active");
-        } );
-    </script>
+{{ moment.include_moment(local_js=url_for('static', filename='AdminLTE/plugins/moment/moment-with-locales.min.js')) }}
+<script type="text/javascript">
+  var csrf_token = "{{ csrf_token() }}";
+</script>
 {% endblock script %}

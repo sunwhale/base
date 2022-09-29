@@ -37,21 +37,15 @@ def edit_profile_admin(user_id):
         if role.name == 'Locked':
             user.lock()
         user.role = role
-        user.bio = form.bio.data
-        user.website = form.website.data
         user.confirmed = form.confirmed.data
         user.active = form.active.data
-        user.location = form.location.data
         user.username = form.username.data
         user.email = form.email.data
         db.session.commit()
-        flash('Profile updated.', 'success')
+        flash('用户信息更新。/Profile updated.', 'success')
         return redirect_back()
     form.name.data = user.name
     form.role.data = user.role_id
-    form.bio.data = user.bio
-    form.website.data = user.website
-    form.location.data = user.location
     form.username.data = user.username
     form.email.data = user.email
     form.confirmed.data = user.confirmed
@@ -65,10 +59,10 @@ def edit_profile_admin(user_id):
 def block_user(user_id):
     user = User.query.get_or_404(user_id)
     if user.role.name in ['Administrator', 'Moderator']:
-        flash('Permission denied.', 'warning')
+        flash('权限不足。/Permission denied.', 'warning')
     else:
         user.block()
-        flash('Account blocked.', 'info')
+        flash('账号冻结。/Account blocked.', 'info')
     return redirect_back()
 
 
@@ -78,7 +72,7 @@ def block_user(user_id):
 def unblock_user(user_id):
     user = User.query.get_or_404(user_id)
     user.unblock()
-    flash('Block canceled.', 'info')
+    flash('账号解冻。Block canceled.', 'info')
     return redirect_back()
 
 
@@ -88,10 +82,10 @@ def unblock_user(user_id):
 def lock_user(user_id):
     user = User.query.get_or_404(user_id)
     if user.role.name in ['Administrator', 'Moderator']:
-        flash('Permission denied.', 'warning')
+        flash('权限不足。/Permission denied.', 'warning')
     else:
         user.lock()
-        flash('Account locked.', 'info')
+        flash('账号锁定。/Account locked.', 'info')
     return redirect_back()
 
 
@@ -101,18 +95,7 @@ def lock_user(user_id):
 def unlock_user(user_id):
     user = User.query.get_or_404(user_id)
     user.unlock()
-    flash('Lock canceled.', 'info')
-    return redirect_back()
-
-
-@admin_bp.route('/delete/tag/<int:tag_id>', methods=['GET', 'POST'])
-@login_required
-@permission_required('MODERATE')
-def delete_tag(tag_id):
-    tag = Tag.query.get_or_404(tag_id)
-    db.session.delete(tag)
-    db.session.commit()
-    flash('Tag deleted.', 'info')
+    flash('账号解锁。/Lock canceled.', 'info')
     return redirect_back()
 
 
@@ -122,7 +105,7 @@ def delete_tag(tag_id):
 def manage_user():
     filter_rule = request.args.get('filter', 'all')  # 'all', 'locked', 'blocked', 'administrator', 'moderator'
     page = request.args.get('page', 1, type=int)
-    per_page = current_app.config['MANAGE_USER_PER_PAGE']
+    per_page = 10
     administrator = Role.query.filter_by(name='Administrator').first()
     moderator = Role.query.filter_by(name='Moderator').first()
 
@@ -140,48 +123,3 @@ def manage_user():
     pagination = filtered_users.order_by(User.member_since.desc()).paginate(page, per_page)
     users = pagination.items
     return render_template('admin/manage_user.html', pagination=pagination, users=users)
-
-
-@admin_bp.route('/manage/photo', defaults={'order': 'by_flag'})
-@admin_bp.route('/manage/photo/<order>')
-@login_required
-@permission_required('MODERATE')
-def manage_photo(order):
-    page = request.args.get('page', 1, type=int)
-    per_page = current_app.config['ALBUMY_MANAGE_PHOTO_PER_PAGE']
-    order_rule = 'flag'
-    if order == 'by_time':
-        pagination = Photo.query.order_by(Photo.timestamp.desc()).paginate(page, per_page)
-        order_rule = 'time'
-    else:
-        pagination = Photo.query.order_by(Photo.flag.desc()).paginate(page, per_page)
-    photos = pagination.items
-    return render_template('admin/manage_photo.html', pagination=pagination, photos=photos, order_rule=order_rule)
-
-
-@admin_bp.route('/manage/tag')
-@login_required
-@permission_required('MODERATE')
-def manage_tag():
-    page = request.args.get('page', 1, type=int)
-    per_page = current_app.config['ALBUMY_MANAGE_TAG_PER_PAGE']
-    pagination = Tag.query.order_by(Tag.id.desc()).paginate(page, per_page)
-    tags = pagination.items
-    return render_template('admin/manage_tag.html', pagination=pagination, tags=tags)
-
-
-@admin_bp.route('/manage/comment', defaults={'order': 'by_flag'})
-@admin_bp.route('/manage/comment/<order>')
-@login_required
-@permission_required('MODERATE')
-def manage_comment(order):
-    page = request.args.get('page', 1, type=int)
-    per_page = current_app.config['ALBUMY_MANAGE_COMMENT_PER_PAGE']
-    order_rule = 'flag'
-    if order == 'by_time':
-        pagination = Comment.query.order_by(Comment.timestamp.desc()).paginate(page, per_page)
-        order_rule = 'time'
-    else:
-        pagination = Comment.query.order_by(Comment.flag.desc()).paginate(page, per_page)
-    comments = pagination.items
-    return render_template('admin/manage_comment.html', pagination=pagination, comments=comments, order_rule=order_rule)

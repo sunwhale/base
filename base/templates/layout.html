@@ -1,26 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  {% block head %}
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}固体力学知识分享{% endblock title %}</title>
-  <link type="image-icon" href="{{ url_for('static', filename='imgs/faveicon.png') }}" rel="icon"/>
-  <!-- Google Font: Source Sans Pro -->
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
-  {% if env['service'] == 'server' %}
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
-  {% else %}
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
-  <!-- Theme style -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/dist/css/adminlte.min.css') }}">
-  {% endif %}
-  {% block css %}{% endblock css %}
-  {% endblock head %}
+{% block head %}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}固体力学知识分享{% endblock title %}</title>
+<link type="image-icon" href="{{ url_for('static', filename='imgs/faveicon.png') }}" rel="icon"/>
+<!-- Google Font: Source Sans Pro -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+{% if env['service'] == 'server' %}
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<!-- Theme style -->
+<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+{% else %}
+<!-- Font Awesome -->
+<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
+<!-- Theme style -->
+<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/dist/css/adminlte.min.css') }}">
+{% endif %}
+{% block css %}{% endblock css %}
+{% endblock head %}
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
@@ -185,6 +185,33 @@
             </ul>
           </li>
           {% endblock nav_sheet %}
+          {% block nav_admin %}
+          {% if current_user.is_admin %}
+          <li class="nav-item" id="sheets">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-user"></i>
+              <p>
+                用户
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('admin.manage_user') }}" class="nav-link" id="manage_user">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>用户管理</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('auth.register') }}" target="_blank" class="nav-link" id="register">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>注册新用户</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          {% endblock nav_admin %}
         </ul>
       </nav>
       <!-- /.sidebar-menu -->

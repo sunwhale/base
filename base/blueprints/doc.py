@@ -113,7 +113,7 @@ def manage_docs():
 @login_required
 def deletemd(doc_id):
     if not current_user.can('MODERATE'):
-        flash('您的权限不能删除该文章！', 'danger')
+        flash('您的权限不能删除该文章！', 'warning')
         return redirect(url_for('.manage_docs'))
     doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
     if os.path.exists(doc_path):

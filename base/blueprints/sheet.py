@@ -8,6 +8,7 @@ import shutil
 
 from flask import jsonify, render_template, flash, redirect, url_for, current_app, send_from_directory, request, abort, Blueprint
 from flask_login import login_required, current_user
+from base.extensions import csrf
 from tools.dir_status import create_id, sheets_detail
 
 
@@ -51,6 +52,7 @@ def view_sheet(sheet_id):
 
 
 @sheet_bp.route('/upload/<int:sheet_id>', methods=['POST'])
+@csrf.exempt
 def upload(sheet_id):
     exceldata = request.form['exceldata']
     message = {}
@@ -85,6 +87,7 @@ def upload(sheet_id):
 
 
 @sheet_bp.route('/read/<int:sheet_id>', methods=['POST'])
+@csrf.exempt
 def read(sheet_id):
     sheet_path = os.path.join(current_app.config['SHEET_PATH'], str(sheet_id))
     sheet_file = os.path.join(sheet_path, 'sheet.json')
