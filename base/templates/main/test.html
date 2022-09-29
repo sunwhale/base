@@ -4,10 +4,10 @@
 {% block title %}固体力学知识分享{% endblock title %}
 
 {% block css %}
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css' />
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css' />
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css' />
-<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css' />
+<link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/plugins/css/pluginsCss.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/plugins/plugins.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/css/luckysheet.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/assets/iconfont/iconfont.css') }}"/>
 {% endblock css %}
 
 {% block content %}
@@ -17,10 +17,11 @@
           <div class="col-12">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">文章列表</h3>
+                <h3 class="card-title">表格应用</h3>
               </div>
               <div class="card-body">
                 <div id="luckysheet" style="width:100%;height:800px;left:0px;top:0px;"></div>
+                <p></p>
                 <button class="btn btn-default" onclick="uploadExcelData()">保存</button>
               </div>
             </div>
@@ -31,13 +32,9 @@
 {% endblock content %}
 
 {% block script %}
-{% if env['service'] == 'server' %}
-<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
-{% else %}
-<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
-{% endif %}
+<script src="{{ url_for('static', filename='luckysheet/plugins/js/plugin.js') }}"></script>
+<script src="{{ url_for('static', filename='luckysheet/luckysheet.umd.js') }}"></script>
+
 <script type="text/javascript">
   $(function () {
     //配置项
@@ -46,7 +43,7 @@
       title: "参数列表",
       lang: "zh",
       showinfobar: false,
-      loadUrl: "{{ url_for('main.readdata') }}",
+      // loadUrl: "{{ url_for('main.readdata') }}",
     }
     luckysheet.create(options)
   })

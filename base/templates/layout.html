@@ -121,15 +121,15 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="{{ url_for('propellant.create_packing_model') }}" class="nav-link" id="create_packing_model">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>球体填充建模</p>
-                </a>
-              </li>
-              <li class="nav-item">
                 <a href="{{ url_for('propellant.manage_packing_models') }}" class="nav-link" id="manage_packing_models">
                   <i class="far fa-circle nav-icon"></i>
                   <p>球体填充模型管理</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('propellant.create_packing_model') }}" class="nav-link" id="create_packing_model">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>新建球体填充模型</p>
                 </a>
               </li>
             </ul>
@@ -146,20 +146,45 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="{{ url_for('doc.createmd') }}" class="nav-link" id="createmd">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>新建文章</p>
-                </a>
-              </li>
-              <li class="nav-item">
                 <a href="{{ url_for('doc.manage_docs') }}" class="nav-link" id="manage_docs">
                   <i class="far fa-circle nav-icon"></i>
                   <p>文章管理</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="{{ url_for('doc.createmd') }}" class="nav-link" id="createmd">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>新建文章</p>
+                </a>
+              </li>
             </ul>
           </li>
           {% endblock nav_doc %}
+          {% block nav_sheet %}
+          <li class="nav-item" id="sheets">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-table"></i>
+              <p>
+                数据表格
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('sheet.manage_sheets') }}" class="nav-link" id="manage_sheets">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>数据表格管理</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('sheet.create_sheet') }}" class="nav-link" id="create_sheet">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>新建数据表格</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endblock nav_sheet %}
         </ul>
       </nav>
       <!-- /.sidebar-menu -->

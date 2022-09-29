@@ -28,6 +28,7 @@ class BaseConfig:
     UPLOAD_PATH = os.path.join(FILE_PATH, 'uploads')
     UPLOAD_IMG_PATH = os.path.join(FILE_PATH, 'uploads', 'imgs')
     DOC_PATH = os.path.join(FILE_PATH, 'doc')
+    SHEET_PATH = os.path.join(FILE_PATH, 'sheet')
     PROPELLANT_PATH = os.path.join(FILE_PATH, 'propellant')
     PROPELLANT_PACKING_MODEL_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'models')
     PROPELLANT_PACKING_SUBMODEL_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'submodels')

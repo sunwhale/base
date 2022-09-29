@@ -176,6 +176,26 @@ def get_doc_status(path, doc_id):
     return status 
 
 
+def get_sheet_status(path, sheet_id):
+    sheet_file = os.path.join(path, str(sheet_id), 'sheet.json')
+    msg_file = os.path.join(path, str(sheet_id), 'sheet.msg')
+    status = {}
+    if os.path.exists(sheet_file):
+        sheet_modified_time = os.path.getmtime(sheet_file)
+        status['sheet_id'] = sheet_id
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            status['title'] = message['title']
+            status['sheet_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(sheet_modified_time))
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../viewmd/'+str(sheet_id), '../edit_sheet/'+str(sheet_id), '../delete_sheet/'+str(sheet_id))
+        except FileNotFoundError:
+            for key in ['title', 'sheet_time']:
+                status[key] = 'None'
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../viewmd/'+str(sheet_id), '../edit_sheet/'+str(sheet_id), '../delete_sheet/'+str(sheet_id))
+    return status 
+
+
 def packing_models_detail(path):
     data_list = []
     model_id_list = sub_dirs_int(path)
@@ -209,6 +229,20 @@ def docs_detail(path):
     doc_id_list = sub_dirs_int(path)
     for doc_id in doc_id_list:
         status = get_doc_status(path, doc_id)
+        data_list.append(status)
+        
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def sheets_detail(path):
+    data_list = []
+    sheet_id_list = sub_dirs_int(path)
+    for sheet_id in sheet_id_list:
+        status = get_sheet_status(path, sheet_id)
         data_list.append(status)
         
     data = {

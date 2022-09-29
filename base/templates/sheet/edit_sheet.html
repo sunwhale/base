@@ -1,0 +1,60 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form %}
+
+{% block title %}编辑-{{ message['title'] }}{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/plugins/css/pluginsCss.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/plugins/plugins.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/css/luckysheet.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/assets/iconfont/iconfont.css') }}"/>
+{% endblock css %}
+
+{% block pageheader %}编辑数据表格{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('.manage_sheets') }}">数据表格管理</a></li>
+<li class="breadcrumb-item active"></li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div id="luckysheet" style="margin:0px;padding:0px;position:absolute;width:100%;height:100%;left:0px;top:0px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock content %}
+
+{% block script %}
+<script src="{{ url_for('static', filename='luckysheet/plugins/js/plugin.js') }}"></script>
+<script src="{{ url_for('static', filename='luckysheet/luckysheet.umd.js') }}"></script>
+
+<script type="text/javascript">
+  $(function () {
+    var options = {
+      container: "luckysheet",
+      title: "{{ message['title'] }}",
+      lang: "zh",
+      myFolderUrl: "{{ url_for('sheet.manage_sheets') }}",
+      loadUrl: "{{ url_for('sheet.read', sheet_id=sheet_id) }}",
+      functionButton: "<button class=\"btn btn-default\" onclick=\"uploadExcelData()\">保存</button> <a class=\"btn btn-default\" href=\"{{ url_for('.manage_sheets') }}\">返回</a>",
+    }
+    luckysheet.create(options)
+  })
+
+  function uploadExcelData() {
+    $.post("{{ url_for('sheet.upload', sheet_id=sheet_id) }}", {
+      exceldata: JSON.stringify(luckysheet.getAllSheets()),
+      title: luckysheet.toJson().title
+    }, function (data) {
+      alert(data['message'])
+    });
+  }
+
+</script>
+{% endblock script %}
