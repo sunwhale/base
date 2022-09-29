@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>编辑-{{ message['title'] }}</title>
+<title>查看-{{ message['title'] }}</title>
 
 {% block css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/plugins/css/pluginsCss.css') }}"/>
@@ -30,19 +30,36 @@
       lang: "zh",
       myFolderUrl: "{{ url_for('sheet.manage_sheets') }}",
       loadUrl: "{{ url_for('sheet.read', sheet_id=sheet_id) }}",
-      functionButton: "<button class=\"btn btn-default\" onclick=\"uploadExcelData()\">保存</button> <a class=\"btn btn-default\" href=\"{{ url_for('.view_sheet', sheet_id=sheet_id) }}\">查看</a>",
-    }
+      allowCopy: false, // 是否允许拷贝
+      showtoolbar: false, // 是否显示工具栏
+      showsheetbar: false, // 是否显示底部sheet页按钮
+      showstatisticBar: false, // 是否显示底部计数栏
+      sheetBottomConfig: false, // sheet页下方的添加行按钮和回到顶部按钮配置
+      allowEdit: false, // 是否允许前台编辑
+      enableAddRow: false, // 允许增加行
+      enableAddCol: false, // 允许增加列
+      userInfo: false, // 右上角的用户信息展示样式
+      showRowBar: false, // 是否显示行号区域
+      showColumnBar: false, // 是否显示列号区域
+      sheetFormulaBar: false, // 是否显示公式栏
+      enableAddBackTop: false, // 返回头部按钮
+      showstatisticBarConfig: {
+        count:false,
+        view:false,
+        zoom:false,
+      },
+      showsheetbarConfig: {
+        add: false, // 新增sheet
+        menu: false, // sheet管理菜单
+        sheet: false, // sheet页显示
+      },
+      hook: {
+        cellMousedown:this.cellMousedown, // 绑定鼠标事件
+      },
+      forceCalculation: true, // 强制计算公式
+    };
     luckysheet.create(options)
   })
-
-  function uploadExcelData() {
-    $.post("{{ url_for('sheet.upload', sheet_id=sheet_id) }}", {
-      exceldata: JSON.stringify(luckysheet.getAllSheets()),
-      title: luckysheet.toJson().title
-    }, function (data) {
-      alert(data['message'])
-    });
-  }
 </script>
 {% endblock script %}
 </body>

@@ -36,6 +36,20 @@ def edit_sheet(sheet_id):
         abort(404)
 
 
+@sheet_bp.route('/view_sheet/<int:sheet_id>', methods=['GET'])
+@login_required
+def view_sheet(sheet_id):
+    sheet_path = os.path.join(current_app.config['SHEET_PATH'], str(sheet_id))
+    sheet_file = os.path.join(sheet_path, 'sheet.json')
+    msg_file = os.path.join(sheet_path, 'sheet.msg')
+    with open(msg_file, 'r', encoding='utf-8') as f:
+        message = json.load(f)
+    if os.path.exists(sheet_file):
+        return render_template('sheet/view_sheet.html', sheet_id=sheet_id, message=message)
+    else:
+        abort(404)
+
+
 @sheet_bp.route('/upload/<int:sheet_id>', methods=['POST'])
 def upload(sheet_id):
     exceldata = request.form['exceldata']
@@ -47,7 +61,8 @@ def upload(sheet_id):
             'message': '保存失败'
         }
     else:
-        sheet_path = os.path.join(current_app.config['SHEET_PATH'], str(sheet_id))
+        sheet_path = os.path.join(
+            current_app.config['SHEET_PATH'], str(sheet_id))
         if not os.path.isdir(sheet_path):
             os.makedirs(sheet_path)
         try:
@@ -69,7 +84,7 @@ def upload(sheet_id):
     return res
 
 
-@sheet_bp.route('/read/<int:sheet_id>', methods=['GET', 'POST'])
+@sheet_bp.route('/read/<int:sheet_id>', methods=['POST'])
 def read(sheet_id):
     sheet_path = os.path.join(current_app.config['SHEET_PATH'], str(sheet_id))
     sheet_file = os.path.join(sheet_path, 'sheet.json')

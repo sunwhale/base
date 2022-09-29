@@ -188,11 +188,11 @@ def get_sheet_status(path, sheet_id):
                 message = json.load(f)
             status['title'] = message['title']
             status['sheet_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(sheet_modified_time))
-            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../viewmd/'+str(sheet_id), '../edit_sheet/'+str(sheet_id), '../delete_sheet/'+str(sheet_id))
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_sheet/'+str(sheet_id), '../edit_sheet/'+str(sheet_id), '../delete_sheet/'+str(sheet_id))
         except FileNotFoundError:
             for key in ['title', 'sheet_time']:
                 status[key] = 'None'
-            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../viewmd/'+str(sheet_id), '../edit_sheet/'+str(sheet_id), '../delete_sheet/'+str(sheet_id))
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_sheet/'+str(sheet_id), '../edit_sheet/'+str(sheet_id), '../delete_sheet/'+str(sheet_id))
     return status 
 
 
