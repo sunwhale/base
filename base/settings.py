@@ -22,7 +22,6 @@ class Operations:
 
 
 class BaseConfig:
-    ADMIN_EMAIL = os.getenv('BASE_ADMIN', 'sunjingyu@imech.ac.cn')
     FILE_PATH = os.path.join(basedir, 'files')
     STATIC_PATH = os.path.join(basedir, 'base', 'static')
     UPLOAD_PATH = os.path.join(FILE_PATH, 'uploads')
@@ -33,8 +32,19 @@ class BaseConfig:
     PROPELLANT_PACKING_MODEL_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'models')
     PROPELLANT_PACKING_SUBMODEL_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'submodels')
     PROPELLANT_PACKING_MESH_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'meshes')
+    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
     SECRET_KEY = os.getenv('SECRET_KEY', 'secret string')
+    
+    ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'sunjingyu@imech.ac.cn')
+    BASE_MAIL_SUBJECT_PREFIX = '[Base]'
+    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_PORT = 465
+    MAIL_USE_SSL = True
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = ('Base Admin', MAIL_USERNAME)
 
 
 class DevelopmentConfig(BaseConfig):

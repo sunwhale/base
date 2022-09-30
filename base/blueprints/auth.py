@@ -2,10 +2,11 @@
 """
 
 """
-from flask import render_template, flash, redirect, url_for, Blueprint
+from flask import render_template, flash, redirect, url_for, Blueprint, current_app
 from flask_login import login_user, logout_user, login_required, current_user, login_fresh, confirm_login
 
 from base.decorators import admin_required, permission_required
+from base.emails import send_confirm_email, send_reset_password_email
 from base.extensions import db
 from base.forms.auth import LoginForm, RegisterForm, ForgetPasswordForm, ResetPasswordForm
 from base.models import User
@@ -25,12 +26,12 @@ def login():
         user = User.query.filter_by(email=form.email.data.lower()).first()
         if user is not None and user.validate_password(form.password.data):
             if login_user(user, form.remember_me.data):
-                flash('登录成功。', 'success')
+                flash('登录成功。/Login success.', 'success')
                 return redirect_back()
             else:
-                flash('您的账号已被锁定。', 'warning')
+                flash('您的账号已被锁定。/Your account is blocked.', 'warning')
                 return redirect(url_for('main.index'))
-        flash('无效的邮箱或密码。', 'warning')
+        flash('无效的邮箱或密码。/Invalid email or password.', 'warning')
     return render_template('auth/login.html', form=form)
 
 
@@ -51,7 +52,7 @@ def re_authenticate():
 @login_required
 def logout():
     logout_user()
-    flash('登出成功。', 'success')
+    flash('登出成功。/Logout success.', 'success')
     return redirect(url_for('main.index'))
 
 
@@ -69,6 +70,38 @@ def register():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        flash('注册成功。', 'success')
+        flash('注册成功。/Register success.', 'success')
         return redirect(url_for('.login'))
     return render_template('auth/register.html', form=form)
+
+
+@auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data.lower()).first()
+        if user is None:
+            return redirect(url_for('main.index'))
+        if validate_token(user=user, token=token, operation=Operations.RESET_PASSWORD,
+                          new_password=form.password.data):
+            flash('密码更新成功。/Password updated.', 'success')
+            return redirect(url_for('.login'))
+        else:
+            flash('链接无效或过期。/Invalid or expired link.', 'danger')
+            return redirect(url_for('.forget_password'))
+    return render_template('auth/reset_password.html', form=form)
+
+
+@auth_bp.route('/forget_password', methods=['GET', 'POST'])
+def forget_password():
+    form = ForgetPasswordForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data.lower()).first()
+        if user:
+            token = generate_token(user=user, operation=Operations.RESET_PASSWORD)
+            send_reset_password_email(user=user, token=token)
+            flash('密码重置邮件已发送，请检查您的收件箱。/Password reset email sent, check your inbox.', 'info')
+            return redirect(url_for('.login'))
+        flash('无效邮箱。/Invalid email.', 'warning')
+        return redirect(url_for('.forget_password'))
+    return render_template('auth/reset_password.html', form=form)
