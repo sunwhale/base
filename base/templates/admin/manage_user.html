@@ -117,5 +117,7 @@
 {{ moment.include_moment(local_js=url_for('static', filename='AdminLTE/plugins/moment/moment-with-locales.min.js')) }}
 <script type="text/javascript">
   var csrf_token = "{{ csrf_token() }}";
+  document.getElementById("user").className = "nav-item menu-open"
+  document.getElementById("manage_user").className = "nav-link active"
 </script>
 {% endblock script %}

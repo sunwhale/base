@@ -28,3 +28,10 @@
       </div>
     </section>
 {% endblock content %}
+
+{% block script %}
+<script type="text/javascript">
+  document.getElementById("user").className = "nav-item menu-open"
+  document.getElementById("register").className = "nav-link active"
+</script>
+{% endblock script %}
