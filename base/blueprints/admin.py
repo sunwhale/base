@@ -2,7 +2,7 @@
 """
 
 """
-from flask import render_template, flash, Blueprint, request
+from flask import Blueprint, flash, render_template, request
 from flask_login import login_required
 
 from base.decorators import admin_required, permission_required

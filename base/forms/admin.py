@@ -2,12 +2,12 @@
 """
 
 """
-from wtforms import StringField, SelectField, BooleanField, SubmitField
-from wtforms import ValidationError
-from wtforms.validators import DataRequired, Length, Email
+from wtforms import (BooleanField, SelectField, StringField, SubmitField,
+                     ValidationError)
+from wtforms.validators import DataRequired, Email, Length
 
 from base.forms.user import EditProfileForm
-from base.models import User, Role
+from base.models import Role, User
 
 
 class EditProfileAdminForm(EditProfileForm):

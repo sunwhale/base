@@ -4,7 +4,7 @@
 """
 from functools import wraps
 
-from flask import Markup, flash, url_for, redirect, abort
+from flask import Markup, abort, flash, redirect, url_for
 from flask_login import current_user
 
 

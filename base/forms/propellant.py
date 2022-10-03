@@ -3,9 +3,12 @@
 
 """
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, SelectField, TextAreaField, ValidationError, HiddenField, \
-    BooleanField, PasswordField, IntegerField, FloatField, MultipleFileField, DateField, DecimalField, FileField
-from wtforms.validators import DataRequired, Length, Optional, URL, NumberRange, ValidationError, Regexp
+from wtforms import (BooleanField, DateField, DecimalField, FileField,
+                     FloatField, HiddenField, IntegerField, MultipleFileField,
+                     PasswordField, SelectField, StringField, SubmitField,
+                     TextAreaField, ValidationError)
+from wtforms.validators import (URL, DataRequired, Length, NumberRange,
+                                Optional, Regexp, ValidationError)
 
 
 class PackingForm(FlaskForm):

@@ -2,16 +2,19 @@
 """
 
 """
-from flask import render_template, flash, redirect, url_for, Blueprint, current_app
-from flask_login import login_user, logout_user, login_required, current_user, login_fresh, confirm_login
+from flask import (Blueprint, current_app, flash, redirect, render_template,
+                   url_for)
+from flask_login import (confirm_login, current_user, login_fresh,
+                         login_required, login_user, logout_user)
 
 from base.decorators import admin_required, permission_required
 from base.emails import send_confirm_email, send_reset_password_email
 from base.extensions import db
-from base.forms.auth import LoginForm, RegisterForm, ForgetPasswordForm, ResetPasswordForm
+from base.forms.auth import (ForgetPasswordForm, LoginForm, RegisterForm,
+                             ResetPasswordForm)
 from base.models import User
 from base.settings import Operations
-from base.utils import generate_token, validate_token, redirect_back
+from base.utils import generate_token, redirect_back, validate_token
 
 auth_bp = Blueprint('auth', __name__)
 

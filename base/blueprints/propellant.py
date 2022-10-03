@@ -2,25 +2,27 @@
 """
 
 """
+import json
 import os
 import shutil
-import numpy as np
 import threading
 import time
-import json
 
-from flask import abort, render_template, flash, redirect, url_for, current_app, jsonify, request, Blueprint, send_from_directory
-from flask_login import login_required, current_user
-
-from psic.packing_spheres_in_cube import create_model
-from psic.create_submodel import create_submodel
+import numpy as np
+from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
+                   render_template, request, send_from_directory, url_for)
+from flask_login import current_user, login_required
 from psic.create_mesh import create_mesh
+from psic.create_submodel import create_submodel
+from psic.packing_spheres_in_cube import create_model
+from tools.dir_status import (create_id, formatSize, get_mesh_status,
+                              get_model_status, get_submodel_status,
+                              packing_models_detail, packing_submodels_detail,
+                              sub_dirs_int)
 
-from base.forms.propellant import PackingForm, SubmodelForm, MeshForm, UploadForm, PostForm
-from base.global_var import exporting_threads, create_thread_id
-
-from tools.dir_status import create_id, sub_dirs_int, get_model_status, get_submodel_status, get_mesh_status, packing_models_detail, packing_submodels_detail, formatSize
-
+from base.forms.propellant import (MeshForm, PackingForm, PostForm,
+                                   SubmodelForm, UploadForm)
+from base.global_var import create_thread_id, exporting_threads
 
 propellant_bp = Blueprint('propellant', __name__)
 

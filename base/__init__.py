@@ -8,13 +8,13 @@ import click
 from flask import Flask, render_template
 from flask_wtf.csrf import CSRFError
 
-from base.blueprints.auth import auth_bp
 from base.blueprints.admin import admin_bp
+from base.blueprints.auth import auth_bp
 from base.blueprints.doc import doc_bp
-from base.blueprints.sheet import sheet_bp
 from base.blueprints.main import main_bp
 from base.blueprints.propellant import propellant_bp
-from base.extensions import bootstrap, db, login_manager, moment, csrf, mail
+from base.blueprints.sheet import sheet_bp
+from base.extensions import bootstrap, csrf, db, login_manager, mail, moment
 from base.models import Role
 from base.settings import config
 

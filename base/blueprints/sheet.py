@@ -2,15 +2,16 @@
 """
 
 """
-import os
 import json
+import os
 import shutil
 
-from flask import jsonify, render_template, flash, redirect, url_for, current_app, send_from_directory, request, abort, Blueprint
-from flask_login import login_required, current_user
-from base.extensions import csrf
+from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
+                   render_template, request, send_from_directory, url_for)
+from flask_login import current_user, login_required
 from tools.dir_status import create_id, sheets_detail
 
+from base.extensions import csrf
 
 sheet_bp = Blueprint('sheet', __name__)
 

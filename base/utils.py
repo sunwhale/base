@@ -6,15 +6,15 @@ import os
 import uuid
 
 try:
-    from urlparse import urlparse, urljoin
+    from urlparse import urljoin, urlparse
 except ImportError:
     from urllib.parse import urlparse, urljoin
 
 import PIL
-from PIL import Image
-from flask import current_app, request, url_for, redirect, flash
+from flask import current_app, flash, redirect, request, url_for
 from itsdangerous import BadSignature, SignatureExpired
 from itsdangerous.serializer import Serializer
+from PIL import Image
 
 from base.extensions import db
 from base.models import User

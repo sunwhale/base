@@ -4,9 +4,11 @@
 """
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileAllowed, FileRequired
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, HiddenField, ValidationError
-from wtforms.validators import DataRequired, Length, Email, EqualTo, Optional, Regexp
+from flask_wtf.file import FileAllowed, FileField, FileRequired
+from wtforms import (BooleanField, HiddenField, PasswordField, StringField,
+                     SubmitField, TextAreaField, ValidationError)
+from wtforms.validators import (DataRequired, Email, EqualTo, Length, Optional,
+                                Regexp)
 
 from base.models import User
 

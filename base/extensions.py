@@ -4,11 +4,11 @@
 """
 
 from flask_bootstrap import Bootstrap4
-from flask_login import LoginManager, AnonymousUserMixin
+from flask_login import AnonymousUserMixin, LoginManager
+from flask_mail import Mail
+from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf import CSRFProtect
-from flask_moment import Moment
-from flask_mail import Mail
 
 bootstrap = Bootstrap4()
 db = SQLAlchemy()

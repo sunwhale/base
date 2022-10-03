@@ -2,12 +2,12 @@
 """
 
 """
-import os
 import json
+import os
 
-from flask import jsonify, render_template, flash, redirect, url_for, current_app, send_from_directory, request, abort, Blueprint
-from flask_login import login_required, current_user
-
+from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
+                   render_template, request, send_from_directory, url_for)
+from flask_login import current_user, login_required
 
 main_bp = Blueprint('main', __name__)
 
@@ -19,7 +19,7 @@ def index():
 
 @main_bp.route('/test', methods=['GET', 'POST'])
 def test():
-    return render_template('main/test.html')
+    return 'Hello world!'
 
 
 @main_bp.route('/data', methods=['POST'])

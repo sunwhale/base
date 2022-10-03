@@ -2,15 +2,15 @@
 """
 
 """
+import json
 import os
 import shutil
 import time
-import json
 
-from flask import abort, render_template, flash, redirect, url_for, current_app, jsonify, request, Blueprint, send_from_directory
-from flask_login import login_required, current_user
+from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
+                   render_template, request, send_from_directory, url_for)
+from flask_login import current_user, login_required
 from tools.dir_status import create_id, docs_detail
-
 
 doc_bp = Blueprint('doc', __name__)
 
