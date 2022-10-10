@@ -63,9 +63,6 @@ server {
     ssl_stapling_verify on;
     resolver 8.8.8.8 8.8.4.4 valid=300s;
     resolver_timeout 5s;
-    add_header Strict-Transport-Security "max-age=63072000; includeSubdomains";
-    add_header X-Frame-Options DENY;
-    add_header X-Content-Type-Options nosniff;
     
     location / {
         proxy_pass http://127.0.0.1:8000;  # 转发的地址，即Gunicorn运行的地址

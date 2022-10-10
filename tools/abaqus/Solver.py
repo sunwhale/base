@@ -4,9 +4,10 @@
 """
 
 import os
-import threading
-import psutil
 import subprocess
+import threading
+
+import psutil
 
 
 class Solver:

@@ -4,16 +4,17 @@ from abaqus import *
 from abaqusConstants import *
 from caeModules import *
 from driverUtils import executeOnCaeStartup
+
 try:
-    from material_io import get_grains_parameters
     from euler_io import read_euler
+    from material_io import get_grains_parameters
     print("Use local package.")
 except ImportError:
     import sys
     package_path = r'F:\Github\cpfem_czm\func'
     sys.path.append(package_path)
-    from material_io import get_grains_parameters
     from euler_io import read_euler
+    from material_io import get_grains_parameters
     print("Use package at %s." % package_path)
 
 

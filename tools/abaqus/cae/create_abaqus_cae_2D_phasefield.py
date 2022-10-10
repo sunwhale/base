@@ -1,8 +1,14 @@
 # -*- coding: mbcs -*-
-from abaqus_cae.set_part import create_sketch_base, create_part, create_mesh, create_all_set
-from abaqus_cae.set_material import set_elastic_material, set_umat_material, set_solid_section, set_material_conductivity
+from abaqus_cae.set_material import (set_elastic_material,
+                                     set_material_conductivity,
+                                     set_solid_section, set_umat_material)
+from abaqus_cae.set_others import (set_assembly, set_bc_disp, set_bc_symm,
+                                   set_job, set_output, set_predefined_field,
+                                   set_step)
+from abaqus_cae.set_part import (create_all_set, create_mesh, create_part,
+                                 create_sketch_base)
 from abaqus_cae.set_part_boundary import set_part_boundary
-from abaqus_cae.set_others import set_assembly, set_step, set_output, set_bc_symm, set_bc_disp, set_job, set_predefined_field
+
 try:
     from abaqus import *
     from abaqusConstants import *

@@ -15,14 +15,14 @@ from flask_login import current_user, login_required
 from psic.create_mesh import create_mesh
 from psic.create_submodel import create_submodel
 from psic.packing_spheres_in_cube import create_model
-from tools.dir_status import (create_id, formatSize, get_mesh_status,
-                              get_model_status, get_submodel_status,
-                              packing_models_detail, packing_submodels_detail,
-                              sub_dirs_int)
 
 from base.forms.propellant import (MeshForm, PackingForm, PostForm,
                                    SubmodelForm, UploadForm)
 from base.global_var import create_thread_id, exporting_threads
+from tools.dir_status import (create_id, formatSize, get_mesh_status,
+                              get_model_status, get_submodel_status,
+                              packing_models_detail, packing_submodels_detail,
+                              sub_dirs_int)
 
 propellant_bp = Blueprint('propellant', __name__)
 
