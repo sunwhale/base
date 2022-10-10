@@ -1,0 +1,46 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form %}
+
+{% block title %}固体力学知识分享{% endblock title %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-body">
+                <form method="post" class="form">
+                  <div id="editormd"></div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock content %}
+
+{% block script %}
+{% if env['service'] == 'server' %}
+<script src="https://cdn.bootcdn.net/ajax/libs/editor-md/1.5.0/editormd.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/marked/0.3.3/marked.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/prettify/r298/prettify.min.js"></script>
+{% else %}
+<script src="{{ url_for('static', filename='editormd/editormd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='editormd/lib/marked.min.js') }}"></script>
+<script src="{{ url_for('static', filename='editormd/lib/prettify.min.js') }}"></script>
+{% endif %}
+<script type="text/javascript">
+  var textEditor;
+  $(function() {
+    $.get("{{ url_for('doc.getmd', doc_id=1) }}", function(md) {
+      textEditor = editormd.markdownToHTML("editormd", {
+        markdown: md,
+        htmlDecode: "style,script,iframe",
+        tex: true,
+      });
+    });
+  });
+</script>
+{% endblock script %}

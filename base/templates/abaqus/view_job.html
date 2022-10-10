@@ -1,0 +1,67 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form %}
+
+{% block title %}查看算例{% endblock title %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-6">
+            <div class="card card-primary">
+              <div class="card-body">
+                {{ logs }}
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card card-primary">
+              <div class="card-body">
+                <div class="card-body table-responsive p-0" style="height: 600px;">
+                  <table class="table table-head-fixed text-nowrap">
+                    <thead>
+                      <tr>
+                        <th width=10% style="vertical-align: middle;text-align: center;">Step</th>
+                        <th width=10% style="vertical-align: middle;text-align: center;">Increment</th>
+                        <th width=10% style="vertical-align: middle;text-align: center;">Att</th>
+                        <th width=10% style="vertical-align: middle;text-align: center;">Severe<br>Discon<br>Iter</th>
+                        <th width=10% style="vertical-align: middle;text-align: center;">Equil<br>Iter</th>
+                        <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Iter</th>
+                        <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Time/Freq</th>
+                        <th width=10% style="vertical-align: middle;text-align: center;">Step<br>Time/LPF</th>
+                        <th width=10% style="vertical-align: middle;text-align: center;">Time/LPF<br>Inc</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for row in status %}
+                      <tr style="vertical-align: middle;text-align: center;">
+                        {% for item in row %}
+                          <td> {{ item }} </td>
+                        {% endfor %}
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock content %}
+
+{% block script %}
+{% if env['service'] == 'server' %}
+<script src="https://cdn.bootcdn.net/ajax/libs/editor-md/1.5.0/editormd.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/marked/0.3.3/marked.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/prettify/r298/prettify.min.js"></script>
+{% else %}
+<script src="{{ url_for('static', filename='editormd/editormd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='editormd/lib/marked.min.js') }}"></script>
+<script src="{{ url_for('static', filename='editormd/lib/prettify.min.js') }}"></script>
+{% endif %}
+<script type="text/javascript">
+
+</script>
+{% endblock script %}

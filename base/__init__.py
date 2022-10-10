@@ -8,6 +8,7 @@ import click
 from flask import Flask, render_template
 from flask_wtf.csrf import CSRFError
 
+from base.blueprints.abaqus import abaqus_bp
 from base.blueprints.admin import admin_bp
 from base.blueprints.auth import auth_bp
 from base.blueprints.doc import doc_bp
@@ -48,6 +49,7 @@ def register_extensions(app):
 
 def register_blueprints(app):
     app.register_blueprint(main_bp)
+    app.register_blueprint(abaqus_bp, url_prefix='/abaqus')
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(doc_bp, url_prefix='/doc')

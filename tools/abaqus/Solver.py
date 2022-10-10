@@ -8,6 +8,24 @@ import subprocess
 import threading
 
 import psutil
+import pandas as pd
+
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        pass
+ 
+    try:
+        import unicodedata
+        unicodedata.numeric(s)
+        return True
+    except (TypeError, ValueError):
+        pass
+ 
+    return False
 
 
 class Solver:
@@ -75,11 +93,22 @@ class Solver:
     def get_sta(self):
         sta_file = os.path.join(self.path, '{}.sta'.format(self.job))
         with open(sta_file, 'r') as f:
-            status = f.read()
+            lines = f.readlines()
+        status = []
+        for line in lines:
+            ls = line.split()
+            if ls:
+                if is_number(ls[0]):
+                    status.append(ls)
         return status
 
+    def get_log(self):
+        log_file = os.path.join(self.path, '{}.log'.format(self.job))
+        with open(log_file, 'r') as f:
+            logs = f.read()
+        return logs
 
 if __name__ == '__main__':
-    s = Solver(path='F:\\Github\\base\\tools\\abaqus\\run\\1',
+    s = Solver(path='F:\\Github\\base\\files\\abaqus\\run\\1',
                job='Job-1', user='umat_visco_maxwell_phasefield.for')
-    s.run()
+    s.get_log()

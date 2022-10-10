@@ -26,6 +26,7 @@ class BaseConfig:
     STATIC_PATH = os.path.join(basedir, 'base', 'static')
     UPLOAD_PATH = os.path.join(FILE_PATH, 'uploads')
     UPLOAD_IMG_PATH = os.path.join(FILE_PATH, 'uploads', 'imgs')
+    ABAQUS_PATH = os.path.join(FILE_PATH, 'abaqus')
     DOC_PATH = os.path.join(FILE_PATH, 'doc')
     SHEET_PATH = os.path.join(FILE_PATH, 'sheet')
     PROPELLANT_PATH = os.path.join(FILE_PATH, 'propellant')
