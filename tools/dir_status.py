@@ -8,7 +8,7 @@ import os
 import time
 
 
-def getFiles(path):
+def get_files(path):
     fns = []
     for root, dirs, files in os.walk(path):
         for fn in files:
@@ -16,14 +16,14 @@ def getFiles(path):
     return fns
 
 
-def hasFile(filename, files):
+def has_file(filename, files):
     b = False
     if filename in files:
         b = True
     return b
 
 
-def formatSize(size_in_bytes):
+def format_size(size_in_bytes):
     try:
         size_in_bytes = float(size_in_bytes)
         kb = size_in_bytes / 1024
@@ -69,6 +69,25 @@ def create_id(path):
         return 1
     else:
         return max(old_id_list)+1
+    
+def files_in_dir(path):
+    file_list = []
+    for filename in next(os.walk(path))[2]:
+        file = {}
+        file['name'] = filename
+        file['size'] = file_size(os.path.join(path, filename))
+        file['time'] = file_time(os.path.join(path, filename))
+        file_list.append(file)    
+    return file_list
+    
+
+def file_time(file):
+    modified_time = os.path.getmtime(file)
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(modified_time))
+
+
+def file_size(file):
+    return format_size(os.path.getsize(file))
 
 
 def get_model_status(path, model_id):
@@ -79,7 +98,6 @@ def get_model_status(path, model_id):
     status = {}
     status['model_id'] = model_id
     try:
-        npy_modified_time = os.path.getmtime(npy_file)
         with open(msg_file, 'r', encoding='utf-8') as f:
             message = json.load(f)
         with open(args_file, 'r', encoding='utf-8') as f:
@@ -87,8 +105,8 @@ def get_model_status(path, model_id):
             status['args'] = str(args)
         with open(log_file, 'r', encoding='utf-8') as f:
             status['log'] = f.read()        
-        status['npy_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(npy_modified_time))
-        status['npy_size'] = formatSize(os.path.getsize(npy_file))
+        status['npy_time'] = file_time(npy_file)
+        status['npy_size'] = file_size(npy_file)
         status['size'] = str(message['size'])
         status['gap'] = message['gap']
         status['num_ball'] = message['num_ball']
@@ -109,14 +127,13 @@ def get_submodel_status(path, model_id, submodel_id):
     status['model_id'] = model_id
     status['submodel_id'] = submodel_id
     try:
-        npy_modified_time = os.path.getmtime(npy_file)
         with open(msg_file, 'r', encoding='utf-8') as f:
             message = json.load(f)
         with open(args_file, 'r', encoding='utf-8') as f:
             args = json.load(f)
             status['args'] = str(args)
-        status['npy_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(npy_modified_time))
-        status['npy_size'] = formatSize(os.path.getsize(npy_file))
+        status['npy_time'] = file_time(npy_file)
+        status['npy_size'] = file_size(npy_file)
         status['ndiv'] = message['ndiv']
         status['location'] = str(message['location'])
         status['subsize'] = str(message['subsize'])
@@ -138,7 +155,6 @@ def get_mesh_status(path, model_id, submodel_id):
     status['model_id'] = model_id
     status['submodel_id'] = submodel_id
     if os.path.exists(inp_file):
-        inp_modified_time = os.path.getmtime(inp_file)
         with open(args_file, 'r', encoding='utf-8') as f:
             args = json.load(f)
         with open(msg_file, 'r', encoding='utf-8') as f:
@@ -151,8 +167,8 @@ def get_mesh_status(path, model_id, submodel_id):
         status['dimension'] = message['dimension']
         status['size'] = message['size']
         status['element_type'] = message['element_type']        
-        status['inp_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(inp_modified_time))
-        status['inp_size'] = formatSize(os.path.getsize(inp_file))
+        status['inp_time'] = file_time(inp_file)
+        status['inp_size'] = file_size(inp_file)
     return status        
         
 
@@ -161,13 +177,12 @@ def get_doc_status(path, doc_id):
     msg_file = os.path.join(path, str(doc_id), 'article.msg')
     status = {}
     if os.path.exists(md_file):
-        md_modified_time = os.path.getmtime(md_file)
         status['doc_id'] = doc_id
         try:
             with open(msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
             status['title'] = message['title']
-            status['md_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(md_modified_time))
+            status['md_time'] = file_time(md_file)
             status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../viewmd/'+str(doc_id), '../editmd/'+str(doc_id), '../deletemd/'+str(doc_id))
         except FileNotFoundError:
             for key in ['title', 'md_time']:
@@ -181,13 +196,12 @@ def get_sheet_status(path, sheet_id):
     msg_file = os.path.join(path, str(sheet_id), 'sheet.msg')
     status = {}
     if os.path.exists(sheet_file):
-        sheet_modified_time = os.path.getmtime(sheet_file)
         status['sheet_id'] = sheet_id
         try:
             with open(msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
             status['title'] = message['title']
-            status['sheet_time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(sheet_modified_time))
+            status['sheet_time'] = file_time(sheet_file)
             status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_sheet/'+str(sheet_id), '../edit_sheet/'+str(sheet_id), '../delete_sheet/'+str(sheet_id))
         except FileNotFoundError:
             for key in ['title', 'sheet_time']:
@@ -253,5 +267,5 @@ def sheets_detail(path):
 
 
 if __name__ == '__main__':
-    path = '..\\files\\propellant\\packing\\mesh\\'
-    print(get_mesh_status(path, 1, 1))
+    path = '..\\files\\abaqus\\run\\1\\'
+    print(files_in_dir(path))

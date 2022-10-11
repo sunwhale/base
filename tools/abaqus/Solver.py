@@ -108,6 +108,12 @@ class Solver:
             logs = f.read()
         return logs
 
+    def get_inp(self):
+        inp_file = os.path.join(self.path, '{}.inp'.format(self.job))
+        with open(inp_file, 'r') as f:
+            inp = f.read()
+        return inp
+
 if __name__ == '__main__':
     s = Solver(path='F:\\Github\\base\\files\\abaqus\\run\\1',
                job='Job-1', user='umat_visco_maxwell_phasefield.for')

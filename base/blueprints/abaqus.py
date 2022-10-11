@@ -6,12 +6,13 @@ import json
 import os
 import shutil
 import time
+import subprocess
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from tools.dir_status import create_id, docs_detail
+from tools.dir_status import create_id, files_in_dir
 from tools.abaqus.Solver import Solver
 
 abaqus_bp = Blueprint('abaqus', __name__)
@@ -29,4 +30,13 @@ def view_job():
     s = Solver(abaqus_path)
     status = s.get_sta()
     logs = s.get_log()
-    return render_template('abaqus/view_job.html', logs=logs, status=status)
+    inp = s.get_inp()
+    files = files_in_dir(abaqus_path)
+    return render_template('abaqus/view_job.html', logs=logs, status=status, inp=inp, files=files)
+
+
+@abaqus_bp.route('/open_path/<path>')
+def open_path(path):
+    cmd = 'explorer %s' % path
+    proc = subprocess.run(cmd)
+    return str(proc)

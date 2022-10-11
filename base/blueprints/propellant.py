@@ -19,7 +19,7 @@ from psic.packing_spheres_in_cube import create_model
 from base.forms.propellant import (MeshForm, PackingForm, PostForm,
                                    SubmodelForm, UploadForm)
 from base.global_var import create_thread_id, exporting_threads
-from tools.dir_status import (create_id, formatSize, get_mesh_status,
+from tools.dir_status import (create_id, format_size, get_mesh_status,
                               get_model_status, get_submodel_status,
                               packing_models_detail, packing_submodels_detail,
                               sub_dirs_int)
@@ -290,23 +290,3 @@ def thread_clear():
 @login_required
 def status():
     return str(threading.active_count()) +  str([t.current_thread() for t in threading.enumerate()])
-
-
-@propellant_bp.route('/editormd', methods=['GET', 'POST'])
-@login_required
-def editormd():
-    filename = 'abaqus_on_ubuntu.md'
-    if request.method == 'POST':
-        data = request.form.to_dict()
-        content = data['text-editormd-markdown-doc'].replace('\n','')
-
-        with open(os.path.join(current_app.config['STATIC_PATH'], filename), 'w', encoding='utf-8') as f:
-            f.write(content)
-        return render_template('propellant/editormd.html', filename=filename)
-    return render_template('propellant/editormd.html', filename=filename)
-
-
-@propellant_bp.route('/previewmd')
-@login_required
-def previewmd():
-    return render_template('propellant/previewmd.html')

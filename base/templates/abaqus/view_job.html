@@ -3,22 +3,95 @@
 
 {% block title %}查看算例{% endblock title %}
 
+{% block pageheader %}生成{{ model_id }}号球体填充主模型的子模型网格{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item active">生成{{ model_id }}号球体填充主模型的子模型网格</li>
+{% endblock level %}
+
 {% block content %}
     <section class="content">
       <div class="container-fluid">
         <div class="row">
-          <div class="col-6">
+          <div class="col-12">
             <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ model_id }}号球体填充模型：{{ submodel_id }}号子模型</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
               <div class="card-body">
-                {{ logs }}
+                <div class="row">
+                  <div class="col-6">
+                    <h5 class="text-primary">模型信息</h5>
+                    <ul class="list-unstyled">
+                      <li> 项目名称：{{status['npy_time']}} </li>
+                      <li> 模型编号：{{status['num_ball']}} </li>
+                      <li> 工作目录：{{status['num_ball']}} </li>
+                      <li> 用户自定义文件：{{status['num_ball']}} </li>
+                      <li> CPU核心数量：{{status['num_ball']}} </li>
+                      <li> 当前状态：Completed/Runing/Stopped </li>
+                    </ul>
+                    <h5 class="text-primary">进程控制</h5>
+                    <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止ABAQUS的计算：</p>
+                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                      <label class="btn btn-success active">
+                        <input type="radio" name="options" id="option_a1" autocomplete="off"> 计 算
+                      </label>
+                      <label class="btn btn-warning">
+                        <input type="radio" name="options" id="option_a2" autocomplete="off"> 暂 停
+                      </label>
+                      <label class="btn btn-info">
+                        <input type="radio" name="options" id="option_a3" autocomplete="off"> 继 续
+                      </label>
+                      <label class="btn btn-danger">
+                        <input type="radio" name="options" id="option_a3" autocomplete="off"> 终 止
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <h5 class="text-primary">文件列表</h5>
+                    <table class="table table-sm table-hover">
+                      <thead>
+                        <tr>
+                          <th width=40%>文件名</th>
+                          <th width=40%>修改日期</th>
+                          <th width=20%>大小</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for file in files %}
+                        <tr>
+                          <td> {{ file['name'] }} </td>
+                          <td> {{ file['time'] }} </td>
+                          <td> {{ file['size'] }} </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
           <div class="col-6">
             <div class="card card-primary">
               <div class="card-body">
-                <div class="card-body table-responsive p-0" style="height: 600px;">
-                  <table class="table table-head-fixed text-nowrap">
+                <h5 class="text-primary">日志文件.log</h5>
+                <textarea class="form-control" rows="30">{{ logs }}</textarea>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card card-primary">
+              <div class="card-body">
+                <h5 class="text-primary">状态文件.sta</h5>
+                <div class="card-body table-responsive p-0" style="height: 734px;">
+                  <table class="table table-sm table-hover table-head-fixed text-nowrap">
                     <thead>
                       <tr>
                         <th width=10% style="vertical-align: middle;text-align: center;">Step</th>
