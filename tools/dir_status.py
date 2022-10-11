@@ -210,6 +210,39 @@ def get_sheet_status(path, sheet_id):
     return status 
 
 
+def get_project_status(path, project_id):
+    msg_file = os.path.join(path, str(project_id), 'project.msg')
+    status = {}
+    if os.path.exists(msg_file):
+        status['project_id'] = project_id
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            status['name'] = message['name']
+            status['project_time'] = file_time(msg_file)
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
+        except FileNotFoundError:
+            for key in ['title', 'project_time']:
+                status[key] = 'None'
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
+    return status 
+
+
+def get_job_status(path, project_id, job_id):
+    inp_file = os.path.join(path, str(project_id), str(job_id), 'Job-1.inp')
+    status = {}
+    status['project_id'] = project_id
+    status['job_id'] = job_id
+    try:
+        status['inp_time'] = file_time(inp_file)
+        status['inp_size'] = file_size(inp_file)
+        status['operation'] = "<a href='%s'>查看</a>" % ('../view_job/'+str(project_id)+'/'+str(job_id))
+    except FileNotFoundError:
+        for key in ['npy_time', 'npy_size', 'ndiv', 'location', 'subsize', 'gap', 'num_ball', 'fraction', 'operation']:
+            status[key] = 'None'
+    return status
+
+
 def packing_models_detail(path):
     data_list = []
     model_id_list = sub_dirs_int(path)
@@ -257,6 +290,34 @@ def sheets_detail(path):
     sheet_id_list = sub_dirs_int(path)
     for sheet_id in sheet_id_list:
         status = get_sheet_status(path, sheet_id)
+        data_list.append(status)
+        
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def projects_detail(path):
+    data_list = []
+    project_id_list = sub_dirs_int(path)
+    for project_id in project_id_list:
+        status = get_project_status(path, project_id)
+        data_list.append(status)
+        
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def project_jobs_detail(path, project_id):
+    data_list = []
+    job_id_list = sub_dirs_int(os.path.join(path, str(project_id)))
+    for job_id in job_id_list:
+        status = get_job_status(path, project_id, job_id)
         data_list.append(status)
         
     data = {

@@ -3,7 +3,8 @@
 
 """
 from flask_wtf import FlaskForm
-from wtforms import (BooleanField, DateField, DecimalField, FileField,
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+from wtforms import (BooleanField, DateField, DecimalField,
                      FloatField, HiddenField, IntegerField, MultipleFileField,
                      PasswordField, SelectField, StringField, SubmitField,
                      TextAreaField, ValidationError)
@@ -12,5 +13,5 @@ from wtforms.validators import (URL, DataRequired, Length, NumberRange,
 
 
 class UploadForm(FlaskForm):
-    filename = FileField('上传文件')
+    filename = FileField('上传文件', validators=[FileRequired()])
     submit = SubmitField('提交')

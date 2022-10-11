@@ -1,13 +1,15 @@
 {% extends 'layout.html' %}
 {% from 'bootstrap4/form.html' import render_form %}
 
-{% block title %}查看算例{% endblock title %}
+{% block title %}{{ project_id }}.{{ job_id }}号算例{% endblock title %}
 
-{% block pageheader %}生成{{ model_id }}号球体填充主模型的子模型网格{% endblock pageheader %}
+{% block pageheader %}算例信息{% endblock pageheader %}
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
-<li class="breadcrumb-item active">生成{{ model_id }}号球体填充主模型的子模型网格</li>
+<li class="breadcrumb-item"><a href="{{ url_for('abaqus.manage_projects') }}">ABAQUS项目管理</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('abaqus.view_project', project_id=project_id) }}">{{ project_id }}号ABAQUS项目</a></li>
+<li class="breadcrumb-item active">算例信息</li>
 {% endblock level %}
 
 {% block content %}
@@ -17,7 +19,7 @@
           <div class="col-12">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">{{ model_id }}号球体填充模型：{{ submodel_id }}号子模型</h3>
+                <h3 class="card-title">{{ project_id }}号ABAQUS项目：{{ job_id }}号算例</h3>
                 <div class="card-tools">
                   <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
                     <i class="fas fa-minus"></i>

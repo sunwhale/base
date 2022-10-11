@@ -186,7 +186,7 @@
           </li>
           {% endblock nav_sheet %}
           {% block nav_abaqus %}
-          <li class="nav-item" id="sheets">
+          <li class="nav-item" id="abaqus">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-cubes"></i>
               <p>
@@ -205,12 +205,6 @@
                 <a href="{{ url_for('sheet.create_sheet') }}" target="_blank" class="nav-link" id="create_project">
                   <i class="far fa-circle nav-icon"></i>
                   <p>查看项目</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="{{ url_for('abaqus.view_job') }}" target="_blank" class="nav-link" id="view_job">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>查看算例</p>
                 </a>
               </li>
             </ul>
