@@ -36,24 +36,35 @@
                       <li> 工作目录：{{status['num_ball']}} </li>
                       <li> 用户自定义文件：{{status['num_ball']}} </li>
                       <li> CPU核心数量：{{status['num_ball']}} </li>
-                      <li> 当前状态：Completed/Runing/Stopped </li>
+                      <li> 当前状态：{{solver_status}} </li>
                     </ul>
                     <h5 class="text-primary">进程控制</h5>
                     <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止ABAQUS的计算：</p>
-                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                      <label class="btn btn-success active">
-                        <input type="radio" name="options" id="option_a1" autocomplete="off"> 计 算
-                      </label>
-                      <label class="btn btn-warning">
-                        <input type="radio" name="options" id="option_a2" autocomplete="off"> 暂 停
-                      </label>
-                      <label class="btn btn-info">
-                        <input type="radio" name="options" id="option_a3" autocomplete="off"> 继 续
-                      </label>
-                      <label class="btn btn-danger">
-                        <input type="radio" name="options" id="option_a3" autocomplete="off"> 终 止
-                      </label>
-                    </div>
+
+                    {% if solver_status=='Submitting' or solver_status=='Running' or solver_status=='Pause' or solver_status=='Stopping'%}
+                    <a href="#" class="btn btn-secondary">计 算</a>
+                    {% else %}
+                    <a href="{{ url_for('abaqus.run_job', project_id=project_id, job_id=job_id) }}" class="btn btn-success">计 算</a>
+                    {% endif %}
+
+                    {% if solver_status=='Running' %}
+                    <a href="#" class="btn btn-warning">暂 停</a>
+                    {% else %}
+                    <a href="#" class="btn btn-secondary">暂 停</a>
+                    {% endif %}
+
+                    {% if solver_status=='Pause' %}
+                    <a href="#" class="btn btn-info">继 续</a>
+                    {% else %}
+                    <a href="#" class="btn btn-secondary">继 续</a>
+                    {% endif %}
+
+                    {% if solver_status=='Running' %}
+                    <a href="{{ url_for('abaqus.terminate_job', project_id=project_id, job_id=job_id) }}" class="btn btn-danger">终 止</a>
+                    {% else %}
+                    <a href="#" class="btn btn-secondary">终 止</a>
+                    {% endif %}
+
                   </div>
                   <div class="col-6">
                     <h5 class="text-primary">文件列表</h5>

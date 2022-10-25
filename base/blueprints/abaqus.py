@@ -85,9 +85,57 @@ def view_job(project_id, job_id):
         s = Solver(job_path)
         status = s.get_sta()
         logs = s.get_log()
-        inp = s.get_inp()
         files = files_in_dir(job_path)
-        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, logs=logs, status=status, inp=inp, files=files)
+
+        status_file = os.path.join(job_path, '.status')
+        if not os.path.exists(status_file):
+            with open(status_file, 'w', encoding='utf-8') as f:
+                f.write('None')
+
+        with open(status_file, 'r', encoding='utf-8') as f:
+            solver_status = f.read()
+
+        if 'COMPLETED' in logs:
+            with open(status_file, 'w', encoding='utf-8') as f:
+                f.write('Completed')
+        elif 'exited' in logs:
+            with open(status_file, 'w', encoding='utf-8') as f:
+                f.write('Stopped')
+        elif 'Run standard.exe' in logs and solver_status != 'Stopping':
+            with open(status_file, 'w', encoding='utf-8') as f:
+                f.write('Running')
+
+        with open(status_file, 'r', encoding='utf-8') as f:
+            solver_status = f.read()
+        
+        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, logs=logs, status=status, solver_status=solver_status, files=files)
+    else:
+        abort(404)
+
+
+@abaqus_bp.route('/run_job/<int:project_id>/<int:job_id>')
+def run_job(project_id, job_id):
+    job_path = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    if os.path.exists(job_path):
+        s = Solver(job_path, job='Job-1', user='umat_visco_maxwell_phasefield.for')
+        s.clear()
+        proc = s.run()
+        with open(os.path.join(job_path, '.status'), 'w', encoding='utf-8') as f:
+            f.write('Submitting')
+        return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+    else:
+        abort(404)
+
+
+@abaqus_bp.route('/terminate_job/<int:project_id>/<int:job_id>')
+def terminate_job(project_id, job_id):
+    job_path = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    if os.path.exists(job_path):
+        s = Solver(job_path, job='Job-1', user='umat_visco_maxwell_phasefield.for')
+        proc = s.terminate()
+        with open(os.path.join(job_path, '.status'), 'w', encoding='utf-8') as f:
+            f.write('Stopping')
+        return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
     else:
         abort(404)
 
