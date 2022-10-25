@@ -47,7 +47,8 @@ def view_project(project_id):
     form = UploadForm()
     if form.validate_on_submit():
         f = form.filename.data
-        print(f)
+        f.save(os.path.join(project_path, f.filename))
+
     if os.path.exists(project_path):
         status = get_project_status(path, project_id)
         files = files_in_dir(project_path)
@@ -56,17 +57,25 @@ def view_project(project_id):
         abort(404)
 
 
-# @abaqus_bp.route('/view_project/<int:project_id>')
-# @login_required
-# def view_project(project_id):
-#     path = os.path.join(current_app.config['ABAQUS_PATH'])
-#     project_path = os.path.join(path, str(project_id))
-#     if os.path.exists(project_path):
-#         status = get_project_status(path, project_id)
-#         files = files_in_dir(project_path)
-#         return render_template('abaqus/view_project.html', project_id=project_id, status=status, files=files)
-#     else:
-#         abort(404)
+@abaqus_bp.route('/delete_project_file/<int:project_id>/<path:filename>')
+@login_required
+def delete_project_file(project_id, filename):
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该文件！', 'danger')
+        return redirect(url_for('.view_project', project_id=project_id))
+    file = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(filename))
+    if os.path.exists(file):
+        os.remove(file)
+        flash('文件%s删除成功。' % filename, 'success')
+    else:
+        flash('文件%s不存在。' % filename, 'warning')
+    return redirect(url_for('.view_project', project_id=project_id))
+
+
+@abaqus_bp.route('/get_project_file/<int:project_id>/<path:filename>')
+@login_required
+def get_project_file(project_id, filename):
+    return send_from_directory(os.path.join(current_app.config['ABAQUS_PATH'], str(project_id)), filename)
 
 
 @abaqus_bp.route('/view_job/<int:project_id>/<int:job_id>')

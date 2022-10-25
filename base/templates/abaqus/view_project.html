@@ -32,13 +32,17 @@
               <div class="card-body">
                 <div class="row">
                   <div class="col-6">
-                    <h5 class="text-primary">模型信息</h5>
+                    <h5 class="text-primary">项目信息</h5>
                     <ul class="list-unstyled">
-                      <li> 项目名称：{{status['npy_time']}} </li>
-                      <li> 项目编号：{{status['num_ball']}} </li>
-                      <li> 工作目录：{{status['num_ball']}} </li>
-                      <li> 用户自定义文件：{{status['num_ball']}} </li>
+                      <li> 项目名称：{{status['name']}} </li>
+                      <li> 项目编号：{{ project_id }} </li>
+                      <li> 创建时间：{{status['project_time']}} </li>
+                      <li> 项目信息：{{status['log']}} </li>
                     </ul>
+                  
+                    <h5 class="text-primary">创建新算例</h5>
+                    基于当前项目文件，点击<a href="#">这里</a>进入算例生成界面。
+
                   </div>
                   <div class="col-6">
                     <h5 class="text-primary">上传文件</h5>
@@ -56,9 +60,10 @@
                     <table class="table table-sm table-hover">
                       <thead>
                         <tr>
-                          <th width=40%>文件名</th>
-                          <th width=40%>修改日期</th>
-                          <th width=20%>大小</th>
+                          <th width=30%>文件名</th>
+                          <th width=30%>修改日期</th>
+                          <th width=10%>大小</th>
+                          <th width=20%>操作</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -67,6 +72,7 @@
                           <td> {{ file['name'] }} </td>
                           <td> {{ file['time'] }} </td>
                           <td> {{ file['size'] }} </td>
+                          <td> <a href="{{ url_for('abaqus.get_project_file', project_id=project_id, filename=file['name']) }}">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_project_file', project_id=project_id, filename=file['name']) }}">删除</a> </td>
                         </tr>
                         {% endfor %}
                       </tbody>

@@ -220,9 +220,10 @@ def get_project_status(path, project_id):
                 message = json.load(f)
             status['name'] = message['name']
             status['project_time'] = file_time(msg_file)
+            status['log'] = message['log']
             status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
         except FileNotFoundError:
-            for key in ['title', 'project_time']:
+            for key in ['title', 'project_time', 'log']:
                 status[key] = 'None'
             status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
     return status 
