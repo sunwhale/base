@@ -106,7 +106,7 @@ def create_packing_submodel(model_id):
             thread.start()
         return render_template('propellant/create_packing_submodel.html', form=form, model_id=model_id)
     else:
-        flash('主模型%s不存在。' % model_id, 'danger')
+        flash('主模型%s不存在。' % model_id, 'warning')
         return render_template('propellant/create_packing_submodel.html', form=form, model_id=model_id)
 
 
@@ -169,7 +169,7 @@ def create_packing_mesh(model_id):
             thread.start()
         return render_template('propellant/create_packing_mesh.html', form=form, model_id=model_id)
     else:
-        flash('主模型%s不存在，或尚未生成子模型。' % model_id, 'danger')
+        flash('主模型%s不存在，或尚未生成子模型。' % model_id, 'warning')
         return render_template('propellant/create_packing_mesh.html', form=form, model_id=model_id)
 
 
@@ -260,7 +260,7 @@ def delete_packing_models(model_id):
             shutil.rmtree(mesh_path)
         flash('模型%s删除成功。' % model_id, 'success')
     else:
-        flash('模型%s不存在。' % model_id, 'danger')
+        flash('模型%s不存在。' % model_id, 'warning')
     return redirect(url_for('.manage_packing_models'))
 
 

@@ -29,16 +29,17 @@
               <div class="card-body">
                 <div class="row">
                   <div class="col-6">
-                    <h5 class="text-primary">模型信息</h5>
+                    <h5 class="text-primary">算例信息</h5>
                     <ul class="list-unstyled">
-                      <li> 项目名称：{{status['npy_time']}} </li>
-                      <li> 模型编号：{{status['num_ball']}} </li>
-                      <li> 工作目录：{{status['num_ball']}} </li>
-                      <li> 用户自定义文件：{{status['num_ball']}} </li>
-                      <li> CPU核心数量：{{status['num_ball']}} </li>
-                      <li> 当前状态：{{solver_status}} </li>
+                      <li> 项目编号：{{ project_id }} </li>
+                      <li> 算例编号：{{ job_id }} </li>
+                      <li> 创建时间：{{ status['inp_time'] }}</li>
+                      <li> 算例inp文件：{{ status['job'] }}.inp</li>
+                      <li> 算例user文件：{{ status['user'] }}</li>
+                      <li> 算例使用CPU核心数量：{{ status['cpus'] }}</li>
+                      <li> 当前状态：{{ solver_status }} </li>
                     </ul>
-                    <h5 class="text-primary">进程控制</h5>
+                    <h5 class="text-primary">求解控制</h5>
                     <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止ABAQUS的计算：</p>
 
                     {% if solver_status=='Submitting' or solver_status=='Running' or solver_status=='Pause' or solver_status=='Stopping'%}
@@ -65,6 +66,10 @@
                     <a href="#" class="btn btn-secondary">终 止</a>
                     {% endif %}
 
+                    {% if env['service'] == 'client' %}
+                    <a href="{{ url_for('abaqus.open_job', project_id=project_id, job_id=job_id) }}" class="btn btn-primary">在资源管理器中打开</a>
+                    {% endif %}
+
                   </div>
                   <div class="col-6">
                     <h5 class="text-primary">文件列表</h5>
@@ -72,8 +77,9 @@
                       <thead>
                         <tr>
                           <th width=40%>文件名</th>
-                          <th width=40%>修改日期</th>
-                          <th width=20%>大小</th>
+                          <th width=30%>修改日期</th>
+                          <th width=10%>大小</th>
+                          <th width=20%>操作</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -82,6 +88,7 @@
                           <td> {{ file['name'] }} </td>
                           <td> {{ file['time'] }} </td>
                           <td> {{ file['size'] }} </td>
+                          <td> <a href="{{ url_for('abaqus.get_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">删除</a> </td>
                         </tr>
                         {% endfor %}
                       </tbody>
@@ -119,7 +126,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      {% for row in status %}
+                      {% for row in sta %}
                       <tr style="vertical-align: middle;text-align: center;">
                         {% for item in row %}
                           <td> {{ item }} </td>

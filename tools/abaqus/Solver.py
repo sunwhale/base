@@ -6,6 +6,7 @@
 import os
 import subprocess
 import threading
+import json
 
 import psutil
 import pandas as pd
@@ -33,26 +34,49 @@ class Solver:
     Solver类，定义ABAQUS求解器执行参数。
     """
 
-    def __init__(self, path, job='Job-1', user='user.for', cpus='1', is_clear=True):
+    def __init__(self, path, job='Job-1', user='', cpus='1', is_clear=True):
         self.path = path
         self.job = job
         self.user = user
         self.cpus = cpus
         self.is_clear = is_clear
 
+    def write_msg(self):
+        message = {}
+        message['job'] = self.job
+        message['user'] = self.user
+        message['cpus'] = self.cpus
+        msg_file = os.path.join(self.path, '.msg')
+        with open(msg_file, 'w', encoding='utf-8') as f:
+            json.dump(message, f, ensure_ascii=False)
+
+    def read_msg(self):
+        msg_file = os.path.join(self.path, '.msg')
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            self.job = message['job']
+            self.user = message['user']
+            self.cpus = message['cpus']
+        except FileNotFoundError:
+            message = {}
+        return message
+
+    def check_files(self):
+        inp_file = os.path.join(self.path, '{}.inp'.format(self.job))
+        user_file = os.path.join(self.path, self.user)
+        if not os.path.exists(inp_file):
+            return False
+        if not os.path.exists(user_file):
+            return False
+        return True
+
     def run(self):
         os.chdir(self.path)
-        cmd = 'abaqus job=%s user=%s cpus=%s ask=off' % (self.job, self.user, self.cpus)
-        proc = subprocess.Popen(cmd, shell=True)
-        return proc
-
-    def run_with_fortran(self):
-        os.chdir(self.path)
-        cmd1 = '\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\" x86 amd64'
-        cmd2 = '\"C:\\Program Files (x86)\\Intel\\oneAPI\\setvars.bat\" intel64 vs2019'
-        cmd3 = 'abaqus job=%s user=%s cpus=%s ask=off' % (
-            self.job, self.user, self.cpus)
-        cmd = '%s && %s && %s' % (cmd1, cmd2, cmd3)
+        if self.user == '':
+            cmd = 'abaqus job=%s cpus=%s ask=off' % (self.job, self.cpus)
+        else:
+            cmd = 'abaqus job=%s user=%s cpus=%s ask=off' % (self.job, self.user, self.cpus)
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
@@ -133,13 +157,42 @@ class Solver:
             inp = f.read()
         return inp
 
-    def delete_log(self):
-        log_file = os.path.join(self.path, '{}.log'.format(self.job))
-        if os.path.exists(log_file):
-            os.remove(log_file)
+    def solver_status(self):
+        """
+        求解器的可能状态如下：
+        ['Setting', 'Submitting', 'Running', 'Stopping', 'Stopped', 'Completed']
+
+        Returns
+        -------
+        None.
+
+        """
+        status_file = os.path.join(self.path, '.status')
+        # Obtain the initial solver_status
+        if not os.path.exists(status_file):
+            solver_status = 'Setting'
+            with open(status_file, 'w', encoding='utf-8') as f:
+                f.write(solver_status)
+        else:
+            with open(status_file, 'r', encoding='utf-8') as f:
+                solver_status = f.read()
+
+        # Update solver_status based on the logs
+        logs = self.get_log()
+        if 'COMPLETED' in logs:
+            solver_status = 'Completed'
+        elif 'exited' in logs:
+            solver_status = 'Stopped'
+        elif 'Run standard.exe' in logs and solver_status != 'Stopping':
+            solver_status = 'Running'
+
+        with open(status_file, 'w', encoding='utf-8') as f:
+            f.write(solver_status)
+
+        return solver_status
 
 
 if __name__ == '__main__':
-    s = Solver(path='F:\\Github\\base\\files\\abaqus\\run\\1',
+    s = Solver(path='F:\\Github\\base\\files\\abaqus\\1\\1',
                job='Job-1', user='umat_visco_maxwell_phasefield.for')
-    s.get_log()
+    s.write_msg()

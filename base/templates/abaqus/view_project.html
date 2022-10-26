@@ -34,10 +34,10 @@
                   <div class="col-6">
                     <h5 class="text-primary">项目信息</h5>
                     <ul class="list-unstyled">
-                      <li> 项目名称：{{status['name']}} </li>
+                      <li> 项目名称：{{ status['name'] }} </li>
                       <li> 项目编号：{{ project_id }} </li>
-                      <li> 创建时间：{{status['project_time']}} </li>
-                      <li> 项目信息：{{status['log']}} </li>
+                      <li> 创建时间：{{ status['project_time'] }} </li>
+                      <li> 项目描述：{{ status['descript'] }} </li>
                     </ul>
                   
                     <h5 class="text-primary">创建新算例</h5>
@@ -60,7 +60,7 @@
                     <table class="table table-sm table-hover">
                       <thead>
                         <tr>
-                          <th width=30%>文件名</th>
+                          <th width=40%>文件名</th>
                           <th width=30%>修改日期</th>
                           <th width=10%>大小</th>
                           <th width=20%>操作</th>

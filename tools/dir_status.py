@@ -220,10 +220,10 @@ def get_project_status(path, project_id):
                 message = json.load(f)
             status['name'] = message['name']
             status['project_time'] = file_time(msg_file)
-            status['log'] = message['log']
+            status['descript'] = message['descript']
             status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
-        except FileNotFoundError:
-            for key in ['name', 'project_time', 'log']:
+        except (FileNotFoundError, KeyError):
+            for key in ['name', 'project_time', 'descript']:
                 status[key] = 'None'
             status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
     return status 
@@ -232,18 +232,24 @@ def get_project_status(path, project_id):
 def get_job_status(path, project_id, job_id):
     inp_file = os.path.join(path, str(project_id), str(job_id), 'Job-1.inp')
     status_file = os.path.join(path, str(project_id), str(job_id), '.status')
+    msg_file = os.path.join(path, str(project_id), str(job_id), '.msg')
     status = {}
     status['project_id'] = project_id
     status['job_id'] = job_id
     try:
         with open(status_file, 'r', encoding='utf-8') as f:
             solver_status = f.read()
+        with open(msg_file, 'r', encoding='utf-8') as f:
+            message = json.load(f)
+        status['job'] = message['job']
+        status['user'] = message['user']
+        status['cpus'] = message['cpus']
         status['inp_time'] = file_time(inp_file)
         status['inp_size'] = file_size(inp_file)
         status['solver_status'] = solver_status
         status['operation'] = "<a href='%s'>查看</a> | <a class='btn btn-secondary btn-sm' href='%s'>查看</a> " % ('../view_job/'+str(project_id)+'/'+str(job_id), '../view_job/'+str(project_id)+'/'+str(job_id))
     except FileNotFoundError:
-        for key in ['npy_time', 'npy_size', 'ndiv', 'location', 'subsize', 'gap', 'num_ball', 'fraction', 'operation']:
+        for key in ['inp_time', 'inp_size', 'solver_status', 'operation']:
             status[key] = 'None'
     return status
 

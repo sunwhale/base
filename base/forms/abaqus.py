@@ -14,4 +14,17 @@ from wtforms.validators import (URL, DataRequired, Length, NumberRange,
 
 class UploadForm(FlaskForm):
     filename = FileField('上传文件', validators=[FileRequired()])
-    submit = SubmitField('提交')
+    submit = SubmitField('上传')
+
+
+class ProjectForm(FlaskForm):
+    name = StringField('项目名称', validators=[DataRequired(), Length(1, 60)])
+    descript = TextAreaField('项目描述', validators=[DataRequired()])
+    submit = SubmitField(u'提交')
+
+
+class JobForm(FlaskForm):
+    inp = StringField('算例inp文件', validators=[DataRequired(), Length(1, 128)])
+    user = StringField('算例user文件', validators=[DataRequired(), Length(1, 128)])
+    cpus = IntegerField('算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 16)])
+    submit = SubmitField(u'提交')
