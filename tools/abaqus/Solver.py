@@ -153,14 +153,20 @@ class Solver:
 
     def get_inp(self):
         inp_file = os.path.join(self.path, '{}.inp'.format(self.job))
-        with open(inp_file, 'r') as f:
-            inp = f.read()
+        if os.path.exists(inp_file):
+            with open(inp_file, 'r') as f:
+                inp = f.read()
+        else:
+            inp = ''
         return inp
 
     def get_parameters(self):
         para_file = os.path.join(self.path, 'parameters.inp')
-        with open(para_file, 'r') as f:
-            para = f.read()
+        if os.path.exists(para_file):
+            with open(para_file, 'r') as f:
+                para = f.read()
+        else:
+            para = ''
         return para
 
     def solver_status(self):
