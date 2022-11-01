@@ -19,12 +19,12 @@ class UploadForm(FlaskForm):
 
 class ProjectForm(FlaskForm):
     name = StringField('项目名称', validators=[DataRequired(), Length(1, 60)])
-    descript = TextAreaField('项目描述', validators=[DataRequired()])
+    descript = TextAreaField('项目描述')
     submit = SubmitField(u'提交')
 
 
 class JobForm(FlaskForm):
-    inp = StringField('算例inp文件', validators=[DataRequired(), Length(1, 128)])
-    user = StringField('算例user文件', validators=[DataRequired(), Length(1, 128)])
+    job = StringField('算例inp文件', default='Job-1.inp', validators=[DataRequired(), Length(1, 128)])
+    user = StringField('算例user文件', default='user.for')
     cpus = IntegerField('算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 16)])
     submit = SubmitField(u'提交')

@@ -249,7 +249,7 @@ def get_job_status(path, project_id, job_id):
         status['solver_status'] = solver_status
         status['operation'] = "<a href='%s'>查看</a> | <a class='btn btn-secondary btn-sm' href='%s'>查看</a> " % ('../view_job/'+str(project_id)+'/'+str(job_id), '../view_job/'+str(project_id)+'/'+str(job_id))
     except FileNotFoundError:
-        for key in ['inp_time', 'inp_size', 'solver_status', 'operation']:
+        for key in ['job', 'user', 'cpus', 'inp_time', 'inp_size', 'solver_status', 'operation']:
             status[key] = 'None'
     return status
 

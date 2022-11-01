@@ -46,6 +46,31 @@ def create_project():
     return render_template('abaqus/create_project.html', form=form)
 
 
+@abaqus_bp.route('/create_job/<int:project_id>', methods=['GET', 'POST'])
+@login_required
+def create_job(project_id):
+    form = JobForm()
+    if form.validate_on_submit():
+        job = form.job.data
+        user = form.user.data
+        cpus = form.cpus.data
+        path = current_app.config['ABAQUS_PATH']
+        project_path = os.path.join(path, str(project_id))
+        job_id = create_id(project_path)
+        job_path = os.path.join(project_path, str(job_id))
+        if not os.path.isdir(job_path):
+            os.makedirs(job_path)
+        message = {}
+        message['job'] = job
+        message['user'] = user
+        message['cpus'] = cpus
+        msg_file = os.path.join(job_path, '.msg')
+        with open(msg_file, 'w', encoding='utf-8') as f:
+            json.dump(message, f, ensure_ascii=False)
+        return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+    return render_template('abaqus/create_job.html', form=form)
+
+
 @abaqus_bp.route('/projects_status')
 @login_required
 def projects_status():
