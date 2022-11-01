@@ -38,12 +38,13 @@
                       <li> 算例user文件：{{ status['user'] }}</li>
                       <li> 算例使用CPU核心数量：{{ status['cpus'] }}</li>
                       <li> 当前状态：{{ solver_status }} </li>
+                      <a class='btn btn-primary' href="{{ url_for('abaqus.edit_job', project_id=project_id, job_id=job_id) }}">编辑信息</a>
                     </ul>
                     <h5 class="text-primary">求解控制</h5>
                     <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止ABAQUS的计算：</p>
 
                     {% if solver_status=='Submitting' or solver_status=='Running' or solver_status=='Pause' or solver_status=='Stopping'%}
-                    <a href="#" class="btn btn-secondary">计 算</a>
+                    <button class="btn btn-secondary" disabled="disabled">计 算</button>
                     {% else %}
                     <a href="{{ url_for('abaqus.run_job', project_id=project_id, job_id=job_id) }}" class="btn btn-success">计 算</a>
                     {% endif %}
@@ -51,25 +52,27 @@
                     {% if solver_status=='Running' %}
                     <a href="#" class="btn btn-warning">暂 停</a>
                     {% else %}
-                    <a href="#" class="btn btn-secondary">暂 停</a>
+                    <button class="btn btn-secondary" disabled="disabled">暂 停</button>
                     {% endif %}
 
                     {% if solver_status=='Pause' %}
                     <a href="#" class="btn btn-info">继 续</a>
                     {% else %}
-                    <a href="#" class="btn btn-secondary">继 续</a>
+                    <button class="btn btn-secondary" disabled="disabled">继 续</button>
                     {% endif %}
 
                     {% if solver_status=='Running' %}
                     <a href="{{ url_for('abaqus.terminate_job', project_id=project_id, job_id=job_id) }}" class="btn btn-danger">终 止</a>
                     {% else %}
-                    <a href="#" class="btn btn-secondary">终 止</a>
+                    <button class="btn btn-secondary" disabled="disabled">终 止</button>
                     {% endif %}
 
                     {% if env['service'] == 'client' %}
                     <a href="{{ url_for('abaqus.open_job', project_id=project_id, job_id=job_id) }}" class="btn btn-primary">在资源管理器中打开</a>
                     {% endif %}
-
+                    <p></p>
+                    <h5 class="text-primary">parameters.inp</h5>
+                    <textarea class="form-control" rows="15">{{ para }}</textarea>
                   </div>
                   <div class="col-6">
                     <h5 class="text-primary">文件列表</h5>

@@ -24,7 +24,7 @@ class ProjectForm(FlaskForm):
 
 
 class JobForm(FlaskForm):
-    job = StringField('算例inp文件', default='Job-1.inp', validators=[DataRequired(), Length(1, 128)])
+    job = StringField('算例名', default='Job-1', validators=[DataRequired(), Length(1, 128)])
     user = StringField('算例user文件', default='user.for')
     cpus = IntegerField('算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 16)])
     submit = SubmitField(u'提交')

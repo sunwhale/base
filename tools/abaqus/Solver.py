@@ -157,6 +157,12 @@ class Solver:
             inp = f.read()
         return inp
 
+    def get_parameters(self):
+        para_file = os.path.join(self.path, 'parameters.inp')
+        with open(para_file, 'r') as f:
+            para = f.read()
+        return para
+
     def solver_status(self):
         """
         求解器的可能状态如下：

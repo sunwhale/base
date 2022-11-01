@@ -221,11 +221,11 @@ def get_project_status(path, project_id):
             status['name'] = message['name']
             status['project_time'] = file_time(msg_file)
             status['descript'] = message['descript']
-            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
         except (FileNotFoundError, KeyError):
             for key in ['name', 'project_time', 'descript']:
                 status[key] = 'None'
-            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
     return status 
 
 
@@ -247,10 +247,11 @@ def get_job_status(path, project_id, job_id):
         status['inp_time'] = file_time(inp_file)
         status['inp_size'] = file_size(inp_file)
         status['solver_status'] = solver_status
-        status['operation'] = "<a href='%s'>查看</a> | <a class='btn btn-secondary btn-sm' href='%s'>查看</a> " % ('../view_job/'+str(project_id)+'/'+str(job_id), '../view_job/'+str(project_id)+'/'+str(job_id))
+        status['operation'] = "<a class='btn btn-primary btn-sm' href='%s'>查看</a> <a class='btn btn-primary btn-sm' onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_job/'+str(project_id)+'/'+str(job_id), '../delete_job/'+str(project_id)+'/'+str(job_id))
     except FileNotFoundError:
-        for key in ['job', 'user', 'cpus', 'inp_time', 'inp_size', 'solver_status', 'operation']:
+        for key in ['job', 'user', 'cpus', 'inp_time', 'inp_size', 'solver_status']:
             status[key] = 'None'
+        status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../delete_job/'+str(project_id)+'/'+str(job_id))
     return status
 
 
