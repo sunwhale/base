@@ -192,6 +192,20 @@ class Solver:
         with open(para_json_file, 'w', encoding='utf-8') as f:
             json.dump(para_dict, f, ensure_ascii=False)
 
+    def parameter_keys(self):
+        para_file = os.path.join(self.path, 'parameters.inp')
+        if os.path.exists(para_file):
+            with open(para_file, 'r') as f:
+                para = f.readlines()
+        else:
+            para = ''
+        para_dict = {}
+        for p in para:
+            if '=' in p:
+                l = p.strip().replace(' ', '').split('=')
+                para_dict[l[0]] = l[1]
+        return para_dict.keys()
+
     def solver_status(self):
         """
         求解器的可能状态如下：
@@ -218,7 +232,7 @@ class Solver:
             solver_status = 'Completed'
         elif 'exited' in logs:
             solver_status = 'Stopped'
-        elif 'Run standard.exe' in logs and solver_status != 'Stopping':
+        elif 'Run standard' in logs and solver_status != 'Stopping':
             solver_status = 'Running'
 
         with open(status_file, 'w', encoding='utf-8') as f:

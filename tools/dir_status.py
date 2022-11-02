@@ -252,7 +252,7 @@ def get_job_status(path, project_id, job_id):
         status['inp_time'] = file_time(inp_file)
         status['inp_size'] = file_size(inp_file)
         status['solver_status'] = solver_status
-        status['parameters'] = parameters
+        status['parameters'] = str(parameters)
         button = ""
         button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % ('../view_job/'+str(project_id)+'/'+str(job_id))
         button += "<a class='btn btn-primary btn-sm' onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a> " % ('../delete_job/'+str(project_id)+'/'+str(job_id))
@@ -260,14 +260,14 @@ def get_job_status(path, project_id, job_id):
             button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>计算</button> "
         else:
             button += "<a href='%s' class='btn btn-success btn-sm'>计算</a> " % ('../run_job/'+str(project_id)+'/'+str(job_id))
-        if solver_status=='Running':
-            button += "<a href='#' class='btn btn-warning btn-sm'>暂停</a> "
-        else:
-            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>暂停</button> "
-        if solver_status=='Pause':
-            button += "<a href='#'' class='btn btn-info btn-sm'>继续</a> "
-        else:
-            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>继续</button> "
+        # if solver_status=='Running':
+        #     button += "<a href='#' class='btn btn-warning btn-sm'>暂停</a> "
+        # else:
+        #     button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>暂停</button> "
+        # if solver_status=='Pause':
+        #     button += "<a href='#'' class='btn btn-info btn-sm'>继续</a> "
+        # else:
+        #     button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>继续</button> "
         if solver_status=='Running':
             button += "<a href='%s' class='btn btn-danger btn-sm'>终止</a>" % ('../terminate_job/'+str(project_id)+'/'+str(job_id))
         else:

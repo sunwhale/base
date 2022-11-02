@@ -142,6 +142,8 @@ def project_jobs_status(project_id):
 def view_project(project_id):
     path = current_app.config['ABAQUS_PATH']
     project_path = os.path.join(path, str(project_id))
+    s = Solver(project_path)
+    parameters = s.parameter_keys()
     form = UploadForm()
     if form.validate_on_submit():
         f = form.filename.data
@@ -150,7 +152,7 @@ def view_project(project_id):
     if os.path.exists(project_path):
         status = get_project_status(path, project_id)
         files = files_in_dir(project_path)
-        return render_template('abaqus/view_project.html', project_id=project_id, status=status, files=files, form=form)
+        return render_template('abaqus/view_project.html', project_id=project_id, status=status, files=files, parameters=parameters, form=form)
     else:
         abort(404)
 
