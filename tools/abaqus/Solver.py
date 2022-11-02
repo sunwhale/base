@@ -18,14 +18,14 @@ def is_number(s):
         return True
     except ValueError:
         pass
- 
+
     try:
         import unicodedata
         unicodedata.numeric(s)
         return True
     except (TypeError, ValueError):
         pass
- 
+
     return False
 
 
@@ -76,7 +76,8 @@ class Solver:
         if self.user == '':
             cmd = 'abaqus job=%s cpus=%s ask=off' % (self.job, self.cpus)
         else:
-            cmd = 'abaqus job=%s user=%s cpus=%s ask=off' % (self.job, self.user, self.cpus)
+            cmd = 'abaqus job=%s user=%s cpus=%s ask=off' % (
+                self.job, self.user, self.cpus)
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
@@ -169,6 +170,28 @@ class Solver:
             para = ''
         return para
 
+    def save_parameters(self, para):
+        para_file = os.path.join(self.path, 'parameters.inp')
+        para = para.replace('\r', '')
+        with open(para_file, 'w', encoding='utf-8') as f:
+            f.write(para)
+
+    def parameters_to_json(self):
+        para_file = os.path.join(self.path, 'parameters.inp')
+        if os.path.exists(para_file):
+            with open(para_file, 'r') as f:
+                para = f.readlines()
+        else:
+            para = ''
+        para_dict = {}
+        for p in para:
+            if '=' in p:
+                l = p.strip().replace(' ', '').split('=')
+                para_dict[l[0]] = l[1]
+        para_json_file = os.path.join(self.path, 'parameters.json')
+        with open(para_json_file, 'w', encoding='utf-8') as f:
+            json.dump(para_dict, f, ensure_ascii=False)
+
     def solver_status(self):
         """
         求解器的可能状态如下：
@@ -203,8 +226,35 @@ class Solver:
 
         return solver_status
 
+    def button(self, project_id, job_id):
+        solver_status = self.solver_status()
+        button = ""
+        button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % (
+            '../view_job/'+str(project_id)+'/'+str(job_id))
+        button += "<a class='btn btn-primary btn-sm' onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a> " % (
+            '../delete_job/'+str(project_id)+'/'+str(job_id))
+        if solver_status == 'Submitting' or solver_status == 'Running' or solver_status == 'Pause' or solver_status == 'Stopping':
+            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>计算</button> "
+        else:
+            button += "<a href='%s' class='btn btn-success btn-sm'>计算</a> " % (
+                '../run_job/'+str(project_id)+'/'+str(job_id))
+        if solver_status == 'Running':
+            button += "<a href='#' class='btn btn-warning btn-sm'>暂停</a> "
+        else:
+            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>暂停</button> "
+        if solver_status == 'Pause':
+            button += "<a href='#'' class='btn btn-info btn-sm'>继续</a> "
+        else:
+            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>继续</button> "
+        if solver_status == 'Running':
+            button += "<a href='%s' class='btn btn-danger btn-sm'>终止</a>" % (
+                '../terminate_job/'+str(project_id)+'/'+str(job_id))
+        else:
+            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>终止</button>"
+        return button
+
 
 if __name__ == '__main__':
     s = Solver(path='F:\\Github\\base\\files\\abaqus\\1\\1',
                job='Job-1', user='umat_visco_maxwell_phasefield.for')
-    s.write_msg()
+    s.parameters_to_json()

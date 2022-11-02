@@ -12,8 +12,8 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.abaqus import UploadForm, ProjectForm, JobForm
-from tools.dir_status import create_id, files_in_dir, projects_detail, get_project_status, project_jobs_detail, get_job_status
+from base.forms.abaqus import UploadForm, ProjectForm, JobForm, ParameterForm
+from tools.dir_status import sub_dirs_int, create_id, files_in_dir, projects_detail, get_project_status, project_jobs_detail, get_job_status
 from tools.abaqus.Solver import Solver
 
 abaqus_bp = Blueprint('abaqus', __name__)
@@ -127,6 +127,12 @@ def projects_status():
 @abaqus_bp.route('/project_jobs_status/<int:project_id>')
 @login_required
 def project_jobs_status(project_id):
+    path = current_app.config['ABAQUS_PATH']
+    job_id_list = sub_dirs_int(os.path.join(path, str(project_id)))
+    for job_id in job_id_list:
+        job_path = os.path.join(path, str(project_id), str(job_id))
+        s = Solver(job_path)
+        s.solver_status()
     data = project_jobs_detail(current_app.config['ABAQUS_PATH'], project_id)
     return jsonify(data)
 
@@ -221,7 +227,7 @@ def get_job_file(project_id, job_id, filename):
     return send_from_directory(os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(job_id)), filename)
 
 
-@abaqus_bp.route('/view_job/<int:project_id>/<int:job_id>')
+@abaqus_bp.route('/view_job/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
 @login_required
 def view_job(project_id, job_id):
     path = current_app.config['ABAQUS_PATH']
@@ -231,12 +237,18 @@ def view_job(project_id, job_id):
         sta = s.get_sta()
         logs = s.get_log()
         para = s.get_parameters()
-        sta = sta[-100:]
-        logs = logs[-10000:]
+        form = ParameterForm()
+        if form.validate_on_submit():
+            para = form.para.data
+            s.save_parameters(para)
+            flash('parameters.inp保存成功。', 'success')
+            return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+        form.para.data = para
+        s.parameters_to_json()
         files = files_in_dir(job_path)
         solver_status = s.solver_status()
         status = get_job_status(path, project_id, job_id)
-        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status, logs=logs, sta=sta, para=para, solver_status=solver_status, files=files)
+        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status, logs=logs[-5000:], sta=sta[-100:], form=form, solver_status=solver_status, files=files)
     else:
         abort(404)
 
@@ -255,7 +267,7 @@ def run_job(project_id, job_id):
                 f.write('Submitting')
         else:
             flash('缺少必要的计算文件。', 'warning')
-        return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+        return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
     else:
         abort(404)
 
@@ -269,7 +281,7 @@ def terminate_job(project_id, job_id):
         proc = s.terminate()
         with open(os.path.join(job_path, '.status'), 'w', encoding='utf-8') as f:
             f.write('Stopping')
-        return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+        return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
     else:
         abort(404)
 

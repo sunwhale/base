@@ -28,3 +28,8 @@ class JobForm(FlaskForm):
     user = StringField('算例user文件', default='user.for')
     cpus = IntegerField('算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 16)])
     submit = SubmitField(u'提交')
+
+
+class ParameterForm(FlaskForm):
+    para = TextAreaField('parameters.inp')
+    submit = SubmitField(u'保存')
