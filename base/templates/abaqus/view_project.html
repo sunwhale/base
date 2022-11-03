@@ -37,11 +37,13 @@
                       <li> 项目名称：{{ status['name'] }} </li>
                       <li> 项目编号：{{ project_id }} </li>
                       <li> 创建时间：{{ status['project_time'] }} </li>
+                      <li> 缺省算例名：{{ status['job'] }} </li>
+                      <li> 缺省user文件：{{ status['user'] }} </li>
+                      <li> 缺省算例使用CPU核心数量：{{ status['cpus'] }} </li>
                       <li> 项目描述：{{ status['descript'] }} </li>
                       <a class='btn btn-primary' href="{{ url_for('abaqus.edit_project', project_id=project_id) }}">编辑信息</a>
                     </ul>
 
-                  
                     <h5 class="text-primary">创建新算例</h5>
                     复制当前项目文件到算例文件夹，并生成新的参数文件。<br>
                     <a class='btn btn-primary' href="{{ url_for('abaqus.create_job', project_id=project_id) }}">新建算例</a>
@@ -50,14 +52,12 @@
                   <div class="col-6">
                     <h5 class="text-primary">上传文件</h5>
 
-
                     <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
                       {{ form.csrf_token }}
                       <div class="form-group">
                       {{ form.submit }}{{ form.filename }}
                       </div>
                     </form>
-
 
                     <h5 class="text-primary">项目文件</h5>
                     <table class="table table-sm table-hover">

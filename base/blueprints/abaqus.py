@@ -5,16 +5,18 @@
 import json
 import os
 import shutil
-import time
 import subprocess
+import time
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.abaqus import UploadForm, ProjectForm, JobForm, ParameterForm
-from tools.dir_status import sub_dirs_int, create_id, files_in_dir, projects_detail, get_project_status, project_jobs_detail, get_job_status
+from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, UploadForm
 from tools.abaqus.Solver import Solver
+from tools.dir_status import (create_id, files_in_dir, get_job_status,
+                              get_project_status, project_jobs_detail,
+                              projects_detail, sub_dirs_int)
 
 abaqus_bp = Blueprint('abaqus', __name__)
 
@@ -30,15 +32,16 @@ def manage_projects():
 def create_project():
     form = ProjectForm()
     if form.validate_on_submit():
-        name = form.name.data
-        descript = form.descript.data
         project_id = create_id(current_app.config['ABAQUS_PATH'])
         project_path = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id))
         if not os.path.isdir(project_path):
             os.makedirs(project_path)
         message = {}
-        message['name'] = name
-        message['descript'] = descript
+        message['name'] = form.name.data
+        message['descript'] = form.descript.data
+        message['job'] = form.job.data
+        message['user'] = form.user.data
+        message['cpus'] = form.cpus.data
         msg_file = os.path.join(project_path, 'project.msg')
         with open(msg_file, 'w', encoding='utf-8') as f:
             json.dump(message, f, ensure_ascii=False)
@@ -50,9 +53,9 @@ def create_project():
 @login_required
 def create_job(project_id):
     form = JobForm()
+    path = current_app.config['ABAQUS_PATH']
+    project_path = os.path.join(path, str(project_id))
     if form.validate_on_submit():
-        path = current_app.config['ABAQUS_PATH']
-        project_path = os.path.join(path, str(project_id))
         job_id = create_id(project_path)
         job_path = os.path.join(project_path, str(job_id))
         if not os.path.isdir(job_path):
@@ -68,6 +71,12 @@ def create_job(project_id):
         for file in files:
             shutil.copy(os.path.join(project_path, file['name']), os.path.join(job_path, file['name']))
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+    msg_file = os.path.join(project_path, 'project.msg')
+    with open(msg_file, 'r', encoding='utf-8') as f:
+        message = json.load(f)
+    form.job.data = message['job']
+    form.user.data = message['user']
+    form.cpus.data = message['cpus']
     return render_template('abaqus/create_job.html', form=form)
 
 
@@ -82,6 +91,9 @@ def edit_project(project_id):
         message = {}
         message['name'] = form.name.data
         message['descript'] = form.descript.data
+        message['job'] = form.job.data
+        message['user'] = form.user.data
+        message['cpus'] = form.cpus.data
         with open(msg_file, 'w', encoding='utf-8') as f:
             json.dump(message, f, ensure_ascii=False)
         return redirect(url_for('.view_project', project_id=project_id))
@@ -90,6 +102,9 @@ def edit_project(project_id):
         message = json.load(f)
     form.name.data = message['name']
     form.descript.data = message['descript']
+    form.job.data = message['job']
+    form.user.data = message['user']
+    form.cpus.data = message['cpus']
     return render_template('abaqus/create_job.html', form=form)
 
 
@@ -279,7 +294,8 @@ def run_job(project_id, job_id):
 def terminate_job(project_id, job_id):
     job_path = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
     if os.path.exists(job_path):
-        s = Solver(job_path, job='Job-1', user='umat_visco_maxwell_phasefield.for')
+        s = Solver(job_path)
+        s.read_msg()
         proc = s.terminate()
         with open(os.path.join(job_path, '.status'), 'w', encoding='utf-8') as f:
             f.write('Stopping')

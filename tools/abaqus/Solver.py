@@ -3,13 +3,11 @@
 
 """
 
+import json
 import os
 import subprocess
-import threading
-import json
 
 import psutil
-import pandas as pd
 
 
 def is_number(s):
@@ -234,6 +232,10 @@ class Solver:
             solver_status = 'Stopped'
         elif 'Run standard' in logs and solver_status != 'Stopping':
             solver_status = 'Running'
+
+        # 如果发生异常，则赋予默认值'Setting'
+        if solver_status not in ['Setting', 'Submitting', 'Running', 'Stopping', 'Stopped', 'Completed']:
+            solver_status = 'Setting'
 
         with open(status_file, 'w', encoding='utf-8') as f:
             f.write(solver_status)

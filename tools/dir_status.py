@@ -221,9 +221,12 @@ def get_project_status(path, project_id):
             status['name'] = message['name']
             status['project_time'] = file_time(msg_file)
             status['descript'] = message['descript']
+            status['job'] = message['job']
+            status['user'] = message['user']
+            status['cpus'] = message['cpus']
             status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
         except (FileNotFoundError, KeyError):
-            for key in ['name', 'project_time', 'descript']:
+            for key in ['name', 'project_time', 'descript', 'job', 'user', 'cpus']:
                 status[key] = 'None'
             status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
     return status 
