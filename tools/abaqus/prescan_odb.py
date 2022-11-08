@@ -26,7 +26,7 @@ def len_2_level(x):
         return count
 
 
-def onOdbPrescan(odb_file):
+def prescan_odb(odb_file):
 
     odb_dict = {
         'jobData': {},
@@ -131,7 +131,11 @@ def onOdbPrescan(odb_file):
                     'totalTime': step.totalTime
                 }
 
+                i = 0
                 for frame in step.frames:
+                    i += 1
+                    if i > 5:
+                        break
                     frame_dict = {
                         'description': frame.description,
                         'fieldOutputs': {},
@@ -169,15 +173,16 @@ def onOdbPrescan(odb_file):
             print('Abaqus error message: %s' % str(e))
         except:
             print('Unknown Exception.')
+    else:
+        print('The odb file is not found.')
 
     return odb_dict
 
 
 if __name__ == '__main__':
-    odb_file = 'F:\\Github\\base\\tools\\abaqus\\Job-1.odb'
-    odb_dict = onOdbPrescan(odb_file)
-    print(odb_dict['steps']['Step-1']['frames'][0]['fieldOutputs']['S'])
+    odb_file = sys.argv[-2]
+    odb_dict = prescan_odb(odb_file)
 
-    odb_json_file = 'F:\\Github\\base\\tools\\abaqus\\prescan_odb.json'
+    odb_json_file = sys.argv[-1]
     with open(odb_json_file, 'w') as f:
         json.dump(odb_dict, f, ensure_ascii=False)
