@@ -142,6 +142,7 @@ def onOdbPrescan(odb_file):
 
                     for field in frame.fieldOutputs.values():
                         frame_dict['fieldOutputs'][field.name] = {
+                            'baseElementTypes': [],
                             'bulkDataBlocks': [],
                             'componentLabels': field.componentLabels,
                             'description': field.description,
@@ -150,6 +151,10 @@ def onOdbPrescan(odb_file):
                             'type': str(field.type),
                             'validInvariants': [],
                         }
+
+                        for base_element_type in field.baseElementTypes:
+                            frame_dict['fieldOutputs'][field.name]['baseElementTypes'].append(
+                                str(base_element_type))
 
                         for location in field.locations:
                             frame_dict['fieldOutputs'][field.name]['locations'].append(
@@ -173,6 +178,6 @@ if __name__ == '__main__':
     odb_dict = onOdbPrescan(odb_file)
     print(odb_dict['steps']['Step-1']['frames'][0]['fieldOutputs']['S'])
 
-    odb_json_file = 'F:\\Github\\base\\tools\\abaqus\\odb.json'
+    odb_json_file = 'F:\\Github\\base\\tools\\abaqus\\prescan_odb.json'
     with open(odb_json_file, 'w') as f:
         json.dump(odb_dict, f, ensure_ascii=False)

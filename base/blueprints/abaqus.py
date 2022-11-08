@@ -33,7 +33,8 @@ def create_project():
     form = ProjectForm()
     if form.validate_on_submit():
         project_id = create_id(current_app.config['ABAQUS_PATH'])
-        project_path = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id))
+        project_path = os.path.join(
+            current_app.config['ABAQUS_PATH'], str(project_id))
         if not os.path.isdir(project_path):
             os.makedirs(project_path)
         message = {}
@@ -69,7 +70,8 @@ def create_job(project_id):
             json.dump(message, f, ensure_ascii=False)
         files = files_in_dir(project_path)
         for file in files:
-            shutil.copy(os.path.join(project_path, file['name']), os.path.join(job_path, file['name']))
+            shutil.copy(os.path.join(project_path, file['name']), os.path.join(
+                job_path, file['name']))
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
     msg_file = os.path.join(project_path, 'project.msg')
     with open(msg_file, 'r', encoding='utf-8') as f:
@@ -112,7 +114,8 @@ def edit_project(project_id):
 @login_required
 def edit_job(project_id, job_id):
     form = JobForm()
-    job_path = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    job_path = os.path.join(
+        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
     msg_file = os.path.join(job_path, '.msg')
 
     if form.validate_on_submit():
@@ -178,7 +181,8 @@ def delete_project(project_id):
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该项目！', 'danger')
         return redirect(url_for('.manage_projects'))
-    project_path = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id))
+    project_path = os.path.join(
+        current_app.config['ABAQUS_PATH'], str(project_id))
     if os.path.exists(project_path):
         shutil.rmtree(project_path)
         flash('ABAQUS项目%s删除成功。' % project_id, 'success')
@@ -193,7 +197,8 @@ def delete_job(project_id, job_id):
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该项目！', 'danger')
         return redirect(url_for('.manage_projects'))
-    job_path = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    job_path = os.path.join(
+        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
     if os.path.exists(job_path):
         shutil.rmtree(job_path)
         flash('ABAQUS项目%s算例%s删除成功。' % (project_id, job_id), 'success')
@@ -208,7 +213,8 @@ def delete_project_file(project_id, filename):
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该文件！', 'danger')
         return redirect(url_for('.view_project', project_id=project_id))
-    file = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(filename))
+    file = os.path.join(current_app.config['ABAQUS_PATH'], str(
+        project_id), str(filename))
     if os.path.exists(file):
         os.remove(file)
         flash('文件%s删除成功。' % filename, 'success')
@@ -223,7 +229,8 @@ def delete_job_file(project_id, job_id, filename):
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该文件！', 'danger')
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
-    file = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(job_id), str(filename))
+    file = os.path.join(current_app.config['ABAQUS_PATH'], str(
+        project_id), str(job_id), str(filename))
     if os.path.exists(file):
         os.remove(file)
         flash('文件%s删除成功。' % filename, 'success')
@@ -273,7 +280,8 @@ def view_job(project_id, job_id):
 @abaqus_bp.route('/run_job/<int:project_id>/<int:job_id>')
 @login_required
 def run_job(project_id, job_id):
-    job_path = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    job_path = os.path.join(
+        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
     if os.path.exists(job_path):
         s = Solver(job_path)
         s.read_msg()
@@ -292,7 +300,8 @@ def run_job(project_id, job_id):
 @abaqus_bp.route('/terminate_job/<int:project_id>/<int:job_id>')
 @login_required
 def terminate_job(project_id, job_id):
-    job_path = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    job_path = os.path.join(
+        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
     if os.path.exists(job_path):
         s = Solver(job_path)
         s.read_msg()
@@ -315,3 +324,63 @@ def open_job(project_id, job_id):
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
     else:
         abort(404)
+
+
+@abaqus_bp.route('/scan_odb')
+@login_required
+def scan_odb():
+    return render_template('abaqus/scan_odb.html')
+
+
+@abaqus_bp.route('/prescan_odb_data', methods=['GET', 'POST'])
+@login_required
+def prescan_odb_data():
+    odb_json_file = 'F:\\Github\\base\\tools\\abaqus\\prescan_odb.json'
+    with open(odb_json_file, 'r', encoding='utf-8') as f:
+        odb_dict = json.load(f)
+
+    def dict_to_tree(obj, start_id, parent_id, depth=0, maxdepth=10):
+        if depth >= maxdepth:
+            return start_id
+        if isinstance(obj, dict):
+            for key, val in obj.items():
+                tree.append({"id": start_id, "pId": parent_id, "name": key})
+                start_id += 1
+                start_id = dict_to_tree(val, start_id, start_id-1, depth=depth+1, maxdepth=maxdepth)
+        elif isinstance(obj, list):
+            i = 0
+            for elem in obj:
+                tree.append({"id": start_id, "pId": parent_id, "name": i})
+                i += 1
+                start_id += 1
+                start_id = dict_to_tree(elem, start_id, start_id-1, depth=depth, maxdepth=maxdepth)
+        else:
+            tree.append({"id": start_id, "pId": parent_id, "name": obj})
+            start_id += 1
+        return start_id
+
+    global tree
+    tree = []
+    dict_to_tree(odb_dict, 1, 0)
+
+    return tree
+
+
+@abaqus_bp.route('/scan_odb_data', methods=['GET', 'POST'])
+@login_required
+def scan_odb_data():
+    odb_json_file = 'F:\\Github\\base\\tools\\abaqus\\prescan_odb.json'
+    with open(odb_json_file, 'r', encoding='utf-8') as f:
+        odb_dict = json.load(f)
+
+    tree = []
+
+    tree.append({"id": 1, "pId": 0, "name": "Datasets", "open": True, "icon": url_for(
+        'static', filename='zTree/icons/icoR_adaptiveRemeshRulesSmall.png')})
+    tree.append({"id": 2, "pId": 1, "name": "File: " +
+                 odb_dict['name'], "icon": url_for('static', filename='zTree/icons/icoR_mdbSmall.png')})
+    for key, step in odb_dict['steps'].items():
+        tree.append({"id": 3, "pId": 2, "name": key, "icon": url_for(
+            'static', filename='zTree/icons/icoR_stepSmall.png')})
+
+    return tree
