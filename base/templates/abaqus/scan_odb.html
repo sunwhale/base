@@ -78,7 +78,7 @@
     },
     async: {
       enable: true,
-      url:"{{ url_for('abaqus.prescan_odb_data') }}",
+      url:"{{ url_for('abaqus.prescan_odb_data', project_id=1, job_id=1) }}",
       type: "get",
     }
   };

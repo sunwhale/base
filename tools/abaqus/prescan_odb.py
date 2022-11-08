@@ -131,11 +131,7 @@ def prescan_odb(odb_file):
                     'totalTime': step.totalTime
                 }
 
-                i = 0
                 for frame in step.frames:
-                    i += 1
-                    if i > 5:
-                        break
                     frame_dict = {
                         'description': frame.description,
                         'fieldOutputs': {},

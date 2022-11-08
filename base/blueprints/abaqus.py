@@ -14,6 +14,7 @@ from flask_login import current_user, login_required
 
 from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, UploadForm
 from tools.abaqus.Solver import Solver
+from tools.abaqus.Postproc import Postproc
 from tools.dir_status import (create_id, files_in_dir, get_job_status,
                               get_project_status, project_jobs_detail,
                               projects_detail, sub_dirs_int)
@@ -326,44 +327,67 @@ def open_job(project_id, job_id):
         abort(404)
 
 
+@abaqus_bp.route('/prescan_odb/<int:project_id>/<int:job_id>')
+@login_required
+def prescan_odb(project_id, job_id):
+    job_path = os.path.join(
+        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    if os.path.exists(job_path):
+        p = Postproc(job_path)
+        if p.check_files():
+            proc = p.prescan_odb()
+        else:
+            flash('缺少odb文件。', 'warning')
+        return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
+    else:
+        abort(404)
+
+
+def dict_to_tree(obj, start_id, parent_id, depth=0, maxdepth=10):
+    if depth >= maxdepth:
+        return start_id
+    if isinstance(obj, dict):
+        for key, val in obj.items():
+            if depth < 1:
+                tree.append({"id": start_id, "pId": parent_id, "name": key, "open": True})
+            else:
+                tree.append({"id": start_id, "pId": parent_id, "name": key})
+            start_id += 1
+            start_id = dict_to_tree(val, start_id, start_id-1, depth=depth+1, maxdepth=maxdepth)
+    elif isinstance(obj, list):
+        i = 0
+        for elem in obj:
+            tree.append({"id": start_id, "pId": parent_id, "name": i})
+            i += 1
+            start_id += 1
+            start_id = dict_to_tree(elem, start_id, start_id-1, depth=depth, maxdepth=maxdepth)
+    else:
+        tree.append({"id": start_id, "pId": parent_id, "name": obj})
+        start_id += 1
+    return start_id
+
+
+@abaqus_bp.route('/prescan_odb_data/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+def prescan_odb_data(project_id, job_id):
+    job_path = os.path.join(
+        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    prescan_odb_json_file = os.path.join(job_path, 'prescan_odb.json')
+    global tree
+    tree = []
+    if os.path.exists(prescan_odb_json_file):
+        with open(prescan_odb_json_file, 'r', encoding='utf-8') as f:
+            prescan_odb_dict = json.load(f)
+            dict_to_tree(prescan_odb_dict, 1, 0)
+    else:
+        tree.append({"id": 1, "pId": 0, "name": "空"})
+    return tree
+
+
 @abaqus_bp.route('/scan_odb')
 @login_required
 def scan_odb():
     return render_template('abaqus/scan_odb.html')
-
-
-@abaqus_bp.route('/prescan_odb_data', methods=['GET', 'POST'])
-@login_required
-def prescan_odb_data():
-    odb_json_file = 'F:\\Github\\base\\tools\\abaqus\\prescan_odb.json'
-    with open(odb_json_file, 'r', encoding='utf-8') as f:
-        odb_dict = json.load(f)
-
-    def dict_to_tree(obj, start_id, parent_id, depth=0, maxdepth=10):
-        if depth >= maxdepth:
-            return start_id
-        if isinstance(obj, dict):
-            for key, val in obj.items():
-                tree.append({"id": start_id, "pId": parent_id, "name": key})
-                start_id += 1
-                start_id = dict_to_tree(val, start_id, start_id-1, depth=depth+1, maxdepth=maxdepth)
-        elif isinstance(obj, list):
-            i = 0
-            for elem in obj:
-                tree.append({"id": start_id, "pId": parent_id, "name": i})
-                i += 1
-                start_id += 1
-                start_id = dict_to_tree(elem, start_id, start_id-1, depth=depth, maxdepth=maxdepth)
-        else:
-            tree.append({"id": start_id, "pId": parent_id, "name": obj})
-            start_id += 1
-        return start_id
-
-    global tree
-    tree = []
-    dict_to_tree(odb_dict, 1, 0)
-
-    return tree
 
 
 @abaqus_bp.route('/scan_odb_data', methods=['GET', 'POST'])

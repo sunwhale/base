@@ -3,6 +3,14 @@
 
 {% block title %}{{ project_id }}.{{ job_id }}号算例{% endblock title %}
 
+{% block css %}
+{% if env['service'] == 'server' %}
+<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/zTree.v3/3.5.42/css/zTreeStyle/zTreeStyle.min.css">
+{% else %}
+<link rel="stylesheet" href="{{ url_for('static', filename='zTree/css/zTreeStyle/zTreeStyle.css') }}">
+{% endif %}
+{% endblock css %}
+
 {% block pageheader %}算例信息{% endblock pageheader %}
 
 {% block level %}
@@ -45,7 +53,7 @@
                         </ul>
                         <h5 class="text-primary">求解控制</h5>
                         当前状态：{{ solver_status }}
-                        <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止ABAQUS的计算，并通过刷新页面获取算例状态。</p>
+                        <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止ABAQUS的计算，并通过<a href="javascript:location.reload();">刷新</a>页面获取算例状态。</p>
 
                         {% if solver_status=='Submitting' or solver_status=='Running' or solver_status=='Pause' or solver_status=='Stopping'%}
                         <button class="btn btn-secondary" disabled="disabled">计 算</button>
@@ -77,11 +85,32 @@
                 </div>
               </div>
               <div class="col-12">
-                <div class="card card-primary collapsed-card">
+                <div class="card card-primary">
+                  <div class="card-header">
+                    <h3 class="card-title">参数文件</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        <form action="" method="post" class="form" role="form">
+                          {{ form.csrf_token() }}
+                          {{ render_field(form.para, style="height: 266px;") }}
+                          {{ render_field(form.submit, button_style='btn btn-primary') }}
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary">
                   <div class="card-header">
                     <h3 class="card-title">文件列表</h3>
                     <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i></button>
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                     </div>
                   </div>
                   <div class="card-body">
@@ -112,27 +141,6 @@
                   </div>
                 </div>
               </div>
-              <div class="col-12">
-                <div class="card card-primary">
-                  <div class="card-header">
-                    <h3 class="card-title">参数文件</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
-                    </div>
-                  </div>
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col-12">
-                        <form action="" method="post" class="form" role="form">
-                          {{ form.csrf_token() }}
-                          {{ render_field(form.para, style="height: 226px;") }}
-                          {{ render_field(form.submit, button_style='btn btn-primary') }}
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
           <div class="col-6">
@@ -141,7 +149,7 @@
                 <div class="card card-primary">
                   <div class="card-body">
                     <h5 class="text-primary">日志文件.log</h5>
-                    <textarea class="form-control" style="height: 369px;">{{ logs }}</textarea>
+                    <textarea class="form-control" style="height: 345px;">{{ logs }}</textarea>
                   </div>
                 </div>
               </div>
@@ -178,6 +186,27 @@
                   </div>
                 </div>
               </div>
+              <div class="col-12">
+                <div class="card card-primary">
+                  <div class="card-header">
+                    <h3 class="card-title">后处理</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        <p class="mb-1">您可以通过点击下面的按钮进行ABAQUS计算结果的后处理，并通过<a href="javascript:location.reload();">刷新</a>页面更新結果。</p>
+                        <a href="{{ url_for('abaqus.prescan_odb', project_id=project_id, job_id=job_id) }}" class="btn btn-success">odb 预扫描</a>
+                        <p></p>
+                        <p class="mb-1">预扫描树状图：</p>
+                        <ul id="ztree" class="ztree"></ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -187,15 +216,28 @@
 
 {% block script %}
 {% if env['service'] == 'server' %}
-<script src="https://cdn.bootcdn.net/ajax/libs/editor-md/1.5.0/editormd.min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/marked/0.3.3/marked.min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/prettify/r298/prettify.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/zTree.v3/3.5.42/js/jquery.ztree.core.min.js"></script>
 {% else %}
-<script src="{{ url_for('static', filename='editormd/editormd.min.js') }}"></script>
-<script src="{{ url_for('static', filename='editormd/lib/marked.min.js') }}"></script>
-<script src="{{ url_for('static', filename='editormd/lib/prettify.min.js') }}"></script>
+<script src="{{ url_for('static', filename='zTree/js/jquery.ztree.core.min.js') }}"></script>
 {% endif %}
 <script type="text/javascript">
+
+  var setting = {
+    data: {
+      simpleData: {
+        enable: true
+      }
+    },
+    async: {
+      enable: true,
+      url:"{{ url_for('abaqus.prescan_odb_data', project_id=project_id, job_id=job_id) }}",
+      type: "get",
+    }
+  };
+
+  $(document).ready(function(){
+    $.fn.zTree.init($("#ztree"), setting);
+  });
 
 </script>
 {% endblock script %}
