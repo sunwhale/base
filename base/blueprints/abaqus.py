@@ -349,18 +349,21 @@ def dict_to_tree(obj, start_id, parent_id, depth=0, maxdepth=10):
     if isinstance(obj, dict):
         for key, val in obj.items():
             if depth < 1:
-                tree.append({"id": start_id, "pId": parent_id, "name": key, "open": True})
+                tree.append({"id": start_id, "pId": parent_id,
+                             "name": key, "open": True})
             else:
                 tree.append({"id": start_id, "pId": parent_id, "name": key})
             start_id += 1
-            start_id = dict_to_tree(val, start_id, start_id-1, depth=depth+1, maxdepth=maxdepth)
+            start_id = dict_to_tree(
+                val, start_id, start_id-1, depth=depth+1, maxdepth=maxdepth)
     elif isinstance(obj, list):
         i = 0
         for elem in obj:
             tree.append({"id": start_id, "pId": parent_id, "name": i})
             i += 1
             start_id += 1
-            start_id = dict_to_tree(elem, start_id, start_id-1, depth=depth, maxdepth=maxdepth)
+            start_id = dict_to_tree(
+                elem, start_id, start_id-1, depth=depth, maxdepth=maxdepth)
     else:
         tree.append({"id": start_id, "pId": parent_id, "name": obj})
         start_id += 1
@@ -399,12 +402,40 @@ def scan_odb_data():
 
     tree = []
 
-    tree.append({"id": 1, "pId": 0, "name": "Datasets", "open": True, "icon": url_for(
+    parent_id = {}
+    for i in range(10):
+        parent_id[i] = []
+
+    tree.append({"id": len(tree)+1, "pId": 0, "name": "Datasets", "open": True, "icon": url_for(
         'static', filename='zTree/icons/icoR_adaptiveRemeshRulesSmall.png')})
-    tree.append({"id": 2, "pId": 1, "name": "File: " +
+
+    parent_id[0].append(len(tree))
+
+    tree.append({"id": len(tree)+1, "pId": parent_id[0][-1], "name": "File: " +
                  odb_dict['name'], "icon": url_for('static', filename='zTree/icons/icoR_mdbSmall.png')})
-    for key, step in odb_dict['steps'].items():
-        tree.append({"id": 3, "pId": 2, "name": key, "icon": url_for(
+
+    parent_id[1].append(len(tree))
+    for step_key, step in odb_dict['steps'].items():
+        tree.append({"id": len(tree)+1, "pId": parent_id[1][-1], "name": step_key, "icon": url_for(
             'static', filename='zTree/icons/icoR_stepSmall.png')})
+
+        parent_id[2].append(len(tree))
+        for frame in step['frames']:
+            tree.append({"id": len(tree)+1, "pId": parent_id[2][-1], "name": frame['description'], "icon": url_for(
+                'static', filename='zTree/icons/icoR_framesSmall.png')})
+
+            parent_id[3].append(len(tree))
+            for field_name in ['S', 'LE', 'E']:
+                if field_name in frame['fieldOutputs'].keys():
+                    tree.append({"id": len(tree)+1, "pId": parent_id[3][-1],
+                                 "name": field_name})
+
+                    parent_id[4].append(len(tree))
+
+                    tree.append({"id": len(tree)+1, "pId": parent_id[4][-1],
+                                 "name": "Element types: %s" % str(frame['fieldOutputs']['S']['baseElementTypes'])})
+
+                    tree.append({"id": len(tree)+1, "pId": parent_id[4][-1],
+                                 "name": "Component labels: %s" % str(frame['fieldOutputs']['S']['componentLabels'])})
 
     return tree
