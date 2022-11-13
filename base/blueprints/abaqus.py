@@ -338,6 +338,8 @@ def prescan_odb(project_id, job_id):
         p = Postproc(job_path)
         if p.check_files():
             proc = p.prescan_odb()
+            with open(os.path.join(job_path, '.prescan_status'), 'w', encoding='utf-8') as f:
+                f.write('Scanning')
         else:
             flash('缺少odb文件。', 'warning')
         return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
@@ -360,13 +362,13 @@ def prescan_odb_data(project_id, job_id):
 
 
 @abaqus_bp.route('/scan_odb')
-# @login_required
+@login_required
 def scan_odb():
     return render_template('abaqus/scan_odb.html')
 
 
 @abaqus_bp.route('/scan_odb_data2', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def scan_odb_data2():
     odb_json_file = 'F:\\Github\\base\\tools\\abaqus\\prescan_odb.json'
     with open(odb_json_file, 'r', encoding='utf-8') as f:
@@ -376,7 +378,7 @@ def scan_odb_data2():
 
 
 @abaqus_bp.route('/scan_odb_data', methods=['GET', 'POST'])
-# @login_required
+@login_required
 def scan_odb_data():
 
     # import numpy as np

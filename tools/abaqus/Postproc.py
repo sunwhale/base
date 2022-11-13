@@ -27,6 +27,22 @@ def is_number(s):
     return False
 
 
+def dump_json(file_name, data, encoding='utf-8'):
+    """
+    Write JSON data to file.
+    """
+    with open(file_name, 'w', encoding=encoding) as f:
+        return json.dump(data, f, ensure_ascii=False)
+
+
+def load_json(file_name, encoding='utf-8'):
+    """
+    Read JSON data from file.
+    """
+    with open(file_name, 'r', encoding=encoding) as f:
+        return json.load(f)
+
+
 class Postproc:
     """
     Postproc类，定义ABAQUS后处理执行参数。
@@ -39,8 +55,7 @@ class Postproc:
     def read_msg(self):
         msg_file = os.path.join(self.path, '.msg')
         try:
-            with open(msg_file, 'r', encoding='utf-8') as f:
-                message = json.load(f)
+            message = load_json(msg_file)
             self.job = message['job']
         except FileNotFoundError:
             message = {}
@@ -55,9 +70,62 @@ class Postproc:
 
     def prescan_odb(self):
         os.chdir(self.path)
-        cmd = 'abaqus viewer noGui=%s -- %s.odb %s' % ('F:\\Github\\base\\tools\\abaqus\\prescan_odb.py', self.job, 'prescan_odb.json')
+        cmd = 'abaqus viewer noGui=%s -- %s.odb %s' % (
+            'F:\\Github\\base\\tools\\abaqus\\prescan_odb.py', self.job, 'prescan_odb.json')
         proc = subprocess.Popen(cmd, shell=True)
         return proc
+
+    def get_rpy(self):
+        rpy_file = os.path.join(self.path, 'abaqus.rpy')
+        if os.path.exists(rpy_file):
+            with open(rpy_file, 'r') as f:
+                rpy = f.read()
+        else:
+            rpy = ''
+        return rpy
+
+    def prescan_status(self):
+        """
+        求解器的可能状态如下：
+        ['No odb file', 'Ready to prescan', 'Submitting', 'Scanning', 'Stopped', 'Completed']
+
+        Returns
+        -------
+        prescan_status
+
+        """
+        status_file = os.path.join(self.path, '.prescan_status')
+        
+        odb_file = os.path.join(self.path, '{}.odb'.format(self.job))
+        if not os.path.exists(odb_file):
+            prescan_status = 'No odb file'
+            with open(status_file, 'w', encoding='utf-8') as f:
+                f.write(prescan_status)
+            return prescan_status
+
+        if not os.path.exists(status_file):
+            prescan_status = 'Ready to prescan'
+            with open(status_file, 'w', encoding='utf-8') as f:
+                f.write(prescan_status)
+        else:
+            with open(status_file, 'r', encoding='utf-8') as f:
+                prescan_status = f.read()
+
+        rpy = self.get_rpy()
+        if 'done' in rpy:
+            prescan_status = 'Completed'
+        elif 'exited' in rpy:
+            prescan_status = 'Stopped'
+        elif 'Run standard' in rpy and prescan_status != 'Stopping':
+            prescan_status = 'Scanning'
+
+        if prescan_status not in ['No odb file', 'Ready to prescan', 'Submitting', 'Scanning', 'Stopped', 'Completed']:
+            prescan_status = 'Ready to prescan'
+
+        with open(status_file, 'w', encoding='utf-8') as f:
+            f.write(prescan_status)
+
+        return prescan_status
 
 
 if __name__ == '__main__':

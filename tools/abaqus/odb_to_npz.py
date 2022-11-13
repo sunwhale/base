@@ -8,26 +8,28 @@ import json
 import os
 import numpy as np
 
-position = {'INTEGRATION_POINT': INTEGRATION_POINT,
-            'NODAL': NODAL,
-            'ELEMENT_NODAL': ELEMENT_NODAL,
-            'CENTROID': CENTROID}
+position = {
+    'INTEGRATION_POINT': INTEGRATION_POINT,
+    'NODAL': NODAL,
+    'ELEMENT_NODAL': ELEMENT_NODAL,
+    'CENTROID': CENTROID
+}
 
 
-def write_json(file_name, data):
+def dump_json(file_name, data):
     """
     Write JSON data to file.
     """
-    with open(file_name, 'w') as data_file:
-        return json.dump(data, data_file)
+    with open(file_name, 'w') as f:
+        return json.dump(data, f)
 
 
-def read_json(file_name):
+def load_json(file_name):
     """
     Read JSON data from file.
     """
-    with open(file_name, 'r') as data_file:
-        return json.loads(data_file.read())
+    with open(file_name, 'r') as f:
+        return json.load(f)
 
 
 def is_int(s):
@@ -40,13 +42,13 @@ def is_int(s):
 
 
 def odb_to_npz():
-    # Read commands from the file
+    # Read settings from the file
 
-    cmds = read_json('output_json.txt')
-    odbs = cmds['ODB']
-    regions = cmds['Regions']
-    variables = cmds['Variables']
-    step_frames = cmds['Frames']
+    settings = load_json('odb_to_npz.json')
+    odbs = settings['ODB']
+    regions = settings['Regions']
+    variables = settings['Variables']
+    step_frames = settings['Frames']
 
     total_count = 0
     # loop of odbs
@@ -61,8 +63,6 @@ def odb_to_npz():
 
     print(total_count)
 
-    process_count = 0
-
     # loop of odbs
     for odb_name in odbs:
         odb = openOdb(path=str(odb_name), readOnly=True)
@@ -71,109 +71,114 @@ def odb_to_npz():
         print(odb_name)
         # loop of regions
         for r in regions:
-            # print(r)
-            data[str(r[0])] = {}
-            data[str(r[0])]['fieldOutputs'] = {}
-            data[str(r[0])]['regionType'] = r[1]
-            data[str(r[0])]['elements'] = []
-            data[str(r[0])]['nodes'] = []
+            r_name = str(r[0])
+            r_type = str(r[1])
 
-            if r[1] == "Element set":
-                if '.' in str(r[0]):
-                    instanceName = str(r[0]).split('.')[0]
-                    setName = str(r[0]).split('.')[1]
+            data[r_name] = {
+                'fieldOutputs': {},
+                'regionType': r_type,
+                'elements': [],
+                'nodes': [],
+            }
+
+            if r_type == "Element set":
+                if '.' in r_name:
+                    instanceName = r_name.split('.')[0]
+                    setName = r_name.split('.')[1]
                     try:
                         region = odb.rootAssembly.instances[instanceName].elementSets[setName]
                         for e in region.elements:
-                            element = {}
-                            element['label'] = e.label
-                            element['type'] = e.type
-                            element['connectivity'] = e.connectivity
-                            element['instanceName'] = e.instanceName
-                            data[str(r[0])]['elements'].append(element)
+                            element = {
+                                'label': e.label,
+                                'type': e.type,
+                                'connectivity': e.connectivity,
+                                'instanceName': e.instanceName
+                            }
+                            data[r_name]['elements'].append(element)
                     except OdbError, e:
                         print 'Abaqus error message: %s' % str(e)
                     except:
                         print 'Unknown Exception.'
                 else:
-                    region = odb.rootAssembly.elementSets[str(r[0])]
+                    region = odb.rootAssembly.elementSets[r_name]
                     for e in region.elements[0]:
-                        element = {}
-                        element['label'] = e.label
-                        element['type'] = e.type
-                        element['connectivity'] = e.connectivity
-                        element['instanceName'] = e.instanceName
-                        data[str(r[0])]['elements'].append(element)
+                        element = {
+                            'label': e.label,
+                            'type': e.type,
+                            'connectivity': e.connectivity,
+                            'instanceName': e.instanceName
+                        }
+                        data[r_name]['elements'].append(element)
 
-            if r[1] == "Node set":
-                region = odb.rootAssembly.nodeSets[str(r[0])]
+            if r_type == "Node set":
+                region = odb.rootAssembly.nodeSets[r_name]
                 for n in region.nodes[0]:
-                    node = {}
-                    node['label'] = n.label
-                    node['coordinates'] = n.coordinates
-                    node['instanceName'] = n.instanceName
-                    data[str(r[0])]['nodes'].append(node)
+                    node = {
+                        'label': n.label,
+                        'coordinates': n.coordinates,
+                        'instanceName': n.instanceName
+                    }
+                    data[r_name]['nodes'].append(node)
 
-            if r[1] == "Instance":
-                region = odb.rootAssembly.instances[str(r[0])]
+            if r_type == "Instance":
+                region = odb.rootAssembly.instances[r_name]
                 for e in region.elements:
-                    element = {}
-                    element['label'] = e.label
-                    element['type'] = e.type
-                    element['connectivity'] = e.connectivity
-                    element['instanceName'] = e.instanceName
-                    data[str(r[0])]['elements'].append(element)
+                    element = {
+                        'label': e.label,
+                        'type': e.type,
+                        'connectivity': e.connectivity,
+                        'instanceName': e.instanceName
+                    }
+                    data[r_name]['elements'].append(element)
                 for n in region.nodes:
-                    node = {}
-                    node['label'] = n.label
-                    node['coordinates'] = n.coordinates
-                    node['instanceName'] = n.instanceName
-                    data[str(r[0])]['nodes'].append(node)
-
-            if r[1] == "Surface set":
-                region = odb.rootAssembly.surfaces[str(r[0])]
+                    node = {
+                        'label': n.label,
+                        'coordinates': n.coordinates,
+                        'instanceName': n.instanceName
+                    }
+                    data[r_name]['nodes'].append(node)
 
             for v in variables:
-                data[str(r[0])]['fieldOutputs'][str(v[0])] = {}
-                data[str(r[0])]['fieldOutputs'][str(v[0])]['position'] = str(v[1])
-                data[str(r[0])]['fieldOutputs'][str(v[0])]['baseElementType'] = []
-                data[str(r[0])]['fieldOutputs'][str(v[0])]['componentLabels'] = []
-                data[str(r[0])]['fieldOutputs'][str(v[0])]['values'] = []
-                data[str(r[0])]['fieldOutputs'][str(v[0])]['elementLabels'] = []
-                data[str(r[0])]['fieldOutputs'][str(v[0])]['nodeLabels'] = []
+                v_name = str(v[0])
+                v_position = str(v[1])
+                data[r_name]['fieldOutputs'][v_name] = {
+                    'position': v_position,
+                    'baseElementType': [],
+                    'componentLabels': [],
+                    'values': [],
+                    'elementLabels': [],
+                    'nodeLabels': []
+                }
 
             # loop of steps
             time = []
             for step in step_frames:
-                frames = odb.steps[str(step[0])].frames
+                step_name = str(step[0])
+                frames_in_step = step[1]
+                frames = odb.steps[step_name].frames
 
                 # loop of frames
-                if step[1] == []:
-                    step[1] = range(len(frames))
+                if frames_in_step == []:
+                    frames_in_step = range(len(frames))
 
-                for frame_id in step[1]:
-
+                for frame_id in frames_in_step:
                     print(frame_id)
-
-                    process_count += 1
-
                     time.append(frames[frame_id].frameValue)
 
                     # loop of variables
                     for v in variables:
-                        field_comp = frames[frame_id].fieldOutputs[str(v[0])].getSubset(
-                            position=position[str(v[1])], region=region)
+                        v_name = str(v[0])
+                        v_position = str(v[1])
+                        field_comp = frames[frame_id].fieldOutputs[v_name].getSubset(position=position[v_position], region=region)
                         if len(field_comp.bulkDataBlocks) > 0:
                             bulk_data = field_comp.bulkDataBlocks[0]
-                            data[str(r[0])]['fieldOutputs'][str(v[0])]['values'].append(np.array(bulk_data.data))
-                            if data[str(r[0])]['fieldOutputs'][str(v[0])]['elementLabels'] == []:
-                                data[str(r[0])]['fieldOutputs'][str(v[0])]['elementLabels'].append(np.array(bulk_data.elementLabels))
-                            if data[str(r[0])]['fieldOutputs'][str(v[0])]['nodeLabels'] == []:
-                                data[str(r[0])]['fieldOutputs'][str(v[0])]['nodeLabels'].append(np.array(bulk_data.nodeLabels))
-                            if data[str(r[0])]['fieldOutputs'][str(v[0])]['baseElementType'] == []:
-                                data[str(r[0])]['fieldOutputs'][str(v[0])]['baseElementType'].append(np.array(bulk_data.baseElementType))
-                            if data[str(r[0])]['fieldOutputs'][str(v[0])]['componentLabels'] == []:
-                                data[str(r[0])]['fieldOutputs'][str(v[0])]['componentLabels'].append(np.array(bulk_data.componentLabels))
+                            field_var = data[r_name]['fieldOutputs'][v_name]
+                            field_var['values'].append(np.array(bulk_data.data))
+                            if field_var['elementLabels'] == []:
+                                field_var['elementLabels'].append(np.array(bulk_data.elementLabels))
+                                field_var['nodeLabels'].append(np.array(bulk_data.nodeLabels))
+                                field_var['baseElementType'].append(np.array(bulk_data.baseElementType))
+                                field_var['componentLabels'].append(np.array(bulk_data.componentLabels))
 
         np.savez(odb_name.replace('.odb', '') + '.npz',
                  data=data,
@@ -183,3 +188,7 @@ def odb_to_npz():
         del time
 
         odb.close()
+
+
+if __name__ == '__main__':
+    odb_to_npz()
