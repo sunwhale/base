@@ -44,12 +44,12 @@ class Solver:
         message['job'] = self.job
         message['user'] = self.user
         message['cpus'] = self.cpus
-        msg_file = os.path.join(self.path, '.msg')
+        msg_file = os.path.join(self.path, '.job_msg')
         with open(msg_file, 'w', encoding='utf-8') as f:
             json.dump(message, f, ensure_ascii=False)
 
     def read_msg(self):
-        msg_file = os.path.join(self.path, '.msg')
+        msg_file = os.path.join(self.path, '.job_msg')
         try:
             with open(msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
@@ -214,7 +214,7 @@ class Solver:
         None.
 
         """
-        status_file = os.path.join(self.path, '.status')
+        status_file = os.path.join(self.path, '.solver_status')
         # Obtain the initial solver_status
         if not os.path.exists(status_file):
             solver_status = 'Setting'

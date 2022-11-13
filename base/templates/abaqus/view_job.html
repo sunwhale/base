@@ -149,7 +149,7 @@
                 <div class="card card-primary">
                   <div class="card-body">
                     <h5 class="text-primary">日志文件.log</h5>
-                    <textarea class="form-control" style="height: 345px;">{{ logs }}</textarea>
+                    <textarea id="textarea_log" class="form-control" style="height: 345px;">{{ logs }}</textarea>
                   </div>
                 </div>
               </div>
@@ -221,6 +221,9 @@
 <script src="{{ url_for('static', filename='zTree/js/jquery.ztree.core.min.js') }}"></script>
 {% endif %}
 <script type="text/javascript">
+
+  var textarea_log = document.getElementById('textarea_log');
+  textarea_log.scrollTop = textarea_log.scrollHeight;
 
   var setting = {
     data: {

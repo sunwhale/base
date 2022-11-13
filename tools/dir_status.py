@@ -211,7 +211,7 @@ def get_sheet_status(path, sheet_id):
 
 
 def get_project_status(path, project_id):
-    msg_file = os.path.join(path, str(project_id), 'project.msg')
+    msg_file = os.path.join(path, str(project_id), '.project_msg')
     status = {}
     if os.path.exists(msg_file):
         status['project_id'] = project_id
@@ -234,8 +234,8 @@ def get_project_status(path, project_id):
 
 def get_job_status(path, project_id, job_id):
     inp_file = os.path.join(path, str(project_id), str(job_id), 'Job-1.inp')
-    status_file = os.path.join(path, str(project_id), str(job_id), '.status')
-    msg_file = os.path.join(path, str(project_id), str(job_id), '.msg')
+    status_file = os.path.join(path, str(project_id), str(job_id), '.solver_status')
+    msg_file = os.path.join(path, str(project_id), str(job_id), '.job_msg')
     para_json_file = os.path.join(path, str(project_id), str(job_id), 'parameters.json')
     status = {}
     status['project_id'] = project_id

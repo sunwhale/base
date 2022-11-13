@@ -19,6 +19,7 @@ from tools.dir_status import (create_id, files_in_dir, get_job_status,
                               get_project_status, project_jobs_detail,
                               projects_detail, sub_dirs_int)
 from tools.tree import json_to_ztree
+from tools.common import make_dir, dump_json, load_json
 
 abaqus_bp = Blueprint('abaqus', __name__)
 
@@ -33,22 +34,23 @@ def manage_projects():
 @login_required
 def create_project():
     form = ProjectForm()
+
     if form.validate_on_submit():
-        project_id = create_id(current_app.config['ABAQUS_PATH'])
-        project_path = os.path.join(
-            current_app.config['ABAQUS_PATH'], str(project_id))
-        if not os.path.isdir(project_path):
-            os.makedirs(project_path)
-        message = {}
-        message['name'] = form.name.data
-        message['descript'] = form.descript.data
-        message['job'] = form.job.data
-        message['user'] = form.user.data
-        message['cpus'] = form.cpus.data
-        msg_file = os.path.join(project_path, 'project.msg')
-        with open(msg_file, 'w', encoding='utf-8') as f:
-            json.dump(message, f, ensure_ascii=False)
+        abaqus_path = current_app.config['ABAQUS_PATH']
+        project_id = create_id(abaqus_path)
+        project_path = os.path.join(abaqus_path, str(project_id))
+        make_dir(project_path)
+        message = {
+            'name': form.name.data,
+            'descript': form.descript.data,
+            'job': form.job.data,
+            'user': form.user.data,
+            'cpus': form.cpus.data
+        }
+        msg_file = os.path.join(project_path, '.project_msg')
+        dump_json(msg_file, message)
         return redirect(url_for('.view_project', project_id=project_id))
+
     return render_template('abaqus/create_project.html', form=form)
 
 
@@ -56,28 +58,28 @@ def create_project():
 @login_required
 def create_job(project_id):
     form = JobForm()
-    path = current_app.config['ABAQUS_PATH']
-    project_path = os.path.join(path, str(project_id))
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    project_path = os.path.join(abaqus_path, str(project_id))
+
     if form.validate_on_submit():
         job_id = create_id(project_path)
         job_path = os.path.join(project_path, str(job_id))
-        if not os.path.isdir(job_path):
-            os.makedirs(job_path)
-        message = {}
-        message['job'] = form.job.data
-        message['user'] = form.user.data
-        message['cpus'] = form.cpus.data
-        msg_file = os.path.join(job_path, '.msg')
-        with open(msg_file, 'w', encoding='utf-8') as f:
-            json.dump(message, f, ensure_ascii=False)
+        make_dir(job_path)
+        message = {
+            'job': form.job.data,
+            'user': form.user.data,
+            'cpus': form.cpus.data
+        }
+        msg_file = os.path.join(job_path, '.job_msg')
+        dump_json(msg_file, message)
         files = files_in_dir(project_path)
         for file in files:
-            shutil.copy(os.path.join(project_path, file['name']), os.path.join(
-                job_path, file['name']))
+            shutil.copy(os.path.join(project_path, file['name']),
+                        os.path.join(job_path, file['name']))
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
-    msg_file = os.path.join(project_path, 'project.msg')
-    with open(msg_file, 'r', encoding='utf-8') as f:
-        message = json.load(f)
+
+    msg_file = os.path.join(project_path, '.project_msg')
+    message = load_json(msg_file)
     form.job.data = message['job']
     form.user.data = message['user']
     form.cpus.data = message['cpus']
@@ -88,22 +90,22 @@ def create_job(project_id):
 @login_required
 def edit_project(project_id):
     form = ProjectForm()
-    project = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id))
-    msg_file = os.path.join(project, 'project.msg')
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    project_path = os.path.join(abaqus_path, str(project_id))
+    msg_file = os.path.join(project_path, '.project_msg')
 
     if form.validate_on_submit():
-        message = {}
-        message['name'] = form.name.data
-        message['descript'] = form.descript.data
-        message['job'] = form.job.data
-        message['user'] = form.user.data
-        message['cpus'] = form.cpus.data
-        with open(msg_file, 'w', encoding='utf-8') as f:
-            json.dump(message, f, ensure_ascii=False)
+        message = {
+            'name': form.name.data,
+            'descript': form.descript.data,
+            'job': form.job.data,
+            'user': form.user.data,
+            'cpus': form.cpus.data
+        }
+        dump_json(msg_file, message)
         return redirect(url_for('.view_project', project_id=project_id))
 
-    with open(msg_file, 'r', encoding='utf-8') as f:
-        message = json.load(f)
+    message = load_json(msg_file)
     form.name.data = message['name']
     form.descript.data = message['descript']
     form.job.data = message['job']
@@ -116,21 +118,19 @@ def edit_project(project_id):
 @login_required
 def edit_job(project_id, job_id):
     form = JobForm()
-    job_path = os.path.join(
-        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
-    msg_file = os.path.join(job_path, '.msg')
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
+    msg_file = os.path.join(job_path, '.job_msg')
 
     if form.validate_on_submit():
         message = {}
         message['job'] = form.job.data
         message['user'] = form.user.data
         message['cpus'] = form.cpus.data
-        with open(msg_file, 'w', encoding='utf-8') as f:
-            json.dump(message, f, ensure_ascii=False)
+        dump_json(msg_file, message)
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
 
-    with open(msg_file, 'r', encoding='utf-8') as f:
-        message = json.load(f)
+    message = load_json(msg_file)
     form.job.data = message['job']
     form.user.data = message['user']
     form.cpus.data = message['cpus']
@@ -147,21 +147,21 @@ def projects_status():
 @abaqus_bp.route('/project_jobs_status/<int:project_id>')
 @login_required
 def project_jobs_status(project_id):
-    path = current_app.config['ABAQUS_PATH']
-    job_id_list = sub_dirs_int(os.path.join(path, str(project_id)))
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_id_list = sub_dirs_int(os.path.join(abaqus_path, str(project_id)))
     for job_id in job_id_list:
-        job_path = os.path.join(path, str(project_id), str(job_id))
+        job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
         s = Solver(job_path)
         s.solver_status()
-    data = project_jobs_detail(current_app.config['ABAQUS_PATH'], project_id)
+    data = project_jobs_detail(abaqus_path, project_id)
     return jsonify(data)
 
 
 @abaqus_bp.route('/view_project/<int:project_id>', methods=['GET', 'POST'])
 @login_required
 def view_project(project_id):
-    path = current_app.config['ABAQUS_PATH']
-    project_path = os.path.join(path, str(project_id))
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    project_path = os.path.join(abaqus_path, str(project_id))
     s = Solver(project_path)
     parameters = s.parameter_keys()
     form = UploadForm()
@@ -170,7 +170,7 @@ def view_project(project_id):
         f.save(os.path.join(project_path, f.filename))
 
     if os.path.exists(project_path):
-        status = get_project_status(path, project_id)
+        status = get_project_status(abaqus_path, project_id)
         files = files_in_dir(project_path)
         return render_template('abaqus/view_project.html', project_id=project_id, status=status, files=files, parameters=parameters, form=form)
     else:
@@ -180,11 +180,11 @@ def view_project(project_id):
 @abaqus_bp.route('/delete_project/<int:project_id>')
 @login_required
 def delete_project(project_id):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    project_path = os.path.join(abaqus_path, str(project_id))
     if not current_user.can('MODERATE'):
-        flash('您的权限不能删除该项目！', 'danger')
+        flash('您的权限不能删除该项目！', 'warning')
         return redirect(url_for('.manage_projects'))
-    project_path = os.path.join(
-        current_app.config['ABAQUS_PATH'], str(project_id))
     if os.path.exists(project_path):
         shutil.rmtree(project_path)
         flash('ABAQUS项目%s删除成功。' % project_id, 'success')
@@ -196,11 +196,11 @@ def delete_project(project_id):
 @abaqus_bp.route('/delete_job/<int:project_id>/<int:job_id>')
 @login_required
 def delete_job(project_id, job_id):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if not current_user.can('MODERATE'):
-        flash('您的权限不能删除该项目！', 'danger')
+        flash('您的权限不能删除该项目！', 'warning')
         return redirect(url_for('.manage_projects'))
-    job_path = os.path.join(
-        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
     if os.path.exists(job_path):
         shutil.rmtree(job_path)
         flash('ABAQUS项目%s算例%s删除成功。' % (project_id, job_id), 'success')
@@ -212,11 +212,11 @@ def delete_job(project_id, job_id):
 @abaqus_bp.route('/delete_project_file/<int:project_id>/<path:filename>')
 @login_required
 def delete_project_file(project_id, filename):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    file = os.path.join(abaqus_path, str(project_id), str(filename))
     if not current_user.can('MODERATE'):
-        flash('您的权限不能删除该文件！', 'danger')
+        flash('您的权限不能删除该文件！', 'warning')
         return redirect(url_for('.view_project', project_id=project_id))
-    file = os.path.join(current_app.config['ABAQUS_PATH'], str(
-        project_id), str(filename))
     if os.path.exists(file):
         os.remove(file)
         flash('文件%s删除成功。' % filename, 'success')
@@ -228,11 +228,12 @@ def delete_project_file(project_id, filename):
 @abaqus_bp.route('/delete_job_file/<int:project_id>/<int:job_id>/<path:filename>')
 @login_required
 def delete_job_file(project_id, job_id, filename):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    file = os.path.join(abaqus_path, str(project_id),
+                        str(job_id), str(filename))
     if not current_user.can('MODERATE'):
-        flash('您的权限不能删除该文件！', 'danger')
+        flash('您的权限不能删除该文件！', 'warning')
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
-    file = os.path.join(current_app.config['ABAQUS_PATH'], str(
-        project_id), str(job_id), str(filename))
     if os.path.exists(file):
         os.remove(file)
         flash('文件%s删除成功。' % filename, 'success')
@@ -256,8 +257,8 @@ def get_job_file(project_id, job_id, filename):
 @abaqus_bp.route('/view_job/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
 @login_required
 def view_job(project_id, job_id):
-    path = current_app.config['ABAQUS_PATH']
-    job_path = os.path.join(path, str(project_id), str(job_id))
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if os.path.exists(job_path):
         s = Solver(job_path)
         sta = s.get_sta()
@@ -273,7 +274,7 @@ def view_job(project_id, job_id):
         s.parameters_to_json()
         files = files_in_dir(job_path)
         solver_status = s.solver_status()
-        status = get_job_status(path, project_id, job_id)
+        status = get_job_status(abaqus_path, project_id, job_id)
         return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status, logs=logs[-5000:], sta=sta[-100:], form=form, solver_status=solver_status, files=files)
     else:
         abort(404)
@@ -282,15 +283,15 @@ def view_job(project_id, job_id):
 @abaqus_bp.route('/run_job/<int:project_id>/<int:job_id>')
 @login_required
 def run_job(project_id, job_id):
-    job_path = os.path.join(
-        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if os.path.exists(job_path):
         s = Solver(job_path)
         s.read_msg()
         s.clear()
         if s.check_files():
             proc = s.run()
-            with open(os.path.join(job_path, '.status'), 'w', encoding='utf-8') as f:
+            with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
                 f.write('Submitting')
         else:
             flash('缺少必要的计算文件。', 'warning')
@@ -302,13 +303,13 @@ def run_job(project_id, job_id):
 @abaqus_bp.route('/terminate_job/<int:project_id>/<int:job_id>')
 @login_required
 def terminate_job(project_id, job_id):
-    job_path = os.path.join(
-        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if os.path.exists(job_path):
         s = Solver(job_path)
         s.read_msg()
         proc = s.terminate()
-        with open(os.path.join(job_path, '.status'), 'w', encoding='utf-8') as f:
+        with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
             f.write('Stopping')
         return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
     else:
@@ -318,8 +319,8 @@ def terminate_job(project_id, job_id):
 @abaqus_bp.route('/open_job/<int:project_id>/<int:job_id>')
 @login_required
 def open_job(project_id, job_id):
-    path = current_app.config['ABAQUS_PATH']
-    job_path = os.path.join(path, str(project_id), str(job_id))
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if os.path.exists(job_path):
         cmd = 'explorer %s' % job_path
         proc = subprocess.run(cmd)
@@ -331,8 +332,8 @@ def open_job(project_id, job_id):
 @abaqus_bp.route('/prescan_odb/<int:project_id>/<int:job_id>')
 @login_required
 def prescan_odb(project_id, job_id):
-    job_path = os.path.join(
-        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if os.path.exists(job_path):
         p = Postproc(job_path)
         if p.check_files():
@@ -347,15 +348,14 @@ def prescan_odb(project_id, job_id):
 @abaqus_bp.route('/prescan_odb_data/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
 @login_required
 def prescan_odb_data(project_id, job_id):
-    job_path = os.path.join(
-        current_app.config['ABAQUS_PATH'], str(project_id), str(job_id))
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     prescan_odb_json_file = os.path.join(job_path, 'prescan_odb.json')
     if os.path.exists(prescan_odb_json_file):
-        with open(prescan_odb_json_file, 'r', encoding='utf-8') as f:
-            prescan_odb_dict = json.load(f)
-            ztree = json_to_ztree(prescan_odb_dict)
+        prescan_odb_dict = load_json(prescan_odb_json_file)
+        ztree = json_to_ztree(prescan_odb_dict)
     else:
-        ztree = [{"id": 1, "pId": 0, "name": "空"}]
+        ztree = [{"id": 1, "pId": 0, "name": "无"}]
     return ztree
 
 
@@ -384,7 +384,7 @@ def scan_odb_data():
     # npz = np.load('F:\\Github\\base\\tools\\abaqus\\Job-1.npz', allow_pickle=True, encoding='latin1')
     # data = npz['data'][()]
     # time = npz['time']
-    
+
     # ztree = json_to_ztree(data)
 
     odb_json_file = 'F:\\Github\\base\\tools\\abaqus\\prescan_odb.json'
@@ -436,26 +436,25 @@ def scan_odb_data():
         'static', filename='zTree/icons/icoR_displayGroupsSmall.png')})
     parent_id[0].append(len(tree))
     for elementset_key, elementset in odb_dict['rootAssembly']['elementSets'].items():
-        tree.append({"id": len(tree)+1, "pId": parent_id[0][-1], "name": 
-                 elementset['name'], "icon": url_for('static', filename='zTree/icons/icoR_elementSetSmall.png')})  
+        tree.append({"id": len(tree)+1, "pId": parent_id[0][-1], "name":
+                     elementset['name'], "icon": url_for('static', filename='zTree/icons/icoR_elementSetSmall.png')})
 
         parent_id[1].append(len(tree))
         tree.append({"id": len(tree)+1, "pId": parent_id[1][-1], "name":
-                     str(elementset['instances_len'])+' instances'}) 
-        #parent_id[1].append(len(tree))
+                     str(elementset['instances_len'])+' instances'})
+        # parent_id[1].append(len(tree))
         tree.append({"id": len(tree)+1, "pId": parent_id[1][-1], "name":
                      str(elementset['elements_len'])+' elements'})
 
-    for nodeset_key, nodeset in odb_dict['rootAssembly']['nodeSets'].items(): 
-        tree.append({"id": len(tree)+1, "pId": parent_id[0][-1], "name": 
-                 nodeset['name'], "icon": url_for('static', filename='zTree/icons/icoR_nodeSetSmall.png')})
+    for nodeset_key, nodeset in odb_dict['rootAssembly']['nodeSets'].items():
+        tree.append({"id": len(tree)+1, "pId": parent_id[0][-1], "name":
+                     nodeset['name'], "icon": url_for('static', filename='zTree/icons/icoR_nodeSetSmall.png')})
         parent_id[1].append(len(tree))
         tree.append({"id": len(tree)+1, "pId": parent_id[1][-1], "name":
-                     str(nodeset['instances_len'])+' instances'}) 
-        #parent_id[1].append(len(tree))
+                     str(nodeset['instances_len'])+' instances'})
+        # parent_id[1].append(len(tree))
         tree.append({"id": len(tree)+1, "pId": parent_id[1][-1], "name":
                      str(nodeset['nodes_len'])+' nodes'})
-
 
     tree.append({"id": len(tree)+1, "pId": 0, "name": "Assembly", "open": True, "icon": url_for(
         'static', filename='zTree/icons/icoR_connectorSmall.png')})
@@ -463,13 +462,13 @@ def scan_odb_data():
         'static', filename='zTree/icons/icoR_partInstanceSmall.png')})
     parent_id[2].append(len(tree))
     for instance_key, instance in odb_dict['rootAssembly']['instances'].items():
-        tree.append({"id": len(tree)+1, "pId": parent_id[2][-1], "name": 
-                 instance['name'], "icon": url_for('static', filename='zTree/icons/icoR_partSmall.png')})
+        tree.append({"id": len(tree)+1, "pId": parent_id[2][-1], "name":
+                     instance['name'], "icon": url_for('static', filename='zTree/icons/icoR_partSmall.png')})
 
         parent_id[3].append(len(tree))
         tree.append({"id": len(tree)+1, "pId": parent_id[3][-1], "name":
-                     str(instance['elements_len'])+' elements'}) 
-        #parent_id[1].append(len(tree))
+                     str(instance['elements_len'])+' elements'})
+        # parent_id[1].append(len(tree))
         tree.append({"id": len(tree)+1, "pId": parent_id[3][-1], "name":
                      str(instance['nodes_len'])+' nodes'})
 
