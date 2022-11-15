@@ -69,8 +69,15 @@ class Solver:
             return False
         return True
 
+    def preproc(self):
+        os.chdir(self.path)
+        cmd = 'python edit_amplitude.py'
+        proc = subprocess.Popen(cmd, shell=True)
+        return proc
+
     def run(self):
         os.chdir(self.path)
+        self.preproc()
         if self.user == '':
             cmd = 'abaqus job=%s cpus=%s ask=off' % (self.job, self.cpus)
         else:

@@ -18,7 +18,7 @@ from tools.abaqus.Postproc import Postproc
 from tools.dir_status import (create_id, files_in_dir, get_job_status,
                               get_project_status, project_jobs_detail,
                               projects_detail, sub_dirs_int)
-from tools.tree import json_to_ztree
+from tools.tree import json_to_ztree, odb_json_to_ztree
 from tools.common import make_dir, dump_json, load_json
 
 abaqus_bp = Blueprint('abaqus', __name__)
@@ -145,7 +145,7 @@ def projects_status():
 
 
 @abaqus_bp.route('/project_jobs_status/<int:project_id>')
-@login_required
+# @login_required
 def project_jobs_status(project_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_id_list = sub_dirs_int(os.path.join(abaqus_path, str(project_id)))
@@ -347,6 +347,22 @@ def prescan_odb(project_id, job_id):
         abort(404)
 
 
+@abaqus_bp.route('/odb_to_npz/<int:project_id>/<int:job_id>')
+@login_required
+def odb_to_npz(project_id, job_id):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
+    if os.path.exists(job_path):
+        p = Postproc(job_path)
+        if p.check_files():
+            proc = p.odb_to_npz()
+        else:
+            flash('缺少odb文件。', 'warning')
+        return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
+    else:
+        abort(404)
+
+
 @abaqus_bp.route('/prescan_odb_data/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
 @login_required
 def prescan_odb_data(project_id, job_id):
@@ -355,7 +371,24 @@ def prescan_odb_data(project_id, job_id):
     prescan_odb_json_file = os.path.join(job_path, 'prescan_odb.json')
     if os.path.exists(prescan_odb_json_file):
         prescan_odb_dict = load_json(prescan_odb_json_file)
-        ztree = json_to_ztree(prescan_odb_dict)
+        ztree = odb_json_to_ztree(prescan_odb_dict, url_for('static', filename='zTree/icons/'))
+    else:
+        ztree = [{"id": 1, "pId": 0, "name": "无"}]
+    return ztree
+
+
+@abaqus_bp.route('/odb_to_npz_data/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+def odb_to_npz_data(project_id, job_id):
+    import numpy as np
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
+    p = Postproc(job_path)
+    npz_file = os.path.join(job_path, str(p.job) + '.npz')
+    if os.path.exists(npz_file):
+        npz = np.load(npz_file, allow_pickle=True, encoding='latin1')
+        data = npz['data'][()]
+        ztree = json_to_ztree(data)
     else:
         ztree = [{"id": 1, "pId": 0, "name": "无"}]
     return ztree
@@ -390,88 +423,10 @@ def scan_odb_data():
     # ztree = json_to_ztree(data)
 
     odb_json_file = 'F:\\Github\\base\\tools\\abaqus\\prescan_odb.json'
-    with open(odb_json_file, 'r', encoding='utf-8') as f:
-        odb_dict = json.load(f)
 
-    tree = []
+    odb_json_data = load_json(odb_json_file)
 
-    parent_id = {}
-    for i in range(10):
-        parent_id[i] = []
+    ztree = odb_json_to_ztree(odb_json_data, url_for('static', filename='zTree/icons/'))
+    
 
-    tree.append({"id": len(tree)+1, "pId": 0, "name": "Datasets", "open": True, "showIcon": False, "icon": url_for(
-        'static', filename='zTree/icons/icoR_adaptiveRemeshRulesSmall.png')})
-
-    parent_id[0].append(len(tree))
-
-    tree.append({"id": len(tree)+1, "pId": parent_id[0][-1], "name": "File: " +
-                 odb_dict['name'], "icon": url_for('static', filename='zTree/icons/icoR_mdbSmall.png')})
-
-    parent_id[1].append(len(tree))
-    for step_key, step in odb_dict['steps'].items():
-        tree.append({"id": len(tree)+1, "pId": parent_id[1][-1], "name": step_key, "icon": url_for(
-            'static', filename='zTree/icons/icoR_stepSmall.png')})
-
-        parent_id[2].append(len(tree))
-        for frame in step['frames']:
-            tree.append({"id": len(tree)+1, "pId": parent_id[2][-1], "name": frame['description'], "icon": url_for(
-                'static', filename='zTree/icons/icoR_framesSmall.png')})
-
-            parent_id[3].append(len(tree))
-            for field_name in ['S', 'LE', 'E']:
-                if field_name in frame['fieldOutputs'].keys():
-                    tree.append({"id": len(tree)+1, "pId": parent_id[3][-1],
-                                 "name": field_name})
-
-                    parent_id[4].append(len(tree))
-
-                    tree.append({"id": len(tree)+1, "pId": parent_id[4][-1],
-                                 "name": "Element types: %s" % str(frame['fieldOutputs']['S']['baseElementTypes'])})
-
-                    tree.append({"id": len(tree)+1, "pId": parent_id[4][-1],
-                                 "name": "Component labels: %s" % str(frame['fieldOutputs']['S']['componentLabels'])})
-
-                    tree.append({"id": len(tree)+1, "pId": parent_id[4][-1],
-                                 "name": "Locations: %s" % str(frame['fieldOutputs']['S']['locations'])})
-
-    tree.append({"id": len(tree)+1, "pId": 0, "name": "Groups", "open": True, "icon": url_for(
-        'static', filename='zTree/icons/icoR_displayGroupsSmall.png')})
-    parent_id[0].append(len(tree))
-    for elementset_key, elementset in odb_dict['rootAssembly']['elementSets'].items():
-        tree.append({"id": len(tree)+1, "pId": parent_id[0][-1], "name":
-                     elementset['name'], "icon": url_for('static', filename='zTree/icons/icoR_elementSetSmall.png')})
-
-        parent_id[1].append(len(tree))
-        tree.append({"id": len(tree)+1, "pId": parent_id[1][-1], "name":
-                     str(elementset['instances_len'])+' instances'})
-        # parent_id[1].append(len(tree))
-        tree.append({"id": len(tree)+1, "pId": parent_id[1][-1], "name":
-                     str(elementset['elements_len'])+' elements'})
-
-    for nodeset_key, nodeset in odb_dict['rootAssembly']['nodeSets'].items():
-        tree.append({"id": len(tree)+1, "pId": parent_id[0][-1], "name":
-                     nodeset['name'], "icon": url_for('static', filename='zTree/icons/icoR_nodeSetSmall.png')})
-        parent_id[1].append(len(tree))
-        tree.append({"id": len(tree)+1, "pId": parent_id[1][-1], "name":
-                     str(nodeset['instances_len'])+' instances'})
-        # parent_id[1].append(len(tree))
-        tree.append({"id": len(tree)+1, "pId": parent_id[1][-1], "name":
-                     str(nodeset['nodes_len'])+' nodes'})
-
-    tree.append({"id": len(tree)+1, "pId": 0, "name": "Assembly", "open": True, "icon": url_for(
-        'static', filename='zTree/icons/icoR_connectorSmall.png')})
-    tree.append({"id": len(tree)+1, "pId": len(tree), "name": "Instances", "icon": url_for(
-        'static', filename='zTree/icons/icoR_partInstanceSmall.png')})
-    parent_id[2].append(len(tree))
-    for instance_key, instance in odb_dict['rootAssembly']['instances'].items():
-        tree.append({"id": len(tree)+1, "pId": parent_id[2][-1], "name":
-                     instance['name'], "icon": url_for('static', filename='zTree/icons/icoR_partSmall.png')})
-
-        parent_id[3].append(len(tree))
-        tree.append({"id": len(tree)+1, "pId": parent_id[3][-1], "name":
-                     str(instance['elements_len'])+' elements'})
-        # parent_id[1].append(len(tree))
-        tree.append({"id": len(tree)+1, "pId": parent_id[3][-1], "name":
-                     str(instance['nodes_len'])+' nodes'})
-
-    return tree
+    return ztree

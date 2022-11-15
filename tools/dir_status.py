@@ -256,6 +256,7 @@ def get_job_status(path, project_id, job_id):
         status['inp_size'] = file_size(inp_file)
         status['solver_status'] = solver_status
         status['parameters'] = str(parameters)
+        status['path'] = os.path.join(path, str(project_id), str(job_id))
         button = ""
         button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % ('../view_job/'+str(project_id)+'/'+str(job_id))
         button += "<a class='btn btn-primary btn-sm' onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a> " % ('../delete_job/'+str(project_id)+'/'+str(job_id))

@@ -70,8 +70,15 @@ class Postproc:
 
     def prescan_odb(self):
         os.chdir(self.path)
-        cmd = 'abaqus viewer noGui=%s -- %s.odb %s' % (
-            'F:\\Github\\base\\tools\\abaqus\\prescan_odb.py', self.job, 'prescan_odb.json')
+        py_file = os.path.join(os.path.dirname(__file__), 'prescan_odb.py')
+        cmd = 'abaqus viewer noGui=%s -- %s.odb %s' % (py_file, self.job, 'prescan_odb.json')
+        proc = subprocess.Popen(cmd, shell=True)
+        return proc
+
+    def odb_to_npz(self):
+        os.chdir(self.path)
+        py_file = os.path.join(os.path.dirname(__file__), 'odb_to_npz.py')
+        cmd = 'abaqus viewer noGui=%s -- %s' % (py_file, 'odb_to_npz.json')
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
@@ -129,6 +136,6 @@ class Postproc:
 
 
 if __name__ == '__main__':
-    s = Solver(path='F:\\Github\\base\\files\\abaqus\\1\\1',
-               job='Job-1', user='umat_visco_maxwell_phasefield.for')
-    s.parameters_to_json()
+    p = Postproc(path='F:\\Github\\base\\files\\abaqus\\1\\1',
+               job='Job-1')
+    p.prescan_odb()

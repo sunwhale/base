@@ -41,10 +41,9 @@ def is_int(s):
     return False
 
 
-def odb_to_npz():
-    # Read settings from the file
-
-    settings = load_json('odb_to_npz.json')
+def odb_to_npz(setting_file):
+    # Read settings from the setting file
+    settings = load_json(setting_file)
     odbs = settings['ODB']
     regions = settings['Regions']
     variables = settings['Variables']
@@ -191,4 +190,5 @@ def odb_to_npz():
 
 
 if __name__ == '__main__':
-    odb_to_npz()
+    setting_file = sys.argv[-1]
+    odb_to_npz(setting_file)

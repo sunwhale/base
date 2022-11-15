@@ -199,9 +199,13 @@
                       <div class="col-12">
                         <p class="mb-1">您可以通过点击下面的按钮进行ABAQUS计算结果的后处理，并通过<a href="javascript:location.reload();">刷新</a>页面更新結果。</p>
                         <a href="{{ url_for('abaqus.prescan_odb', project_id=project_id, job_id=job_id) }}" class="btn btn-success">odb 预扫描</a>
+                        <a href="{{ url_for('abaqus.odb_to_npz', project_id=project_id, job_id=job_id) }}" class="btn btn-success">odb_to_npz</a>
                         <p></p>
                         <p class="mb-1">预扫描树状图：</p>
-                        <ul id="ztree" class="ztree"></ul>
+                        <ul id="ztree-odb" class="ztree"></ul>
+                        <p></p>
+                        <p class="mb-1">npz文件结构：</p>
+                        <ul id="ztree-npz" class="ztree"></ul>
                       </div>
                     </div>
                   </div>
@@ -225,7 +229,7 @@
   var textarea_log = document.getElementById('textarea_log');
   textarea_log.scrollTop = textarea_log.scrollHeight;
 
-  var setting = {
+  var setting_odb = {
     data: {
       simpleData: {
         enable: true
@@ -239,7 +243,24 @@
   };
 
   $(document).ready(function(){
-    $.fn.zTree.init($("#ztree"), setting);
+    $.fn.zTree.init($("#ztree-odb"), setting_odb);
+  });
+
+  var setting_npz = {
+    data: {
+      simpleData: {
+        enable: true
+      }
+    },
+    async: {
+      enable: true,
+      url:"{{ url_for('abaqus.odb_to_npz_data', project_id=project_id, job_id=job_id) }}",
+      type: "get",
+    }
+  };
+
+  $(document).ready(function(){
+    $.fn.zTree.init($("#ztree-npz"), setting_npz);
   });
 
 </script>
