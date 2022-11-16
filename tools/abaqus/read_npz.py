@@ -42,14 +42,13 @@ def load_region_data(npz_file, regions):
         except:
             strain = np.array(data[r]['fieldOutputs']['LE']['values'])
 
-        # sdv1 = np.array(data[r]['fieldOutputs']['SDV1']['values'])
-        # sdv3 = np.array(data[r]['fieldOutputs']['SDV3']['values'])
-        # sdv19 = np.array(data[r]['fieldOutputs']['SDV19']['values'])
-        # sdv21 = np.array(data[r]['fieldOutputs']['SDV21']['values'])
-        # sdv22 = np.array(data[r]['fieldOutputs']['SDV22']['values'])
-        # sdv23 = np.array(data[r]['fieldOutputs']['SDV23']['values'])
-        # sdv24 = np.array(data[r]['fieldOutputs']['SDV24']['values'])
-        sdv121 = np.array(data[r]['fieldOutputs']['SDV121']['values'])
+        sdv1 = np.array(data[r]['fieldOutputs']['SDV1']['values'])
+        sdv3 = np.array(data[r]['fieldOutputs']['SDV3']['values'])
+        sdv19 = np.array(data[r]['fieldOutputs']['SDV19']['values'])
+        sdv21 = np.array(data[r]['fieldOutputs']['SDV21']['values'])
+        sdv22 = np.array(data[r]['fieldOutputs']['SDV22']['values'])
+        sdv23 = np.array(data[r]['fieldOutputs']['SDV23']['values'])
+        sdv24 = np.array(data[r]['fieldOutputs']['SDV24']['values'])
 
         # print(stress.shape)
         # print(strain.shape)
@@ -96,9 +95,9 @@ if __name__ == '__main__':
     data = {}
 
     jobs_status = load_status(
-        'http://127.0.0.1:5000/abaqus/project_jobs_status/3')
+        'http://127.0.0.1:5000/abaqus/project_jobs_status/2')
 
-    job_ids = [1, 2]
+    job_ids = [1, 2, 3, 4]
 
     for job_id in job_ids:
         job_status = jobs_status[job_id]
@@ -106,18 +105,22 @@ if __name__ == '__main__':
         npz_file = os.path.join(job_path, job_status['job'] + '.npz')
         try:
             data[job_id] = load_region_data(npz_file,
-                                            ['PART-1-1.GRAIN_1'])
+                                            ['PART-1-1.CZ-INTER-GRAIN_1-GRAIN_2'])
         except:
             print('error:' + npz_file)
 
     for job_id in data.keys():
-        # plt.plot(data[job_id]['strain'],
-        #          data[job_id]['stress'],
-        #          label=jobs_status[job_id]['period'])
-        plt.plot(data[job_id]['time']*float(jobs_status[job_id]['amp']),
-                 data[job_id]['pacm'],
-                 label=jobs_status[job_id]['period'])
-    
+        plt.plot(data[job_id]['strain'],
+                  data[job_id]['stress'],
+                  label=jobs_status[job_id]['period'])
+        # plt.plot(data[job_id]['time']*float(jobs_status[job_id]['amp']),
+        #           data[job_id]['strain'],
+        #           label=jobs_status[job_id]['period'])
+        if job_id == 5:
+            plt.plot(data[job_id]['time']*float(jobs_status[job_id]['amp']),
+                     data[job_id]['pacm'],
+                     label=jobs_status[job_id]['period'])
+        
     plt.legend(loc=0, frameon=1)
     # plt.xscale('log')
     # plt.yscale('log')
