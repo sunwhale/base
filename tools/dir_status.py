@@ -82,13 +82,18 @@ def files_in_dir(path):
     
 
 def file_time(file):
-    modified_time = os.path.getmtime(file)
-    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(modified_time))
+    if os.path.exists(file):
+        modified_time = os.path.getmtime(file)
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(modified_time))
+    else:
+        return 'None'
 
 
 def file_size(file):
-    return format_size(os.path.getsize(file))
-
+    if os.path.exists(file):
+        return format_size(os.path.getsize(file))
+    else:
+        return 'None'
 
 def get_model_status(path, model_id):
     npy_file = os.path.join(path, str(model_id), 'model.npy')
@@ -233,28 +238,56 @@ def get_project_status(path, project_id):
 
 
 def get_job_status(path, project_id, job_id):
-    inp_file = os.path.join(path, str(project_id), str(job_id), 'Job-1.inp')
-    status_file = os.path.join(path, str(project_id), str(job_id), '.solver_status')
     msg_file = os.path.join(path, str(project_id), str(job_id), '.job_msg')
     para_json_file = os.path.join(path, str(project_id), str(job_id), 'parameters.json')
     status = {}
     status['project_id'] = project_id
     status['job_id'] = job_id
     try:
-        with open(status_file, 'r', encoding='utf-8') as f:
-            solver_status = f.read()
         with open(msg_file, 'r', encoding='utf-8') as f:
             message = json.load(f)
         with open(para_json_file, 'r', encoding='utf-8') as f:
             parameters = json.load(f)
         for p in parameters.keys():
             status[p] = parameters[p]
+
+        solver_status_file = os.path.join(path, str(project_id), str(job_id), '.solver_status')
+        if os.path.exists(solver_status_file):
+            with open(solver_status_file, 'r', encoding='utf-8') as f:
+                solver_status = f.read()
+        else:
+            solver_status = 'None'
+
+        prescan_status_file = os.path.join(path, str(project_id), str(job_id), '.prescan_status')
+        if os.path.exists(prescan_status_file):
+            with open(prescan_status_file, 'r', encoding='utf-8') as f:
+                prescan_status = f.read()
+        else:
+            prescan_status = 'None'
+
+        odb_to_npz_status_file = os.path.join(path, str(project_id), str(job_id), '.odb_to_npz_status')
+        if os.path.exists(odb_to_npz_status_file):
+            with open(odb_to_npz_status_file, 'r', encoding='utf-8') as f:
+                odb_to_npz_status = f.read()
+        else:
+            odb_to_npz_status = 'None'
+
+        job_name = message['job']
+        inp_file = os.path.join(path, str(project_id), str(job_id), '%s.inp' % job_name)
+        odb_file = os.path.join(path, str(project_id), str(job_id), '%s.odb' % job_name)
+        npz_file = os.path.join(path, str(project_id), str(job_id), '%s.npz' % job_name)
         status['job'] = message['job']
         status['user'] = message['user']
         status['cpus'] = message['cpus']
         status['inp_time'] = file_time(inp_file)
         status['inp_size'] = file_size(inp_file)
+        status['odb_time'] = file_time(odb_file)
+        status['odb_size'] = file_size(odb_file)
+        status['npz_time'] = file_time(npz_file)
+        status['npz_size'] = file_size(npz_file)
         status['solver_status'] = solver_status
+        status['prescan_status'] = prescan_status
+        status['odb_to_npz_status'] = odb_to_npz_status
         status['parameters'] = str(parameters)
         status['path'] = os.path.join(path, str(project_id), str(job_id))
         button = ""
@@ -273,12 +306,20 @@ def get_job_status(path, project_id, job_id):
         # else:
         #     button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>继续</button> "
         if solver_status=='Running':
-            button += "<a href='%s' class='btn btn-danger btn-sm'>终止</a>" % ('../terminate_job/'+str(project_id)+'/'+str(job_id))
+            button += "<a href='%s' class='btn btn-danger btn-sm'>终止</a> " % ('../terminate_job/'+str(project_id)+'/'+str(job_id))
         else:
-            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>终止</button>"
+            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>终止</button> "
+        if prescan_status!='Scanning' and prescan_status!='Submitting':
+            button += "<a class='btn btn-success btn-sm' href='%s'>扫描</a> " % ('../prescan_odb/'+str(project_id)+'/'+str(job_id))
+        else:
+            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>扫描</button> "
+        if odb_to_npz_status!='Running' and odb_to_npz_status!='Submitting':
+            button += "<a class='btn btn-success btn-sm' href='%s'>导出</a> " % ('../odb_to_npz/'+str(project_id)+'/'+str(job_id))
+        else:
+            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>导出</button> "
         status['operation'] = button
     except FileNotFoundError:
-        for key in ['job', 'user', 'cpus', 'inp_time', 'inp_size', 'solver_status']:
+        for key in ['job', 'user', 'cpus']:
             status[key] = 'None'
         status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../delete_job/'+str(project_id)+'/'+str(job_id))
     return status

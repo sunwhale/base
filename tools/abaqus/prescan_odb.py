@@ -28,6 +28,9 @@ def len_2_level(x):
 
 def prescan_odb(odb_file):
 
+    with open('.prescan_status', 'w') as f:
+        f.write('Scanning')
+
     odb_dict = {
         'jobData': {},
         'materials': {},
@@ -164,13 +167,24 @@ def prescan_odb(odb_file):
                             frame_dict['fieldOutputs'][field.name]['validInvariants'].append(
                                 str(valid_invariant))
                     odb_dict['steps'][step.name]['frames'].append(frame_dict)
-
+            with open('.prescan_status', 'w') as f:
+                f.write('Done')
         except OdbError, e:
-            print('Abaqus error message: %s' % str(e))
+            print('OdbError: %s\n' % str(e))
+            with open('.prescan_status', 'w') as f:
+                f.write('Error')
+        except KeyError, e:
+            print('KeyError: %s\n' % str(e))
+            with open('.prescan_status', 'w') as f:
+                f.write('Error')
         except:
-            print('Unknown Exception.')
+            print('Unknown Error\n')
+            with open('.prescan_status', 'w') as f:
+                f.write('Error')
     else:
-        print('The odb file is not found.')
+        print('The odb file is not found.\n')
+        with open('.prescan_status', 'w') as f:
+                f.write('Error')
 
     return odb_dict
 

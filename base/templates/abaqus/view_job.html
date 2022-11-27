@@ -55,7 +55,7 @@
                         当前状态：{{ solver_status }}
                         <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止ABAQUS的计算，并通过<a href="javascript:location.reload();">刷新</a>页面获取算例状态。</p>
 
-                        {% if solver_status=='Submitting' or solver_status=='Running' or solver_status=='Pause' or solver_status=='Stopping'%}
+                        {% if solver_status=='Submitting' or solver_status=='Running' or solver_status=='Pause' or solver_status=='Stopping' %}
                         <button class="btn btn-secondary" disabled="disabled">计 算</button>
                         {% else %}
                         <a href="{{ url_for('abaqus.run_job', project_id=project_id, job_id=job_id) }}" class="btn btn-success">计 算</a>
@@ -198,13 +198,24 @@
                     <div class="row">
                       <div class="col-12">
                         <p class="mb-1">您可以通过点击下面的按钮进行ABAQUS计算结果的后处理，并通过<a href="javascript:location.reload();">刷新</a>页面更新結果。</p>
+                        
+                        {% if status['prescan_status']!='Scanning' and status['prescan_status']!='Submitting' %}
                         <a href="{{ url_for('abaqus.prescan_odb', project_id=project_id, job_id=job_id) }}" class="btn btn-success">odb 预扫描</a>
+                        {% else %}
+                        <button class="btn btn-secondary" disabled="disabled">odb 预扫描</button>
+                        {% endif %}
+
+                        {% if status['odb_to_npz_status']!='Running' and status['odb_to_npz_status']!='Submitting' %}
                         <a href="{{ url_for('abaqus.odb_to_npz', project_id=project_id, job_id=job_id) }}" class="btn btn-success">odb_to_npz</a>
+                        {% else %}
+                        <button class="btn btn-secondary" disabled="disabled">odb_to_npz</button>
+                        {% endif %}
+
                         <p></p>
-                        <p class="mb-1">预扫描树状图：</p>
+                        <p class="mb-1">预扫描树状图（{{ status['prescan_status'] }}）：</p>
                         <ul id="ztree-odb" class="ztree"></ul>
                         <p></p>
-                        <p class="mb-1">npz文件结构：</p>
+                        <p class="mb-1">npz文件结构（{{ status['odb_to_npz_status'] }}）：</p>
                         <ul id="ztree-npz" class="ztree"></ul>
                       </div>
                     </div>

@@ -68,9 +68,19 @@ class Postproc:
         else:
             return True
 
+    def check_setting_files(self):
+        setting_file = os.path.join(self.path, 'odb_to_npz.json')
+        if not os.path.exists(setting_file):
+            return False
+        else:
+            return True
+
     def prescan_odb(self):
         os.chdir(self.path)
         py_file = os.path.join(os.path.dirname(__file__), 'prescan_odb.py')
+        json_file = os.path.join(self.path, 'prescan_odb.json')
+        if os.path.exists(json_file):
+            os.remove(json_file)
         cmd = 'abaqus viewer noGui=%s -- %s.odb %s' % (py_file, self.job, 'prescan_odb.json')
         proc = subprocess.Popen(cmd, shell=True)
         return proc
@@ -78,6 +88,9 @@ class Postproc:
     def odb_to_npz(self):
         os.chdir(self.path)
         py_file = os.path.join(os.path.dirname(__file__), 'odb_to_npz.py')
+        npz_file = os.path.join(self.path, '{}.npz'.format(self.job))
+        if os.path.exists(npz_file):
+            os.remove(npz_file)
         cmd = 'abaqus viewer noGui=%s -- %s' % (py_file, 'odb_to_npz.json')
         proc = subprocess.Popen(cmd, shell=True)
         return proc
@@ -93,7 +106,7 @@ class Postproc:
 
     def prescan_status(self):
         """
-        求解器的可能状态如下：
+        后处理的可能状态如下：
         ['No odb file', 'Ready to prescan', 'Submitting', 'Scanning', 'Stopped', 'Completed']
 
         Returns

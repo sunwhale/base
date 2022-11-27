@@ -339,7 +339,7 @@ def prescan_odb(project_id, job_id):
         if p.check_files():
             proc = p.prescan_odb()
             with open(os.path.join(job_path, '.prescan_status'), 'w', encoding='utf-8') as f:
-                f.write('Scanning')
+                f.write('Submitting')
         else:
             flash('缺少odb文件。', 'warning')
         return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
@@ -354,10 +354,12 @@ def odb_to_npz(project_id, job_id):
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if os.path.exists(job_path):
         p = Postproc(job_path)
-        if p.check_files():
+        if p.check_files() and p.check_setting_files():
             proc = p.odb_to_npz()
+            with open(os.path.join(job_path, '.odb_to_npz_status'), 'w', encoding='utf-8') as f:
+                f.write('Submitting')
         else:
-            flash('缺少odb文件。', 'warning')
+            flash('缺少odb文件或odb_to_npz.json配置文件。', 'warning')
         return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
     else:
         abort(404)

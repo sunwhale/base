@@ -125,32 +125,93 @@ def odb_json_to_ztree(odb_dict, icon_path):
                      "icon": icon_path + 'icoR_stepSmall.png'})
 
         parent_id[2].append(len(tree))
-        for frame in step['frames']:
+        max_len = 16
+        if len(step['frames']) <= max_len:
+            for frame in step['frames']:
+                tree.append({"id": len(tree)+1,
+                             "pId": parent_id[2][-1],
+                             "name": frame['description'],
+                             "icon": icon_path + 'icoR_framesSmall.png'})
+
+                parent_id[3].append(len(tree))
+                for field_name in ['S', 'LE', 'E']:
+                    if field_name in frame['fieldOutputs'].keys():
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[3][-1],
+                                     "name": field_name})
+
+                        parent_id[4].append(len(tree))
+
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[4][-1],
+                                     "name": "Element types: %s" % str(frame['fieldOutputs'][field_name]['baseElementTypes'])})
+
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[4][-1],
+                                     "name": "Component labels: %s" % str(frame['fieldOutputs'][field_name]['componentLabels'])})
+
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[4][-1],
+                                     "name": "Locations: %s" % str(frame['fieldOutputs'][field_name]['locations'])})
+        else:
+            for frame in step['frames'][:int(max_len/2)]:
+                tree.append({"id": len(tree)+1,
+                             "pId": parent_id[2][-1],
+                             "name": frame['description'],
+                             "icon": icon_path + 'icoR_framesSmall.png'})
+
+                parent_id[3].append(len(tree))
+                for field_name in ['S', 'LE', 'E']:
+                    if field_name in frame['fieldOutputs'].keys():
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[3][-1],
+                                     "name": field_name})
+
+                        parent_id[4].append(len(tree))
+
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[4][-1],
+                                     "name": "Element types: %s" % str(frame['fieldOutputs'][field_name]['baseElementTypes'])})
+
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[4][-1],
+                                     "name": "Component labels: %s" % str(frame['fieldOutputs'][field_name]['componentLabels'])})
+
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[4][-1],
+                                     "name": "Locations: %s" % str(frame['fieldOutputs'][field_name]['locations'])})
+
             tree.append({"id": len(tree)+1,
                          "pId": parent_id[2][-1],
-                         "name": frame['description'],
-                         "icon": icon_path + 'icoR_framesSmall.png'})
+                         "name": "..."})
 
-            parent_id[3].append(len(tree))
-            for field_name in ['S', 'LE', 'E']:
-                if field_name in frame['fieldOutputs'].keys():
-                    tree.append({"id": len(tree)+1,
-                                 "pId": parent_id[3][-1],
-                                 "name": field_name})
+            for frame in step['frames'][-int(max_len/2):]:
+                tree.append({"id": len(tree)+1,
+                             "pId": parent_id[2][-1],
+                             "name": frame['description'],
+                             "icon": icon_path + 'icoR_framesSmall.png'})
 
-                    parent_id[4].append(len(tree))
+                parent_id[3].append(len(tree))
+                for field_name in ['S', 'LE', 'E']:
+                    if field_name in frame['fieldOutputs'].keys():
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[3][-1],
+                                     "name": field_name})
 
-                    tree.append({"id": len(tree)+1,
-                                 "pId": parent_id[4][-1],
-                                 "name": "Element types: %s" % str(frame['fieldOutputs']['S']['baseElementTypes'])})
+                        parent_id[4].append(len(tree))
 
-                    tree.append({"id": len(tree)+1,
-                                 "pId": parent_id[4][-1],
-                                 "name": "Component labels: %s" % str(frame['fieldOutputs']['S']['componentLabels'])})
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[4][-1],
+                                     "name": "Element types: %s" % str(frame['fieldOutputs'][field_name]['baseElementTypes'])})
 
-                    tree.append({"id": len(tree)+1,
-                                 "pId": parent_id[4][-1],
-                                 "name": "Locations: %s" % str(frame['fieldOutputs']['S']['locations'])})
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[4][-1],
+                                     "name": "Component labels: %s" % str(frame['fieldOutputs'][field_name]['componentLabels'])})
+
+                        tree.append({"id": len(tree)+1,
+                                     "pId": parent_id[4][-1],
+                                     "name": "Locations: %s" % str(frame['fieldOutputs'][field_name]['locations'])})
+
 
     tree.append({"id": len(tree)+1,
                  "pId": 0, "name": "Groups",
