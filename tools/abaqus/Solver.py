@@ -109,11 +109,12 @@ class Solver:
         for cmd in cmds:
             try:
                 proc = subprocess.Popen(cmd, shell=True)
-                print('proc:', proc)
+                # print('proc:', proc)
             except subprocess.CalledProcessError as exc:
-                print('returncode:', exc.returncode)
-                print('cmd:', exc.cmd)
-                print('output:', exc.output)
+                # print('returncode:', exc.returncode)
+                # print('cmd:', exc.cmd)
+                # print('output:', exc.output)
+                pass
 
     def terminate(self):
         os.chdir(self.path)
@@ -210,6 +211,13 @@ class Solver:
                 l = p.strip().replace(' ', '').split('=')
                 para_dict[l[0]] = l[1]
         return para_dict.keys()
+
+    def is_done(self):
+        solver_status = self.solver_status()
+        if solver_status == 'Stopped' or solver_status == 'Completed':
+            return True
+        else:
+            return False
 
     def solver_status(self):
         """

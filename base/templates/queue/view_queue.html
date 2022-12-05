@@ -1,0 +1,256 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}计算队列管理{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+{% endblock css %}
+
+{% block pageheader %}计算队列管理{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('abaqus.manage_projects') }}">计算队列管理</a></li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-success">
+              <div class="card-header">
+                <h3 class="card-title">执行中队列</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12">
+                    {% if active %}
+                    <a href="{{ url_for('queue.stop') }}" class="btn btn-warning"><i class="fa fa-pause"></i> <strong>暂停</strong></a>
+                    {% else %}
+                    <a href="{{ url_for('queue.start') }}" class="btn btn-success"><i class="fa fa-play"></i> <strong>开始</strong></a>
+                    {% endif %}
+                    <p></p>
+                    <table class="table table-sm">
+                      <thead>
+                        <tr>
+                          <th width=50px>ID</th>
+                          <th width=80px>类型</th>
+                          <th width=80px>算例</th>
+                          <th width=80px>CPU数</th>
+                          <th width=180px>开始时间</th>
+                          <th>当前进度</th>
+                          <th width=150px>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tbody_run">
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card card-warning">
+              <div class="card-header">
+                <h3 class="card-title">等待队列</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12">
+                    <table class="table table-sm">
+                      <thead>
+                        <tr>
+                          <th width=50px>ID</th>
+                          <th width=80px>类型</th>
+                          <th width=80px>算例</th>
+                          <th width=80px>CPU数</th>
+                          <th width=180px>提交时间</th>
+                          <th>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tbody_wait">
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">完成队列</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12">
+                    <table class="table table-sm">
+                      <thead>
+                        <tr>
+                          <th width=50px>ID</th>
+                          <th width=80px>类型</th>
+                          <th width=80px>算例</th>
+                          <th width="15%">状态</th>
+                          <th>结束时间</th>
+                          <th width=150px>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody id="tbody_done">
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+{% endblock content %}
+
+{% block script %}
+<script type="text/javascript">
+
+  var prog_url = "{{ url_for('queue.events') }}"
+  $.get(prog_url, function(events){
+    update_tbody_wait(events)
+    update_tbody_run(events)
+    update_tbody_done(events)
+  })
+
+  var refreshID = setInterval(function(){
+    var prog_url = "{{ url_for('queue.events') }}"
+    $.get(prog_url, function(events){
+      update_tbody_wait(events)
+      update_tbody_run(events)
+      update_tbody_done(events)
+    })
+  }, 2000);
+
+  function update_tbody_wait(events){
+    $("#tbody_wait").empty();
+    var tbody = document.getElementById('tbody_wait')
+    for(var id in events['in_queue']){
+      var tr = document.createElement('tr');
+      tbody.appendChild(tr)
+
+      var td = document.createElement('td');
+      td.innerHTML = Number(id) + 1
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['in_queue'][id]['type']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['in_queue'][id]['project_id'].toString() + '.' + events['in_queue'][id]['job_id'].toString()
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['in_queue'][id]['cpus']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['in_queue'][id]['time']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = "<a href='../abaqus/view_job/" + events['in_queue'][id]['project_id'].toString() + '/' + events['in_queue'][id]['job_id'].toString() + "'> 查看模型 </a>"
+      tr.appendChild(td)
+    } 
+  }
+
+  function update_tbody_run(events){
+    $("#tbody_run").empty();
+    var tbody = document.getElementById('tbody_run')
+    for(var id in events['running']){
+      var tr = document.createElement('tr');
+      tbody.appendChild(tr)
+
+      var td = document.createElement('td');
+      td.innerHTML = Number(id) + 1
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['running'][id]['type']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['running'][id]['project_id'].toString() + '.' + events['running'][id]['job_id'].toString()
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['running'][id]['cpus']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['running'][id]['time']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['running'][id]['status']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = "<a href='../abaqus/view_job/" + events['running'][id]['project_id'].toString() + '/' + events['running'][id]['job_id'].toString() + "'> 查看模型 </a>"
+      tr.appendChild(td)
+    } 
+  }
+
+  function update_tbody_done(events){
+    $("#tbody_done").empty();
+    var tbody = document.getElementById('tbody_done')
+    for(var id in events['done']){
+      var tr = document.createElement('tr');
+      tbody.appendChild(tr)
+
+      var td = document.createElement('td');
+      td.innerHTML = Number(id) + 1
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['done'][id]['type']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['done'][id]['project_id'].toString() + '.' + events['done'][id]['job_id'].toString()
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['done'][id]['status']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = events['done'][id]['time']
+      tr.appendChild(td)
+
+      var td = document.createElement('td');
+      td.innerHTML = "<a href='../abaqus/view_job/" + events['done'][id]['project_id'].toString() + '/' + events['done'][id]['job_id'].toString() + "'> 查看模型 </a>"
+      tr.appendChild(td)
+    } 
+  }
+
+  document.getElementById("monitor").className = "nav-item menu-open"
+  document.getElementById("view_queue").className = "nav-link active"
+
+</script>
+{% endblock script %}

@@ -272,6 +272,17 @@ def get_job_status(path, project_id, job_id):
         else:
             odb_to_npz_status = 'None'
 
+        odb_to_npz_proc_file = os.path.join(path, str(project_id), str(job_id), '.odb_to_npz_proc')
+        if os.path.exists(odb_to_npz_proc_file):
+            with open(odb_to_npz_proc_file, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+                if len(lines) != 0:
+                    odb_to_npz_proc = lines[-1]
+                else:
+                    odb_to_npz_proc = '0.0'
+        else:
+            odb_to_npz_proc = ''
+
         job_name = message['job']
         inp_file = os.path.join(path, str(project_id), str(job_id), '%s.inp' % job_name)
         odb_file = os.path.join(path, str(project_id), str(job_id), '%s.odb' % job_name)
@@ -288,6 +299,7 @@ def get_job_status(path, project_id, job_id):
         status['solver_status'] = solver_status
         status['prescan_status'] = prescan_status
         status['odb_to_npz_status'] = odb_to_npz_status
+        status['odb_to_npz_proc'] = odb_to_npz_proc
         status['parameters'] = str(parameters)
         status['path'] = os.path.join(path, str(project_id), str(job_id))
         button = ""

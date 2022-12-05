@@ -7,7 +7,7 @@
 <title>{% block title %}固体力学知识分享{% endblock title %}</title>
 <link type="image-icon" href="{{ url_for('static', filename='imgs/faveicon.png') }}" rel="icon"/>
 <!-- Google Font: Source Sans Pro -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+<!-- <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback"> -->
 {% if env['service'] == 'server' %}
 <!-- Font Awesome -->
 <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">
@@ -210,6 +210,25 @@
             </ul>
           </li>
           {% endblock nav_abaqus %}
+          {% block nav_monitor %}
+          <li class="nav-item" id="monitor">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-tasks"></i>
+              <p>
+                资源管理
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('queue.view_queue') }}" class="nav-link" id="view_queue">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>计算队列管理</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endblock nav_monitor %}
           {% block nav_admin %}
           {% if current_user.is_admin %}
           <li class="nav-item" id="user">

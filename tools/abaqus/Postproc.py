@@ -81,7 +81,8 @@ class Postproc:
         json_file = os.path.join(self.path, 'prescan_odb.json')
         if os.path.exists(json_file):
             os.remove(json_file)
-        cmd = 'abaqus viewer noGui=%s -- %s.odb %s' % (py_file, self.job, 'prescan_odb.json')
+        cmd = 'abaqus viewer noGui=%s -- %s.odb %s' % (
+            py_file, self.job, 'prescan_odb.json')
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
@@ -107,7 +108,7 @@ class Postproc:
     def prescan_status(self):
         """
         后处理的可能状态如下：
-        ['No odb file', 'Ready to prescan', 'Submitting', 'Scanning', 'Stopped', 'Completed']
+        ['None', 'Submitting', 'Scanning', 'Error', 'Done']
 
         Returns
         -------
@@ -115,40 +116,26 @@ class Postproc:
 
         """
         status_file = os.path.join(self.path, '.prescan_status')
-        
-        odb_file = os.path.join(self.path, '{}.odb'.format(self.job))
-        if not os.path.exists(odb_file):
-            prescan_status = 'No odb file'
-            with open(status_file, 'w', encoding='utf-8') as f:
-                f.write(prescan_status)
-            return prescan_status
+
+        # odb_file = os.path.join(self.path, '{}.odb'.format(self.job))
+        # if not os.path.exists(odb_file):
+        #     prescan_status = 'No odb file'
+        #     with open(status_file, 'w', encoding='utf-8') as f:
+        #         f.write(prescan_status)
+        #     return prescan_status
 
         if not os.path.exists(status_file):
-            prescan_status = 'Ready to prescan'
+            prescan_status = 'None'
             with open(status_file, 'w', encoding='utf-8') as f:
                 f.write(prescan_status)
         else:
             with open(status_file, 'r', encoding='utf-8') as f:
                 prescan_status = f.read()
 
-        rpy = self.get_rpy()
-        if 'done' in rpy:
-            prescan_status = 'Completed'
-        elif 'exited' in rpy:
-            prescan_status = 'Stopped'
-        elif 'Run standard' in rpy and prescan_status != 'Stopping':
-            prescan_status = 'Scanning'
-
-        if prescan_status not in ['No odb file', 'Ready to prescan', 'Submitting', 'Scanning', 'Stopped', 'Completed']:
-            prescan_status = 'Ready to prescan'
-
-        with open(status_file, 'w', encoding='utf-8') as f:
-            f.write(prescan_status)
-
         return prescan_status
 
 
 if __name__ == '__main__':
     p = Postproc(path='F:\\Github\\base\\files\\abaqus\\1\\1',
-               job='Job-1')
+                 job='Job-1')
     p.prescan_odb()

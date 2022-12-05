@@ -20,8 +20,18 @@ from tools.dir_status import (create_id, files_in_dir, get_job_status,
                               projects_detail, sub_dirs_int)
 from tools.tree import json_to_ztree, odb_json_to_ztree
 from tools.common import make_dir, dump_json, load_json
+from base.global_var import event_source
+from tools.events_new import update_events_new
+
 
 abaqus_bp = Blueprint('abaqus', __name__)
+
+
+@abaqus_bp.route('/observer', methods=['GET', 'POST'])
+@login_required
+def observer():
+    print('event_message', event_message)
+    return event_message
 
 
 @abaqus_bp.route('/manage_projects', methods=['GET', 'POST'])
@@ -145,7 +155,7 @@ def projects_status():
 
 
 @abaqus_bp.route('/project_jobs_status/<int:project_id>')
-# @login_required
+@login_required
 def project_jobs_status(project_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_id_list = sub_dirs_int(os.path.join(abaqus_path, str(project_id)))
@@ -168,7 +178,28 @@ def view_project(project_id):
     if form.validate_on_submit():
         f = form.filename.data
         f.save(os.path.join(project_path, f.filename))
-
+    if request.method == 'POST':
+        data = request.form.to_dict()
+        solver_list = [int(job_id)
+                       for job_id in data['descript'].split(',') if job_id != '']
+        new_jobs = []
+        for job_id in solver_list:
+            job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
+            if os.path.exists(job_path):
+                s = Solver(job_path)
+                job = {'type': 'Solver',
+                       'project_id': project_id,
+                       'job_id': job_id,
+                       'job_path': job_path,
+                       'cpus': s.cpus,
+                       'time': time.strftime('%Y-%m-%d %H:%M:%S'),
+                       'status': 'Submitting'}
+                new_jobs.append(job)
+                event_type = job['type']
+                event_dict = job
+                event_source.set_event(event_type, event_dict)
+                event_source.send_event()
+        update_events_new(new_jobs, current_app.config['EVENTS_NEW'])
     if os.path.exists(project_path):
         status = get_project_status(abaqus_path, project_id)
         files = files_in_dir(project_path)
@@ -358,6 +389,8 @@ def odb_to_npz(project_id, job_id):
             proc = p.odb_to_npz()
             with open(os.path.join(job_path, '.odb_to_npz_status'), 'w', encoding='utf-8') as f:
                 f.write('Submitting')
+            with open(os.path.join(job_path, '.odb_to_npz_proc'), 'w', encoding='utf-8') as f:
+                f.write('0.0\n')
         else:
             flash('缺少odb文件或odb_to_npz.json配置文件。', 'warning')
         return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
@@ -373,7 +406,8 @@ def prescan_odb_data(project_id, job_id):
     prescan_odb_json_file = os.path.join(job_path, 'prescan_odb.json')
     if os.path.exists(prescan_odb_json_file):
         prescan_odb_dict = load_json(prescan_odb_json_file)
-        ztree = odb_json_to_ztree(prescan_odb_dict, url_for('static', filename='zTree/icons/'))
+        ztree = odb_json_to_ztree(prescan_odb_dict, url_for(
+            'static', filename='zTree/icons/'))
     else:
         ztree = [{"id": 1, "pId": 0, "name": "无"}]
     return ztree
@@ -428,7 +462,7 @@ def scan_odb_data():
 
     odb_json_data = load_json(odb_json_file)
 
-    ztree = odb_json_to_ztree(odb_json_data, url_for('static', filename='zTree/icons/'))
-    
+    ztree = odb_json_to_ztree(odb_json_data, url_for(
+        'static', filename='zTree/icons/'))
 
     return ztree

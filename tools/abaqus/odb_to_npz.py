@@ -58,7 +58,7 @@ def odb_to_npz(setting_file):
     f_proc = open('.odb_to_npz_proc', 'w')
     with open('.odb_to_npz_status', 'w') as f:
         f.write('Running')
-        
+
     # Read settings from the setting file
     settings = load_json(setting_file)
     odbs = settings['ODB']
@@ -180,7 +180,7 @@ def odb_to_npz(setting_file):
                                 time.append(frame.frameValue)
                                 current_count += 1
                                 if is_write(current_count, total_count):
-                                    f_proc.write('%f\n' % (float(current_count)/total_count))
+                                    f_proc.write('%.1f\n' % (float(current_count)*100/total_count))
                                     f_proc.flush()
                                 # loop of variables
                                 for v in variables:
@@ -202,7 +202,7 @@ def odb_to_npz(setting_file):
                             time.append(frames[frame_id].frameValue)
                             current_count += 1
                             if is_write(current_count, total_count):
-                                f_proc.write('%f\n' % (float(current_count)/total_count))
+                                f_proc.write('%.1f\n' % (float(current_count)*100/total_count))
                                 f_proc.flush()
                             # loop of variables
                             for v in variables:

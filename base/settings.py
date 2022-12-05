@@ -27,6 +27,8 @@ class BaseConfig:
     UPLOAD_PATH = os.path.join(FILE_PATH, 'uploads')
     UPLOAD_IMG_PATH = os.path.join(FILE_PATH, 'uploads', 'imgs')
     ABAQUS_PATH = os.path.join(FILE_PATH, 'abaqus')
+    QUEUE_PATH = os.path.join(FILE_PATH, 'queue')
+    EVENTS_NEW = os.path.join(FILE_PATH, 'queue', '.events_new')
     DOC_PATH = os.path.join(FILE_PATH, 'doc')
     SHEET_PATH = os.path.join(FILE_PATH, 'sheet')
     PROPELLANT_PATH = os.path.join(FILE_PATH, 'propellant')

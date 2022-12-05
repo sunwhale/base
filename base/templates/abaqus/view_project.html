@@ -99,29 +99,39 @@
                 </div>
               </div>
               <div class="card-body">
-                <table id="data" class="table table-bordered table-striped">
-                  <thead>
-                    <tr>
-                      <th width="5%">算例ID</th>
-                      {% for parameter in parameters %}
-                      <th>{{ parameter }}</th>
-                      {% endfor %}
-                      <th width="5%">inp 时间</th>
-                      <th width="5%">inp 大小</th>
-                      <th width="5%">odb 时间</th>
-                      <th width="5%">odb 大小</th>
-                      <th width="5%">npz 时间</th>
-                      <th width="5%">npz 大小</th>
-                      <th width="5%">求解状态</th>
-                      <th width="10%">操作</th>
-                    </tr>
-                  </thead>
-                </table>
+                <form method="POST" id="form_queue" name="form_queue">
+                  {{ form.csrf_token }}
+                  <button class="btn btn-success" type="submit" id="submit_queue">
+                    <i class="fa fa-upload"></i>
+                    <strong>提交至计算队列</strong>
+                  </button>
+                  <textarea class="form-control" id="descript" name="descript"></textarea>
+                  <p></p>
+                  <table id="data" class="table table-bordered table-striped">
+                    <thead>
+                      <tr>
+                        <th width=20px><input type="checkbox" id="customCheck" class="checkAll"></th>
+                        <th width="5%">算例ID</th>
+                        {% for parameter in parameters %}
+                        <th>{{ parameter }}</th>
+                        {% endfor %}
+                        <th width="5%">inp 时间</th>
+                        <th width="5%">inp 大小</th>
+                        <th width="5%">odb 时间</th>
+                        <th width="5%">odb 大小</th>
+                        <th width="5%">npz 时间</th>
+                        <th width="5%">npz 大小</th>
+                        <th width="5%">求解状态</th>
+                        <th width=140px>操作</th>
+                      </tr>
+                    </thead>
+                  </table>
+                </form>
               </div>
             </div>
           </div>
 <!--           <div class="col-12">
-            <div class="card card-primary collapsed-card">
+            <div class="card card-primary">
               <div class="card-header">
                 <h3 class="card-title">{{ project_id }}号ABAQUS项目的算例列表</h3>
                 <div class="card-tools">
@@ -129,22 +139,35 @@
                     <i class="fas fa-expand"></i>
                   </button>
                   <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-plus"></i>
+                    <i class="fas fa-minus"></i>
                   </button>
                 </div>
               </div>
               <div class="card-body">
-                <table id="data_simple" class="table table-bordered table-striped">
-                  <thead>
-                    <tr>
-                      <th width="8%">算例ID</th>
-                      <th width="10%">创建时间</th>
-                      <th>参数列表</th>
-                      <th width="8%">求解状态</th>
-                      <th width="16%">操作</th>
-                    </tr>
-                  </thead>
-                </table>
+                <form method="POST" id="form_queue" name="form_queue">
+                  {{ form.csrf_token }}
+                  <button class="btn btn-warning btn-sm" type="submit" id="submit_queue">
+                    <i class="fa fa-save"></i>
+                    <strong>提交至计算队列</strong>
+                  </button>
+                  <p></p>
+                  <textarea class="form-control" id="descript" name="descript"></textarea>
+                  <table id="data_queue" class="table table-bordered table-striped">
+                    <thead>
+                      <tr>
+                        <th width="5%"><input type="checkbox" id="customCheck" class="checkAll">  全选</th>
+                        <th width="5%">算例ID</th>
+                        <th>inp 时间</th>
+                        <th>inp 大小</th>
+                        <th>odb 时间</th>
+                        <th>odb 大小</th>
+                        <th>npz 时间</th>
+                        <th>npz 大小</th>
+                        <th>求解状态</th>
+                      </tr>
+                    </thead>
+                  </table>
+                </form>
               </div>
             </div>
           </div> -->
@@ -157,6 +180,7 @@
 {% block script %}
 <script src="{{ url_for('static', filename='AdminLTE/plugins/datatables/jquery.dataTables.min.js') }}"></script>
 <script src="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+<script src="https://cdn.datatables.net/select/1.5.0/js/dataTables.select.min.js"></script>
 
 <script type="text/javascript">
 
@@ -187,14 +211,19 @@
 
   $(function () {
     $('#data').DataTable({
-      "paging": true,
-      "pageLength": 10,
-      "ordering": true,
-      "info": true,
-      "autoWidth": false,
-      "responsive": true,
-      "ajax": "{{ url_for('abaqus.project_jobs_status', project_id=project_id) }}",
-      "columns": [
+      paging: true,
+      pageLength: 10,
+      ordering: true,
+      info: true,
+      autoWidth: false,
+      responsive: true,
+      ajax: "{{ url_for('abaqus.project_jobs_status', project_id=project_id) }}",
+      columns: [
+        { data : null, 
+          render: function (data) {
+            return data='<input type="checkbox" class="checkOne" id="'+data['job_id']+'">';
+          },
+          sClass: 'text-center'},
         { data: 'job_id' },
         {% for parameter in parameters %}
         { data: '{{ parameter }}' },
@@ -212,23 +241,54 @@
   });
 
   $(function () {
-    $('#data_simple').DataTable({
-      "paging": true,
-      "pageLength": 10,
-      "ordering": true,
-      "info": true,
-      "autoWidth": false,
-      "responsive": true,
-      "ajax": "{{ url_for('abaqus.project_jobs_status', project_id=project_id) }}",
-      "columns": [
-        { data: 'job_id' },
+    $('#data_queue').DataTable({
+      paging: true,
+      pageLength: 10,
+      ordering: false,
+      info: true,
+      autoWidth: false,
+      responsive: true,
+      ajax: "{{ url_for('abaqus.project_jobs_status', project_id=project_id) }}",
+      columns: [
+        { data : null, 
+          render: function (data) {
+            return data='<input type="checkbox" class="checkOne" id="'+data['job_id']+'">';
+          },
+          sClass: 'text-center'},
+        { data: 'job_id', name: 'job_id' },
         { data: 'inp_time' },
-        { data: 'parameters' },
+        { data: 'inp_size' },
+        { data: 'odb_time' },
+        { data: 'odb_size' },
+        { data: 'npz_time' },
+        { data: 'npz_size' },
         { data: 'solver_status' },
-        { data: 'operation' },
       ],
     });
   });
+
+  // https://blog.csdn.net/weixin_43235307/article/details/121795990
+  $(document).on("click",".checkAll",function(){
+    $(".checkOne").prop("checked",$(this).prop("checked"));
+  });
+
+  $(document).on("click",".checkOne",function(){
+    var flag=$(".checkOne:checked").length==$(".checkOne").length;
+    $(".checkAll").prop("checked",flag);
+  });
+
+  $(document).ready(function(){
+    $('#form_queue').on('submit', function(){
+      var checked_item = $(".checkOne:checked")
+      var checked_items = []
+      for(let i=0;i<checked_item.length;i++){
+        checked_items.push(checked_item[i].id);
+      }
+      document.getElementById("descript").value=checked_items;
+    });      
+  });
+
+  document.getElementById("descript").style.display="none"
 
   document.getElementById("abaqus").className = "nav-item menu-open"
 
