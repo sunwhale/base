@@ -106,14 +106,14 @@
                     <strong>提交至计算队列</strong>
                   </button>
                   <button class="btn btn-primary" id="hide_para">
-                    <i class="fa fa-eye"></i>
-                    <strong>隐藏/显示模型参数</strong>
+                    <i class="fa fa-eye-slash" id="hide_para_icon"></i>
+                    <strong id="hide_para_text">隐藏模型参数列</strong>
                   </button>
                   <button class="btn btn-primary" id="hide_solver">
-                    <i class="fa fa-eye"></i>
-                    <strong>隐藏/显示求解文件</strong>
+                    <i class="fa fa-eye-slash" id="hide_solver_icon"></i>
+                    <strong id="hide_solver_text">隐藏求解文件列</strong>
                   </button>
-                  <textarea class="form-control" id="descript" name="descript"></textarea>
+                  <textarea class="form-control" id="queue" name="queue"></textarea>
                   <p></p>
                   <table id="data" class="table table-bordered table-striped">
                     <thead>
@@ -214,6 +214,15 @@
     for (var i=2; i<{{ parameters|length }}+2; i++) {
       var column = table.column(i);
       column.visible( ! column.visible() );
+      var text = document.getElementById('hide_para_text');
+      var icon = document.getElementById('hide_para_icon');
+      if (column.visible()) {
+        text.innerHTML = '隐藏模型参数列'
+        icon.setAttribute('class','fa fa-eye-slash')
+      } else {
+        text.innerHTML = '显示模型参数列'
+        icon.setAttribute('class','fa fa-eye')
+      }
     }
   });
 
@@ -224,33 +233,42 @@
     for (var i={{ parameters|length }}+2; i<{{ parameters|length }}+8; i++) {
       var column = table.column(i);
       column.visible( ! column.visible() );
+      var text = document.getElementById('hide_solver_text');
+      var icon = document.getElementById('hide_solver_icon');
+      if (column.visible()) {
+        text.innerHTML = '隐藏求解文件列'
+        icon.setAttribute('class','fa fa-eye-slash')
+      } else {
+        text.innerHTML = '显示求解文件列'
+        icon.setAttribute('class','fa fa-eye')
+      }
     }
   });
 
   // https://blog.csdn.net/weixin_43235307/article/details/121795990
-  $(document).on("click", ".checkAll", function () {
-    $(".checkOne").prop("checked",$(this).prop("checked"));
+  $(document).on('click', '.checkAll', function () {
+    $('.checkOne').prop('checked', $(this).prop('checked'));
   });
 
-  $(document).on("click", ".checkOne", function () {
-    var flag=$(".checkOne:checked").length==$(".checkOne").length;
-    $(".checkAll").prop("checked",flag);
+  $(document).on('click', '.checkOne', function () {
+    var flag = $('.checkOne:checked').length == $('.checkOne').length;
+    $('.checkAll').prop('checked', flag);
   });
 
   $(document).ready(function () {
     $('#form_queue').on('submit', function () {
-      var checked_item = $(".checkOne:checked")
+      var checked_item = $('.checkOne:checked')
       var checked_items = []
       for (var i=0; i<checked_item.length; i++) {
         checked_items.push(checked_item[i].id);
       }
-      document.getElementById("descript").value=checked_items;
+      document.getElementById('queue').value = checked_items;
     });      
   });
 
-  document.getElementById("descript").style.display="none"
+  document.getElementById('queue').style.display = 'none'
 
-  document.getElementById("abaqus").className = "nav-item menu-open"
+  document.getElementById('abaqus').className = 'nav-item menu-open'
 
 </script>
 {% endblock script %}

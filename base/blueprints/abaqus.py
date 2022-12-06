@@ -180,28 +180,29 @@ def view_project(project_id):
         f.save(os.path.join(project_path, f.filename))
     if request.method == 'POST':
         data = request.form.to_dict()
-        solver_list = [int(job_id)
-                       for job_id in data['descript'].split(',') if job_id != '']
-        new_jobs = []
-        for job_id in solver_list:
-            job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
-            if os.path.exists(job_path):
-                s = Solver(job_path)
-                job = {'type': 'Solver',
-                       'project_id': project_id,
-                       'job_id': job_id,
-                       'job_path': job_path,
-                       'cpus': s.cpus,
-                       'time': time.strftime('%Y-%m-%d %H:%M:%S'),
-                       'status': 'Submitting'}
-                new_jobs.append(job)
-                event_type = job['type']
-                event_dict = job
-                event_source.set_event(event_type, event_dict)
-                event_source.send_event()
-        update_events_new(new_jobs, current_app.config['EVENTS_NEW'])
-        flash('选中的算例已经提交到计算队列。', 'success')
-        return redirect(url_for('queue.view_queue'))
+        if 'queue' in data.keys():
+            solver_list = [int(job_id)
+                           for job_id in data['queue'].split(',') if job_id != '']
+            new_jobs = []
+            for job_id in solver_list:
+                job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
+                if os.path.exists(job_path):
+                    s = Solver(job_path)
+                    job = {'type': 'Solver',
+                           'project_id': project_id,
+                           'job_id': job_id,
+                           'job_path': job_path,
+                           'cpus': s.cpus,
+                           'time': time.strftime('%Y-%m-%d %H:%M:%S'),
+                           'status': 'Submitting'}
+                    new_jobs.append(job)
+                    event_type = job['type']
+                    event_dict = job
+                    event_source.set_event(event_type, event_dict)
+                    event_source.send_event()
+            update_events_new(new_jobs, current_app.config['EVENTS_NEW'])
+            flash('选中的算例已经提交到计算队列。', 'success')
+            return redirect(url_for('queue.view_queue'))
     if os.path.exists(project_path):
         status = get_project_status(abaqus_path, project_id)
         files = files_in_dir(project_path)
