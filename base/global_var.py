@@ -1,10 +1,12 @@
 # -*- coding:utf-8 -*-
 
-from tools.events_manager import EventManager, Listener, EventSource
+from tools.events_manager import EventManager, SolverListener, PostprocListener, EventSource
 
-solver_listener = Listener("Solver")
+solver_listener = SolverListener('Solver')
+postproc_listener = PostprocListener('Postproc')
 event_manager = EventManager()
 event_manager.add_event_listener('Solver', solver_listener.handler)
+event_manager.add_event_listener('odb_to_npz', postproc_listener.handler)
 event_source = EventSource(event_manager)
 
 exporting_threads = {}

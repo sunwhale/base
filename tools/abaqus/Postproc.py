@@ -105,6 +105,22 @@ class Postproc:
             rpy = ''
         return rpy
 
+    def odb_to_npz_status(self):
+        odb_to_npz_status_file = os.path.join(self.path, '.odb_to_npz_status')
+        if os.path.exists(odb_to_npz_status_file):
+            with open(odb_to_npz_status_file, 'r', encoding='utf-8') as f:
+                odb_to_npz_status = f.read()
+        else:
+            odb_to_npz_status = 'None'
+        return odb_to_npz_status
+
+    def is_odb_to_npz_done(self):
+        odb_to_npz_status = self.odb_to_npz_status()
+        if odb_to_npz_status == 'Done' or odb_to_npz_status == 'Error':
+            return True
+        else:
+            return False
+
     def prescan_status(self):
         """
         后处理的可能状态如下：
@@ -116,13 +132,6 @@ class Postproc:
 
         """
         status_file = os.path.join(self.path, '.prescan_status')
-
-        # odb_file = os.path.join(self.path, '{}.odb'.format(self.job))
-        # if not os.path.exists(odb_file):
-        #     prescan_status = 'No odb file'
-        #     with open(status_file, 'w', encoding='utf-8') as f:
-        #         f.write(prescan_status)
-        #     return prescan_status
 
         if not os.path.exists(status_file):
             prescan_status = 'None'

@@ -11,6 +11,7 @@ from threading import Thread
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from tools.abaqus.Solver import Solver
+from tools.abaqus.Postproc import Postproc
 from tools.events_new import get_events_new
 
 
@@ -45,10 +46,11 @@ class EventManager:
         self.__thread = Thread(target=self.__run)
         self.count = 0
         self.thread_count = 0
-        self.__max_cpus = 1
+        self.__max_cpus = 8
         self.__used_cpus = 0
         self.__events_running = []
         self.__events_done = []
+        self.__events_reload = []
         self.f_in_queue = ''
         self.f_running = ''
         # 这里的__handlers是一个字典，用来保存对应的事件的响应函数
@@ -77,9 +79,12 @@ class EventManager:
                     print("  <__RUN::>队列是空的")
             self.count += 1
             self.__update_running_status()
+            for event in self.__events_reload:
+                self.__event_process(event)
             print("  <__RUN::>Run中的count:", self.count)
             print("  <__RUN::>Run中的cpus:", self.__used_cpus)
             print("  <__RUN::>Run中的events:", self.__events_running)
+            print("  <__RUN::>Run中的events_reload:", self.__events_reload)
             # self.update_status()
             time.sleep(2)
 
@@ -91,7 +96,13 @@ class EventManager:
             # 若存在，则按顺序将事件传递给处理函数执行
             for handler in self.__handlers[event.event_type]:
                 # 这里的handler就是放进去的监听函数，这里会跳转到listener.handler(event)
-                handler(event)
+                is_reload = handler(event)
+                if is_reload:
+                    if event not in self.__events_reload:
+                        self.__events_reload.append(event)
+                else:
+                    if event in self.__events_reload:
+                        self.__events_reload.remove(event)
         self.count += 1
 
     def __update_cpus(self, event):
@@ -109,7 +120,15 @@ class EventManager:
                     self.__events_running.remove(event)
                     self.__events_done.append(event)
                     self.__used_cpus -= int(event.dict['cpus'])
-
+            if event.event_type == 'odb_to_npz':
+                p = Postproc(event.dict['job_path'])
+                event.dict['status'] = p.odb_to_npz_status()
+                if p.is_odb_to_npz_done():
+                    event.dict['time'] = time.strftime('%Y-%m-%d %H:%M:%S')
+                    self.__events_running.remove(event)
+                    self.__events_done.append(event)
+                    self.__used_cpus -= int(event.dict['cpus'])
+                    
     def start(self):
         """启动"""
         print('{}_start'.format(self.count))
@@ -235,7 +254,7 @@ class EventSource:
         self.__event_manager.send_event(event)
 
 
-class Listener:
+class SolverListener:
     """
     监听器
     """
@@ -247,6 +266,7 @@ class Listener:
     def handler(self, event):
         print(u'%s 收到新事件' % self.__username)
         print(u'事件内容：%s' % event.dict)
+        is_reload = False
         job_path = event.dict['job_path']
         if os.path.exists(job_path):
             s = Solver(job_path)
@@ -260,8 +280,50 @@ class Listener:
                 print('缺少必要的计算文件。', 'warning')
         else:
             print('不存在目录%s。' % job_path, 'warning')
+        return is_reload
 
 
+class PostprocListener:
+    """
+    监听器
+    """
+
+    def __init__(self, username):
+        self.__username = username
+
+    # 监听器的处理函数
+    def handler(self, event):
+        print(u'%s 收到新事件' % self.__username)
+        print(u'事件内容：%s' % event.dict)
+        is_reload = False
+        job_path = event.dict['job_path']
+        if os.path.exists(job_path):
+            p = Postproc(job_path)
+            s = Solver(job_path)
+            if p.check_setting_files():
+                if s.is_done():
+                    if p.check_files():
+                        proc = p.odb_to_npz()
+                        with open(os.path.join(job_path, '.odb_to_npz_status'), 'w', encoding='utf-8') as f:
+                            f.write('Submitting')
+                        with open(os.path.join(job_path, '.odb_to_npz_proc'), 'w', encoding='utf-8') as f:
+                            f.write('0.0\n')
+                    else:
+                        print('缺少odb文件。', 'warning')
+                else:
+                    # 如果此时算例s正在计算中，则后处理过程p要等待其完成后再继续执行
+                    with open(os.path.join(job_path, '.odb_to_npz_status'), 'w', encoding='utf-8') as f:
+                        f.write('Waiting for solving')
+                    with open(os.path.join(job_path, '.odb_to_npz_proc'), 'w', encoding='utf-8') as f:
+                        f.write('0.0\n')
+                    is_reload = True
+            else:
+                print('缺少odb_to_npz.json配置文件。', 'warning')
+        else:
+            print('不存在目录%s。' % job_path, 'warning')
+        return is_reload
+
+            
 class StatusEventHandler(FileSystemEventHandler):
     def __init__(self, status_file, event_source):
         self.status_file = status_file
@@ -290,7 +352,7 @@ class StatusEventHandler(FileSystemEventHandler):
 def monitor(path, f_new, f_in_queue, f_running):
     
     # 1.实例化『监听器』
-    solver_listener = Listener("Solver")
+    solver_listener = SolverListener('Solver')
 
     # 2.实例化『事件管理器』
     event_manager = EventManager()

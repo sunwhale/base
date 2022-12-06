@@ -88,7 +88,7 @@
           <div class="col-12">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">{{ project_id }}号ABAQUS项目的算例参数列表</h3>
+                <h3 class="card-title">{{ project_id }}号ABAQUS项目的算例列表</h3>
                 <div class="card-tools">
                   <button type="button" class="btn btn-tool" data-card-widget="maximize">
                     <i class="fas fa-expand"></i>
@@ -101,9 +101,17 @@
               <div class="card-body">
                 <form method="POST" id="form_queue" name="form_queue">
                   {{ form.csrf_token }}
-                  <button class="btn btn-success" type="submit" id="submit_queue">
+                  <button class="btn btn-success" type="submit" id="submit_queue_solver">
                     <i class="fa fa-upload"></i>
-                    <strong>提交至计算队列</strong>
+                    <strong>提交至队列（求解）</strong>
+                  </button>
+                  <button class="btn btn-success" type="submit" id="submit_queue_odb_to_npz">
+                    <i class="fa fa-upload"></i>
+                    <strong>提交至队列（导出）</strong>
+                  </button>
+                  <button class="btn btn-success" type="submit" id="submit_queue_all">
+                    <i class="fa fa-upload"></i>
+                    <strong>提交至队列（求解+导出）</strong>
                   </button>
                   <button class="btn btn-primary" id="hide_para">
                     <i class="fa fa-eye-slash" id="hide_para_icon"></i>
@@ -113,7 +121,8 @@
                     <i class="fa fa-eye-slash" id="hide_solver_icon"></i>
                     <strong id="hide_solver_text">隐藏求解文件列</strong>
                   </button>
-                  <textarea class="form-control" id="queue" name="queue"></textarea>
+                  <textarea class="form-control" id="queue_value" name="queue_value"></textarea>
+                  <textarea class="form-control" id="queue_type" name="queue_type"></textarea>
                   <p></p>
                   <table id="data" class="table table-bordered table-striped">
                     <thead>
@@ -256,17 +265,43 @@
   });
 
   $(document).ready(function () {
-    $('#form_queue').on('submit', function () {
+    $('#submit_queue_solver').on('click', function () {
       var checked_item = $('.checkOne:checked')
       var checked_items = []
       for (var i=0; i<checked_item.length; i++) {
         checked_items.push(checked_item[i].id);
       }
-      document.getElementById('queue').value = checked_items;
-    });      
+      document.getElementById('queue_value').value = checked_items;
+      document.getElementById('queue_type').value = 'Solver';
+    });
   });
 
-  document.getElementById('queue').style.display = 'none'
+  $(document).ready(function () {
+    $('#submit_queue_odb_to_npz').on('click', function () {
+      var checked_item = $('.checkOne:checked')
+      var checked_items = []
+      for (var i=0; i<checked_item.length; i++) {
+        checked_items.push(checked_item[i].id);
+      }
+      document.getElementById('queue_value').value = checked_items;
+      document.getElementById('queue_type').value = 'odb_to_npz';
+    });
+  });
+
+  $(document).ready(function () {
+    $('#submit_queue_all').on('click', function () {
+      var checked_item = $('.checkOne:checked')
+      var checked_items = []
+      for (var i=0; i<checked_item.length; i++) {
+        checked_items.push(checked_item[i].id);
+      }
+      document.getElementById('queue_value').value = checked_items;
+      document.getElementById('queue_type').value = 'All';
+    });
+  });
+
+  document.getElementById('queue_value').style.display = 'none'
+  document.getElementById('queue_type').style.display = 'none'
 
   document.getElementById('abaqus').className = 'nav-item menu-open'
 
