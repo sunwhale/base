@@ -32,7 +32,7 @@ class BaseConfig:
     DOC_PATH = os.path.join(FILE_PATH, 'doc')
     SHEET_PATH = os.path.join(FILE_PATH, 'sheet')
     PACKING_PATH = os.path.join(FILE_PATH, 'packing')
-    PACKING_MODEL_PATH = os.path.join(PACKING_PATH, 'models')
+    PACKING_MODELS_PATH = os.path.join(PACKING_PATH, 'models')
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     

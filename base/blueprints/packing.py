@@ -17,7 +17,7 @@ from psic.create_submodel import create_submodel as psic_create_submodel
 from psic.packing_spheres_in_cube import create_model as psic_create_model
 
 from base.forms.packing import (MeshForm, PackingForm, PostForm,
-                                   SubmodelForm, UploadForm)
+                                SubmodelForm, UploadForm)
 from base.global_var import create_thread_id, exporting_threads
 from tools.dir_status import (create_id, format_size, get_mesh_status,
                               get_model_status, get_submodel_status,
@@ -44,8 +44,9 @@ def create_model():
         rad_min = float(form.rad_min.data)
         rad_max = float(form.rad_max.data)
 
-        model_id = create_id(current_app.config['PACKING_MODEL_PATH'])
-        model_path = os.path.join(current_app.config['PACKING_MODEL_PATH'], str(model_id))
+        model_id = create_id(current_app.config['PACKING_MODELS_PATH'])
+        model_path = os.path.join(
+            current_app.config['PACKING_MODELS_PATH'], str(model_id))
 
         if not os.path.isdir(model_path):
             os.makedirs(model_path)
@@ -72,7 +73,8 @@ def create_model():
 @packing_bp.route('/create_submodel/<int:model_id>', methods=['GET', 'POST'])
 @login_required
 def create_submodel(model_id):
-    model_path = os.path.join(current_app.config['PACKING_MODEL_PATH'], str(model_id))
+    model_path = os.path.join(
+        current_app.config['PACKING_MODELS_PATH'], str(model_id))
     model_msg_file = os.path.join(model_path, 'model.msg')
     model_npy_file = os.path.join(model_path, 'model.npy')
     form = SubmodelForm()
@@ -83,10 +85,10 @@ def create_submodel(model_id):
             with open(model_msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
             size = message['size']
-            submodel_path = os.path.join(model_path, 'submodels')
+            submodels_path = os.path.join(model_path, 'submodels')
 
-            if os.path.exists(submodel_path):
-                shutil.rmtree(submodel_path)
+            if os.path.exists(submodels_path):
+                shutil.rmtree(submodels_path)
 
             thread_id = create_thread_id()
             exporting_threads[thread_id] = {}
@@ -98,7 +100,7 @@ def create_submodel(model_id):
             status['log'] = ''
 
             args = (model_npy_file, model_id, size,
-                    ndiv, gap, submodel_path, status)
+                    ndiv, gap, submodels_path, status)
 
             thread = threading.Thread(target=psic_create_submodel, args=args)
             thread.start()
@@ -112,7 +114,8 @@ def create_submodel(model_id):
 @login_required
 def create_mesh(model_id):
     form = MeshForm()
-    model_path = os.path.join(current_app.config['PACKING_MODEL_PATH'], str(model_id))
+    model_path = os.path.join(
+        current_app.config['PACKING_MODELS_PATH'], str(model_id))
     submodels_path = os.path.join(model_path, 'submodels')
     meshes_path = os.path.join(model_path, 'meshes')
     if os.path.isdir(model_path):
@@ -141,7 +144,8 @@ def create_mesh(model_id):
                 status['status'] = 'Running'
                 for submodel_id in submodel_ids:
                     mesh_path = os.path.join(meshes_path, str(submodel_id))
-                    submodel_path = os.path.join(submodels_path, str(submodel_id))
+                    submodel_path = os.path.join(
+                        submodels_path, str(submodel_id))
                     msg_file = os.path.join(submodel_path, 'model.msg')
 
                     with open(msg_file, 'r', encoding='utf-8') as f:
@@ -150,20 +154,22 @@ def create_mesh(model_id):
                     if len(size) > 3:
                         size = size[:3]
                     dimension = [s[1] for s in size]
-                    
+
                     if not os.path.isdir(mesh_path):
                         os.makedirs(mesh_path)
 
                     status['progress'] = 100*submodel_id/len(submodel_ids)
                     substatus = {'status': 'Submit', 'log': '', 'progress': 0}
 
-                    args = (gap, size, dimension, node_shape, element_type, submodel_path, mesh_path, substatus)
+                    args = (gap, size, dimension, node_shape,
+                            element_type, submodel_path, mesh_path, substatus)
                     psic_create_mesh(*args)
 
                 status['progress'] = 100
                 status['status'] = 'Done'
 
-            args = (gap, node_shape, element_type, submodels_path, meshes_path, status)
+            args = (gap, node_shape, element_type,
+                    submodels_path, meshes_path, status)
             thread = threading.Thread(target=create_meshes, args=args)
             thread.start()
         return render_template('packing/create_mesh.html', form=form, model_id=model_id)
@@ -188,45 +194,49 @@ def manage_submodels(model_id):
 @login_required
 def models_status():
     data = packing_models_detail(
-        current_app.config['PACKING_MODEL_PATH'])
+        current_app.config['PACKING_MODELS_PATH'])
     return jsonify(data)
 
 
 @packing_bp.route('/submodels_status/<int:model_id>')
 @login_required
 def submodels_status(model_id):
-    submodel_path = os.path.join(current_app.config['PACKING_MODEL_PATH'], str(model_id), 'submodels')
-    data = packing_submodels_detail(submodel_path, model_id)
+    submodels_path = os.path.join(
+        current_app.config['PACKING_MODELS_PATH'], str(model_id), 'submodels')
+    data = packing_submodels_detail(submodels_path, model_id)
     return jsonify(data)
 
 
 @packing_bp.route('/get_model/<int:model_id>/<path:filename>')
 @login_required
 def get_model(model_id, filename):
-    model_path = os.path.join(current_app.config['PACKING_MODEL_PATH'], str(model_id))
+    model_path = os.path.join(
+        current_app.config['PACKING_MODELS_PATH'], str(model_id))
     return send_from_directory(model_path, filename)
 
 
 @packing_bp.route('/get_submodel/<int:model_id>/<int:submodel_id>/<path:filename>')
 @login_required
 def get_submodel(model_id, submodel_id, filename):
-    submodel_path = os.path.join(current_app.config['PACKING_MODEL_PATH'], str(model_id), 'submodels', str(submodel_id))
+    submodel_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(
+        model_id), 'submodels', str(submodel_id))
     return send_from_directory(submodel_path, filename)
 
 
 @packing_bp.route('/get_mesh/<int:model_id>/<int:submodel_id>/<path:filename>')
 @login_required
 def get_mesh(model_id, submodel_id, filename):
-    mesh_path = os.path.join(current_app.config['PACKING_MODEL_PATH'], str(model_id), 'meshes', str(submodel_id))
+    mesh_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(
+        model_id), 'meshes', str(submodel_id))
     return send_from_directory(mesh_path, filename)
 
 
 @packing_bp.route('/view_model/<int:model_id>')
 @login_required
 def view_model(model_id):
-    path = os.path.join(current_app.config['PACKING_MODEL_PATH'])
-    if os.path.exists(os.path.join(path, str(model_id))):
-        status = get_model_status(path, model_id)
+    models_path = os.path.join(current_app.config['PACKING_MODELS_PATH'])
+    if os.path.exists(os.path.join(models_path, str(model_id))):
+        status = get_model_status(models_path, model_id)
         return render_template('packing/view_model.html', model_id=model_id, status=status)
     else:
         abort(404)
@@ -235,7 +245,8 @@ def view_model(model_id):
 @packing_bp.route('/view_submodel/<int:model_id>/<int:submodel_id>')
 @login_required
 def view_submodel(model_id, submodel_id):
-    model_path = os.path.join(current_app.config['PACKING_MODEL_PATH'], str(model_id))
+    model_path = os.path.join(
+        current_app.config['PACKING_MODELS_PATH'], str(model_id))
     submodels_path = os.path.join(model_path, 'submodels')
     meshes_path = os.path.join(model_path, 'meshes')
     if os.path.exists(os.path.join(submodels_path, str(submodel_id))):
@@ -252,7 +263,8 @@ def delete_models(model_id):
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该模型！', 'danger')
         return redirect(url_for('.manage_models'))
-    model_path = os.path.join(current_app.config['PACKING_MODEL_PATH'], str(model_id))
+    model_path = os.path.join(
+        current_app.config['PACKING_MODELS_PATH'], str(model_id))
     if os.path.exists(model_path):
         shutil.rmtree(model_path)
         flash('模型%s删除成功。' % model_id, 'success')
@@ -286,4 +298,4 @@ def thread_clear():
 @packing_bp.route('/status')
 @login_required
 def status():
-    return str(threading.active_count()) +  str([t.current_thread() for t in threading.enumerate()])
+    return str(threading.active_count()) + str([t.current_thread() for t in threading.enumerate()])
