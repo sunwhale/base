@@ -7,7 +7,9 @@
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
-<li class="breadcrumb-item active">生成{{ model_id }}号球体填充主模型的子模型</li>
+<li class="breadcrumb-item"><a href="{{ url_for('propellant.manage_packing_models') }}">球体填充模型管理</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('propellant.view_packing_model', model_id=model_id) }}">{{ model_id }}号主模型</a></li>
+<li class="breadcrumb-item active">生成子模型</li>
 {% endblock level %}
 
 {% block content %}
@@ -21,6 +23,8 @@
                 <h3 class="card-title">{{ model_id }}号主模型分区参数</h3>
               </div>
               <div class="card-body">
+                说明：通过对当前主模型在每个坐标轴方向等分，生成当前主模型的子模型。
+                <p></p>
                 <form action="" method="post" class="form" role="form" onsubmit="return sumbit_sure()">
                   {{ form.csrf_token() }}
                   {{ render_form_row([form.gap, form.ndiv]) }}

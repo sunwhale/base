@@ -7,7 +7,9 @@
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
-<li class="breadcrumb-item active">生成{{ model_id }}号球体填充主模型的子模型网格</li>
+<li class="breadcrumb-item"><a href="{{ url_for('propellant.manage_packing_models') }}">球体填充模型管理</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('propellant.view_packing_model', model_id=model_id) }}">{{ model_id }}号主模型</a></li>
+<li class="breadcrumb-item active">生成子模型有限元网格</li>
 {% endblock level %}
 
 {% block content %}
@@ -21,6 +23,8 @@
                 <h3 class="card-title">网格划分参数</h3>
               </div>
               <div class="card-body">
+                说明：生成所有子模型对应的有限元网格文件。
+                <p></p>
                 <form action="" method="post" class="form" role="form" onsubmit="return sumbit_sure()">
                   {{ form.csrf_token() }}
                   {{ render_form_row([form.gap, form.node_shape, form.element_type]) }}
