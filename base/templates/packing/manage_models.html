@@ -86,7 +86,7 @@
       "info": true,
       "autoWidth": false,
       "responsive": true,
-      "ajax": "{{ url_for('propellant.packing_models_status') }}",
+      "ajax": "{{ url_for('packing.models_status') }}",
       "columns": [
           { data: 'model_id' },
           { data: 'npy_time' },
@@ -100,8 +100,8 @@
     });
   });
 
-  document.getElementById("propellant").className = "nav-item menu-open"
-  document.getElementById("manage_packing_models").className = "nav-link active"
+  document.getElementById("packing").className = "nav-item menu-open"
+  document.getElementById("manage_models").className = "nav-link active"
 
 </script>
 {% endblock script %}

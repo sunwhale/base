@@ -13,7 +13,7 @@ from base.blueprints.admin import admin_bp
 from base.blueprints.auth import auth_bp
 from base.blueprints.doc import doc_bp
 from base.blueprints.main import main_bp
-from base.blueprints.propellant import propellant_bp
+from base.blueprints.packing import packing_bp
 from base.blueprints.sheet import sheet_bp
 from base.blueprints.queue import queue_bp
 from base.extensions import bootstrap, csrf, db, login_manager, mail, moment
@@ -54,7 +54,7 @@ def register_blueprints(app):
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.register_blueprint(doc_bp, url_prefix='/doc')
-    app.register_blueprint(propellant_bp, url_prefix='/propellant')
+    app.register_blueprint(packing_bp, url_prefix='/packing')
     app.register_blueprint(sheet_bp, url_prefix='/sheet')
     app.register_blueprint(queue_bp, url_prefix='/queue')
 

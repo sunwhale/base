@@ -110,31 +110,31 @@
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
           <!-- Add icons to the links using the .nav-icon class
                with font-awesome or any other icon font library -->
-          {% block nav_propellant %}
-          <li class="nav-item" id="propellant">
+          {% block nav_packing %}
+          <li class="nav-item" id="packing">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-th"></i>
               <p>
-                固体推进剂
+                球体填充建模
                 <i class="right fas fa-angle-left"></i>
               </p>
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="{{ url_for('propellant.manage_packing_models') }}" class="nav-link" id="manage_packing_models">
+                <a href="{{ url_for('packing.manage_models') }}" class="nav-link" id="manage_models">
                   <i class="far fa-circle nav-icon"></i>
                   <p>球体填充模型管理</p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{{ url_for('propellant.create_packing_model') }}" class="nav-link" id="create_packing_model">
+                <a href="{{ url_for('packing.create_model') }}" class="nav-link" id="create_model">
                   <i class="far fa-circle nav-icon"></i>
                   <p>新建球体填充模型</p>
                 </a>
               </li>
             </ul>
           </li>
-          {% endblock nav_propellant %}
+          {% endblock nav_packing %}
           {% block nav_doc %}
           <li class="nav-item" id="docs">
             <a href="#" class="nav-link">

@@ -31,11 +31,9 @@ class BaseConfig:
     EVENTS_NEW = os.path.join(FILE_PATH, 'queue', '.events_new')
     DOC_PATH = os.path.join(FILE_PATH, 'doc')
     SHEET_PATH = os.path.join(FILE_PATH, 'sheet')
-    PROPELLANT_PATH = os.path.join(FILE_PATH, 'propellant')
-    PROPELLANT_PACKING_MODEL_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'models')
-    PROPELLANT_PACKING_SUBMODEL_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'submodels')
-    PROPELLANT_PACKING_MESH_PATH = os.path.join(PROPELLANT_PATH, 'packing', 'meshes')
-    
+    PACKING_PATH = os.path.join(FILE_PATH, 'packing')
+    PACKING_MODEL_PATH = os.path.join(PACKING_PATH, 'models')
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     SECRET_KEY = os.getenv('SECRET_KEY', 'secret string')

@@ -1,15 +1,15 @@
 {% extends 'layout.html' %}
 {% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
 
-{% block title %}生成{{ model_id }}号球体填充主模型的子模型{% endblock title %}
+{% block title %}生成{{ model_id }}号球体填充主模型的子模型网格{% endblock title %}
 
-{% block pageheader %}生成{{ model_id }}号球体填充主模型的子模型{% endblock pageheader %}
+{% block pageheader %}生成{{ model_id }}号球体填充主模型的子模型网格{% endblock pageheader %}
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
-<li class="breadcrumb-item"><a href="{{ url_for('propellant.manage_packing_models') }}">球体填充模型管理</a></li>
-<li class="breadcrumb-item"><a href="{{ url_for('propellant.view_packing_model', model_id=model_id) }}">{{ model_id }}号主模型</a></li>
-<li class="breadcrumb-item active">生成子模型</li>
+<li class="breadcrumb-item"><a href="{{ url_for('packing.manage_models') }}">球体填充模型管理</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('packing.view_model', model_id=model_id) }}">{{ model_id }}号主模型</a></li>
+<li class="breadcrumb-item active">生成子模型有限元网格</li>
 {% endblock level %}
 
 {% block content %}
@@ -20,14 +20,14 @@
           <div class="col-md-12">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">{{ model_id }}号主模型分区参数</h3>
+                <h3 class="card-title">网格划分参数</h3>
               </div>
               <div class="card-body">
-                说明：通过对当前主模型在每个坐标轴方向等分，生成当前主模型的子模型。
+                说明：生成所有子模型对应的有限元网格文件。
                 <p></p>
                 <form action="" method="post" class="form" role="form" onsubmit="return sumbit_sure()">
                   {{ form.csrf_token() }}
-                  {{ render_form_row([form.gap, form.ndiv]) }}
+                  {{ render_form_row([form.gap, form.node_shape, form.element_type]) }}
                   {{ render_field(form.submit, button_style='btn btn-primary') }}
                 </form>
               </div>
@@ -67,7 +67,7 @@
 {% block script %}
 <script type="text/javascript">
   var refreshID = setInterval(function(){
-    var prog_url = "{{ url_for('propellant.thread') }}"
+    var prog_url = "{{ url_for('packing.thread') }}"
     $.get(prog_url, function(threads){
 
       is_fresh = false
@@ -116,14 +116,14 @@
 
       var td = document.createElement('td');
       if(threads[id]['status'] == 'Done'){
-        td.innerHTML = "<a href='../view_packing_model/" + threads[id]['class_id'] + "'> 查看模型 </a>"
+        td.innerHTML = "<a href='../view_model/" + threads[id]['class_id'] + "'> 查看模型 </a>"
       }
       tr.appendChild(td)
     } 
   }
 
   function clear_query(btn){
-    var prog_url = "{{ url_for('propellant.thread_clear') }}";
+    var prog_url = "{{ url_for('packing.thread_clear') }}";
     $.get(prog_url, function(threads){
       update_table(threads)
     })
@@ -139,7 +139,7 @@
     }
   }
 
-  document.getElementById("propellant").className = "nav-item menu-open"
+  document.getElementById("packing").className = "nav-item menu-open"
 
 </script>
 {% endblock script %}

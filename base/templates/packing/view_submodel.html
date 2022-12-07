@@ -7,8 +7,8 @@
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
-<li class="breadcrumb-item"><a href="{{ url_for('propellant.manage_packing_models') }}">球体填充模型管理</a></li>
-<li class="breadcrumb-item"><a href="{{ url_for('propellant.view_packing_model', model_id=model_id) }}">{{ model_id }}号球体填充模型</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('packing.manage_models') }}">球体填充模型管理</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('packing.view_model', model_id=model_id) }}">{{ model_id }}号球体填充模型</a></li>
 <li class="breadcrumb-item active">子模型信息</li>
 {% endblock level %}
 
@@ -40,15 +40,15 @@
                       <li> 模型文件大小：{{status['npy_size']}} </li>
                       <li> 参数列表：{{status['args']}} </li>
                     </ul>
-                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.png"></a>
-                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/density.png" target="_blank"><img height="350" src="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/density.png"></a>
+                    <a href="{{ url_for('packing.get_submodel', model_id=model_id, submodel_id=submodel_id, filename='model.png') }}" target="_blank"><img height="350" src="{{ url_for('packing.get_submodel', model_id=model_id, submodel_id=submodel_id, filename='model.png') }}"></a>
+                    <a href="{{ url_for('packing.get_submodel', model_id=model_id, submodel_id=submodel_id, filename='density.png') }}" target="_blank"><img height="350" src="{{ url_for('packing.get_submodel', model_id=model_id, submodel_id=submodel_id, filename='density.png') }}"></a>
 
                     <h5 class="text-primary">文件</h5>
-                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.npy" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.npy</a>
-                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/args.json" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a>
-                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.msg" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a>
-                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a>
-                    <a href="{{ url_for('propellant.get_packing_submodel', filename='') }}/{{ model_id }}/{{ submodel_id }}/density.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a>
+                    <a href="{{ url_for('packing.get_submodel', model_id=model_id, submodel_id=submodel_id, filename='model.npy') }}" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.npy</a>
+                    <a href="{{ url_for('packing.get_submodel', model_id=model_id, submodel_id=submodel_id, filename='args.json') }}" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a>
+                    <a href="{{ url_for('packing.get_submodel', model_id=model_id, submodel_id=submodel_id, filename='model.msg') }}" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a>
+                    <a href="{{ url_for('packing.get_submodel', model_id=model_id, submodel_id=submodel_id, filename='model.png') }}" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a>
+                    <a href="{{ url_for('packing.get_submodel', model_id=model_id, submodel_id=submodel_id, filename='density.png') }}" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a>
                   </div>
                 </div>
               </div>
@@ -81,10 +81,10 @@
                     </ul>
 
                     <h5 class="text-primary">文件</h5>
-                    <a href="{{ url_for('propellant.get_packing_mesh', filename='') }}/{{ model_id }}/{{ submodel_id }}/Model-1.inp" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> Model-1.inp</a>
-                    <a href="{{ url_for('propellant.get_packing_mesh', filename='') }}/{{ model_id }}/{{ submodel_id }}/args.json" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a>
-                    <a href="{{ url_for('propellant.get_packing_mesh', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.msg" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a>
-                    <a href="{{ url_for('propellant.get_packing_mesh', filename='') }}/{{ model_id }}/{{ submodel_id }}/model.png" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a>
+                    <a href="{{ url_for('packing.get_mesh', model_id=model_id, submodel_id=submodel_id, filename='Model-1.inp') }}" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> Model-1.inp</a>
+                    <a href="{{ url_for('packing.get_mesh', model_id=model_id, submodel_id=submodel_id, filename='args.json') }}" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> args.json</a>
+                    <a href="{{ url_for('packing.get_mesh', model_id=model_id, submodel_id=submodel_id, filename='model.msg') }}" class="btn-link text-secondary"><i class="far fa-fw fa-file"></i> model.msg</a>
+                    <a href="{{ url_for('packing.get_mesh', model_id=model_id, submodel_id=submodel_id, filename='model.png') }}" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> model.png</a>
                   </div>
                 </div>
               </div>
@@ -98,7 +98,7 @@
 {% block script %}
 <script type="text/javascript">
 
-  document.getElementById("propellant").className = "nav-item menu-open"
+  document.getElementById("packing").className = "nav-item menu-open"
 
 </script>
 {% endblock script %}

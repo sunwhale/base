@@ -116,18 +116,18 @@ def get_model_status(path, model_id):
         status['gap'] = message['gap']
         status['num_ball'] = message['num_ball']
         status['fraction'] = '%.4f' % message['fraction']
-        status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>子模型</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_packing_model/'+str(model_id), '../manage_packing_submodels/'+str(model_id), '../delete_packing_models/'+str(model_id))
+        status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>子模型</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_model/'+str(model_id), '../manage_submodels/'+str(model_id), '../delete_models/'+str(model_id))
     except FileNotFoundError:
         for key in ['npy_time', 'npy_size', 'size', 'gap', 'num_ball', 'fraction']:
             status[key] = 'None'
-        status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../delete_packing_models/'+str(model_id))
+        status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../delete_models/'+str(model_id))
     return status
 
 
 def get_submodel_status(path, model_id, submodel_id):
-    npy_file = os.path.join(path, str(model_id), str(submodel_id), 'model.npy')
-    msg_file = os.path.join(path, str(model_id), str(submodel_id), 'model.msg')
-    args_file = os.path.join(path, str(model_id), str(submodel_id), 'args.json')
+    npy_file = os.path.join(path, str(submodel_id), 'model.npy')
+    msg_file = os.path.join(path, str(submodel_id), 'model.msg')
+    args_file = os.path.join(path, str(submodel_id), 'args.json')
     status = {}
     status['model_id'] = model_id
     status['submodel_id'] = submodel_id
@@ -145,7 +145,7 @@ def get_submodel_status(path, model_id, submodel_id):
         status['gap'] = message['gap']
         status['num_ball'] = message['num_ball']
         status['fraction'] = '%.4f' % message['fraction']
-        status['operation'] = "<a href='%s'>查看</a>" % ('../view_packing_submodel/'+str(model_id)+'/'+str(submodel_id))
+        status['operation'] = "<a href='%s'>查看</a>" % ('../view_submodel/'+str(model_id)+'/'+str(submodel_id))
     except FileNotFoundError:
         for key in ['npy_time', 'npy_size', 'ndiv', 'location', 'subsize', 'gap', 'num_ball', 'fraction', 'operation']:
             status[key] = 'None'
@@ -153,9 +153,9 @@ def get_submodel_status(path, model_id, submodel_id):
 
 
 def get_mesh_status(path, model_id, submodel_id):
-    inp_file = os.path.join(path, str(model_id), str(submodel_id), 'Model-1.inp')
-    args_file = os.path.join(path, str(model_id), str(submodel_id), 'args.json')
-    msg_file = os.path.join(path, str(model_id), str(submodel_id), 'model.msg')
+    inp_file = os.path.join(path, str(submodel_id), 'Model-1.inp')
+    args_file = os.path.join(path, str(submodel_id), 'args.json')
+    msg_file = os.path.join(path, str(submodel_id), 'model.msg')
     status = {}
     status['model_id'] = model_id
     status['submodel_id'] = submodel_id
@@ -353,7 +353,7 @@ def packing_models_detail(path):
 
 def packing_submodels_detail(path, model_id):
     data_list = []
-    submodel_id_list = sub_dirs_int(os.path.join(path, str(model_id)))
+    submodel_id_list = sub_dirs_int(path)
     for submodel_id in submodel_id_list:
         status = get_submodel_status(path, model_id, submodel_id)
         data_list.append(status)

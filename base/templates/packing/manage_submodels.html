@@ -11,7 +11,7 @@
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
-<li class="breadcrumb-item"><a href="{{ url_for('propellant.manage_packing_models') }}">球体填充模型管理</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('packing.manage_models') }}">球体填充模型管理</a></li>
 <li class="breadcrumb-item active">子模型管理</li>
 {% endblock level %}
 
@@ -89,7 +89,7 @@
       "info": true,
       "autoWidth": false,
       "responsive": true,
-      "ajax": "{{ url_for('propellant.packing_submodels_status', model_id=model_id) }}",
+      "ajax": "{{ url_for('packing.submodels_status', model_id=model_id) }}",
       "columns": [
         { data: 'submodel_id' },
         { data: 'model_id' },
@@ -105,8 +105,8 @@
     });
   });
 
-  document.getElementById("propellant").className = "nav-item menu-open"
-  document.getElementById("manage_packing_models").className = "nav-link active"
+  document.getElementById("packing").className = "nav-item menu-open"
+  document.getElementById("manage_models").className = "nav-link active"
 
 </script>
 {% endblock script %}
