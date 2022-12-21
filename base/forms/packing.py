@@ -3,6 +3,7 @@
 
 """
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField, FileRequired
 from wtforms import (BooleanField, DateField, DecimalField, FileField,
                      FloatField, HiddenField, IntegerField, MultipleFileField,
                      PasswordField, SelectField, StringField, SubmitField,
@@ -40,11 +41,20 @@ class MeshForm(FlaskForm):
 
 
 class UploadForm(FlaskForm):
-    filename = FileField('上传文件')
-    submit = SubmitField('提交')
+    filename = FileField('上传文件', validators=[FileRequired()])
+    submit = SubmitField('上传')
 
 
 class PostForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(1, 60)])
     body = TextAreaField('Body', validators=[DataRequired()])
     submit = SubmitField('提交')
+
+
+class ABAQUSForm(FlaskForm):
+    name = StringField('项目名称', render_kw = {'readonly': True})
+    descript = TextAreaField('项目描述')
+    job = StringField('缺省算例名', default='Job-1')
+    user = StringField('缺省user文件', default='user.for')
+    cpus = IntegerField('缺省算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 16)])
+    submit = SubmitField(u'提交')

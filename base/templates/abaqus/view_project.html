@@ -41,12 +41,19 @@
                       <li> 缺省user文件：{{ status['user'] }} </li>
                       <li> 缺省算例使用CPU核心数量：{{ status['cpus'] }} </li>
                       <li> 项目描述：{{ status['descript'] }} </li>
-                      <a class='btn btn-primary' href="{{ url_for('abaqus.edit_project', project_id=project_id) }}">编辑信息</a>
+                      <a class='btn btn-primary' href="{{ url_for('abaqus.edit_project', project_id=project_id) }}"><strong>编辑信息</strong></a>
+                      {% if env['service'] == 'client' %}
+                      <a href="{{ url_for('abaqus.open_project', project_id=project_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
+                      {% endif %}
+                      {% if status['link']!='None' %}
+                      <a href="{{ status['link'] }}" class='btn btn-warning'><strong>外部关联项目</strong></a>
+                      {% endif %}
                     </ul>
-
+                    {% if status['link']=='None' %}
                     <h5 class="text-primary">创建新算例</h5>
                     复制当前项目文件到算例文件夹，并生成新的参数文件。<br>
-                    <a class='btn btn-primary' href="{{ url_for('abaqus.create_job', project_id=project_id) }}">新建算例</a>
+                    <a class='btn btn-primary' href="{{ url_for('abaqus.create_job', project_id=project_id) }}"><strong>新建算例</strong></a>
+                    {% endif %}
                     
                   </div>
                   <div class="col-6">
@@ -156,7 +163,6 @@
 {% block script %}
 <script src="{{ url_for('static', filename='AdminLTE/plugins/datatables/jquery.dataTables.min.js') }}"></script>
 <script src="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-<script src="https://cdn.datatables.net/select/1.5.0/js/dataTables.select.min.js"></script>
 
 <script type="text/javascript">
 

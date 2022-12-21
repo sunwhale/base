@@ -17,12 +17,13 @@ from psic.create_submodel import create_submodel as psic_create_submodel
 from psic.packing_spheres_in_cube import create_model as psic_create_model
 
 from base.forms.packing import (MeshForm, PackingForm, PostForm,
-                                SubmodelForm, UploadForm)
+                                SubmodelForm, UploadForm, ABAQUSForm)
 from base.global_var import create_thread_id, exporting_threads
+from tools.common import make_dir, dump_json, load_json
 from tools.dir_status import (create_id, format_size, get_mesh_status,
                               get_model_status, get_submodel_status,
                               packing_models_detail, packing_submodels_detail,
-                              sub_dirs_int)
+                              sub_dirs_int, files_in_dir)
 
 packing_bp = Blueprint('packing', __name__)
 
@@ -48,8 +49,7 @@ def create_model():
         model_path = os.path.join(
             current_app.config['PACKING_MODELS_PATH'], str(model_id))
 
-        if not os.path.isdir(model_path):
-            os.makedirs(model_path)
+        make_dir(model_path)
 
         thread_id = create_thread_id()
         exporting_threads[thread_id] = {}
@@ -77,8 +77,10 @@ def create_submodel(model_id):
         current_app.config['PACKING_MODELS_PATH'], str(model_id))
     model_msg_file = os.path.join(model_path, 'model.msg')
     model_npy_file = os.path.join(model_path, 'model.npy')
+    abaqus_msg_file = os.path.join(model_path, 'abaqus', '.abaqus_msg')
+
     form = SubmodelForm()
-    if os.path.exists(model_npy_file):
+    if os.path.exists(model_npy_file) and not os.path.exists(abaqus_msg_file):
         if form.validate_on_submit():
             gap = float(form.gap.data)
             ndiv = int(form.ndiv.data)
@@ -86,9 +88,12 @@ def create_submodel(model_id):
                 message = json.load(f)
             size = message['size']
             submodels_path = os.path.join(model_path, 'submodels')
+            meshes_path = os.path.join(model_path, 'meshes')
 
             if os.path.exists(submodels_path):
                 shutil.rmtree(submodels_path)
+            if os.path.exists(meshes_path):
+                shutil.rmtree(meshes_path)
 
             thread_id = create_thread_id()
             exporting_threads[thread_id] = {}
@@ -106,7 +111,10 @@ def create_submodel(model_id):
             thread.start()
         return render_template('packing/create_submodel.html', form=form, model_id=model_id)
     else:
-        flash('主模型%s不存在。' % model_id, 'warning')
+        if not os.path.exists(model_npy_file):
+            flash('主模型%s不存在。' % model_id, 'warning')
+        else:
+            flash('已经存在ABAQUS关联项目，请先删除关联项目再重新生成子模型。', 'warning')
         return render_template('packing/create_submodel.html', form=form, model_id=model_id)
 
 
@@ -118,7 +126,8 @@ def create_mesh(model_id):
         current_app.config['PACKING_MODELS_PATH'], str(model_id))
     submodels_path = os.path.join(model_path, 'submodels')
     meshes_path = os.path.join(model_path, 'meshes')
-    if os.path.isdir(model_path):
+    abaqus_msg_file = os.path.join(model_path, 'abaqus', '.abaqus_msg')
+    if os.path.exists(model_path) and os.path.exists(submodels_path) and not os.path.exists(abaqus_msg_file):
         if form.validate_on_submit():
             gap = float(form.gap.data)
             node_shape = eval(form.node_shape.data)
@@ -127,8 +136,7 @@ def create_mesh(model_id):
             if os.path.exists(meshes_path):
                 shutil.rmtree(meshes_path)
 
-            if not os.path.isdir(meshes_path):
-                os.makedirs(meshes_path)
+            make_dir(meshes_path)
 
             thread_id = create_thread_id()
             exporting_threads[thread_id] = {}
@@ -155,8 +163,7 @@ def create_mesh(model_id):
                         size = size[:3]
                     dimension = [s[1] for s in size]
 
-                    if not os.path.isdir(mesh_path):
-                        os.makedirs(mesh_path)
+                    make_dir(mesh_path)
 
                     status['progress'] = 100*submodel_id/len(submodel_ids)
                     substatus = {'status': 'Submit', 'log': '', 'progress': 0}
@@ -174,8 +181,120 @@ def create_mesh(model_id):
             thread.start()
         return render_template('packing/create_mesh.html', form=form, model_id=model_id)
     else:
-        flash('主模型%s不存在，或尚未生成子模型。' % model_id, 'warning')
+        if not os.path.exists(model_path):
+            flash('主模型%s不存在。' % model_id, 'warning')
+        elif not os.path.exists(submodels_path):
+            flash('尚未划分子模型。', 'warning')
+        else:
+            flash('已经存在ABAQUS关联项目，请先删除关联项目再重新生成子模型。', 'warning')
         return render_template('packing/create_mesh.html', form=form, model_id=model_id)
+
+
+@packing_bp.route('/create_abaqus/<int:model_id>', methods=['GET', 'POST'])
+@login_required
+def create_abaqus(model_id):
+    model_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(model_id))
+    submodels_path = os.path.join(model_path, 'submodels')
+    meshes_path = os.path.join(model_path, 'meshes')
+    form_abaqus = ABAQUSForm()
+    form_upload = UploadForm()
+    if os.path.exists(model_path) and os.path.exists(meshes_path):
+        is_create = False
+
+        abaqus_path = os.path.join(model_path, 'abaqus')
+        make_dir(abaqus_path)
+        abaqus_msg_file = os.path.join(abaqus_path, '.abaqus_msg')
+        
+        if form_upload.validate_on_submit():
+            f = form_upload.filename.data
+            f.save(os.path.join(abaqus_path, f.filename))
+
+        if os.path.exists(abaqus_path):
+            files = files_in_dir(abaqus_path)
+        else:
+            files = []
+
+        if form_abaqus.validate_on_submit() and not form_upload.validate_on_submit():
+            projects_path = current_app.config['ABAQUS_PATH']
+            if os.path.exists(abaqus_msg_file):
+                abaqus_message = load_json(abaqus_msg_file)
+                project_id = abaqus_message['project_id']
+                project_path = os.path.join(projects_path, str(project_id))
+                if os.path.exists(project_path):
+                    flash('主模型%s关联项目已经存在。' % model_id, 'warning')
+                    is_create = False
+                else:
+                    abaqus_message['job'] = form_abaqus.job.data
+                    abaqus_message['user'] = form_abaqus.user.data
+                    abaqus_message['cpus'] = form_abaqus.cpus.data
+                    dump_json(abaqus_msg_file, abaqus_message)
+                    is_create = True
+            else:
+                project_id = create_id(projects_path)
+                abaqus_message = {
+                    'name': form_abaqus.name.data,
+                    'descript': form_abaqus.descript.data,
+                    'job': form_abaqus.job.data,
+                    'user': form_abaqus.user.data,
+                    'cpus': form_abaqus.cpus.data,
+                    'model_id': model_id,
+                    'project_id': project_id
+                }
+                dump_json(abaqus_msg_file, abaqus_message)
+                is_create = True
+
+        if is_create:
+            project_path = os.path.join(projects_path, str(project_id))
+            make_dir(project_path)
+
+            project_msg_file = os.path.join(project_path, '.project_msg')
+            project_message = {
+                'name': abaqus_message['name'],
+                'descript': abaqus_message['descript'],
+                'job': abaqus_message['job'],
+                'user': abaqus_message['user'],
+                'cpus': abaqus_message['cpus'],
+                'link': url_for('packing.view_model', model_id=model_id)
+            }
+            dump_json(project_msg_file, project_message)
+
+            submodel_ids = sub_dirs_int(submodels_path)
+            for submodel_id in submodel_ids:
+                mesh_path = os.path.join(meshes_path, str(submodel_id))
+                job_id = create_id(project_path)
+                job_path = os.path.join(project_path, str(submodel_id))
+                make_dir(job_path)
+                job_message = {
+                    'job': abaqus_message['job'],
+                    'user': abaqus_message['user'],
+                    'cpus': abaqus_message['cpus']
+                }
+                job_msg_file = os.path.join(job_path, '.job_msg')
+                dump_json(job_msg_file, job_message)
+                files = files_in_dir(abaqus_path)
+                for file in files:
+                    shutil.copy(os.path.join(abaqus_path, file['name']),
+                                os.path.join(job_path, file['name']))
+                shutil.copy(os.path.join(mesh_path, 'Model-1.inp'),
+                            os.path.join(job_path, 'Model-1.inp'))
+            flash('主模型%s关联项目生成成功。' % model_id, 'success')
+            return redirect(url_for('abaqus.view_project', project_id=project_id))
+
+        if os.path.exists(abaqus_msg_file):
+            abaqus_message = load_json(abaqus_msg_file)
+            form_abaqus.job.data = abaqus_message['job']
+            form_abaqus.user.data = abaqus_message['user']
+            form_abaqus.cpus.data = abaqus_message['cpus']
+            form_abaqus.descript.data = abaqus_message['descript']
+        form_abaqus.name.data = '%s号球体填充主模型关联项目' % model_id
+
+        return render_template('packing/create_abaqus.html', form_abaqus=form_abaqus, form_upload=form_upload, model_id=model_id, files=files)
+    else:
+        if not os.path.exists(model_path):
+            flash('主模型%s不存在。' % model_id, 'warning')
+        else:
+            flash('尚未生成有限元网格。', 'warning')
+        return render_template('packing/create_abaqus.html', form_abaqus=form_abaqus, form_upload=form_upload, model_id=model_id)
 
 
 @packing_bp.route('/manage_models/')
@@ -229,6 +348,31 @@ def get_mesh(model_id, submodel_id, filename):
     mesh_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(
         model_id), 'meshes', str(submodel_id))
     return send_from_directory(mesh_path, filename)
+
+
+@packing_bp.route('/get_abaqus/<int:model_id>/<path:filename>')
+@login_required
+def get_abaqus(model_id, filename):
+    abaqus_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(
+        model_id), 'abaqus')
+    return send_from_directory(abaqus_path, filename)
+
+
+@packing_bp.route('/delete_abaqus_file/<int:model_id>/<path:filename>')
+@login_required
+def delete_abaqus_file(model_id, filename):
+    abaqus_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(
+        model_id), 'abaqus')
+    file = os.path.join(abaqus_path, str(filename))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该文件！', 'warning')
+        return redirect(url_for('.create_abaqus', model_id=model_id))
+    if os.path.exists(file):
+        os.remove(file)
+        flash('文件%s删除成功。' % filename, 'success')
+    else:
+        flash('文件%s不存在。' % filename, 'warning')
+    return redirect(url_for('.create_abaqus', model_id=model_id))
 
 
 @packing_bp.route('/view_model/<int:model_id>')

@@ -69,7 +69,8 @@ def create_id(path):
         return 1
     else:
         return max(old_id_list)+1
-    
+
+
 def files_in_dir(path):
     file_list = []
     for filename in next(os.walk(path))[2]:
@@ -77,9 +78,9 @@ def files_in_dir(path):
         file['name'] = filename
         file['size'] = file_size(os.path.join(path, filename))
         file['time'] = file_time(os.path.join(path, filename))
-        file_list.append(file)    
+        file_list.append(file)
     return file_list
-    
+
 
 def file_time(file):
     if os.path.exists(file):
@@ -95,11 +96,13 @@ def file_size(file):
     else:
         return 'None'
 
+
 def get_model_status(path, model_id):
     npy_file = os.path.join(path, str(model_id), 'model.npy')
     msg_file = os.path.join(path, str(model_id), 'model.msg')
     args_file = os.path.join(path, str(model_id), 'args.json')
     log_file = os.path.join(path, str(model_id), 'model.log')
+    abaqus_file = os.path.join(path, str(model_id), 'abaqus', '.abaqus_msg')
     status = {}
     status['model_id'] = model_id
     try:
@@ -109,18 +112,26 @@ def get_model_status(path, model_id):
             args = json.load(f)
             status['args'] = str(args)
         with open(log_file, 'r', encoding='utf-8') as f:
-            status['log'] = f.read()        
+            status['log'] = f.read()
+        if os.path.exists(abaqus_file):
+            with open(abaqus_file, 'r', encoding='utf-8') as f:
+                abaqus_message = json.load(f)
+            status['project_id'] = abaqus_message['project_id']
+        else:
+            status['project_id'] = 'None'
         status['npy_time'] = file_time(npy_file)
         status['npy_size'] = file_size(npy_file)
         status['size'] = str(message['size'])
         status['gap'] = message['gap']
         status['num_ball'] = message['num_ball']
         status['fraction'] = '%.4f' % message['fraction']
-        status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>子模型</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_model/'+str(model_id), '../manage_submodels/'+str(model_id), '../delete_models/'+str(model_id))
+        status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>子模型</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+            '../view_model/'+str(model_id), '../manage_submodels/'+str(model_id), '../delete_models/'+str(model_id))
     except FileNotFoundError:
-        for key in ['npy_time', 'npy_size', 'size', 'gap', 'num_ball', 'fraction']:
+        for key in ['npy_time', 'npy_size', 'size', 'gap', 'num_ball', 'fraction', 'project_id']:
             status[key] = 'None'
-        status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../delete_models/'+str(model_id))
+        status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+            '../delete_models/'+str(model_id))
     return status
 
 
@@ -145,7 +156,8 @@ def get_submodel_status(path, model_id, submodel_id):
         status['gap'] = message['gap']
         status['num_ball'] = message['num_ball']
         status['fraction'] = '%.4f' % message['fraction']
-        status['operation'] = "<a href='%s'>查看</a>" % ('../view_submodel/'+str(model_id)+'/'+str(submodel_id))
+        status['operation'] = "<a href='%s'>查看</a>" % (
+            '../view_submodel/'+str(model_id)+'/'+str(submodel_id))
     except FileNotFoundError:
         for key in ['npy_time', 'npy_size', 'ndiv', 'location', 'subsize', 'gap', 'num_ball', 'fraction', 'operation']:
             status[key] = 'None'
@@ -171,11 +183,11 @@ def get_mesh_status(path, model_id, submodel_id):
         status['node_shape'] = message['node_shape']
         status['dimension'] = message['dimension']
         status['size'] = message['size']
-        status['element_type'] = message['element_type']        
+        status['element_type'] = message['element_type']
         status['inp_time'] = file_time(inp_file)
         status['inp_size'] = file_size(inp_file)
-    return status        
-        
+    return status
+
 
 def get_doc_status(path, doc_id):
     md_file = os.path.join(path, str(doc_id), 'article.md')
@@ -188,12 +200,14 @@ def get_doc_status(path, doc_id):
                 message = json.load(f)
             status['title'] = message['title']
             status['md_time'] = file_time(md_file)
-            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../viewmd/'+str(doc_id), '../editmd/'+str(doc_id), '../deletemd/'+str(doc_id))
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                '../viewmd/'+str(doc_id), '../editmd/'+str(doc_id), '../deletemd/'+str(doc_id))
         except FileNotFoundError:
             for key in ['title', 'md_time']:
                 status[key] = 'None'
-            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../viewmd/'+str(doc_id), '../editmd/'+str(doc_id), '../deletemd/'+str(doc_id))
-    return status 
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                '../viewmd/'+str(doc_id), '../editmd/'+str(doc_id), '../deletemd/'+str(doc_id))
+    return status
 
 
 def get_sheet_status(path, sheet_id):
@@ -207,12 +221,14 @@ def get_sheet_status(path, sheet_id):
                 message = json.load(f)
             status['title'] = message['title']
             status['sheet_time'] = file_time(sheet_file)
-            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_sheet/'+str(sheet_id), '../edit_sheet/'+str(sheet_id), '../delete_sheet/'+str(sheet_id))
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                '../view_sheet/'+str(sheet_id), '../edit_sheet/'+str(sheet_id), '../delete_sheet/'+str(sheet_id))
         except FileNotFoundError:
             for key in ['title', 'sheet_time']:
                 status[key] = 'None'
-            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../view_sheet/'+str(sheet_id), '../edit_sheet/'+str(sheet_id), '../delete_sheet/'+str(sheet_id))
-    return status 
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                '../view_sheet/'+str(sheet_id), '../edit_sheet/'+str(sheet_id), '../delete_sheet/'+str(sheet_id))
+    return status
 
 
 def get_project_status(path, project_id):
@@ -229,50 +245,64 @@ def get_project_status(path, project_id):
             status['job'] = message['job']
             status['user'] = message['user']
             status['cpus'] = message['cpus']
-            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
+            if 'link' in message.keys():
+                status['link'] = message['link']
+            else:
+                status['link'] = 'None'
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                'view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
         except (FileNotFoundError, KeyError):
-            for key in ['name', 'project_time', 'descript', 'job', 'user', 'cpus']:
+            for key in ['name', 'project_time', 'descript', 'job', 'user', 'cpus', 'link']:
                 status[key] = 'None'
-            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
-    return status 
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                'view_project/'+str(project_id), 'edit_project/'+str(project_id), 'delete_project/'+str(project_id))
+    return status
 
 
 def get_job_status(path, project_id, job_id):
     msg_file = os.path.join(path, str(project_id), str(job_id), '.job_msg')
-    para_json_file = os.path.join(path, str(project_id), str(job_id), 'parameters.json')
+    para_json_file = os.path.join(
+        path, str(project_id), str(job_id), 'parameters.json')
     status = {}
     status['project_id'] = project_id
     status['job_id'] = job_id
     try:
         with open(msg_file, 'r', encoding='utf-8') as f:
             message = json.load(f)
-        with open(para_json_file, 'r', encoding='utf-8') as f:
-            parameters = json.load(f)
+        if os.path.exists(para_json_file):
+            with open(para_json_file, 'r', encoding='utf-8') as f:
+                parameters = json.load(f)
+        else:
+            parameters = {}
         for p in parameters.keys():
             status[p] = parameters[p]
 
-        solver_status_file = os.path.join(path, str(project_id), str(job_id), '.solver_status')
+        solver_status_file = os.path.join(
+            path, str(project_id), str(job_id), '.solver_status')
         if os.path.exists(solver_status_file):
             with open(solver_status_file, 'r', encoding='utf-8') as f:
                 solver_status = f.read()
         else:
             solver_status = 'None'
 
-        prescan_status_file = os.path.join(path, str(project_id), str(job_id), '.prescan_status')
+        prescan_status_file = os.path.join(
+            path, str(project_id), str(job_id), '.prescan_status')
         if os.path.exists(prescan_status_file):
             with open(prescan_status_file, 'r', encoding='utf-8') as f:
                 prescan_status = f.read()
         else:
             prescan_status = 'None'
 
-        odb_to_npz_status_file = os.path.join(path, str(project_id), str(job_id), '.odb_to_npz_status')
+        odb_to_npz_status_file = os.path.join(
+            path, str(project_id), str(job_id), '.odb_to_npz_status')
         if os.path.exists(odb_to_npz_status_file):
             with open(odb_to_npz_status_file, 'r', encoding='utf-8') as f:
                 odb_to_npz_status = f.read()
         else:
             odb_to_npz_status = 'None'
 
-        odb_to_npz_proc_file = os.path.join(path, str(project_id), str(job_id), '.odb_to_npz_proc')
+        odb_to_npz_proc_file = os.path.join(
+            path, str(project_id), str(job_id), '.odb_to_npz_proc')
         if os.path.exists(odb_to_npz_proc_file):
             with open(odb_to_npz_proc_file, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
@@ -284,9 +314,12 @@ def get_job_status(path, project_id, job_id):
             odb_to_npz_proc = ''
 
         job_name = message['job']
-        inp_file = os.path.join(path, str(project_id), str(job_id), '%s.inp' % job_name)
-        odb_file = os.path.join(path, str(project_id), str(job_id), '%s.odb' % job_name)
-        npz_file = os.path.join(path, str(project_id), str(job_id), '%s.npz' % job_name)
+        inp_file = os.path.join(path, str(project_id),
+                                str(job_id), '%s.inp' % job_name)
+        odb_file = os.path.join(path, str(project_id),
+                                str(job_id), '%s.odb' % job_name)
+        npz_file = os.path.join(path, str(project_id),
+                                str(job_id), '%s.npz' % job_name)
         status['job'] = message['job']
         status['user'] = message['user']
         status['cpus'] = message['cpus']
@@ -303,12 +336,15 @@ def get_job_status(path, project_id, job_id):
         status['parameters'] = str(parameters)
         status['path'] = os.path.join(path, str(project_id), str(job_id))
         button = ""
-        button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % ('../view_job/'+str(project_id)+'/'+str(job_id))
-        button += "<a class='btn btn-primary btn-sm' onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a> " % ('../delete_job/'+str(project_id)+'/'+str(job_id))
-        if solver_status=='Submitting' or solver_status=='Running' or solver_status=='Pause' or solver_status=='Stopping':
+        button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % (
+            '../view_job/'+str(project_id)+'/'+str(job_id))
+        button += "<a class='btn btn-primary btn-sm' onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a> " % (
+            '../delete_job/'+str(project_id)+'/'+str(job_id))
+        if solver_status == 'Submitting' or solver_status == 'Running' or solver_status == 'Pause' or solver_status == 'Stopping':
             button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>计算</button> "
         else:
-            button += "<a href='%s' class='btn btn-success btn-sm'>计算</a> " % ('../run_job/'+str(project_id)+'/'+str(job_id))
+            button += "<a href='%s' class='btn btn-success btn-sm'>计算</a> " % (
+                '../run_job/'+str(project_id)+'/'+str(job_id))
         # if solver_status=='Running':
         #     button += "<a href='#' class='btn btn-warning btn-sm'>暂停</a> "
         # else:
@@ -317,23 +353,27 @@ def get_job_status(path, project_id, job_id):
         #     button += "<a href='#'' class='btn btn-info btn-sm'>继续</a> "
         # else:
         #     button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>继续</button> "
-        if solver_status=='Running':
-            button += "<a href='%s' class='btn btn-danger btn-sm'>终止</a> " % ('../terminate_job/'+str(project_id)+'/'+str(job_id))
+        if solver_status == 'Running':
+            button += "<a href='%s' class='btn btn-danger btn-sm'>终止</a> " % (
+                '../terminate_job/'+str(project_id)+'/'+str(job_id))
         else:
             button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>终止</button> "
-        if prescan_status!='Scanning' and prescan_status!='Submitting':
-            button += "<a class='btn btn-success btn-sm' href='%s'>扫描</a> " % ('../prescan_odb/'+str(project_id)+'/'+str(job_id))
+        if prescan_status != 'Scanning' and prescan_status != 'Submitting':
+            button += "<a class='btn btn-success btn-sm' href='%s'>扫描</a> " % (
+                '../prescan_odb/'+str(project_id)+'/'+str(job_id))
         else:
             button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>扫描</button> "
-        if odb_to_npz_status!='Running' and odb_to_npz_status!='Submitting':
-            button += "<a class='btn btn-success btn-sm' href='%s'>导出</a> " % ('../odb_to_npz/'+str(project_id)+'/'+str(job_id))
+        if odb_to_npz_status != 'Running' and odb_to_npz_status != 'Submitting':
+            button += "<a class='btn btn-success btn-sm' href='%s'>导出</a> " % (
+                '../odb_to_npz/'+str(project_id)+'/'+str(job_id))
         else:
             button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>导出</button> "
         status['operation'] = button
     except FileNotFoundError:
         for key in ['job', 'user', 'cpus']:
             status[key] = 'None'
-        status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % ('../delete_job/'+str(project_id)+'/'+str(job_id))
+        status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+            '../delete_job/'+str(project_id)+'/'+str(job_id))
     return status
 
 
@@ -357,7 +397,7 @@ def packing_submodels_detail(path, model_id):
     for submodel_id in submodel_id_list:
         status = get_submodel_status(path, model_id, submodel_id)
         data_list.append(status)
-        
+
     data = {
         "data": data_list
     }
@@ -371,7 +411,7 @@ def docs_detail(path):
     for doc_id in doc_id_list:
         status = get_doc_status(path, doc_id)
         data_list.append(status)
-        
+
     data = {
         "data": data_list
     }
@@ -385,7 +425,7 @@ def sheets_detail(path):
     for sheet_id in sheet_id_list:
         status = get_sheet_status(path, sheet_id)
         data_list.append(status)
-        
+
     data = {
         "data": data_list
     }
@@ -399,7 +439,7 @@ def projects_detail(path):
     for project_id in project_id_list:
         status = get_project_status(path, project_id)
         data_list.append(status)
-        
+
     data = {
         "data": data_list
     }
@@ -413,7 +453,7 @@ def project_jobs_detail(path, project_id):
     for job_id in job_id_list:
         status = get_job_status(path, project_id, job_id)
         data_list.append(status)
-        
+
     data = {
         "data": data_list
     }

@@ -65,7 +65,9 @@ class Solver:
         user_file = os.path.join(self.path, self.user)
         if not os.path.exists(inp_file):
             return False
-        if not os.path.exists(user_file):
+        if self.user == '':
+            return True
+        elif not os.path.exists(user_file):
             return False
         return True
 

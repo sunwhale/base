@@ -12,7 +12,7 @@
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主页</a></li>
 <li class="breadcrumb-item"><a href="{{ url_for('packing.manage_models') }}">球体填充模型管理</a></li>
-<li class="breadcrumb-item active">主模型信息</li>
+<li class="breadcrumb-item active">{{ model_id }}号主模型</li>
 {% endblock level %}
 
 {% block content %}
@@ -41,11 +41,16 @@
                       <li> 球体间距：{{status['gap']}} </li>
                       <li> 模型文件大小：{{status['npy_size']}} </li>
                       <li> 参数列表：{{status['args']}} </li>
+                      {% if status['project_id']=='None' %}
+                      <li> ABAQUS关联项目：无 </li>
+                      {% else %}
+                      <li> ABAQUS关联项目：<a href="{{ url_for('abaqus.view_project', project_id=status['project_id']) }}">{{ status['project_id'] }}号ABAQUS项目</a> </li>
+                      {% endif %}
                     </ul>
 
                     <a href="{{ url_for('packing.create_submodel', model_id=model_id) }}" class="btn btn-primary"><strong>生成子模型</strong></a>
                     <a href="{{ url_for('packing.create_mesh', model_id=model_id) }}" class="btn btn-success"><strong>生成子模型有限元网格</strong></a>
-                    <a href="{{ url_for('packing.create_mesh', model_id=model_id) }}" class="btn btn-warning"><strong>生成ABAQUS项目</strong></a>
+                    <a href="{{ url_for('packing.create_abaqus', model_id=model_id) }}" class="btn btn-warning"><strong>生成ABAQUS关联项目</strong></a>
                     <br>
 
                     <a href="{{ url_for('packing.get_model', model_id=model_id, filename='model.png') }}" target="_blank"><img height="350" src="{{ url_for('packing.get_model', model_id=model_id, filename='model.png') }}"></a>
@@ -62,7 +67,7 @@
                     <a href="{{ url_for('packing.get_model', model_id=model_id, filename='density.png') }}" class="btn-link text-secondary"><i class="far fa-fw fa-image"></i> density.png</a>
                     <p></p>
                     <h5 class="text-primary">日志</h5>
-                    <textarea class="form-control" rows="20">{{status['log']}}</textarea>
+                    <textarea class="form-control" rows="21">{{status['log']}}</textarea>
                   </div>
                 </div>
               </div>

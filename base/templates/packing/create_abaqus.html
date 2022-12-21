@@ -1,0 +1,82 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}生成{{ model_id }}号球体填充主模型的ABAQUS算例{% endblock title %}
+
+{% block pageheader %}生成{{ model_id }}号球体填充主模型的ABAQUS算例{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('packing.manage_models') }}">球体填充模型管理</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('packing.view_model', model_id=model_id) }}">{{ model_id }}号主模型</a></li>
+<li class="breadcrumb-item active">生成ABAQUS算例</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- left column -->
+          <div class="col-md-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">生成ABAQUS算例</h3>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-6">
+                    说明：生成所有子模型对应的ABAQUS算例文件。
+                    <p></p>
+                    <form action="" method="post" class="form" role="form">
+                      {{ render_form(form_abaqus) }}
+                    </form>
+                  </div>
+                  <div class="col-6">
+                    <h5 class="text-primary">上传文件</h5>
+
+                    <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+                      {{ form_upload.csrf_token }}
+                      <div class="form-group">
+                      {{ form_upload.submit }}{{ form_upload.filename }}
+                      </div>
+                    </form>
+
+                    <h5 class="text-primary">项目文件</h5>
+                    <table class="table table-sm table-hover">
+                      <thead>
+                        <tr>
+                          <th width=40%>文件名</th>
+                          <th width=30%>修改日期</th>
+                          <th width=10%>大小</th>
+                          <th width=20%>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for file in files %}
+                        <tr>
+                          <td> {{ file['name'] }} </td>
+                          <td> {{ file['time'] }} </td>
+                          <td> {{ file['size'] }} </td>
+                          <td> <a href="{{ url_for('packing.get_abaqus', model_id=model_id, filename=file['name']) }}">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('packing.delete_abaqus_file', model_id=model_id, filename=file['name']) }}">删除</a> </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+{% endblock content %}
+
+{% block script %}
+<script type="text/javascript">
+
+  document.getElementById("packing").className = "nav-item menu-open"
+
+</script>
+{% endblock script %}
+

@@ -155,7 +155,6 @@ def projects_status():
 
 
 @abaqus_bp.route('/project_jobs_status/<int:project_id>')
-@login_required
 def project_jobs_status(project_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_id_list = sub_dirs_int(os.path.join(abaqus_path, str(project_id)))
@@ -191,6 +190,7 @@ def view_project(project_id):
                     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
                     if os.path.exists(job_path):
                         s = Solver(job_path)
+                        s.read_msg()
                         job = {'type': 'Solver',
                                'project_id': project_id,
                                'job_id': job_id,
@@ -224,6 +224,7 @@ def view_project(project_id):
                     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
                     if os.path.exists(job_path):
                         s = Solver(job_path)
+                        s.read_msg()
                         job = {'type': 'Solver',
                                'project_id': project_id,
                                'job_id': job_id,
@@ -343,6 +344,7 @@ def view_job(project_id, job_id):
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if os.path.exists(job_path):
         s = Solver(job_path)
+        s.read_msg()
         sta = s.get_sta()
         logs = s.get_log()
         para = s.get_parameters()
@@ -407,6 +409,19 @@ def open_job(project_id, job_id):
         cmd = 'explorer %s' % job_path
         proc = subprocess.run(cmd)
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+    else:
+        abort(404)
+
+
+@abaqus_bp.route('/open_project/<int:project_id>')
+@login_required
+def open_project(project_id):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    project_path = os.path.join(abaqus_path, str(project_id))
+    if os.path.exists(project_path):
+        cmd = 'explorer %s' % project_path
+        proc = subprocess.run(cmd)
+        return redirect(url_for('.view_project', project_id=project_id))
     else:
         abort(404)
 

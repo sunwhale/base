@@ -46,9 +46,9 @@
                           <li> 算例inp文件：{{ status['job'] }}.inp</li>
                           <li> 算例user文件：{{ status['user'] }}</li>
                           <li> 算例使用CPU核心数量：{{ status['cpus'] }}</li>
-                          <a class='btn btn-primary' href="{{ url_for('abaqus.edit_job', project_id=project_id, job_id=job_id) }}">编辑信息</a>
+                          <a class='btn btn-primary' href="{{ url_for('abaqus.edit_job', project_id=project_id, job_id=job_id) }}"><strong>编辑信息</strong></a>
                           {% if env['service'] == 'client' %}
-                          <a href="{{ url_for('abaqus.open_job', project_id=project_id, job_id=job_id) }}" class="btn btn-primary">在资源管理器中打开</a>
+                          <a href="{{ url_for('abaqus.open_job', project_id=project_id, job_id=job_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
                           {% endif %}
                         </ul>
                         <h5 class="text-primary">求解控制</h5>
@@ -56,27 +56,27 @@
                         <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止ABAQUS的计算，并通过<a href="javascript:location.reload();">刷新</a>页面获取算例状态。</p>
 
                         {% if solver_status=='Submitting' or solver_status=='Running' or solver_status=='Pause' or solver_status=='Stopping' %}
-                        <button class="btn btn-secondary" disabled="disabled">计 算</button>
+                        <button class="btn btn-secondary" disabled="disabled"><strong>计 算</strong></button>
                         {% else %}
-                        <a href="{{ url_for('abaqus.run_job', project_id=project_id, job_id=job_id) }}" class="btn btn-success">计 算</a>
+                        <a href="{{ url_for('abaqus.run_job', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>计 算</strong></a>
                         {% endif %}
 
                         {% if solver_status=='Running' %}
-                        <a href="#" class="btn btn-warning">暂 停</a>
+                        <a href="#" class="btn btn-warning"><strong>暂 停</strong></a>
                         {% else %}
-                        <button class="btn btn-secondary" disabled="disabled">暂 停</button>
+                        <button class="btn btn-secondary" disabled="disabled"><strong>暂 停</strong></button>
                         {% endif %}
 
                         {% if solver_status=='Pause' %}
-                        <a href="#" class="btn btn-info">继 续</a>
+                        <a href="#" class="btn btn-info"><strong>继 续</strong></a>
                         {% else %}
-                        <button class="btn btn-secondary" disabled="disabled">继 续</button>
+                        <button class="btn btn-secondary" disabled="disabled"><strong>继 续</strong></button>
                         {% endif %}
 
                         {% if solver_status=='Running' %}
-                        <a href="{{ url_for('abaqus.terminate_job', project_id=project_id, job_id=job_id) }}" class="btn btn-danger">终 止</a>
+                        <a href="{{ url_for('abaqus.terminate_job', project_id=project_id, job_id=job_id) }}" class="btn btn-danger"><strong>终 止</strong></a>
                         {% else %}
-                        <button class="btn btn-secondary" disabled="disabled">终 止</button>
+                        <button class="btn btn-secondary" disabled="disabled"><strong>终 止</strong></button>
                         {% endif %}
                         {{ button }}
                       </div>
@@ -200,15 +200,15 @@
                         <p class="mb-1">您可以通过点击下面的按钮进行ABAQUS计算结果的后处理，并通过<a href="javascript:location.reload();">刷新</a>页面更新結果。</p>
                         
                         {% if status['prescan_status']!='Scanning' and status['prescan_status']!='Submitting' %}
-                        <a href="{{ url_for('abaqus.prescan_odb', project_id=project_id, job_id=job_id) }}" class="btn btn-success">odb 预扫描</a>
+                        <a href="{{ url_for('abaqus.prescan_odb', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>odb 预扫描</strong></a>
                         {% else %}
-                        <button class="btn btn-secondary" disabled="disabled">odb 预扫描</button>
+                        <button class="btn btn-secondary" disabled="disabled"><strong>odb 预扫描</strong></button>
                         {% endif %}
 
                         {% if status['odb_to_npz_status']!='Running' and status['odb_to_npz_status']!='Submitting' %}
-                        <a href="{{ url_for('abaqus.odb_to_npz', project_id=project_id, job_id=job_id) }}" class="btn btn-success">odb_to_npz</a>
+                        <a href="{{ url_for('abaqus.odb_to_npz', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>odb_to_npz</strong></a>
                         {% else %}
-                        <button class="btn btn-secondary" disabled="disabled">odb_to_npz</button>
+                        <button class="btn btn-secondary" disabled="disabled"><strong>odb_to_npz</strong></button>
                         {% endif %}
 
                         <p></p>
