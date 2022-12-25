@@ -144,7 +144,7 @@ conda create -n flask -y python==3.9
 conda activate flask
 git clone https://gitee.com/sunwhale/base.git
 cd base
-pip install -r requirements.txt # -i https://pypi.org/simple #官方源
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ # -i https://pypi.org/simple #官方源
 pip install psic gunicorn
 
 sudo apt install -y supervisor nginx xvfb

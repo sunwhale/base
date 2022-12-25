@@ -4,11 +4,7 @@
 {% block title %}{{ project_id }}.{{ job_id }}号算例{% endblock title %}
 
 {% block css %}
-{% if env['service'] == 'server' %}
-<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/zTree.v3/3.5.42/css/zTreeStyle/zTreeStyle.min.css">
-{% else %}
 <link rel="stylesheet" href="{{ url_for('static', filename='zTree/css/zTreeStyle/zTreeStyle.css') }}">
-{% endif %}
 {% endblock css %}
 
 {% block pageheader %}算例信息{% endblock pageheader %}

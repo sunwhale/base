@@ -124,14 +124,26 @@ def odb_to_npz(setting_file):
                             data[r_name]['elements'].append(element)
 
                 if r_type == "Node set":
-                    region = odb.rootAssembly.nodeSets[r_name]
-                    for n in region.nodes[0]:
-                        node = {
-                            'label': n.label,
-                            'coordinates': n.coordinates,
-                            'instanceName': n.instanceName
-                        }
-                        data[r_name]['nodes'].append(node)
+                    if '.' in r_name:
+                        instanceName = r_name.split('.')[0]
+                        setName = r_name.split('.')[1]
+                        region = odb.rootAssembly.instances[instanceName].nodeSets[setName]
+                        for n in region.nodes:
+                            node = {
+                                'label': n.label,
+                                'coordinates': n.coordinates,
+                                'instanceName': n.instanceName
+                            }
+                            data[r_name]['nodes'].append(node)
+                    else:
+                        region = odb.rootAssembly.nodeSets[r_name]
+                        for n in region.nodes[0]:
+                            node = {
+                                'label': n.label,
+                                'coordinates': n.coordinates,
+                                'instanceName': n.instanceName
+                            }
+                            data[r_name]['nodes'].append(node)
 
                 if r_type == "Instance":
                     region = odb.rootAssembly.instances[r_name]
