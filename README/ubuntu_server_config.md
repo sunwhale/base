@@ -172,6 +172,13 @@ cd base
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ # -i https://pypi.org/simple #官方源
 pip install gunicorn
 
+conda create -n jupyter -y python==3.9
+conda activate jupyter
+pip install jupyterlab
+jupyter lab --generate-config # 生成jupyterlab配置文件
+jupyter lab password # 设置密码，输入两次
+sudo cp /home/ubuntu/base/conf/jupyter/jupyter_lab_config.py /home/ubuntu/.jupyter/jupyter_lab_config.py
+
 sudo apt install -y supervisor nginx xvfb glances
 sudo rm /etc/nginx/sites-enabled/default
 sudo cp /home/ubuntu/base/conf/nginx/*.conf /etc/nginx/conf.d
