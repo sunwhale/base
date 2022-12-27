@@ -27,6 +27,8 @@ sudo sed -i '$aPATH=/var/DassaultSystemes/SIMULIA/Commands:$PATH' /etc/profile #
 sudo bash l_fortran-compiler_p_2023.0.0.25394_offline.sh # 安装fortran编译器
 sudo sed -i '$aPATH=/opt/intel/oneapi/compiler/2023.0.0/linux/bin/intel64:$PATH' /etc/profile # 写入环境变量
 source /etc/profile
+cd /var/DassaultSystemes/SIMULIA/Commands
+sudo mv abq abaqus # 修改可执行程序名称
 abaqus cae -mesa # 打开cae
 abaqus verify -std -user_std -user_exp # 验证
 ```

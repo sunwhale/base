@@ -174,17 +174,19 @@ pip install gunicorn
 
 conda create -n jupyter -y python==3.9
 conda activate jupyter
-pip install jupyterlab
+pip install jupyterlab jupyterlab-language-pack-zh-CN
 jupyter lab --generate-config # 生成jupyterlab配置文件
 jupyter lab password # 设置密码，输入两次
 sudo cp /home/ubuntu/base/conf/jupyter/jupyter_lab_config.py /home/ubuntu/.jupyter/jupyter_lab_config.py
 
 sudo apt install -y supervisor nginx xvfb glances
+
 sudo rm /etc/nginx/sites-enabled/default
 sudo cp /home/ubuntu/base/conf/nginx/*.conf /etc/nginx/conf.d
 sudo service nginx restart
 sudo cp /home/ubuntu/base/conf/supervisor/*.conf /etc/supervisor/conf.d
 sudo service supervisor restart
+sudo supervisorctl
 ```
 
 ps aux | grep nginx
