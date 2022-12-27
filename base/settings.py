@@ -22,8 +22,8 @@ class Operations:
 
 
 class BaseConfig:
-    FILE_PATH = os.path.join(basedir, 'files')
     STATIC_PATH = os.path.join(basedir, 'base', 'static')
+    FILE_PATH = os.path.join(basedir, 'files')
     UPLOAD_PATH = os.path.join(FILE_PATH, 'uploads')
     UPLOAD_IMG_PATH = os.path.join(FILE_PATH, 'uploads', 'imgs')
     ABAQUS_PATH = os.path.join(FILE_PATH, 'abaqus')
@@ -32,7 +32,7 @@ class BaseConfig:
     DOC_PATH = os.path.join(FILE_PATH, 'doc')
     SHEET_PATH = os.path.join(FILE_PATH, 'sheet')
     PACKING_PATH = os.path.join(FILE_PATH, 'packing')
-    PACKING_MODELS_PATH = os.path.join(PACKING_PATH, 'models')
+    PACKING_MODELS_PATH = os.path.join(FILE_PATH, 'packing', 'models')
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     

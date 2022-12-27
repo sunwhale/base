@@ -249,6 +249,7 @@ def view_project(project_id):
                         event_dict = job
                         event_source.set_event(event_type, event_dict)
                         event_source.send_event()
+            make_dir(current_app.config['QUEUE_PATH'])
             update_events_new(new_jobs, current_app.config['EVENTS_NEW'])
             flash('选中的算例已经提交到计算队列。', 'success')
             return redirect(url_for('queue.view_queue'))

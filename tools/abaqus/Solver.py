@@ -6,8 +6,18 @@
 import json
 import os
 import subprocess
+import glob
+import os
 
-import psutil
+
+def files(curr_dir='.', ext='*.txt'):
+    for i in glob.glob(os.path.join(curr_dir, ext)):
+        yield i
+
+
+def remove_files(rootdir, ext):
+    for i in files(rootdir, ext):
+        os.remove(i)
 
 
 def is_number(s):
@@ -90,34 +100,32 @@ class Solver:
 
     def clear(self):
         os.chdir(self.path)
-        cmds = [
-            'del *.rpy.*',
-            'del *.dmp',
-            'del *.lck',
-            'del fort.*',
-            'del abaqus.*',
-            'del *.exception',
-            'del *.jnl',
-            'del *.SMABulk',
-            'del *.odb',
-            'del *.odb_f',
-            'del *.com',
-            'del *.dat',
-            'del *.prt',
-            'del *.sim',
-            'del *.sta',
-            'del *.log'
+        exts = [
+            '*.rpy.*',
+            '*.dmp',
+            '*.lck',
+            'fort.*',
+            'abaqus.*',
+            '*.exception',
+            '*.jnl',
+            '*.SMABulk',
+            '*.odb_f',
+            '*.com',
+            '*.dat',
+            '*.prt',
+            '*.sim',
+            '*.sta',
+            '*.par',
+            '*.pes',
+            '*.pmg',
+            '*.log'
         ]
-        for cmd in cmds:
-            try:
-                proc = subprocess.Popen(cmd, shell=True)
-                # print('proc:', proc)
-            except subprocess.CalledProcessError as exc:
-                # print('returncode:', exc.returncode)
-                # print('cmd:', exc.cmd)
-                # print('output:', exc.output)
-                pass
-
+        for ext in exts:
+            remove_files(self.path, ext)
+        remove_files(self.path, '{}.msg'.format(self.job))
+        remove_files(self.path, '{}.odb'.format(self.job))
+        remove_files(self.path, '{}.npz'.format(self.job))
+        
     def terminate(self):
         os.chdir(self.path)
         cmd = 'abaqus terminate job=%s' % (self.job)
@@ -290,4 +298,4 @@ class Solver:
 if __name__ == '__main__':
     s = Solver(path='F:\\Github\\base\\files\\abaqus\\1\\1',
                job='Job-1', user='umat_visco_maxwell_phasefield.for')
-    s.parameters_to_json()
+    s.clear()

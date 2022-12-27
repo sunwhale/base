@@ -73,7 +73,7 @@ def create_id(path):
 
 def files_in_dir(path):
     file_list = []
-    for filename in next(os.walk(path))[2]:
+    for filename in sorted(next(os.walk(path))[2]):
         file = {}
         file['name'] = filename
         file['size'] = file_size(os.path.join(path, filename))
