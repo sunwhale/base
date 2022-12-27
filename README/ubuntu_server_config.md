@@ -172,11 +172,11 @@ cd base
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ # -i https://pypi.org/simple #官方源
 pip install gunicorn
 
-sudo apt install -y supervisor nginx xvfb
+sudo apt install -y supervisor nginx xvfb glances
 sudo rm /etc/nginx/sites-enabled/default
-sudo cp /www/config/base /etc/nginx/sites-enabled/base
+sudo cp /home/ubuntu/base/conf/nginx/*.conf /etc/nginx/conf.d
 sudo service nginx restart
-sudo cp /www/config/base.conf /etc/supervisor/conf.d/base.conf
+sudo cp /home/ubuntu/base/conf/supervisor/*.conf /etc/supervisor/conf.d
 sudo service supervisor restart
 ```
 
