@@ -28,8 +28,8 @@ conda create -n flask -y python==3.9
 git clone https://gitee.com/sunwhale/base.git
 cd base
 conda activate flask
-pip install -r requirements.txt # -i https://pypi.org/simple #官方源
-pip install psic gunicorn
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ # -i https://pypi.org/simple #官方源
+pip install gunicorn
 ```
 
 
@@ -38,10 +38,12 @@ pip install psic gunicorn
 sudo apt-get install -y nginx
 sudo /etc/init.d/nginx start
 sudo rm /etc/nginx/sites-enabled/default
-sudo vim /etc/nginx/sites-enabled/base
+sudo nano /etc/nginx/sites-enabled/base # 编辑配置文件
+sudo nginx -t # 查看配置文件状态
+sudo service nginx restart
 ```
 
-```Nginx配置文件内容
+```nginx
 server {
     listen 80 default_server; 
     server_name sunjingyu.com;  # 如果你映射了域名，那么可以写在这里
@@ -77,8 +79,6 @@ server {
 ```
 
 ```shell
-sudo nginx -t # 查看配置文件状态
-sudo service nginx restart
 ```
 
 ## 6. 启动gunicorn
@@ -87,43 +87,68 @@ gunicorn -w 1 wsgi:app
 gunicorn -w 1 -b 0.0.0.0 wsgi:app
 ```
 
-## 7. 使用Supervisor管理进程
+## 7. 使用supervisor管理进程
 ```shell
 sudo apt install -y supervisor
-sudo vim /etc/supervisor/conf.d/base.conf
+sudo service supervisor restart
+sudo supervisorctl
+sudo supervisorctl reread  # 重新读取配置
+sudo supervisorctl update  # 更新以便让配置生效
 ```
-
-```
-[program:base]
-command=/opt/miniconda3/bin/conda run -n flask gunicorn -w 1 wsgi:app
+### gunicorn配置文件
+注意：supervisor运行过程中不包含系统环境变量，需要手动配置。
+```shell
+sudo vim /etc/supervisor/conf.d/gunicorn.conf
+[program:gunicorn]
+command=/opt/miniconda3/bin/conda run -n flask gunicorn -c pygun.py wsgi:app --log-level=debug --preload
 directory=/home/ubuntu/base
 user=ubuntu
 autostart=true
 autorestart=true
 stopasgroup=true
 killasgroup=true
+stdout_logfile=./stdout.log
+stderr_logfile=./error.log
+environment=PATH="/home/ubuntu/.local/bin:/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/opt/intel/oneapi/compiler/2022.1.0/linux/bin/intel64:/var/DassaultSystemes/SIMULIA/Commands:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
 ```
-
+### abaqus许可证服务器配置文件
 ```shell
-sudo service supervisor restart
-sudo supervisorctl
-sudo supervisorctl reread  # 重新读取配置
-sudo supervisorctl update  # 更新以便让配置生效
+sudo vim /etc/supervisor/conf.d/lmgrd.conf
+[program:lmgrd]
+command=/usr/SIMULIA/License/2022/linux_a64/code/bin/lmgrd -c /usr/SIMULIA/License/2022/linux_a64/code/bin/ABAQUSLM__lmgrd__SSQ.lic
+directory=/home/ubuntu/abaqus
+user=ubuntu
+autostart=true
+autorestart=true
+stopasgroup=true
+killasgroup=true
+redirect_stderr=true
+stdout_logfile=./stdout.log
+stderr_logfile=./error.log
+environment=PATH="/home/ubuntu/.local/bin:/opt/miniconda3/bin:/opt/miniconda3/condabin:/opt/miniconda3/bin:/opt/intel/oneapi/compiler/2022.1.0/linux/bin/intel64:/var/DassaultSystemes/SIMULIA/Commands:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin"
 ```
 
-## 8. 使用bypy上传文件
+## 8. 使用bypy上传/下载百度网盘中的文件
+[https://github.com/houtianze/bypy](https://github.com/houtianze/bypy)
 ```shell
 pip install bypy
 bypy list
 bypy downdir /
 ```
-[https://github.com/houtianze/bypy](https://github.com/houtianze/bypy)
 
 ## 9. 虚拟图形界面
+用于解决无图形界面linux系统三维绘图的问题。
 ```shell
 sudo apt install xvfb
 Xvfb :1 -screen 0 800x600x24 &
 export DISPLAY=:1
+```
+
+## 10. 安装glances
+用于监视系统进程。
+```shell
+sudo apt install glances
+glances -w
 ```
 
 ## 10.  命令流
@@ -145,7 +170,7 @@ conda activate flask
 git clone https://gitee.com/sunwhale/base.git
 cd base
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ # -i https://pypi.org/simple #官方源
-pip install psic gunicorn
+pip install gunicorn
 
 sudo apt install -y supervisor nginx xvfb
 sudo rm /etc/nginx/sites-enabled/default

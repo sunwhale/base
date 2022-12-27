@@ -19,8 +19,7 @@ sudo bash /media/5/SIMULIA_EstablishedProducts_CAA_API/Linux64/1/StartTUI.sh # �
 sudo cp /media/ABAQUSLM__lmgrd__SSQ.lic /usr/SIMULIA/License/2022/linux_a64/code/bin/ABAQUSLM__lmgrd__SSQ.lic # 将许可证文件复制到许可证服务器安装路径
 sudo mkdir /usr/tmp
 sudo /usr/SIMULIA/License/2022/linux_a64/code/bin/lmgrd -c /usr/SIMULIA/License/2022/linux_a64/code/bin/ABAQUSLM__lmgrd__SSQ.lic # 启动许可证服务器
-cd /usr/SIMULIA/License/2022/linux_a64/code/bin/
-sudo ./lmstat -a # 查看许可证服务器状态
+sudo /usr/SIMULIA/License/2022/linux_a64/code/bin/lmstat -c /usr/SIMULIA/License/2022/linux_a64/code/bin/ABAQUSLM__lmgrd__SSQ.lic -a # 查看许可证服务器状态
 sudo sed -i '$alicense_server_type=FLEXNET' /usr/SIMULIA/EstProducts/2022/linux_a64/SMA/site/licensing.env # 修改配置文件
 sudo sed -i '$aabaquslm_license_file=\"27800@localhost\"' /usr/SIMULIA/EstProducts/2022/linux_a64/SMA/site/licensing.env # 修改配置文件
 sudo sed -i '$aPATH=/var/DassaultSystemes/SIMULIA/Commands:$PATH' /etc/profile # 写入环境变量
