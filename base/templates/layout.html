@@ -111,6 +111,7 @@
           <!-- Add icons to the links using the .nav-icon class
                with font-awesome or any other icon font library -->
           {% block nav_packing %}
+          {% if current_user.is_authenticated %}
           <li class="nav-item" id="packing">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-th"></i>
@@ -134,8 +135,10 @@
               </li>
             </ul>
           </li>
+          {% endif %}
           {% endblock nav_packing %}
           {% block nav_doc %}
+          {% if current_user.is_authenticated %}
           <li class="nav-item" id="docs">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-copy"></i>
@@ -159,8 +162,10 @@
               </li>
             </ul>
           </li>
+          {% endif %}
           {% endblock nav_doc %}
           {% block nav_sheet %}
+          {% if current_user.is_authenticated %}
           <li class="nav-item" id="sheets">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-table"></i>
@@ -184,8 +189,10 @@
               </li>
             </ul>
           </li>
+          {% endif %}
           {% endblock nav_sheet %}
           {% block nav_abaqus %}
+          {% if current_user.is_authenticated %}
           <li class="nav-item" id="abaqus">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-cubes"></i>
@@ -209,8 +216,10 @@
               </li>
             </ul>
           </li>
+          {% endif %}
           {% endblock nav_abaqus %}
           {% block nav_monitor %}
+          {% if current_user.is_authenticated %}
           <li class="nav-item" id="monitor">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-tasks"></i>
@@ -226,9 +235,47 @@
                   <p>计算队列管理</p>
                 </a>
               </li>
+              {% if env['service'] == 'server' %}
+              <li class="nav-item">
+                <a href="/glances/" class="nav-link" id="glances">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>服务器状态</p>
+                </a>
+              </li>
+              {% endif %}
             </ul>
           </li>
+          {% endif %}
           {% endblock nav_monitor %}
+          {% block nav_others %}
+          {% if current_user.is_authenticated %}
+          <li class="nav-item" id="others">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-wrench"></i>
+              <p>
+                其他工具
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="https://sharelatex.cstcloud.cn/" target="_blank" class="nav-link" id="sharelatex">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Sharelatex</p>
+                </a>
+              </li>
+              {% if env['service'] == 'server' %}
+              <li class="nav-item">
+                <a href="https://jupyter.sunjingyu.com:8080/" target="_blank" class="nav-link" id="sharelatex">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>JupyterLab</p>
+                </a>
+              </li>
+              {% endif %}
+            </ul>
+          </li>
+          {% endif %}
+          {% endblock nav_others %}
           {% block nav_admin %}
           {% if current_user.is_admin %}
           <li class="nav-item" id="user">
