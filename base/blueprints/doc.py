@@ -11,6 +11,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
+from base.extensions import csrf
 from tools.dir_status import create_id, docs_detail
 
 doc_bp = Blueprint('doc', __name__)
@@ -72,6 +73,7 @@ def getmd(doc_id):
     return send_from_directory(os.path.join(current_app.config['DOC_PATH'], str(doc_id)), 'article.md')
 
 
+@csrf.exempt
 @doc_bp.route('/upload/<int:doc_id>', methods=['POST'])
 @login_required
 def upload(doc_id):
