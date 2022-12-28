@@ -23,7 +23,10 @@ class Operations:
 
 class BaseConfig:
     STATIC_PATH = os.path.join(basedir, 'base', 'static')
-    FILE_PATH = os.path.join(basedir, 'files')
+    if os.getenv('FILE_PATH') != None:
+        FILE_PATH = os.getenv('FILE_PATH')
+    else:
+        FILE_PATH = os.path.join(basedir, 'files')
     UPLOAD_PATH = os.path.join(FILE_PATH, 'uploads')
     UPLOAD_IMG_PATH = os.path.join(FILE_PATH, 'uploads', 'imgs')
     ABAQUS_PATH = os.path.join(FILE_PATH, 'abaqus')
