@@ -99,8 +99,7 @@ class Postproc:
     def print_figure(self):
         os.chdir(self.path)
         py_file = os.path.join(os.path.dirname(__file__), 'print_figure.py')
-        odb_file = os.path.join(self.path, '{}.odb'.format(self.job))
-        cmd = 'abaqus viewer noGui=%s -- %s' % (py_file, 'print_figure.json')
+        cmd = 'abaqus viewer noGui=%s -- %s %s' % (py_file, 'print_figure.json', '{}.odb'.format(self.job))
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 

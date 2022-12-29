@@ -36,3 +36,28 @@ class JobForm(FlaskForm):
 class ParameterForm(FlaskForm):
     para = TextAreaField('parameters.inp')
     submit = SubmitField(u'保存')
+
+
+class FigureSettingFrom(FlaskForm):
+    imageSize = StringField('imageSize', default='(200, 200)', validators=[DataRequired()])
+    legend = SelectField('legend', coerce=str)
+    plotState = SelectField('plotState', coerce=str)
+    uniformScaleFactor = FloatField('uniformScaleFactor', default=1.0, validators=[DataRequired()])
+    step = StringField('step', default='Step-1', validators=[DataRequired()])
+    frame = IntegerField('frame', default=-1, validators=[DataRequired()])
+    variableLabel = StringField('variableLabel', default='S', validators=[DataRequired()])
+    refinement = StringField('refinement', default="(INVARIANT, 'Mises')", validators=[DataRequired()])
+    outputPosition = SelectField('outputPosition', coerce=str)
+    maxAutoCompute = SelectField('maxAutoCompute', coerce=str)
+    maxValue = FloatField('maxValue', default=1.0)
+    minAutoCompute = SelectField('minAutoCompute', coerce=str)
+    minValue = FloatField('minValue', default=0.0)
+    submit = SubmitField(u'提交')
+
+    def __init__(self, *args, **kwargs):
+        super(FigureSettingFrom, self).__init__(*args, **kwargs)
+        self.legend.choices = ['ON', 'OFF']
+        self.plotState.choices = ['(CONTOURS_ON_DEF, )', '(CONTOURS_ON_UNDEF, )']
+        self.outputPosition.choices = ['INTEGRATION_POINT', 'NODAL', 'ELEMENT_NODAL', 'CENTROID']
+        self.maxAutoCompute.choices = ['ON', 'OFF']
+        self.minAutoCompute.choices = ['ON', 'OFF']

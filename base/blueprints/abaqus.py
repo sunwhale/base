@@ -12,7 +12,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, UploadForm
+from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, UploadForm, FigureSettingFrom
 from tools.abaqus.Solver import Solver
 from tools.abaqus.Postproc import Postproc
 from tools.dir_status import (create_id, files_in_dir, get_job_status,
@@ -500,15 +500,44 @@ def odb_to_npz_data(project_id, job_id):
 @abaqus_bp.route('/print_figure/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
 @login_required
 def print_figure(project_id, job_id):
-    import numpy as np
+    form = FigureSettingFrom()
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
-    p = Postproc(job_path)
-    npz_file = os.path.join(job_path, str(p.job) + '.npz')
-    if os.path.exists(npz_file):
-        npz = np.load(npz_file, allow_pickle=True, encoding='latin1')
-        data = npz['data'][()]
-        ztree = json_to_ztree(data)
-    else:
-        ztree = [{"id": 1, "pId": 0, "name": "无"}]
-    return ztree
+    setting_file = os.path.join(job_path, 'print_figure.json')
+    if form.validate_on_submit():
+        message = {
+            'imageSize': form.imageSize.data,
+            'legend': form.legend.data,
+            'plotState': form.plotState.data,
+            'uniformScaleFactor': form.uniformScaleFactor.data,
+            'step': form.step.data,
+            'frame': form.frame.data,
+            'variableLabel': form.variableLabel.data,
+            'refinement': form.refinement.data,
+            'outputPosition': form.outputPosition.data,
+            'maxAutoCompute': form.maxAutoCompute.data,
+            'maxValue': form.maxValue.data,
+            'minAutoCompute': form.minAutoCompute.data,
+            'minValue': form.minValue.data
+        }
+        dump_json(setting_file, message)
+        p = Postproc(job_path)
+        if p.has_odb():
+            p.print_figure()
+
+    # message = load_json(msg_file)
+    # form.imageSize.data = message['imageSize']
+    # form.legend.data = message['legend']
+    # form.plotState.data = message['plotState']
+    # form.uniformScaleFactor.data = message['uniformScaleFactor']
+    # form.step.data = message['step']
+    # form.frame.data = message['frame']
+    # form.variableLabel.data = message['variableLabel']
+    # form.refinement.data = message['refinement']
+    # form.outputPosition.data = message['outputPosition']
+    # form.maxAutoCompute.data = message['maxAutoCompute']
+    # form.maxValue.data = message['maxValue']
+    # form.minAutoCompute.data = message['minAutoCompute']
+    # form.minValue.data = message['minValue']
+
+    return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form)

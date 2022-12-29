@@ -50,8 +50,9 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
 
 
 if __name__ == '__main__':
-    setting_file = sys.argv[-1]
-    print_figure(setting_file)
+    setting_file = sys.argv[-2]
+    odb_name = sys.argv[-1]
+    print_figure(setting_file, odb_name)
 
     # setting = {
     #     'imageSize': (200, 200),
