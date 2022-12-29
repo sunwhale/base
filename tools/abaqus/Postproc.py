@@ -61,7 +61,7 @@ class Postproc:
             message = {}
         return message
 
-    def check_files(self):
+    def has_odb(self):
         odb_file = os.path.join(self.path, '{}.odb'.format(self.job))
         if not os.path.exists(odb_file):
             return False
@@ -93,6 +93,14 @@ class Postproc:
         if os.path.exists(npz_file):
             os.remove(npz_file)
         cmd = 'abaqus viewer noGui=%s -- %s' % (py_file, 'odb_to_npz.json')
+        proc = subprocess.Popen(cmd, shell=True)
+        return proc
+
+    def print_figure(self):
+        os.chdir(self.path)
+        py_file = os.path.join(os.path.dirname(__file__), 'print_figure.py')
+        odb_file = os.path.join(self.path, '{}.odb'.format(self.job))
+        cmd = 'abaqus viewer noGui=%s -- %s' % (py_file, 'print_figure.json')
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 

@@ -8,7 +8,7 @@ from odbAccess import *
 from textRepr import *
 
 
-def print_figure(setting, odb_name='Job-1.odb'):
+def print_figure(setting_file, odb_name='Job-1.odb'):
     odb = session.openOdb(name=odb_name)
 
     session.pngOptions.setValues(imageSize=setting['imageSize'])
@@ -50,21 +50,24 @@ def print_figure(setting, odb_name='Job-1.odb'):
 
 
 if __name__ == '__main__':
-    setting = {
-        'imageSize': (200, 200),
-        'legend': OFF,
-        'plotState': (CONTOURS_ON_UNDEF, ),
-        'uniformScaleFactor': 1.0,
-        'step': 'Step-1',
-        'frame': -1,
-        'variableLabel': 'NT11',
-        'outputPosition': NODAL,
-        'refinement': (),
-        'maxAutoCompute': OFF,
-        'maxValue': 1,
-        'minAutoCompute': OFF,
-        'minValue': 0
-    }
+    setting_file = sys.argv[-1]
+    print_figure(setting_file)
+
+    # setting = {
+    #     'imageSize': (200, 200),
+    #     'legend': OFF,
+    #     'plotState': (CONTOURS_ON_UNDEF, ),
+    #     'uniformScaleFactor': 1.0,
+    #     'step': 'Step-1',
+    #     'frame': -1,
+    #     'variableLabel': 'NT11',
+    #     'outputPosition': NODAL,
+    #     'refinement': (),
+    #     'maxAutoCompute': OFF,
+    #     'maxValue': 1,
+    #     'minAutoCompute': OFF,
+    #     'minValue': 0
+    # }
     # setting = {
     #     'imageSize': (2000, 2000),
     #     'legend': ON,
@@ -93,4 +96,3 @@ if __name__ == '__main__':
     #     'minAutoCompute': OFF,
     #     'minValue': 0
     # }
-    print_figure(setting)

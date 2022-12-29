@@ -302,7 +302,7 @@ class PostprocListener:
             s = Solver(job_path)
             if p.check_setting_files():
                 if s.is_done():
-                    if p.check_files():
+                    if p.has_odb():
                         proc = p.odb_to_npz()
                         with open(os.path.join(job_path, '.odb_to_npz_status'), 'w', encoding='utf-8') as f:
                             f.write('Submitting')

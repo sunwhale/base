@@ -434,7 +434,7 @@ def prescan_odb(project_id, job_id):
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if os.path.exists(job_path):
         p = Postproc(job_path)
-        if p.check_files():
+        if p.has_odb():
             proc = p.prescan_odb()
             with open(os.path.join(job_path, '.prescan_status'), 'w', encoding='utf-8') as f:
                 f.write('Submitting')
@@ -452,7 +452,7 @@ def odb_to_npz(project_id, job_id):
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if os.path.exists(job_path):
         p = Postproc(job_path)
-        if p.check_files() and p.check_setting_files():
+        if p.has_odb() and p.check_setting_files():
             proc = p.odb_to_npz()
             with open(os.path.join(job_path, '.odb_to_npz_status'), 'w', encoding='utf-8') as f:
                 f.write('Submitting')
@@ -497,39 +497,18 @@ def odb_to_npz_data(project_id, job_id):
     return ztree
 
 
-@abaqus_bp.route('/scan_odb')
+@abaqus_bp.route('/print_figure/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
 @login_required
-def scan_odb():
-    return render_template('abaqus/scan_odb.html')
-
-
-@abaqus_bp.route('/scan_odb_data2', methods=['GET', 'POST'])
-@login_required
-def scan_odb_data2():
-    odb_json_file = 'F:\\Github\\base\\tools\\abaqus\\prescan_odb.json'
-    with open(odb_json_file, 'r', encoding='utf-8') as f:
-        odb_dict = json.load(f)
-    ztree = json_to_ztree(odb_dict)
-    return ztree
-
-
-@abaqus_bp.route('/scan_odb_data', methods=['GET', 'POST'])
-@login_required
-def scan_odb_data():
-
-    # import numpy as np
-
-    # npz = np.load('F:\\Github\\base\\tools\\abaqus\\Job-1.npz', allow_pickle=True, encoding='latin1')
-    # data = npz['data'][()]
-    # time = npz['time']
-
-    # ztree = json_to_ztree(data)
-
-    odb_json_file = 'F:\\Github\\base\\tools\\abaqus\\prescan_odb.json'
-
-    odb_json_data = load_json(odb_json_file)
-
-    ztree = odb_json_to_ztree(odb_json_data, url_for(
-        'static', filename='zTree/icons/'))
-
+def print_figure(project_id, job_id):
+    import numpy as np
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
+    p = Postproc(job_path)
+    npz_file = os.path.join(job_path, str(p.job) + '.npz')
+    if os.path.exists(npz_file):
+        npz = np.load(npz_file, allow_pickle=True, encoding='latin1')
+        data = npz['data'][()]
+        ztree = json_to_ztree(data)
+    else:
+        ztree = [{"id": 1, "pId": 0, "name": "无"}]
     return ztree
