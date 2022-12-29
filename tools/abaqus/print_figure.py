@@ -4,12 +4,54 @@
 """
 from abaqus import *
 from abaqusConstants import *
-from odbAccess import *
-from textRepr import *
+from viewerModules import *
+from driverUtils import executeOnCaeStartup
+import json
+
+
+def dump_json(file_name, data):
+    """
+    Write JSON data to file.
+    """
+    with open(file_name, 'w') as f:
+        return json.dump(data, f)
+
+
+def load_json(file_name):
+    """
+    Read JSON data from file.
+    """
+    with open(file_name, 'r') as f:
+        return json.load(f)
+
+
+def unicode_convert(input_data, encode="utf-8"):
+    """
+    python2中json.loads会默认将字符串解析成unicode，因此需要自行转换为想要的格式
+    """
+    if isinstance(input_data, dict):
+        return {unicode_convert(key, encode): unicode_convert(value) for key, value in input_data.iteritems()}
+    elif isinstance(input_data, list):
+        return [unicode_convert(element, encode) for element in input_data]
+    elif isinstance(input_data, unicode):
+        return input_data.encode(encode)
+    else:
+        return input_data
 
 
 def print_figure(setting_file, odb_name='Job-1.odb'):
     odb = session.openOdb(name=odb_name)
+
+    setting = load_json(setting_file)
+    setting = unicode_convert(setting)
+
+    setting['imageSize'] = eval(setting['imageSize'])
+    setting['legend'] = eval(setting['legend'])
+    setting['plotState'] = eval(setting['plotState'])
+    setting['refinement'] = eval(setting['refinement'])
+    setting['outputPosition'] = eval(setting['outputPosition'])
+    setting['maxAutoCompute'] = eval(setting['maxAutoCompute'])
+    setting['minAutoCompute'] = eval(setting['minAutoCompute'])
 
     session.pngOptions.setValues(imageSize=setting['imageSize'])
     session.printOptions.setValues(vpDecorations=OFF, vpBackground=OFF, reduceColors=False)
@@ -46,7 +88,8 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
                                refinement=setting['refinement'], )
 
     viewport.view.fitView()
-    session.printToFile(fileName=figurename, format=PNG, canvasObjects=(viewport, ))
+    session.printToFile(fileName=figurename, format=PNG,
+                        canvasObjects=(viewport, ))
 
 
 if __name__ == '__main__':
