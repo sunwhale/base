@@ -39,13 +39,15 @@ class ParameterForm(FlaskForm):
 
 
 class FigureSettingFrom(FlaskForm):
-    imageSize = StringField('imageSize', default='(200, 200)', validators=[DataRequired()])
+    imageSize = StringField('imageSize', default='(600, 600)', validators=[DataRequired()])
     legend = SelectField('legend', coerce=str)
     plotState = SelectField('plotState', coerce=str)
     uniformScaleFactor = FloatField('uniformScaleFactor', default=1.0, validators=[DataRequired()])
-    step = StringField('step', default='Step-1', validators=[DataRequired()])
+    # step = StringField('step', default='Step-1', validators=[DataRequired()])
+    step = SelectField('step', coerce=str)
     frame = IntegerField('frame', default=-1, validators=[DataRequired()])
-    variableLabel = StringField('variableLabel', default='S', validators=[DataRequired()])
+    # variableLabel = StringField('variableLabel', default='S', validators=[DataRequired()])
+    variableLabel = SelectField('variableLabel', coerce=str)
     refinement = StringField('refinement', default="(INVARIANT, 'Mises')", validators=[DataRequired()])
     outputPosition = SelectField('outputPosition', coerce=str)
     maxAutoCompute = SelectField('maxAutoCompute', coerce=str)
@@ -58,6 +60,8 @@ class FigureSettingFrom(FlaskForm):
         super(FigureSettingFrom, self).__init__(*args, **kwargs)
         self.legend.choices = ['ON', 'OFF']
         self.plotState.choices = ['(CONTOURS_ON_DEF, )', '(CONTOURS_ON_UNDEF, )']
+        self.step.choices = ['Step-1']
+        self.variableLabel.choices = ['S', 'E', 'NT11']
         self.outputPosition.choices = ['INTEGRATION_POINT', 'NODAL', 'ELEMENT_NODAL', 'CENTROID']
         self.maxAutoCompute.choices = ['ON', 'OFF']
         self.minAutoCompute.choices = ['ON', 'OFF']

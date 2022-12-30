@@ -6,8 +6,7 @@
 import json
 import os
 import subprocess
-
-import psutil
+import threading
 
 
 def is_number(s):
@@ -41,6 +40,19 @@ def load_json(file_name, encoding='utf-8'):
     """
     with open(file_name, 'r', encoding=encoding) as f:
         return json.load(f)
+
+
+def write_log(proc, logfile):
+    f = open(logfile, 'w', encoding='utf-8')
+    for line in iter(proc.stdout.readline, b''):
+        log = line.decode('UTF-8').replace('\n','')
+        f.write(log)
+        f.flush()
+        if not subprocess.Popen.poll(proc) is None:
+            if line == "":
+                break
+    proc.stdout.close()
+    f.close()
 
 
 class Postproc:
@@ -99,9 +111,21 @@ class Postproc:
     def print_figure(self):
         os.chdir(self.path)
         py_file = os.path.join(os.path.dirname(__file__), 'print_figure.py')
-        cmd = 'abaqus viewer noGui=%s -- %s %s' % (py_file, 'print_figure.json', '{}.odb'.format(self.job))
+        cmd = '%s viewer noGui=%s -- %s %s' % (os.getenv('ABAQUS'), py_file, 'print_figure.json', '{}.odb'.format(self.job))
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        logfile = 'print_figure.log'
+        thread = threading.Thread(target=write_log, args=(proc, logfile))
+        thread.start()
         return proc
+
+    def get_print_figure_log(self):
+        log_file = os.path.join(self.path, 'print_figure.log')
+        if os.path.exists(log_file):
+            with open(log_file, 'r') as f:
+                logs = f.read()
+        else:
+            logs = ''
+        return logs
 
     def get_rpy(self):
         rpy_file = os.path.join(self.path, 'abaqus.rpy')

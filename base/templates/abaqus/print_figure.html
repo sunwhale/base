@@ -82,7 +82,7 @@
                               <td> {{ file['name'] }} </td>
                               <td> {{ file['time'] }} </td>
                               <td> {{ file['size'] }} </td>
-                              <td> <a href="{{ url_for('abaqus.get_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">查看</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">删除</a> </td>
+                              <td> <a href="{{ url_for('abaqus.get_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}" target="_blank">查看</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">删除</a> </td>
                             </tr>
                             {% endfor %}
                           </tbody>
@@ -95,7 +95,7 @@
               <div class="col-12">
                 <div class="card card-primary">
                   <div class="card-body">
-                    <h5 class="text-primary">日志文件.rpy</h5>
+                    <h5 class="text-primary">日志文件 print_figure.log</h5>
                     <textarea id="textarea_log" class="form-control" style="height: 345px;">{{ logs }}</textarea>
                   </div>
                 </div>

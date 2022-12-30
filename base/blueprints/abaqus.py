@@ -507,6 +507,14 @@ def print_figure(project_id, job_id):
         form = FigureSettingFrom()
         files = files_in_dir(job_path)
         png_files = [f for f in files if f['name'].split('.')[-1] == 'png']
+        p = Postproc(job_path)
+        prescan_odb_json_file = os.path.join(job_path, 'prescan_odb.json')
+        if os.path.exists(prescan_odb_json_file):
+            prescan_odb_dict = load_json(prescan_odb_json_file)
+            print(prescan_odb_dict['steps'].keys())
+            form.step.choices = list(prescan_odb_dict['steps'].keys())
+            form.variableLabel.choices = list(prescan_odb_dict['steps']['Step-1']['frames'][0]['fieldOutputs'].keys())
+
         if form.validate_on_submit():
             message = {
                 'imageSize': form.imageSize.data,
@@ -524,20 +532,10 @@ def print_figure(project_id, job_id):
                 'minValue': form.minValue.data
             }
             dump_json(setting_file, message)
-            p = Postproc(job_path)
             if p.has_odb():
                 proc = p.print_figure()
-                logs = ''
-                for line in iter(proc.stdout.readline, b''):
-                    logs += str(line)
-                    print(line)
-                    if not subprocess.Popen.poll(proc) is None:
-                        if line == "":
-                            break
-                proc.stdout.close()
-                print(logs)
+                return redirect(url_for('.print_figure', project_id=project_id, job_id=job_id, form=form, files=png_files))
 
-                return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, logs=logs, files=png_files)
         # message = load_json(msg_file)
         # form.imageSize.data = message['imageSize']
         # form.legend.data = message['legend']
@@ -552,7 +550,23 @@ def print_figure(project_id, job_id):
         # form.maxValue.data = message['maxValue']
         # form.minAutoCompute.data = message['minAutoCompute']
         # form.minValue.data = message['minValue']
-
-        return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, files=png_files)
+        logs = p.get_print_figure_log()
+        return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, logs=logs, files=png_files)
     else:
         abort(404)
+
+
+@abaqus_bp.route('/prescan')
+@login_required
+def prescan():
+    return render_template('abaqus/prescan.html')
+
+
+@abaqus_bp.route('/prescan_data', methods=['GET', 'POST'])
+@login_required
+def prescan_data():
+    odb_json_file = 'F:\\Github\\base\\files\\abaqus\\2\\1\\prescan_odb.json'
+    with open(odb_json_file, 'r', encoding='utf-8') as f:
+        odb_dict = json.load(f)
+    ztree = json_to_ztree(odb_dict)
+    return ztree
