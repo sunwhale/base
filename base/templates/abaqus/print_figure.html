@@ -58,9 +58,45 @@
             <div class="column">
               <div class="col-12">
                 <div class="card card-primary">
+                  <div class="card-header">
+                    <h3 class="card-title">图片列表</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        <table class="table table-sm table-hover">
+                          <thead>
+                            <tr>
+                              <th width=40%>图片名</th>
+                              <th width=30%>修改日期</th>
+                              <th width=10%>大小</th>
+                              <th width=20%>操作</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for file in files %}
+                            <tr>
+                              <td> {{ file['name'] }} </td>
+                              <td> {{ file['time'] }} </td>
+                              <td> {{ file['size'] }} </td>
+                              <td> <a href="{{ url_for('abaqus.get_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">查看</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">删除</a> </td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary">
                   <div class="card-body">
                     <h5 class="text-primary">日志文件.rpy</h5>
-                    <textarea id="textarea_log" class="form-control" style="height: 345px;">{{ proc }}</textarea>
+                    <textarea id="textarea_log" class="form-control" style="height: 345px;">{{ logs }}</textarea>
                   </div>
                 </div>
               </div>

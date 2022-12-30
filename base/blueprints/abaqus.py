@@ -505,6 +505,8 @@ def print_figure(project_id, job_id):
     setting_file = os.path.join(job_path, 'print_figure.json')
     if os.path.exists(job_path):
         form = FigureSettingFrom()
+        files = files_in_dir(job_path)
+        png_files = [f for f in files if f['name'].split('.')[-1] == 'png']
         if form.validate_on_submit():
             message = {
                 'imageSize': form.imageSize.data,
@@ -525,7 +527,17 @@ def print_figure(project_id, job_id):
             p = Postproc(job_path)
             if p.has_odb():
                 proc = p.print_figure()
-                return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, proc=proc)
+                logs = ''
+                for line in iter(proc.stdout.readline, b''):
+                    logs += str(line)
+                    print(line)
+                    if not subprocess.Popen.poll(proc) is None:
+                        if line == "":
+                            break
+                proc.stdout.close()
+                print(logs)
+
+                return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, logs=logs, files=png_files)
         # message = load_json(msg_file)
         # form.imageSize.data = message['imageSize']
         # form.legend.data = message['legend']
@@ -541,8 +553,6 @@ def print_figure(project_id, job_id):
         # form.minAutoCompute.data = message['minAutoCompute']
         # form.minValue.data = message['minValue']
 
-        files = files_in_dir(job_path)
-        proc = ''
-        return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, proc=proc)
+        return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, files=png_files)
     else:
         abort(404)

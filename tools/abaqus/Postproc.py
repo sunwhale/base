@@ -100,7 +100,7 @@ class Postproc:
         os.chdir(self.path)
         py_file = os.path.join(os.path.dirname(__file__), 'print_figure.py')
         cmd = 'abaqus viewer noGui=%s -- %s %s' % (py_file, 'print_figure.json', '{}.odb'.format(self.job))
-        proc = subprocess.Popen(cmd, shell=True)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         return proc
 
     def get_rpy(self):
