@@ -52,6 +52,9 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
     setting['outputPosition'] = eval(setting['outputPosition'])
     setting['maxAutoCompute'] = eval(setting['maxAutoCompute'])
     setting['minAutoCompute'] = eval(setting['minAutoCompute'])
+    setting['visibleEdges'] = eval(setting['visibleEdges'])
+    setting['statusPosition'] = eval(setting['statusPosition'])
+    setting['statusRefinement'] = eval(setting['statusRefinement'])
 
     session.pngOptions.setValues(imageSize=setting['imageSize'])
     session.printOptions.setValues(vpDecorations=OFF, vpBackground=OFF, reduceColors=False)
@@ -60,23 +63,42 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
 
     viewport.setValues(displayedObject=odb)
     viewport.makeCurrent()
-    viewport.setValues(width=200)
-    viewport.setValues(height=200)
+    viewport.setValues(width=setting['width'])
+    viewport.setValues(height=setting['height'])
     viewport.view.setProjection(projection=PARALLEL)
     viewport.viewportAnnotationOptions.setValues(legendBox=ON, title=OFF, state=OFF, annotations=OFF, compass=OFF)
     viewport.viewportAnnotationOptions.setValues(triad=OFF, legend=setting['legend'])
 
+    viewport.enableMultipleColors()
+    viewport.setColor(initialColor='#BDBDBD')
+    cmap=viewport.colorMappings[setting['colorMappings']]
+    viewport.setColor(colorMapping=cmap)
+    viewport.disableMultipleColors()
+
     display = viewport.odbDisplay
-    display.commonOptions.setValues(visibleEdges=FREE)
+    display.commonOptions.setValues(visibleEdges=setting['visibleEdges'])
     display.commonOptions.setValues(deformationScaling=UNIFORM, uniformScaleFactor=setting['uniformScaleFactor'])
     display.setFrame(step=setting['step'], frame=setting['frame'])
     display.display.setValues(plotState=setting['plotState'])
     display.contourOptions.setValues(contourStyle=CONTINUOUS)
 
+    if setting['useStatus'] == "True":
+        display.setStatusVariable(variableLabel=setting['statusLabel'],
+                                  outputPosition=setting['statusPosition'],
+                                  refinement=setting['statusRefinement'],
+                                  useStatus=True,
+                                  statusMinimum=setting['statusMinimum'],
+                                  statusMaximum=setting['statusMaximum'])
+
     if setting['refinement'] != ():
-        figurename = '%s_%s' % (setting['refinement'][-1], setting['frame'])
+        figurename = '%s_%s.png' % (setting['refinement'][-1], setting['frame'])
     else:
-        figurename = '%s_%s' % (setting['variableLabel'], setting['frame'])
+        figurename = '%s_%s.png' % (setting['variableLabel'], setting['frame'])
+
+    if setting['plotState'] == (UNDEFORMED, ):
+        figurename = 'UNDEFORMED_%s.png' % (setting['colorMappings'])
+    elif setting['plotState'] == (DEFORMED, ):
+        figurename = 'DEFORMED_%s.png' % (setting['colorMappings'])
 
     display.contourOptions.setValues(maxAutoCompute=setting['maxAutoCompute'],
                                      maxValue=setting['maxValue'],

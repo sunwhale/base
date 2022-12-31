@@ -10,6 +10,10 @@ import glob
 import os
 
 
+ABAQUS = os.getenv('ABAQUS')
+ABAQUS_FORTRAN = os.getenv('ABAQUS_FORTRAN')
+
+
 def files(curr_dir='.', ext='*.txt'):
     for i in glob.glob(os.path.join(curr_dir, ext)):
         yield i
@@ -91,10 +95,9 @@ class Solver:
         os.chdir(self.path)
         self.preproc()
         if self.user == '':
-            cmd = 'abaqus job=%s cpus=%s ask=off' % (self.job, self.cpus)
+            cmd = '%s job=%s cpus=%s ask=off' % (ABAQUS, self.job, self.cpus)
         else:
-            cmd = 'abaqus job=%s user=%s cpus=%s ask=off' % (
-                self.job, self.user, self.cpus)
+            cmd = '%s job=%s user=%s cpus=%s ask=off' % (ABAQUS_FORTRAN, self.job, self.user, self.cpus)
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
@@ -128,19 +131,19 @@ class Solver:
         
     def terminate(self):
         os.chdir(self.path)
-        cmd = 'abaqus terminate job=%s' % (self.job)
+        cmd = '%s terminate job=%s' % (ABAQUS, self.job)
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
     def suspend(self):
         os.chdir(self.path)
-        cmd = 'abaqus suspend job=%s' % (self.job)
+        cmd = '%s suspend job=%s' % (ABAQUS, self.job)
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
     def resume(self):
         os.chdir(self.path)
-        cmd = 'abaqus resume job=%s' % (self.job)
+        cmd = '%s resume job=%s' % (ABAQUS, self.job)
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 

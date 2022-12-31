@@ -38,14 +38,20 @@
                       <div class="col-12">
                         <form action="" method="post" class="form" role="form">
                           {{ form.csrf_token() }}
+                          {{ render_form_row([form.width, form.height]) }}
                           {{ render_form_row([form.imageSize, form.legend]) }}
                           {{ render_form_row([form.plotState, form.uniformScaleFactor]) }}
                           {{ render_form_row([form.step, form.frame]) }}
                           {{ render_form_row([form.variableLabel, form.refinement]) }}
-                          {{ render_form_row([form.outputPosition]) }}
+                          {{ render_form_row([form.outputPosition, form.visibleEdges]) }}
                           {{ render_form_row([form.maxAutoCompute, form.maxValue]) }}
                           {{ render_form_row([form.minAutoCompute, form.minValue]) }}
+                          {{ render_form_row([form.colorMappings]) }}
+                          {{ render_form_row([form.useStatus, form.statusLabel]) }}
+                          {{ render_form_row([form.statusPosition, form.statusRefinement]) }}
+                          {{ render_form_row([form.statusMinimum, form.statusMaximum]) }}
                           {{ render_field(form.submit, button_style='btn btn-primary') }}
+                          <a href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename='print_figure.json') }}" class="btn btn-info">默认设置</a>
                         </form>
                       </div>
                     </div>

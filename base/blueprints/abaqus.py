@@ -324,7 +324,7 @@ def delete_job_file(project_id, job_id, filename):
         flash('文件%s删除成功。' % filename, 'success')
     else:
         flash('文件%s不存在。' % filename, 'warning')
-    return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+    return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
 
 
 @abaqus_bp.route('/get_project_file/<int:project_id>/<path:filename>')
@@ -529,11 +529,15 @@ def print_figure(project_id, job_id):
                 form.step.choices = list(prescan_odb_dict['steps'].keys())
                 form.variableLabel.choices = sorted(list(set(variableLabel_list)))
                 form.refinement.choices = sorted(list(set(refinement_list)))
+                form.statusLabel.choices = sorted(list(set(variableLabel_list)))
+                form.statusRefinement.choices = sorted(list(set(refinement_list)))
             else:
                 flash('请先对odb文件进行预扫描。', 'warning')
 
             if form.validate_on_submit():
                 message = {
+                    'width': form.width.data,
+                    'height': form.height.data,
                     'imageSize': form.imageSize.data,
                     'legend': form.legend.data,
                     'plotState': form.plotState.data,
@@ -543,10 +547,18 @@ def print_figure(project_id, job_id):
                     'variableLabel': form.variableLabel.data,
                     'refinement': form.refinement.data,
                     'outputPosition': form.outputPosition.data,
+                    'visibleEdges': form.visibleEdges.data,
                     'maxAutoCompute': form.maxAutoCompute.data,
                     'maxValue': form.maxValue.data,
                     'minAutoCompute': form.minAutoCompute.data,
-                    'minValue': form.minValue.data
+                    'minValue': form.minValue.data,
+                    'colorMappings': form.colorMappings.data,
+                    'useStatus': form.useStatus.data,
+                    'statusLabel': form.statusLabel.data,
+                    'statusPosition': form.statusPosition.data,
+                    'statusRefinement': form.statusRefinement.data,
+                    'statusMinimum': form.statusMinimum.data,
+                    'statusMaximum': form.statusMaximum.data,
                 }
                 dump_json(setting_file, message)
                 proc = p.print_figure()
@@ -556,6 +568,8 @@ def print_figure(project_id, job_id):
 
         if os.path.exists(setting_file):
             message = load_json(setting_file)
+            form.width.data = message['width']
+            form.height.data = message['height']
             form.imageSize.data = message['imageSize']
             form.legend.data = message['legend']
             form.plotState.data = message['plotState']
@@ -565,10 +579,18 @@ def print_figure(project_id, job_id):
             form.variableLabel.data = message['variableLabel']
             form.refinement.data = message['refinement']
             form.outputPosition.data = message['outputPosition']
+            form.visibleEdges.data = message['visibleEdges']
             form.maxAutoCompute.data = message['maxAutoCompute']
             form.maxValue.data = message['maxValue']
             form.minAutoCompute.data = message['minAutoCompute']
             form.minValue.data = message['minValue']
+            form.colorMappings.data = message['colorMappings']
+            form.useStatus.data = message['useStatus']
+            form.statusLabel.data = message['statusLabel']
+            form.statusPosition.data = message['statusPosition']
+            form.statusRefinement.data = message['statusRefinement']
+            form.statusMinimum.data = message['statusMinimum']
+            form.statusMaximum.data = message['statusMaximum']
 
         logs = p.get_print_figure_log()
         return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, logs=logs, files=png_files)

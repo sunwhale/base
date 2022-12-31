@@ -154,7 +154,7 @@
                   <div class="card-body">
                     <h5 class="text-primary">状态文件.sta</h5>
                     <div class="card-body table-responsive p-0" style="height: 369px;">
-                      <table class="table table-sm table-hover table-head-fixed text-nowrap">
+                      <table class="table table-sm table-hover table-head-fixed text-nowrap" id="table_sta">
                         <thead>
                           <tr>
                             <th width=10% style="vertical-align: middle;text-align: center;">Step</th>
@@ -207,6 +207,8 @@
                         <button class="btn btn-secondary" disabled="disabled"><strong>odb_to_npz</strong></button>
                         {% endif %}
 
+                        <a href="{{ url_for('abaqus.print_figure', project_id=project_id, job_id=job_id) }}" class="btn btn-warning"><strong>图片输出</strong></a>
+
                         <p></p>
                         <p class="mb-1">预扫描树状图（{{ status['prescan_status'] }}）：</p>
                         <ul id="ztree-odb" class="ztree"></ul>
@@ -235,6 +237,9 @@
 
   var textarea_log = document.getElementById('textarea_log');
   textarea_log.scrollTop = textarea_log.scrollHeight;
+
+  var table_sta = document.getElementById('table_sta');
+  table_sta.scrollTop = 50;
 
   var setting_odb = {
     data: {
