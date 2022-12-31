@@ -66,7 +66,7 @@ def create_model():
         thread = threading.Thread(target=psic_create_model, args=args)
         thread.start()
 
-        return render_template('packing/create_model.html', form=form)
+        return redirect(url_for('packing.create_model', form=form))
     return render_template('packing/create_model.html', form=form)
 
 
@@ -109,6 +109,7 @@ def create_submodel(model_id):
 
             thread = threading.Thread(target=psic_create_submodel, args=args)
             thread.start()
+            return redirect(url_for('packing.create_submodel', form=form, model_id=model_id))
         return render_template('packing/create_submodel.html', form=form, model_id=model_id)
     else:
         if not os.path.exists(model_npy_file):
@@ -179,6 +180,7 @@ def create_mesh(model_id):
                     submodels_path, meshes_path, status)
             thread = threading.Thread(target=create_meshes, args=args)
             thread.start()
+            return redirect(url_for('packing.create_mesh', form=form, model_id=model_id))
         return render_template('packing/create_mesh.html', form=form, model_id=model_id)
     else:
         if not os.path.exists(model_path):
@@ -208,6 +210,7 @@ def create_abaqus(model_id):
         if form_upload.validate_on_submit():
             f = form_upload.filename.data
             f.save(os.path.join(abaqus_path, f.filename))
+            return redirect(url_for('packing.create_abaqus', model_id=model_id, form_upload=form_upload))
 
         if os.path.exists(abaqus_path):
             files = files_in_dir(abaqus_path)
@@ -288,13 +291,13 @@ def create_abaqus(model_id):
             form_abaqus.descript.data = abaqus_message['descript']
         form_abaqus.name.data = '%s号球体填充主模型关联项目' % model_id
 
-        return render_template('packing/create_abaqus.html', form_abaqus=form_abaqus, form_upload=form_upload, model_id=model_id, files=files)
+        return render_template('packing/create_abaqus.html', model_id=model_id, form_abaqus=form_abaqus, form_upload=form_upload, files=files)
     else:
         if not os.path.exists(model_path):
             flash('主模型%s不存在。' % model_id, 'warning')
         else:
             flash('尚未生成有限元网格。', 'warning')
-        return render_template('packing/create_abaqus.html', form_abaqus=form_abaqus, form_upload=form_upload, model_id=model_id)
+        return render_template('packing/create_abaqus.html', model_id=model_id, form_abaqus=form_abaqus, form_upload=form_upload)
 
 
 @packing_bp.route('/manage_models/')

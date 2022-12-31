@@ -177,6 +177,7 @@ def view_project(project_id):
     if form.validate_on_submit():
         f = form.filename.data
         f.save(os.path.join(project_path, f.filename))
+        return redirect(url_for('abaqus.view_project', project_id=project_id, parameters=parameters, form=form))
     if request.method == 'POST':
         data = request.form.to_dict()
         print(data)
@@ -509,51 +510,96 @@ def print_figure(project_id, job_id):
         png_files = [f for f in files if f['name'].split('.')[-1] == 'png']
         p = Postproc(job_path)
         prescan_odb_json_file = os.path.join(job_path, 'prescan_odb.json')
-        if os.path.exists(prescan_odb_json_file):
-            prescan_odb_dict = load_json(prescan_odb_json_file)
-            print(prescan_odb_dict['steps'].keys())
-            form.step.choices = list(prescan_odb_dict['steps'].keys())
-            form.variableLabel.choices = list(prescan_odb_dict['steps']['Step-1']['frames'][0]['fieldOutputs'].keys())
+        if p.has_odb():
+            if os.path.exists(prescan_odb_json_file):
+                prescan_odb_dict = load_json(prescan_odb_json_file)
+                from tools.common import invariant_dict
+                refinement_list = []
+                variableLabel_list = []
+                for step in prescan_odb_dict['steps'].keys():
+                    variableLabel_list += list(prescan_odb_dict['steps'][step]['frames'][0]['fieldOutputs'].keys())
+                    fieldOutputs = prescan_odb_dict['steps'][step]['frames'][0]['fieldOutputs']
+                    for key in fieldOutputs.keys():
+                        for i in fieldOutputs[key]['validInvariants']:
+                            refinement_list.append("(INVARIANT, '%s')" % invariant_dict[i])
+                        for i in fieldOutputs[key]['componentLabels']:
+                            refinement_list.append("(COMPONENT, '%s')" % i)
+                refinement_list.append("()")
 
-        if form.validate_on_submit():
-            message = {
-                'imageSize': form.imageSize.data,
-                'legend': form.legend.data,
-                'plotState': form.plotState.data,
-                'uniformScaleFactor': form.uniformScaleFactor.data,
-                'step': form.step.data,
-                'frame': form.frame.data,
-                'variableLabel': form.variableLabel.data,
-                'refinement': form.refinement.data,
-                'outputPosition': form.outputPosition.data,
-                'maxAutoCompute': form.maxAutoCompute.data,
-                'maxValue': form.maxValue.data,
-                'minAutoCompute': form.minAutoCompute.data,
-                'minValue': form.minValue.data
-            }
-            dump_json(setting_file, message)
-            if p.has_odb():
+                form.step.choices = list(prescan_odb_dict['steps'].keys())
+                form.variableLabel.choices = sorted(list(set(variableLabel_list)))
+                form.refinement.choices = sorted(list(set(refinement_list)))
+            else:
+                flash('请先对odb文件进行预扫描。', 'warning')
+
+            if form.validate_on_submit():
+                message = {
+                    'imageSize': form.imageSize.data,
+                    'legend': form.legend.data,
+                    'plotState': form.plotState.data,
+                    'uniformScaleFactor': form.uniformScaleFactor.data,
+                    'step': form.step.data,
+                    'frame': form.frame.data,
+                    'variableLabel': form.variableLabel.data,
+                    'refinement': form.refinement.data,
+                    'outputPosition': form.outputPosition.data,
+                    'maxAutoCompute': form.maxAutoCompute.data,
+                    'maxValue': form.maxValue.data,
+                    'minAutoCompute': form.minAutoCompute.data,
+                    'minValue': form.minValue.data
+                }
+                dump_json(setting_file, message)
                 proc = p.print_figure()
                 return redirect(url_for('.print_figure', project_id=project_id, job_id=job_id, form=form, files=png_files))
+        else:
+            flash('缺少odb文件。', 'warning')
 
-        # message = load_json(msg_file)
-        # form.imageSize.data = message['imageSize']
-        # form.legend.data = message['legend']
-        # form.plotState.data = message['plotState']
-        # form.uniformScaleFactor.data = message['uniformScaleFactor']
-        # form.step.data = message['step']
-        # form.frame.data = message['frame']
-        # form.variableLabel.data = message['variableLabel']
-        # form.refinement.data = message['refinement']
-        # form.outputPosition.data = message['outputPosition']
-        # form.maxAutoCompute.data = message['maxAutoCompute']
-        # form.maxValue.data = message['maxValue']
-        # form.minAutoCompute.data = message['minAutoCompute']
-        # form.minValue.data = message['minValue']
+        if os.path.exists(setting_file):
+            message = load_json(setting_file)
+            form.imageSize.data = message['imageSize']
+            form.legend.data = message['legend']
+            form.plotState.data = message['plotState']
+            form.uniformScaleFactor.data = message['uniformScaleFactor']
+            form.step.data = message['step']
+            form.frame.data = message['frame']
+            form.variableLabel.data = message['variableLabel']
+            form.refinement.data = message['refinement']
+            form.outputPosition.data = message['outputPosition']
+            form.maxAutoCompute.data = message['maxAutoCompute']
+            form.maxValue.data = message['maxValue']
+            form.minAutoCompute.data = message['minAutoCompute']
+            form.minValue.data = message['minValue']
+
         logs = p.get_print_figure_log()
         return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, logs=logs, files=png_files)
     else:
         abort(404)
+
+
+@abaqus_bp.route('/print_figure_dict/<int:project_id>/<int:job_id>')
+def print_figure_dict(project_id, job_id):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
+    prescan_odb_json_file = os.path.join(job_path, 'prescan_odb.json')
+    print_figure_dict = {}
+    if os.path.exists(prescan_odb_json_file):
+        prescan_odb_dict = load_json(prescan_odb_json_file)
+        for step in prescan_odb_dict['steps'].keys():
+            print_figure_dict[step] = {}
+            fieldOutputs = prescan_odb_dict['steps'][step]['frames'][0]['fieldOutputs']
+            from tools.common import invariant_dict
+            print_figure_dict[step]['refinement'] = {}
+            print_figure_dict[step]['outputPosition'] = {}
+            for key in fieldOutputs.keys():
+                print_figure_dict[step]['refinement'][key] = []
+                print_figure_dict[step]['outputPosition'][key] = fieldOutputs[key]['locations'][0]['position']
+                for i in fieldOutputs[key]['validInvariants']:
+                    print_figure_dict[step]['refinement'][key].append("(INVARIANT, '%s')" % invariant_dict[i])
+                for i in fieldOutputs[key]['componentLabels']:
+                    print_figure_dict[step]['refinement'][key].append("(COMPONENT, '%s')" % i)
+                if len(print_figure_dict[step]['refinement'][key]) == 0:
+                    print_figure_dict[step]['refinement'][key].append("()")
+    return jsonify(print_figure_dict)
 
 
 @abaqus_bp.route('/prescan')

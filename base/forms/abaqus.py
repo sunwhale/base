@@ -48,7 +48,8 @@ class FigureSettingFrom(FlaskForm):
     frame = IntegerField('frame', default=-1, validators=[DataRequired()])
     # variableLabel = StringField('variableLabel', default='S', validators=[DataRequired()])
     variableLabel = SelectField('variableLabel', coerce=str)
-    refinement = StringField('refinement', default="(INVARIANT, 'Mises')", validators=[DataRequired()])
+    # refinement = StringField('refinement', default="(INVARIANT, 'Mises')", validators=[DataRequired()])
+    refinement = SelectField('refinement', coerce=str)
     outputPosition = SelectField('outputPosition', coerce=str)
     maxAutoCompute = SelectField('maxAutoCompute', coerce=str)
     maxValue = FloatField('maxValue', default=1.0)
@@ -61,7 +62,8 @@ class FigureSettingFrom(FlaskForm):
         self.legend.choices = ['ON', 'OFF']
         self.plotState.choices = ['(CONTOURS_ON_DEF, )', '(CONTOURS_ON_UNDEF, )']
         self.step.choices = ['Step-1']
-        self.variableLabel.choices = ['S', 'E', 'NT11']
-        self.outputPosition.choices = ['INTEGRATION_POINT', 'NODAL', 'ELEMENT_NODAL', 'CENTROID']
+        self.variableLabel.choices = ['S']
+        self.refinement.choices = ["(INVARIANT, 'Mises')"]
+        self.outputPosition.choices = ['INTEGRATION_POINT', 'NODAL']
         self.maxAutoCompute.choices = ['ON', 'OFF']
         self.minAutoCompute.choices = ['ON', 'OFF']

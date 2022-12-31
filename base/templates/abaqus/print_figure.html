@@ -126,10 +126,71 @@
     },
     async: {
       enable: true,
-      url:"{{ url_for('abaqus.prescan_odb_data', project_id=project_id, job_id=job_id) }}",
+      url: "{{ url_for('abaqus.prescan_odb_data', project_id=project_id, job_id=job_id) }}",
       type: "get",
     }
   };
+
+  $.ajax({
+    type: "get",
+    url: "{{ url_for('abaqus.print_figure_dict', project_id=project_id, job_id=job_id) }}",
+    dataType: "json",
+    success: function (data) {
+      console.log(data);
+      window.print_figure_dict = data
+      sel_step = document.getElementById("step")
+      step = sel_step.value;
+
+      sel_variableLabel = document.getElementById("variableLabel")
+      var variableLabel = sel_variableLabel.value;
+      var refinements = window.print_figure_dict[step]["refinement"][variableLabel];
+      var sel_refinement = document.getElementById("refinement");
+      sel_refinement.options.length = 0;
+      for (var i=0; i < refinements.length; i++) {
+        var refinement = refinements[i]; 
+        var option_refinement = document.createElement("option");
+        var textNode = document.createTextNode(refinement);
+        option_refinement.appendChild(textNode);
+        sel_refinement.appendChild(option_refinement);
+      }
+
+      var outputPosition = window.print_figure_dict[step]["outputPosition"][variableLabel];
+      var sel_outputPosition = document.getElementById("outputPosition");
+      sel_outputPosition.options.length = 0;
+      var option_outputPosition = document.createElement("option");
+      var textNode = document.createTextNode(outputPosition);
+      option_outputPosition.appendChild(textNode);
+      sel_outputPosition.appendChild(option_outputPosition);
+    }
+  });
+
+  sel_step = document.getElementById("step")
+  sel_step.addEventListener("change", function (){
+    step = sel_step.value;
+  })
+
+  sel_variableLabel = document.getElementById("variableLabel")
+  sel_variableLabel.addEventListener("change", function (){
+    var variableLabel = sel_variableLabel.value;
+    var refinements = window.print_figure_dict[step]["refinement"][variableLabel];
+    var sel_refinement = document.getElementById("refinement");
+    sel_refinement.options.length = 0;
+    for (var i=0; i < refinements.length; i++) {
+      var refinement = refinements[i]; 
+      var option_refinement = document.createElement("option");
+      var textNode = document.createTextNode(refinement);
+      option_refinement.appendChild(textNode);
+      sel_refinement.appendChild(option_refinement);
+    }
+
+    var outputPosition = window.print_figure_dict[step]["outputPosition"][variableLabel];
+    var sel_outputPosition = document.getElementById("outputPosition");
+    sel_outputPosition.options.length = 0;
+    var option_outputPosition = document.createElement("option");
+    var textNode = document.createTextNode(outputPosition);
+    option_outputPosition.appendChild(textNode);
+    sel_outputPosition.appendChild(option_outputPosition);
+  })
 
   document.getElementById('abaqus').className = 'nav-item menu-open'
   
