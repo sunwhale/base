@@ -133,8 +133,17 @@ def prescan_odb(odb_file):
                     'timePeriod': step.timePeriod,
                     'totalTime': step.totalTime
                 }
+                max_len = 16
+                frames = step.frames
+                frames_len = len(frames)
+                if frames_len < max_len:
+                    frame_ids = [i for i in range(frames_len)]
+                else:
+                    frame_ids = [i for i in range(max_len/2)]
+                    frame_ids += [i for i in range(frames_len-int(max_len/2), frames_len)]
 
-                for frame in step.frames:
+                for i in frame_ids:
+                    frame = frames[i]
                     frame_dict = {
                         'description': frame.description,
                         'fieldOutputs': {},

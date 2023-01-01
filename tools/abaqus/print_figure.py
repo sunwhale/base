@@ -78,6 +78,10 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
     display = viewport.odbDisplay
     display.commonOptions.setValues(visibleEdges=setting['visibleEdges'])
     display.commonOptions.setValues(deformationScaling=UNIFORM, uniformScaleFactor=setting['uniformScaleFactor'])
+
+    frames_len = len(odb.steps[setting['step']].frames)
+    if setting['frame'] > frames_len-1:
+        setting['frame'] = frames_len-1
     display.setFrame(step=setting['step'], frame=setting['frame'])
     display.display.setValues(plotState=setting['plotState'])
     display.contourOptions.setValues(contourStyle=CONTINUOUS)

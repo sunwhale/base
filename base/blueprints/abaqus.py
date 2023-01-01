@@ -466,6 +466,20 @@ def odb_to_npz(project_id, job_id):
         abort(404)
 
 
+@abaqus_bp.route('/prescan_odb_data_origin/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+def prescan_odb_data_origin(project_id, job_id):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
+    prescan_odb_json_file = os.path.join(job_path, 'prescan_odb.json')
+    if os.path.exists(prescan_odb_json_file):
+        prescan_odb_dict = load_json(prescan_odb_json_file)
+        ztree = json_to_ztree(prescan_odb_dict)
+    else:
+        ztree = [{"id": 1, "pId": 0, "name": "无"}]
+    return ztree
+
+
 @abaqus_bp.route('/prescan_odb_data/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
 @login_required
 def prescan_odb_data(project_id, job_id):
