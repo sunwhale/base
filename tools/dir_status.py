@@ -82,6 +82,16 @@ def files_in_dir(path):
     return file_list
 
 
+def subpaths_in_dir(path):
+    subpath_list = []
+    for subpath_name in sorted(next(os.walk(path))[1]):
+        subpath = {}
+        subpath['name'] = subpath_name
+        subpath['time'] = file_time(os.path.join(path, subpath_name))
+        subpath_list.append(subpath)
+    return subpath_list
+
+
 def file_time(file):
     if os.path.exists(file):
         modified_time = os.path.getmtime(file)
@@ -462,5 +472,5 @@ def project_jobs_detail(path, project_id):
 
 
 if __name__ == '__main__':
-    path = '..\\files\\abaqus\\run\\1\\'
-    print(files_in_dir(path))
+    path = 'F:\\Github\\base\\files\\abaqus\\7\\1'
+    print(subpaths_in_dir(path))

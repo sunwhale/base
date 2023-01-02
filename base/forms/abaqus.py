@@ -67,6 +67,12 @@ class FigureSettingFrom(FlaskForm):
     statusMinimum = FloatField('statusMinimum', default=1.0)
     statusMaximum = FloatField('statusMaximum', default=1.0)
 
+    animate = SelectField('animate', coerce=str)
+    frameInterval = IntegerField('frameInterval', default=1, validators=[DataRequired()])
+    startFrame = IntegerField('startFrame', default=0)
+    endFrame = IntegerField('endFrame', default=-1, validators=[DataRequired()])
+    fps = IntegerField('fps', default=12, validators=[DataRequired()])
+
     submit = SubmitField(u'提交')
 
     def __init__(self, *args, **kwargs):
@@ -81,7 +87,10 @@ class FigureSettingFrom(FlaskForm):
         self.maxAutoCompute.choices = ['ON', 'OFF']
         self.minAutoCompute.choices = ['ON', 'OFF']
         self.colorMappings.choices = ['Default', 'Part instance', 'Set', 'Material', 'Section', 'Element type', 'Averaging region', 'Internal set', 'Composite layup', 'Composite ply']
+        
         self.useStatus.choices = ['False', 'True']
         self.statusLabel.choices = ['NT11']
         self.statusPosition.choices = ['INTEGRATION_POINT', 'NODAL']
         self.statusRefinement.choices = ['()']
+
+        self.animate.choices = ['OFF', 'ON']

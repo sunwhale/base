@@ -38,6 +38,7 @@
                       <div class="col-12">
                         <form action="" method="post" class="form" role="form">
                           {{ form.csrf_token() }}
+                          <h5 class="text-primary">基本设置</h5><hr/>
                           {{ render_form_row([form.width, form.height]) }}
                           {{ render_form_row([form.imageSize, form.legend]) }}
                           {{ render_form_row([form.plotState, form.uniformScaleFactor]) }}
@@ -47,9 +48,15 @@
                           {{ render_form_row([form.maxAutoCompute, form.maxValue]) }}
                           {{ render_form_row([form.minAutoCompute, form.minValue]) }}
                           {{ render_form_row([form.colorMappings]) }}
+                          <h5 class="text-primary">状态变量</h5><hr/>
                           {{ render_form_row([form.useStatus, form.statusLabel]) }}
                           {{ render_form_row([form.statusPosition, form.statusRefinement]) }}
                           {{ render_form_row([form.statusMinimum, form.statusMaximum]) }}
+                          <h5 class="text-primary">批量输出</h5><hr/>
+                          {{ render_form_row([form.animate, form.frameInterval]) }}
+                          {{ render_form_row([form.startFrame, form.endFrame]) }}
+                          <h5 class="text-primary">动图帧率</h5><hr/>
+                          {{ render_form_row([form.fps]) }}
                           {{ render_field(form.submit, button_style='btn btn-primary') }}
                           <a href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename='print_figure.json') }}" class="btn btn-info">默认设置</a>
                         </form>
@@ -91,6 +98,14 @@
                               <td> <a href="{{ url_for('abaqus.get_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}" target="_blank">查看</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">删除</a> </td>
                             </tr>
                             {% endfor %}
+                            {% for subpath in subpaths %}
+                            <tr>
+                              <td> {{ subpath['name'] }} </td>
+                              <td> {{ subpath['time'] }} </td>
+                              <td> 文件夹</td>
+                              <td> <a href="{{ url_for('abaqus.print_figure_gif', project_id=project_id, job_id=job_id, pathname=subpath['name']) }}">生成动图</a> | <a onclick="return confirm('确定删除文件夹？')" href="{{ url_for('abaqus.delete_job_subpath', project_id=project_id, job_id=job_id, pathname=subpath['name']) }}">删除</a> </td>
+                            </tr>
+                            {% endfor %}
                           </tbody>
                         </table>
                       </div>
@@ -102,7 +117,7 @@
                 <div class="card card-primary">
                   <div class="card-body">
                     <h5 class="text-primary">日志文件 print_figure.log</h5>
-                    <textarea id="textarea_log" class="form-control" style="height: 345px;">{{ logs }}</textarea>
+                    <textarea id="textarea_log" class="form-control" style="height: 150px;">{{ logs }}</textarea>
                   </div>
                 </div>
               </div>
@@ -117,6 +132,14 @@
                   <div class="card-body">
                     <div class="row">
                       <div class="col-12">
+                        <p class="mb-1">您可以通过点击下面的按钮进行ABAQUS计算结果的预扫描，并通过<a href="javascript:location.reload();">刷新</a>页面更新状态。</p>
+                        {% if status['prescan_status']!='Scanning' and status['prescan_status']!='Submitting' %}
+                        <a href="{{ url_for('abaqus.prescan_odb', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>odb 预扫描</strong></a>
+                        {% else %}
+                        <button class="btn btn-secondary" disabled="disabled"><strong>odb 预扫描</strong></button>
+                        {% endif %}
+                        <p></p>
+                        <p class="mb-1">预扫描树状图（{{ status['prescan_status'] }}）：</p>
                         <ul id="ztree-odb" class="ztree"></ul>
                       </div>
                     </div>
@@ -163,7 +186,7 @@
     url: "{{ url_for('abaqus.print_figure_dict', project_id=project_id, job_id=job_id) }}",
     dataType: "json",
     success: function (data) {
-      console.log(data);
+      // console.log(data);
       window.print_figure_dict = data
       sel_step = document.getElementById("step")
       step = sel_step.value;

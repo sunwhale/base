@@ -15,13 +15,14 @@ from flask_login import current_user, login_required
 from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, UploadForm, FigureSettingFrom
 from tools.abaqus.Solver import Solver
 from tools.abaqus.Postproc import Postproc
-from tools.dir_status import (create_id, files_in_dir, get_job_status,
+from tools.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status,
                               get_project_status, project_jobs_detail,
                               projects_detail, sub_dirs_int)
 from tools.tree import json_to_ztree, odb_json_to_ztree
 from tools.common import make_dir, dump_json, load_json
 from base.global_var import event_source
 from tools.events_new import update_events_new
+from tools.make_gif import make_gif
 
 
 abaqus_bp = Blueprint('abaqus', __name__)
@@ -327,6 +328,23 @@ def delete_job_file(project_id, job_id, filename):
     return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
 
 
+@abaqus_bp.route('/delete_job_subpath/<int:project_id>/<int:job_id>/<path:pathname>')
+@login_required
+def delete_job_subpath(project_id, job_id, pathname):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    subpath = os.path.join(abaqus_path, str(project_id),
+                        str(job_id), str(pathname))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该文件夹！', 'warning')
+        return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+    if os.path.exists(subpath):
+        shutil.rmtree(subpath)
+        flash('文件夹%s删除成功。' % pathname, 'success')
+    else:
+        flash('文件夹%s不存在。' % pathname, 'warning')
+    return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
+
+
 @abaqus_bp.route('/get_project_file/<int:project_id>/<path:filename>')
 @login_required
 def get_project_file(project_id, filename):
@@ -491,7 +509,7 @@ def prescan_odb_data(project_id, job_id):
         ztree = odb_json_to_ztree(prescan_odb_dict, url_for(
             'static', filename='zTree/icons/'))
     else:
-        ztree = [{"id": 1, "pId": 0, "name": "无"}]
+        ztree = [{"id": 1, "pId": 0, "name": "未进行预扫描"}]
     return ztree
 
 
@@ -508,7 +526,7 @@ def odb_to_npz_data(project_id, job_id):
         data = npz['data'][()]
         ztree = json_to_ztree(data)
     else:
-        ztree = [{"id": 1, "pId": 0, "name": "无"}]
+        ztree = [{"id": 1, "pId": 0, "name": "未生成npz文件"}]
     return ztree
 
 
@@ -521,7 +539,8 @@ def print_figure(project_id, job_id):
     if os.path.exists(job_path):
         form = FigureSettingFrom()
         files = files_in_dir(job_path)
-        png_files = [f for f in files if f['name'].split('.')[-1] == 'png']
+        subpaths = subpaths_in_dir(job_path)
+        png_files = [f for f in files if (f['name'].split('.')[-1] == 'png' or f['name'].split('.')[-1] == 'gif')]
         p = Postproc(job_path)
         prescan_odb_json_file = os.path.join(job_path, 'prescan_odb.json')
         if p.has_odb():
@@ -573,10 +592,17 @@ def print_figure(project_id, job_id):
                     'statusRefinement': form.statusRefinement.data,
                     'statusMinimum': form.statusMinimum.data,
                     'statusMaximum': form.statusMaximum.data,
+                    'animate': form.animate.data,
+                    'frameInterval': form.frameInterval.data,
+                    'startFrame': form.startFrame.data,
+                    'endFrame': form.endFrame.data,
+                    'fps': form.fps.data,
                 }
                 dump_json(setting_file, message)
                 proc = p.print_figure()
-                return redirect(url_for('.print_figure', project_id=project_id, job_id=job_id, form=form, files=png_files))
+                with open(os.path.join(job_path, '.print_figure_status'), 'w', encoding='utf-8') as f:
+                    f.write('Submitting')
+                return redirect(url_for('.print_figure', project_id=project_id, job_id=job_id, form=form, files=png_files, subpaths=subpaths))
         else:
             flash('缺少odb文件。', 'warning')
 
@@ -605,9 +631,15 @@ def print_figure(project_id, job_id):
             form.statusRefinement.data = message['statusRefinement']
             form.statusMinimum.data = message['statusMinimum']
             form.statusMaximum.data = message['statusMaximum']
+            form.animate.data = message['animate']
+            form.frameInterval.data = message['frameInterval']
+            form.startFrame.data = message['startFrame']
+            form.endFrame.data = message['endFrame']
+            form.fps.data = message['fps']
 
+        status = get_job_status(abaqus_path, project_id, job_id)
         logs = p.get_print_figure_log()
-        return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, logs=logs, files=png_files)
+        return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, logs=logs, status=status, files=png_files, subpaths=subpaths)
     else:
         abort(404)
 
@@ -636,6 +668,15 @@ def print_figure_dict(project_id, job_id):
                 if len(print_figure_dict[step]['refinement'][key]) == 0:
                     print_figure_dict[step]['refinement'][key].append("()")
     return jsonify(print_figure_dict)
+
+
+@abaqus_bp.route('/print_figure_gif/<int:project_id>/<int:job_id>/<path:pathname>')
+def print_figure_gif(project_id, job_id, pathname):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
+    gif_path = os.path.join(job_path, str(pathname))
+    make_gif(job_path, gif_path, 8)
+    return redirect(url_for('.print_figure', project_id=project_id, job_id=job_id))
 
 
 @abaqus_bp.route('/prescan')

@@ -193,7 +193,7 @@
                   <div class="card-body">
                     <div class="row">
                       <div class="col-12">
-                        <p class="mb-1">您可以通过点击下面的按钮进行ABAQUS计算结果的后处理，并通过<a href="javascript:location.reload();">刷新</a>页面更新結果。</p>
+                        <p class="mb-1">您可以通过点击下面的按钮进行ABAQUS计算结果的后处理，并通过<a href="javascript:location.reload();">刷新</a>页面更新状态。</p>
                         
                         {% if status['prescan_status']!='Scanning' and status['prescan_status']!='Submitting' %}
                         <a href="{{ url_for('abaqus.prescan_odb', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>odb 预扫描</strong></a>
@@ -207,7 +207,7 @@
                         <button class="btn btn-secondary" disabled="disabled"><strong>odb_to_npz</strong></button>
                         {% endif %}
 
-                        <a href="{{ url_for('abaqus.print_figure', project_id=project_id, job_id=job_id) }}" class="btn btn-warning"><strong>图片输出</strong></a>
+                        <a href="{{ url_for('abaqus.print_figure', project_id=project_id, job_id=job_id) }}" class="btn btn-info"><strong>odb图片输出</strong></a>
 
                         <p></p>
                         <p class="mb-1">预扫描树状图（{{ status['prescan_status'] }}）：</p>
