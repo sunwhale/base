@@ -269,6 +269,34 @@ def get_project_status(path, project_id):
     return status
 
 
+def get_template_status(path, template_id):
+    msg_file = os.path.join(path, str(template_id), '.template_msg')
+    status = {}
+    if os.path.exists(msg_file):
+        status['template_id'] = template_id
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            status['name'] = message['name']
+            status['template_time'] = file_time(msg_file)
+            status['descript'] = message['descript']
+            status['job'] = message['job']
+            status['user'] = message['user']
+            status['cpus'] = message['cpus']
+            if 'link' in message.keys():
+                status['link'] = message['link']
+            else:
+                status['link'] = 'None'
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模板?')\" href='%s'>删除</a>" % (
+                'view_template/'+str(template_id), 'edit_template/'+str(template_id), 'delete_template/'+str(template_id))
+        except (FileNotFoundError, KeyError):
+            for key in ['name', 'template_time', 'descript', 'job', 'user', 'cpus', 'link']:
+                status[key] = 'None'
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模板?')\" href='%s'>删除</a>" % (
+                'view_template/'+str(template_id), 'edit_template/'+str(template_id), 'delete_template/'+str(template_id))
+    return status
+
+
 def get_job_status(path, project_id, job_id):
     msg_file = os.path.join(path, str(project_id), str(job_id), '.job_msg')
     para_json_file = os.path.join(
@@ -470,6 +498,20 @@ def project_jobs_detail(path, project_id):
 
     return data
 
+
+def templates_detail(path):
+    data_list = []
+    template_id_list = sub_dirs_int(path)
+    for template_id in template_id_list:
+        status = get_template_status(path, template_id)
+        data_list.append(status)
+
+    data = {
+        "data": data_list
+    }
+
+    return data
+    
 
 if __name__ == '__main__':
     path = 'F:\\Github\\base\\files\\abaqus\\7\\1'

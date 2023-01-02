@@ -127,7 +127,7 @@
                               <td> {{ file['name'] }} </td>
                               <td> {{ file['time'] }} </td>
                               <td> {{ file['size'] }} </td>
-                              <td> <a href="{{ url_for('abaqus.get_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">删除</a> </td>
+                              <td> <a href="{{ url_for('abaqus.get_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}" target="_blank">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">删除</a> </td>
                             </tr>
                             {% endfor %}
                           </tbody>

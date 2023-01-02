@@ -82,7 +82,7 @@
                           <td> {{ file['name'] }} </td>
                           <td> {{ file['time'] }} </td>
                           <td> {{ file['size'] }} </td>
-                          <td> <a href="{{ url_for('abaqus.get_project_file', project_id=project_id, filename=file['name']) }}">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_project_file', project_id=project_id, filename=file['name']) }}">删除</a> </td>
+                          <td> <a href="{{ url_for('abaqus.get_project_file', project_id=project_id, filename=file['name']) }}" target="_blank">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_project_file', project_id=project_id, filename=file['name']) }}">删除</a> </td>
                         </tr>
                         {% endfor %}
                       </tbody>
@@ -191,7 +191,7 @@
     }
   };
 
-  $(function () {
+  $(function (e) {
     $('#data').DataTable({
       paging: true,
       pageLength: 10,
@@ -221,6 +221,22 @@
         { data: 'operation' },
       ],
     });
+
+    // 初始时隐藏参数列
+    var table = $('#data').DataTable()
+    for (var i=2; i<{{ parameters|length }}+2; i++) {
+      var column = table.column(i);
+      column.visible(false);
+      var text = document.getElementById('hide_para_text');
+      var icon = document.getElementById('hide_para_icon');
+      if (column.visible()) {
+        text.innerHTML = '隐藏模型参数列'
+        icon.setAttribute('class','fa fa-eye-slash')
+      } else {
+        text.innerHTML = '显示模型参数列'
+        icon.setAttribute('class','fa fa-eye')
+      }
+    }
   });
 
   $('#hide_para').on('click', function (e) {

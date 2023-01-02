@@ -12,12 +12,12 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, UploadForm, FigureSettingFrom
+from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, TemplateForm, UploadForm, FigureSettingFrom
 from tools.abaqus.Solver import Solver
 from tools.abaqus.Postproc import Postproc
 from tools.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status,
-                              get_project_status, project_jobs_detail,
-                              projects_detail, sub_dirs_int)
+                              get_project_status, get_template_status, project_jobs_detail,
+                              projects_detail, templates_detail, sub_dirs_int)
 from tools.tree import json_to_ztree, odb_json_to_ztree
 from tools.common import make_dir, dump_json, load_json
 from base.global_var import event_source
@@ -122,7 +122,7 @@ def edit_project(project_id):
     form.job.data = message['job']
     form.user.data = message['user']
     form.cpus.data = message['cpus']
-    return render_template('abaqus/create_job.html', form=form)
+    return render_template('abaqus/create_project.html', form=form)
 
 
 @abaqus_bp.route('/edit_job/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
@@ -677,6 +677,124 @@ def print_figure_gif(project_id, job_id, pathname):
     gif_path = os.path.join(job_path, str(pathname))
     make_gif(job_path, gif_path, 8)
     return redirect(url_for('.print_figure', project_id=project_id, job_id=job_id))
+
+
+@abaqus_bp.route('/manage_templates', methods=['GET', 'POST'])
+@login_required
+def manage_templates():
+    return render_template('abaqus/manage_templates.html')
+
+
+@abaqus_bp.route('/templates_status')
+@login_required
+def templates_status():
+    data = templates_detail(current_app.config['ABAQUS_TEMPLATE_PATH'])
+    return jsonify(data)
+
+
+@abaqus_bp.route('/create_template', methods=['GET', 'POST'])
+@login_required
+def create_template():
+    form = TemplateForm()
+
+    if form.validate_on_submit():
+        templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
+        template_id = create_id(templates_path)
+        template_path = os.path.join(templates_path, str(template_id))
+        make_dir(template_path)
+        message = {
+            'name': form.name.data,
+            'descript': form.descript.data,
+            'job': form.job.data,
+            'user': form.user.data,
+            'cpus': form.cpus.data
+        }
+        msg_file = os.path.join(template_path, '.template_msg')
+        dump_json(msg_file, message)
+        return redirect(url_for('.view_template', template_id=template_id))
+
+    return render_template('abaqus/create_template.html', form=form)
+
+
+@abaqus_bp.route('/view_template/<int:template_id>', methods=['GET', 'POST'])
+@login_required
+def view_template(template_id):
+    templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
+    template_path = os.path.join(templates_path, str(template_id))
+    form = UploadForm()
+    if form.validate_on_submit():
+        f = form.filename.data
+        f.save(os.path.join(template_path, f.filename))
+        return redirect(url_for('abaqus.view_template', template_id=template_id, form=form))
+    if os.path.exists(template_path):
+        status = get_template_status(templates_path, template_id)
+        files = files_in_dir(template_path)
+        return render_template('abaqus/view_template.html', template_id=template_id, status=status, files=files, form=form)
+    else:
+        abort(404)
+
+
+@abaqus_bp.route('/edit_template/<int:template_id>', methods=['GET', 'POST'])
+@login_required
+def edit_template(template_id):
+    form = TemplateForm()
+    templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
+    template_path = os.path.join(templates_path, str(template_id))
+    msg_file = os.path.join(template_path, '.template_msg')
+
+    if form.validate_on_submit():
+        message = {
+            'name': form.name.data,
+            'descript': form.descript.data,
+            'job': form.job.data,
+            'user': form.user.data,
+            'cpus': form.cpus.data
+        }
+        dump_json(msg_file, message)
+        return redirect(url_for('.view_template', template_id=template_id))
+
+    message = load_json(msg_file)
+    form.name.data = message['name']
+    form.descript.data = message['descript']
+    form.job.data = message['job']
+    form.user.data = message['user']
+    form.cpus.data = message['cpus']
+    return render_template('abaqus/create_template.html', form=form)
+
+
+@abaqus_bp.route('/open_template/<int:template_id>')
+@login_required
+def open_template(template_id):
+    templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
+    template_path = os.path.join(templates_path, str(template_id))
+    if os.path.exists(template_path):
+        cmd = 'explorer %s' % template_path
+        proc = subprocess.run(cmd)
+        return redirect(url_for('.view_template', template_id=template_id))
+    else:
+        abort(404)
+
+
+@abaqus_bp.route('/get_template_file/<int:template_id>/<path:filename>')
+@login_required
+def get_template_file(template_id, filename):
+    return send_from_directory(os.path.join(current_app.config['ABAQUS_TEMPLATE_PATH'], str(template_id)), filename)
+
+
+@abaqus_bp.route('/delete_template_file/<int:template_id>/<path:filename>')
+@login_required
+def delete_template_file(template_id, filename):
+    templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
+    file = os.path.join(templates_path, str(template_id), str(filename))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该文件！', 'warning')
+        return redirect(url_for('.view_template', template_id=template_id))
+    if os.path.exists(file):
+        os.remove(file)
+        flash('文件%s删除成功。' % filename, 'success')
+    else:
+        flash('文件%s不存在。' % filename, 'warning')
+    return redirect(url_for('.view_template', template_id=template_id))
 
 
 @abaqus_bp.route('/prescan')

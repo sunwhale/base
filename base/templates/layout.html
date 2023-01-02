@@ -211,7 +211,19 @@
               <li class="nav-item">
                 <a href="{{ url_for('abaqus.create_project') }}" target="_blank" class="nav-link" id="create_project">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>创建ABAQUS项目</p>
+                  <p>新建ABAQUS项目</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('abaqus.manage_templates') }}" class="nav-link" id="manage_templates">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>ABAQUS模板管理</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('abaqus.create_template') }}" target="_blank" class="nav-link" id="create_template">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>新建ABAQUS模板</p>
                 </a>
               </li>
             </ul>
