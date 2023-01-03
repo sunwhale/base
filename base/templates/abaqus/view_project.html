@@ -40,7 +40,8 @@
                       <li> 缺省算例名：{{ status['job'] }} </li>
                       <li> 缺省user文件：{{ status['user'] }} </li>
                       <li> 缺省算例使用CPU核心数量：{{ status['cpus'] }} </li>
-                      <li> 项目描述：{{ status['descript'] }} </li>
+                      <li> 项目简介：</li>
+                      <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
                       <a class='btn btn-primary' href="{{ url_for('abaqus.edit_project', project_id=project_id) }}"><strong>编辑信息</strong></a>
                       {% if env['service'] == 'client' %}
                       <a href="{{ url_for('abaqus.open_project', project_id=project_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>

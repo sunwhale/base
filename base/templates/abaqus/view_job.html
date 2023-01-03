@@ -144,15 +144,23 @@
               <div class="col-12">
                 <div class="card card-primary">
                   <div class="card-body">
-                    <h5 class="text-primary">日志文件.log</h5>
-                    <textarea id="textarea_log" class="form-control" style="height: 345px;">{{ logs }}</textarea>
+                    <h5 class="text-primary">命令行日志 run.log</h5>
+                    <textarea id="textarea_run_log" class="form-control" style="height: 345px;">{{ run_logs }}</textarea>
                   </div>
                 </div>
               </div>
               <div class="col-12">
                 <div class="card card-primary">
                   <div class="card-body">
-                    <h5 class="text-primary">状态文件.sta</h5>
+                    <h5 class="text-primary">求解日志 {{ status['job'] }}.log</h5>
+                    <textarea id="textarea_log" class="form-control" style="height: 369px;">{{ logs }}</textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary">
+                  <div class="card-body">
+                    <h5 class="text-primary">状态文件 {{ status['job'] }}.sta</h5>
                     <div class="card-body table-responsive p-0" style="height: 369px;">
                       <table class="table table-sm table-hover table-head-fixed text-nowrap" id="table_sta">
                         <thead>
@@ -236,6 +244,9 @@
 <script type="text/javascript">
 
   var textarea_log = document.getElementById('textarea_log');
+  textarea_log.scrollTop = textarea_log.scrollHeight;
+
+  var textarea_log = document.getElementById('textarea_run_log');
   textarea_log.scrollTop = textarea_log.scrollHeight;
 
   // var table_sta = document.getElementById('table_sta');

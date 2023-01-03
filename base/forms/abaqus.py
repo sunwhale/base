@@ -19,7 +19,7 @@ class UploadForm(FlaskForm):
 
 class ProjectForm(FlaskForm):
     name = StringField('项目名称', validators=[DataRequired(), Length(1, 60)])
-    descript = TextAreaField('项目描述')
+    descript = TextAreaField('项目描述', render_kw={'rows': 12})
     job = StringField('缺省算例名', default='Job-1', validators=[DataRequired(), Length(1, 128)])
     user = StringField('缺省user文件', default='user.for')
     cpus = IntegerField('缺省算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 16)])

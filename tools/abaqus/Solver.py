@@ -6,8 +6,8 @@
 import json
 import os
 import subprocess
+import threading
 import glob
-import os
 
 
 ABAQUS = os.getenv('ABAQUS')
@@ -39,6 +39,19 @@ def is_number(s):
         pass
 
     return False
+
+
+def write_log(proc, logfile):
+    f = open(logfile, 'w', encoding='utf-8')
+    for line in iter(proc.stdout.readline, b''):
+        log = line.decode('UTF-8').replace('\n','')
+        f.write(log)
+        f.flush()
+        if not subprocess.Popen.poll(proc) is None:
+            if line == "":
+                break
+    proc.stdout.close()
+    f.close()
 
 
 class Solver:
@@ -98,7 +111,10 @@ class Solver:
             cmd = '%s job=%s cpus=%s ask=off' % (ABAQUS, self.job, self.cpus)
         else:
             cmd = '%s job=%s user=%s cpus=%s ask=off' % (ABAQUS_FORTRAN, self.job, self.user, self.cpus)
-        proc = subprocess.Popen(cmd, shell=True)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        logfile = 'run.log'
+        thread = threading.Thread(target=write_log, args=(proc, logfile))
+        thread.start()
         return proc
 
     def clear(self):
@@ -188,6 +204,15 @@ class Solver:
         else:
             para = ''
         return para
+
+    def get_run_log(self):
+        log_file = os.path.join(self.path, 'run.log')
+        if os.path.exists(log_file):
+            with open(log_file, 'r') as f:
+                logs = f.read()
+        else:
+            logs = ''
+        return logs
 
     def save_parameters(self, para):
         para_file = os.path.join(self.path, 'parameters.inp')

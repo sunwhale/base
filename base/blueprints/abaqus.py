@@ -367,6 +367,7 @@ def view_job(project_id, job_id):
         s.read_msg()
         sta = s.get_sta()
         logs = s.get_log()
+        run_logs = s.get_run_log()
         para = s.get_parameters()
         form = ParameterForm()
         if form.validate_on_submit():
@@ -379,7 +380,7 @@ def view_job(project_id, job_id):
         files = files_in_dir(job_path)
         solver_status = s.solver_status()
         status = get_job_status(abaqus_path, project_id, job_id)
-        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status, logs=logs[-5000:], sta=sta[-100:], form=form, solver_status=solver_status, files=files)
+        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status, logs=logs[-5000:], sta=sta[-100:], run_logs=run_logs, form=form, solver_status=solver_status, files=files)
     else:
         abort(404)
 
