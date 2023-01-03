@@ -198,10 +198,11 @@ def create_abaqus(model_id):
     model_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(model_id))
     submodels_path = os.path.join(model_path, 'submodels')
     meshes_path = os.path.join(model_path, 'meshes')
+    templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
     form_abaqus = ABAQUSForm()
     form_upload = UploadForm()
     form_template = TemplateForm()
-    template_dict = templates_detail(current_app.config['ABAQUS_TEMPLATE_PATH'])
+    template_dict = templates_detail(templates_path)
     template_list = []
     for template in template_dict['data']:
         template_list.append('%s_%s' % (template['template_id'], template['name']))
@@ -217,10 +218,16 @@ def create_abaqus(model_id):
         if form_upload.validate_on_submit():
             f = form_upload.filename.data
             f.save(os.path.join(abaqus_path, f.filename))
-            return redirect(url_for('packing.create_abaqus', model_id=model_id, form_upload=form_upload))
+            return redirect(url_for('packing.create_abaqus', model_id=model_id))
 
         if form_template.validate_on_submit():
-            print(form_template.name.data)
+            template_id = int(form_template.name.data.split('_')[0])
+            template_path = os.path.join(templates_path, str(template_id))
+            files = files_in_dir(template_path)
+            for file in files:
+                shutil.copy(os.path.join(template_path, file['name']),
+                            os.path.join(abaqus_path, file['name']))  
+            return redirect(url_for('packing.create_abaqus', model_id=model_id))
 
         if os.path.exists(abaqus_path):
             files = files_in_dir(abaqus_path)

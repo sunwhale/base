@@ -93,7 +93,7 @@
                       <div class="col-12">
                         <form action="" method="post" class="form" role="form">
                           {{ form.csrf_token() }}
-                          {{ render_field(form.para, style="height: 266px;") }}
+                          {{ render_field(form.para, style="height: 200px;") }}
                           {{ render_field(form.submit, button_style='btn btn-primary') }}
                         </form>
                       </div>
@@ -142,53 +142,60 @@
           <div class="col-6">
             <div class="column">
               <div class="col-12">
-                <div class="card card-primary">
+                <!-- Custom Tabs -->
+                <div class="card">
+                  <div class="card-header d-flex p-0">
+                    <h3 class="card-title p-3">求解状态</h3>
+                    <ul class="nav nav-pills ml-auto p-2">
+                      <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">状态文件 {{ status['job'] }}.sta</a></li>
+                      <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
+                      <li class="nav-item"><a class="nav-link" href="#tab_3" data-toggle="tab">求解日志 {{ status['job'] }}.log</a></li>
+                    </ul>
+                  </div><!-- /.card-header -->
                   <div class="card-body">
-                    <h5 class="text-primary">命令行日志 run.log</h5>
-                    <textarea id="textarea_run_log" class="form-control" style="height: 345px;">{{ run_logs }}</textarea>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12">
-                <div class="card card-primary">
-                  <div class="card-body">
-                    <h5 class="text-primary">求解日志 {{ status['job'] }}.log</h5>
-                    <textarea id="textarea_log" class="form-control" style="height: 369px;">{{ logs }}</textarea>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12">
-                <div class="card card-primary">
-                  <div class="card-body">
-                    <h5 class="text-primary">状态文件 {{ status['job'] }}.sta</h5>
-                    <div class="card-body table-responsive p-0" style="height: 369px;">
-                      <table class="table table-sm table-hover table-head-fixed text-nowrap" id="table_sta">
-                        <thead>
-                          <tr>
-                            <th width=10% style="vertical-align: middle;text-align: center;">Step</th>
-                            <th width=10% style="vertical-align: middle;text-align: center;">Increment</th>
-                            <th width=10% style="vertical-align: middle;text-align: center;">Att</th>
-                            <th width=10% style="vertical-align: middle;text-align: center;">Severe<br>Discon<br>Iter</th>
-                            <th width=10% style="vertical-align: middle;text-align: center;">Equil<br>Iter</th>
-                            <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Iter</th>
-                            <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Time/Freq</th>
-                            <th width=10% style="vertical-align: middle;text-align: center;">Step<br>Time/LPF</th>
-                            <th width=10% style="vertical-align: middle;text-align: center;">Time/LPF<br>Inc</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for row in sta %}
-                          <tr style="vertical-align: middle;text-align: center;">
-                            {% for item in row %}
-                              <td> {{ item }} </td>
-                            {% endfor %}
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
+                    <div class="tab-content">
+                      <div class="tab-pane active" id="tab_1">
+                        <div class="card-body table-responsive p-0" style="height: 319.5px;">
+                          <table class="table table-sm table-hover table-head-fixed text-nowrap" id="table_sta">
+                            <thead>
+                              <tr>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Step</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Increment</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Att</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Severe<br>Discon<br>Iter</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Equil<br>Iter</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Iter</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Time/Freq</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Step<br>Time/LPF</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Time/LPF<br>Inc</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for row in sta %}
+                              <tr style="vertical-align: middle;text-align: center;">
+                                {% for item in row %}
+                                  <td> {{ item }} </td>
+                                {% endfor %}
+                              </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <!-- /.tab-pane -->
+                      <div class="tab-pane" id="tab_2">
+                        <textarea id="textarea_run_log" class="form-control" style="height: 319.5px;">{{ run_logs }}</textarea>
+                      </div>
+                      <!-- /.tab-pane -->
+                      <div class="tab-pane" id="tab_3">
+                        <textarea id="textarea_log" class="form-control" style="height: 319.5px;">{{ logs }}</textarea>
+                      </div>
+                      <!-- /.tab-pane -->
                     </div>
-                  </div>
+                    <!-- /.tab-content -->
+                  </div><!-- /.card-body -->
                 </div>
+                <!-- ./card -->
               </div>
               <div class="col-12">
                 <div class="card card-primary">

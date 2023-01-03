@@ -33,10 +33,16 @@
                   </div>
                   <div class="col-6">
                     <h5 class="text-primary">从模板导入文件</h5>
-                    <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+                    <form action="" method="post" class="form-horizontal" enctype="multipart/form-data" role="form">
                       {{ form_template.csrf_token() }}
-                      {{ render_form_row([form_template.name]) }}
-                      {{ render_field(form_template.submit, button_style='btn btn-sm btn-primary') }}
+                      <div class="form-row">
+                        <div class="col-10">
+                          {{ form_template.name(class_="form-control") }}
+                        </div>
+                        <div class="col-2">
+                          {{ form_template.submit(class_="btn btn-primary") }}
+                        </div>
+                      </div>
                     </form>
 
                     <p></p>

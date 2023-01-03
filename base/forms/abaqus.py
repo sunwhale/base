@@ -23,7 +23,7 @@ class ProjectForm(FlaskForm):
     job = StringField('缺省算例名', default='Job-1', validators=[DataRequired(), Length(1, 128)])
     user = StringField('缺省user文件', default='user.for')
     cpus = IntegerField('缺省算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 16)])
-    submit = SubmitField(u'提交')
+    submit = SubmitField('提交')
 
 
 class TemplateForm(ProjectForm):
@@ -34,12 +34,12 @@ class JobForm(FlaskForm):
     job = StringField('算例名', default='Job-1', validators=[DataRequired(), Length(1, 128)])
     user = StringField('算例user文件', default='user.for')
     cpus = IntegerField('算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 16)])
-    submit = SubmitField(u'提交')
+    submit = SubmitField('提交')
 
 
 class ParameterForm(FlaskForm):
     para = TextAreaField('parameters.inp')
-    submit = SubmitField(u'保存')
+    submit = SubmitField('保存')
 
 
 class FigureSettingFrom(FlaskForm):
@@ -49,12 +49,9 @@ class FigureSettingFrom(FlaskForm):
     legend = SelectField('legend', coerce=str)
     plotState = SelectField('plotState', coerce=str)
     uniformScaleFactor = FloatField('uniformScaleFactor', default=1.0, validators=[DataRequired()])
-    # step = StringField('step', default='Step-1', validators=[DataRequired()])
     step = SelectField('step', coerce=str)
     frame = IntegerField('frame', default=-1, validators=[DataRequired()])
-    # variableLabel = StringField('variableLabel', default='S', validators=[DataRequired()])
     variableLabel = SelectField('variableLabel', coerce=str)
-    # refinement = StringField('refinement', default="(INVARIANT, 'Mises')", validators=[DataRequired()])
     refinement = SelectField('refinement', coerce=str)
     outputPosition = SelectField('outputPosition', coerce=str)
     visibleEdges = SelectField('visibleEdges', coerce=str)
@@ -77,7 +74,7 @@ class FigureSettingFrom(FlaskForm):
     endFrame = IntegerField('endFrame', default=-1, validators=[DataRequired()])
     fps = IntegerField('fps', default=12, validators=[DataRequired()])
 
-    submit = SubmitField(u'提交')
+    submit = SubmitField('提交')
 
     def __init__(self, *args, **kwargs):
         super(FigureSettingFrom, self).__init__(*args, **kwargs)
