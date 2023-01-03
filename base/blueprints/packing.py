@@ -17,13 +17,13 @@ from psic.create_submodel import create_submodel as psic_create_submodel
 from psic.packing_spheres_in_cube import create_model as psic_create_model
 
 from base.forms.packing import (MeshForm, PackingForm, PostForm,
-                                SubmodelForm, UploadForm, ABAQUSForm)
+                                SubmodelForm, UploadForm, ABAQUSForm, TemplateForm)
 from base.global_var import create_thread_id, exporting_threads
 from tools.common import make_dir, dump_json, load_json
 from tools.dir_status import (create_id, format_size, get_mesh_status,
                               get_model_status, get_submodel_status,
                               packing_models_detail, packing_submodels_detail,
-                              sub_dirs_int, files_in_dir)
+                              sub_dirs_int, files_in_dir, templates_detail)
 
 packing_bp = Blueprint('packing', __name__)
 
@@ -200,6 +200,13 @@ def create_abaqus(model_id):
     meshes_path = os.path.join(model_path, 'meshes')
     form_abaqus = ABAQUSForm()
     form_upload = UploadForm()
+    form_template = TemplateForm()
+    template_dict = templates_detail(current_app.config['ABAQUS_TEMPLATE_PATH'])
+    template_list = []
+    for template in template_dict['data']:
+        template_list.append('%s_%s' % (template['template_id'], template['name']))
+    form_template.name.choices = template_list
+
     if os.path.exists(model_path) and os.path.exists(meshes_path):
         is_create = False
 
@@ -212,12 +219,15 @@ def create_abaqus(model_id):
             f.save(os.path.join(abaqus_path, f.filename))
             return redirect(url_for('packing.create_abaqus', model_id=model_id, form_upload=form_upload))
 
+        if form_template.validate_on_submit():
+            print(form_template.name.data)
+
         if os.path.exists(abaqus_path):
             files = files_in_dir(abaqus_path)
         else:
             files = []
 
-        if form_abaqus.validate_on_submit() and not form_upload.validate_on_submit():
+        if form_abaqus.validate_on_submit() and not form_upload.validate_on_submit() and not form_template.validate_on_submit():
             projects_path = current_app.config['ABAQUS_PATH']
             if os.path.exists(abaqus_msg_file):
                 abaqus_message = load_json(abaqus_msg_file)
@@ -291,13 +301,13 @@ def create_abaqus(model_id):
             form_abaqus.descript.data = abaqus_message['descript']
         form_abaqus.name.data = '%s号球体填充主模型关联项目' % model_id
 
-        return render_template('packing/create_abaqus.html', model_id=model_id, form_abaqus=form_abaqus, form_upload=form_upload, files=files)
+        return render_template('packing/create_abaqus.html', model_id=model_id, form_abaqus=form_abaqus, form_upload=form_upload, form_template=form_template, files=files)
     else:
         if not os.path.exists(model_path):
             flash('主模型%s不存在。' % model_id, 'warning')
         else:
             flash('尚未生成有限元网格。', 'warning')
-        return render_template('packing/create_abaqus.html', model_id=model_id, form_abaqus=form_abaqus, form_upload=form_upload)
+        return render_template('packing/create_abaqus.html', model_id=model_id, form_abaqus=form_abaqus, form_upload=form_upload, form_template=form_template)
 
 
 @packing_bp.route('/manage_models/')

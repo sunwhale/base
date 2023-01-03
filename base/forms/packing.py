@@ -57,4 +57,13 @@ class ABAQUSForm(FlaskForm):
     job = StringField('缺省算例名', default='Job-1')
     user = StringField('缺省user文件', default='user.for')
     cpus = IntegerField('缺省算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 16)])
-    submit = SubmitField(u'提交')
+    submit = SubmitField('提交')
+
+
+class TemplateForm(FlaskForm):
+    name = SelectField('选择模板', coerce=str)
+    submit = SubmitField('导入')
+
+    def __init__(self, *args, **kwargs):
+        super(TemplateForm, self).__init__(*args, **kwargs)
+        self.name.choices = ['0_模板名称']

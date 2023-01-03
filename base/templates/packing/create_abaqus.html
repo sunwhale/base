@@ -32,8 +32,15 @@
                     </form>
                   </div>
                   <div class="col-6">
-                    <h5 class="text-primary">上传文件</h5>
+                    <h5 class="text-primary">从模板导入文件</h5>
+                    <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+                      {{ form_template.csrf_token() }}
+                      {{ render_form_row([form_template.name]) }}
+                      {{ render_field(form_template.submit, button_style='btn btn-sm btn-primary') }}
+                    </form>
 
+                    <p></p>
+                    <h5 class="text-primary">上传文件</h5>
                     <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
                       {{ form_upload.csrf_token }}
                       <div class="form-group">
@@ -41,6 +48,7 @@
                       </div>
                     </form>
 
+                    <p></p>
                     <h5 class="text-primary">项目文件</h5>
                     <table class="table table-sm table-hover">
                       <thead>
