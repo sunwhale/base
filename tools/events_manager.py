@@ -15,6 +15,9 @@ from tools.abaqus.Postproc import Postproc
 from tools.events_new import get_events_new
 
 
+MAX_CPUS = int(os.getenv('MAX_CPUS'))
+
+
 def dump_json(file_name, data):
     """
     Write JSON data to file.
@@ -46,7 +49,7 @@ class EventManager:
         self.__thread = Thread(target=self.__run)
         self.count = 0
         self.thread_count = 0
-        self.__max_cpus = 8
+        self.__max_cpus = MAX_CPUS
         self.__used_cpus = 0
         self.__events_running = []
         self.__events_done = []
