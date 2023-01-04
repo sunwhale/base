@@ -17,7 +17,7 @@ from psic.create_submodel import create_submodel as psic_create_submodel
 from psic.packing_spheres_in_cube import create_model as psic_create_model
 
 from base.forms.packing import (MeshForm, PackingForm, PostForm,
-                                SubmodelForm, UploadForm, ABAQUSForm, TemplateForm)
+                                SubmodelForm, UploadForm, ABAQUSForm, ImportTemplateForm)
 from base.global_var import create_thread_id, exporting_threads
 from tools.common import make_dir, dump_json, load_json
 from tools.dir_status import (create_id, format_size, get_mesh_status,
@@ -201,7 +201,7 @@ def create_abaqus(model_id):
     templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
     form_abaqus = ABAQUSForm()
     form_upload = UploadForm()
-    form_template = TemplateForm()
+    form_template = ImportTemplateForm()
     template_dict = templates_detail(templates_path)
     template_list = []
     for template in template_dict['data']:
@@ -218,6 +218,7 @@ def create_abaqus(model_id):
         if form_upload.validate_on_submit():
             f = form_upload.filename.data
             f.save(os.path.join(abaqus_path, f.filename))
+            flash('上传文件%s成功。' % f.filename, 'success')
             return redirect(url_for('packing.create_abaqus', model_id=model_id))
 
         if form_template.validate_on_submit():
@@ -226,7 +227,8 @@ def create_abaqus(model_id):
             files = files_in_dir(template_path)
             for file in files:
                 shutil.copy(os.path.join(template_path, file['name']),
-                            os.path.join(abaqus_path, file['name']))  
+                            os.path.join(abaqus_path, file['name']))
+                flash('从模板导入文件%s成功。' % file['name'], 'success')
             return redirect(url_for('packing.create_abaqus', model_id=model_id))
 
         if os.path.exists(abaqus_path):

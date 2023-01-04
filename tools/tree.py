@@ -125,7 +125,7 @@ def odb_json_to_ztree(odb_dict, icon_path):
                      "icon": icon_path + 'icoR_stepSmall.png'})
 
         parent_id[2].append(len(tree))
-        max_len = 16
+        max_len = 8
         if len(step['frames']) <= max_len:
             for frame in step['frames']:
                 tree.append({"id": len(tree)+1,
@@ -340,10 +340,23 @@ def odb_json_to_ztree(odb_dict, icon_path):
 
 
 if __name__ == '__main__':
-    npz = np.load('F:\\Github\\base\\tools\\abaqus\\Job-1.npz',
-                  allow_pickle=True, encoding='latin1')
-    data = npz['data'][()]
-    time = npz['time']
+    # npz = np.load('F:\\Github\\base\\tools\\abaqus\\Job-1.npz',
+    #               allow_pickle=True, encoding='latin1')
+    # data = npz['data'][()]
+    # time = npz['time']
 
-    ztree = json_to_ztree(data)
-    print(data['PART-1-1.COHESIVESEAM-1-ELEMENTS']['elements'][0])
+    # ztree = json_to_ztree(data)
+    # print(data['PART-1-1.COHESIVESEAM-1-ELEMENTS']['elements'][0])
+    
+    odb_json_file = 'F:\\Github\\base\\files\\abaqus\\2\\1\\prescan_odb.json'
+    with open(odb_json_file, 'r', encoding='utf-8') as f:
+        odb_dict = json.load(f)
+    print(list(odb_dict['steps'].keys()))
+    print(list(odb_dict['steps']['Step-1']['frames'][0]['fieldOutputs'].keys()))
+    
+    fieldOutputs = odb_dict['steps']['Step-1']['frames'][0]['fieldOutputs']
+    
+    for key in fieldOutputs.keys():
+        print(key)
+        print(fieldOutputs[key]['validInvariants'])
+        print(fieldOutputs[key]['componentLabels'])

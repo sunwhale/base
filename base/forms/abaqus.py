@@ -30,6 +30,15 @@ class TemplateForm(ProjectForm):
     pass
 
 
+class ImportTemplateForm(FlaskForm):
+    name = SelectField('选择模板', coerce=str)
+    submit = SubmitField('导入')
+
+    def __init__(self, *args, **kwargs):
+        super(ImportTemplateForm, self).__init__(*args, **kwargs)
+        self.name.choices = ['0_模板名称']
+
+        
 class JobForm(FlaskForm):
     job = StringField('算例名', default='Job-1', validators=[DataRequired(), Length(1, 128)])
     user = StringField('算例user文件', default='user.for')

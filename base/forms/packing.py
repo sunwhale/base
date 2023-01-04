@@ -21,7 +21,7 @@ class PackingForm(FlaskForm):
     max_iter = IntegerField('计算球体碰撞的最大迭代次数', default=1000, validators=[DataRequired(), NumberRange(0, 1024)])
     size = StringField('计算域尺寸，毫米', default='[[0,1],[0,1]]', validators=[DataRequired()])
     rayleigh_para = DecimalField('球体直径瑞利分布参数，微米', default=20.32, validators=[DataRequired(), NumberRange(0, 100)])
-    num_ball = IntegerField('填充球体数量', default=5000, validators=[DataRequired(), NumberRange(0, 10000)])
+    num_ball = IntegerField('填充球体数量', default=1200, validators=[DataRequired(), NumberRange(0, 10000)])
     rad_max = DecimalField('最大球体直径，微米', default=100, validators=[DataRequired(), NumberRange(0, 1000)])
     rad_min = DecimalField('最小球体直径，微米', default=10, validators=[DataRequired(), NumberRange(0, 1000)])
     submit = SubmitField(u'提交')
@@ -35,8 +35,8 @@ class SubmodelForm(FlaskForm):
 
 class MeshForm(FlaskForm):
     gap = DecimalField('两圆间距，gap', default=0.0, validators=[NumberRange(0, 0.1)])
-    node_shape = StringField('划分网格节点维度',default='[128,128]',validators=[DataRequired()])
-    element_type = StringField('单元类型，CPE4/C3D8等',default='CPE4T',validators=[DataRequired()])
+    node_shape = StringField('划分网格节点维度',default='[129,129]',validators=[DataRequired()])
+    element_type = StringField('单元类型，CPE4/CPS4/C3D8等',default='CPS4T',validators=[DataRequired()])
     submit = SubmitField('提交')
 
 
@@ -60,10 +60,10 @@ class ABAQUSForm(FlaskForm):
     submit = SubmitField('提交')
 
 
-class TemplateForm(FlaskForm):
+class ImportTemplateForm(FlaskForm):
     name = SelectField('选择模板', coerce=str)
     submit = SubmitField('导入')
 
     def __init__(self, *args, **kwargs):
-        super(TemplateForm, self).__init__(*args, **kwargs)
+        super(ImportTemplateForm, self).__init__(*args, **kwargs)
         self.name.choices = ['0_模板名称']

@@ -12,7 +12,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, TemplateForm, UploadForm, FigureSettingFrom
+from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm, FigureSettingFrom
 from tools.abaqus.Solver import Solver
 from tools.abaqus.Postproc import Postproc
 from tools.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status,
@@ -172,13 +172,32 @@ def project_jobs_status(project_id):
 def view_project(project_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     project_path = os.path.join(abaqus_path, str(project_id))
+    templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
     s = Solver(project_path)
     parameters = s.parameter_keys()
-    form = UploadForm()
-    if form.validate_on_submit():
-        f = form.filename.data
+    form_upload = UploadForm()
+    form_template = ImportTemplateForm()
+    template_dict = templates_detail(templates_path)
+    template_list = []
+    for template in template_dict['data']:
+        template_list.append('%s_%s' % (template['template_id'], template['name']))
+    form_template.name.choices = template_list
+    if form_upload.validate_on_submit():
+        f = form_upload.filename.data
         f.save(os.path.join(project_path, f.filename))
-        return redirect(url_for('abaqus.view_project', project_id=project_id, parameters=parameters, form=form))
+        flash('上传文件%s成功。' % f.filename, 'success')
+        return redirect(url_for('abaqus.view_project', project_id=project_id))
+    
+    if form_template.validate_on_submit():
+        template_id = int(form_template.name.data.split('_')[0])
+        template_path = os.path.join(templates_path, str(template_id))
+        files = files_in_dir(template_path)
+        for file in files:
+            shutil.copy(os.path.join(template_path, file['name']),
+                        os.path.join(project_path, file['name']))
+            flash('从模板导入文件%s成功。' % file['name'], 'success')
+        return redirect(url_for('abaqus.view_project', project_id=project_id))
+
     if request.method == 'POST':
         data = request.form.to_dict()
         print(data)
@@ -258,7 +277,7 @@ def view_project(project_id):
     if os.path.exists(project_path):
         status = get_project_status(abaqus_path, project_id)
         files = files_in_dir(project_path)
-        return render_template('abaqus/view_project.html', project_id=project_id, status=status, files=files, parameters=parameters, form=form)
+        return render_template('abaqus/view_project.html', project_id=project_id, status=status, files=files, parameters=parameters, form_upload=form_upload, form_template=form_template)
     else:
         abort(404)
 
@@ -726,7 +745,8 @@ def view_template(template_id):
     if form.validate_on_submit():
         f = form.filename.data
         f.save(os.path.join(template_path, f.filename))
-        return redirect(url_for('abaqus.view_template', template_id=template_id, form=form))
+        flash('上传文件%s成功。' % f.filename, 'success')
+        return redirect(url_for('abaqus.view_template', template_id=template_id))
     if os.path.exists(template_path):
         status = get_template_status(templates_path, template_id)
         files = files_in_dir(template_path)
