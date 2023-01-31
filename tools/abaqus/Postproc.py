@@ -69,7 +69,7 @@ class Postproc:
         self.job = job
 
     def read_msg(self):
-        msg_file = os.path.join(self.path, '.msg')
+        msg_file = os.path.join(self.path, '.job_msg')
         try:
             message = load_json(msg_file)
             self.job = message['job']

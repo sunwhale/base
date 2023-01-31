@@ -473,6 +473,7 @@ def prescan_odb(project_id, job_id):
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if os.path.exists(job_path):
         p = Postproc(job_path)
+        p.read_msg()
         if p.has_odb():
             proc = p.prescan_odb()
             with open(os.path.join(job_path, '.prescan_status'), 'w', encoding='utf-8') as f:
@@ -491,6 +492,7 @@ def odb_to_npz(project_id, job_id):
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     if os.path.exists(job_path):
         p = Postproc(job_path)
+        p.read_msg()
         if p.has_odb() and p.check_setting_files():
             proc = p.odb_to_npz()
             with open(os.path.join(job_path, '.odb_to_npz_status'), 'w', encoding='utf-8') as f:
@@ -540,6 +542,7 @@ def odb_to_npz_data(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
     p = Postproc(job_path)
+    p.read_msg()
     npz_file = os.path.join(job_path, str(p.job) + '.npz')
     if os.path.exists(npz_file):
         npz = np.load(npz_file, allow_pickle=True, encoding='latin1')
@@ -562,6 +565,7 @@ def print_figure(project_id, job_id):
         subpaths = subpaths_in_dir(job_path)
         png_files = [f for f in files if (f['name'].split('.')[-1] == 'png' or f['name'].split('.')[-1] == 'gif')]
         p = Postproc(job_path)
+        p.read_msg()
         prescan_odb_json_file = os.path.join(job_path, 'prescan_odb.json')
         if p.has_odb():
             if os.path.exists(prescan_odb_json_file):
