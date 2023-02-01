@@ -1,0 +1,44 @@
+{% extends 'layout.html' %}
+
+{% block title %}常用链接{% endblock title %}
+
+{% block pageheader %}常用链接{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item">常用链接</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-body">
+                MobaXterm SSH客户端：<a href="https://mobaxterm.mobatek.net/" target="_blank">https://mobaxterm.mobatek.net/</a><br>
+                Dassault 帮助文档：<a href="https://help.3ds.com/" target="_blank">https://help.3ds.com/</a><br>
+                BootCDN 开源项目CDN加速服务：<a href="https://www.bootcdn.cn/" target="_blank">https://www.bootcdn.cn/</a><br>
+                Bootstrap-Flask 帮助文档：<a href="https://bootstrap-flask.readthedocs.io/en/stable/" target="_blank">https://bootstrap-flask.readthedocs.io/en/stable/</a><br>
+                DAMASK官网：<a href="https://damask.mpie.de/" target="_blank">https://damask.mpie.de/</a><br>
+                Neper: Polycrystal Generation and Meshing：<a href="https://neper.info/" target="_blank">https://neper.info/</a><br>
+                MTEX：<a href="https://mtex-toolbox.github.io/" target="_blank">https://mtex-toolbox.github.io/</a><br>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock content %}
+
+{% block script %}
+{% if env['service'] == 'server' %}
+
+{% else %}
+
+{% endif %}
+<script type="text/javascript">
+  document.getElementById("others").className = "nav-item menu-open"
+  document.getElementById("links").className = "nav-link active"
+</script>
+{% endblock script %}

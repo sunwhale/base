@@ -271,6 +271,12 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
+                <a href="{{ url_for('tools.links') }}" target="_blank" class="nav-link" id="links">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>常用链接</p>
+                </a>
+              </li>
+              <li class="nav-item">
                 <a href="https://sharelatex.cstcloud.cn/" target="_blank" class="nav-link" id="sharelatex">
                   <i class="far fa-circle nav-icon"></i>
                   <p>Sharelatex</p>
@@ -278,7 +284,7 @@
               </li>
               {% if env['service'] == 'server' %}
               <li class="nav-item">
-                <a href="https://jupyter.sunjingyu.com:8080/" target="_blank" class="nav-link" id="sharelatex">
+                <a href="https://jupyter.sunjingyu.com:8080/" target="_blank" class="nav-link" id="jupyter">
                   <i class="far fa-circle nav-icon"></i>
                   <p>JupyterLab</p>
                 </a>
