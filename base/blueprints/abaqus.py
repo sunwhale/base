@@ -12,7 +12,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm, FigureSettingFrom
+from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm, FigureSettingFrom, OdbForm
 from tools.abaqus.Solver import Solver
 from tools.abaqus.Postproc import Postproc
 from tools.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status,
@@ -23,6 +23,7 @@ from tools.common import make_dir, dump_json, load_json
 from base.global_var import event_source
 from tools.events_new import update_events_new
 from tools.make_gif import make_gif
+from tools.read_prescan import read_prescan
 
 
 abaqus_bp = Blueprint('abaqus', __name__)
@@ -822,6 +823,87 @@ def delete_template_file(template_id, filename):
     return redirect(url_for('.view_template', template_id=template_id))
 
 
+@abaqus_bp.route('/postproc', methods=['GET', 'POST'])
+@login_required
+def postproc():
+    abaqus_post_path = current_app.config['ABAQUS_POST_PATH']
+    setting_file = os.path.join(abaqus_post_path, 'postproc.json')
+    prescan_status_file = os.path.join(abaqus_post_path, '.prescan_status')
+    odb_json_file = os.path.join(abaqus_post_path, 'prescan_odb.json')
+
+    if os.path.exists(setting_file):
+        message = load_json(setting_file)
+    else:
+        message = {}
+
+    if os.path.exists(prescan_status_file):
+        with open(prescan_status_file, 'r', encoding='utf-8') as f:
+            prescan_status = f.read()
+    else:
+        prescan_status = 'None'
+
+    form_odb = OdbForm()
+    if form_odb.validate_on_submit():
+        odb_name = form_odb.odb.data
+        message['odb_name'] = form_odb.odb.data
+        job_name = odb_name.split('.')[0]
+        if os.path.exists(odb_name):
+            p = Postproc(abaqus_post_path, job=job_name)
+            proc = p.prescan_odb()
+            with open(os.path.join(abaqus_post_path, '.prescan_status'), 'w', encoding='utf-8') as f:
+                f.write('Submitting')
+            flash('预扫描开始', 'success')
+            dump_json(setting_file, message)
+            
+            return redirect(request.referrer)
+        else:
+            if os.path.exists(odb_json_file):
+                os.remove(odb_json_file)
+            flash('%s不存在。' % odb_name, 'warning')
+            
+    if request.method == 'POST':
+        data = request.form.to_dict()
+        print(data)
+
+    if os.path.exists(odb_json_file):
+        variables, regions, frames = read_prescan(odb_json_file)
+    else:
+        variables = {}
+        regions = []
+        frames = []
+
+    return render_template('abaqus/postproc.html', form_odb=form_odb, filename=odb_json_file, variables=variables, regions=regions, frames=frames)
+
+
+@abaqus_bp.route('/postproc_prescan_odb_data/<path:filename>', methods=['GET', 'POST'])
+@login_required
+def postproc_prescan_odb_data(filename):
+    if os.path.exists(filename):
+        prescan_odb_dict = load_json(filename)
+        ztree = odb_json_to_ztree(prescan_odb_dict, url_for(
+            'static', filename='zTree/icons/'))
+    else:
+        ztree = [{"id": 1, "pId": 0, "name": "未进行预扫描"}]
+    return ztree
+
+
+@abaqus_bp.route('/postproc_prescan_odb/<path:odbname>')
+@login_required
+def postproc_prescan_odb(odbname):
+    dirname = os.path.dirname(odbname)
+    basename = os.path.basename(odbname)
+    jobname = basename.split('.')[0]
+    if os.path.exists(odbname):
+        p = Postproc(dirname, job=jobname)
+        proc = p.prescan_odb()
+        with open(os.path.join(job_path, '.prescan_status'), 'w', encoding='utf-8') as f:
+            f.write('Submitting')
+            flash('预扫描开始', 'success')
+        return redirect(request.referrer)
+    else:
+        abort(404)
+
+
 @abaqus_bp.route('/prescan')
 @login_required
 def prescan():
@@ -831,7 +913,7 @@ def prescan():
 @abaqus_bp.route('/prescan_data', methods=['GET', 'POST'])
 @login_required
 def prescan_data():
-    odb_json_file = 'F:\\Github\\base\\files\\abaqus\\2\\1\\prescan_odb.json'
+    odb_json_file = 'H:\\files\\abaqus\\1\\1\\prescan_odb.json'
     with open(odb_json_file, 'r', encoding='utf-8') as f:
         odb_dict = json.load(f)
     ztree = json_to_ztree(odb_dict)

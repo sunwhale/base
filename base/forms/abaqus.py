@@ -51,6 +51,11 @@ class ParameterForm(FlaskForm):
     submit = SubmitField('保存')
 
 
+class OdbForm(FlaskForm):
+    odb = StringField('ODB文件', default='', validators=[DataRequired()], render_kw={'class': 'form-control', 'placeholder': "输入ODB文件路径，例如：abaqus/1/1/Job-1.odb"})
+    submit = SubmitField('开始预扫描', render_kw={'class': 'btn btn-info btn-flat'})
+
+
 class FigureSettingFrom(FlaskForm):
     width = FloatField('width', default=200.0)
     height = FloatField('height', default=200.0)

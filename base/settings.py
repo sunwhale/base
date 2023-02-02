@@ -30,6 +30,7 @@ class BaseConfig:
     UPLOAD_PATH = os.path.join(FILE_PATH, 'uploads')
     UPLOAD_IMG_PATH = os.path.join(FILE_PATH, 'uploads', 'imgs')
     ABAQUS_PATH = os.path.join(FILE_PATH, 'abaqus')
+    ABAQUS_POST_PATH = os.path.join(FILE_PATH, 'abaqus_post')
     ABAQUS_TEMPLATE_PATH = os.path.join(FILE_PATH, 'abaqus_template')
     QUEUE_PATH = os.path.join(FILE_PATH, 'queue')
     EVENTS_NEW = os.path.join(FILE_PATH, 'queue', '.events_new')
