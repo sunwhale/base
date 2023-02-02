@@ -1,0 +1,223 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}ABAQUS后处理{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='zTree/css/zTreeStyle/zTreeStyle.css') }}">
+{% endblock css %}
+
+{% block pageheader %}ABAQUS后处理{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item active">ABAQUS后处理</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <!-- Custom Tabs -->
+            <div class="card">
+              <div class="card-header d-flex p-0">
+                <h3 class="card-title p-3">ABAQUS后处理</h3>
+                <ul class="nav nav-pills ml-auto p-2">
+                  <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">ODB预扫描</a></li>
+                  <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">Variables</a></li>
+                  <li class="nav-item"><a class="nav-link" href="#tab_3" data-toggle="tab">Frames</a></li>
+                  <li class="nav-item"><a class="nav-link" href="#tab_4" data-toggle="tab">Regions</a></li>
+                  <li class="nav-item"><a class="nav-link" href="#tab_5" data-toggle="tab">生成配置文件</a></li>
+                </ul>
+              </div><!-- /.card-header -->
+              <div class="card-body">
+                <div class="tab-content">
+                  <div class="tab-pane active" id="tab_1">
+                    <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+                      {{ form_odb.csrf_token }}
+                      <div class="input-group">
+                        {{ form_odb.odb }}
+                        <span class="input-group-append">
+                          {{ form_odb.submit }}
+                        </span>
+                      </div>
+                    </form>
+                    <p></p>
+                    <ul id="ztree-odb" class="ztree"></ul>
+                  </div>
+
+                  <div class="tab-pane" id="tab_2">
+                    <table class="table table-sm table-hover">
+                      <thead>
+                        <tr>
+                          <th>Pick <input type="checkbox" class="checkAll_var"></th>
+                          <th>Name</th>
+                          <th>Description</th>
+                          <th>Type</th>
+                          <th>Position</th>
+                          <th>Components</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for key, var in variables.items() %}
+                        <tr>
+                          <td> <input type="checkbox" class="checkOne_var" id={{key}}> </td>
+                          <td> {{ var['name'] }} </td>
+                          <td> {{ var['description'] }} </td>
+                          <td> {{ var['type'] }} </td>
+                          <td> {{ var['position'] }} </td>
+                          <td> {% for label in var['componentLabels'] %}{{ label }}, {% endfor %}</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div class="tab-pane" id="tab_3">
+                    <table class="table table-sm table-hover">
+                      <thead>
+                        <tr>
+                          <th>Pick <input type="checkbox" class="checkAll_frame"></th>
+                          <th>Step name</th>
+                          <th>Frame index</th>
+                          <th>Description</th>
+                          <th>Time</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for f in frames %}
+                        <tr>
+                          <td> <input type="checkbox" class="checkOne_frame" id={{f[1]}}> </td>
+                          <td> {{ f[0] }} </td>
+                          <td> {{ f[1] }} </td>
+                          <td> {{ f[2] }} </td>
+                          <td> {{ f[3] }} </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div class="tab-pane" id="tab_4">
+                    <table class="table table-sm table-hover">
+                      <thead>
+                        <tr>
+                          <th>Pick <input type="checkbox" class="checkAll_region"></th>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Elements</th>
+                          <th>Nodes</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for r in regions %}
+                        <tr>
+                          <td> <input type="checkbox" class="checkOne_region" id="['{{r[0]}}', '{{r[1]}}']"> </td>
+                          <td> {{ r[0] }} </td>
+                          <td> {{ r[1] }} </td>
+                          <td> {{ r[2] }} </td>
+                          <td> {{ r[3] }} </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div class="tab-pane" id="tab_5">
+                    <form method="POST" id="form_variables" name="form_variables">
+                      {{ form_odb.csrf_token }}
+                      <button class="btn btn-success" type="submit" id="btn_update">
+                        <i class="fa fa-upload"></i>
+                        <strong>生成配置文件</strong>
+                      </button>
+                      <textarea class="form-control" id="variable_id" name="variable_id"></textarea>
+                      <textarea class="form-control" id="frame_id" name="frame_id"></textarea>
+                      <textarea class="form-control" id="region_id" name="region_id"></textarea>
+                    </form>
+                  </div>
+
+                </div>
+                <!-- /.tab-content -->
+              </div><!-- /.card-body -->
+            </div>
+            <!-- ./card -->
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock content %}
+
+{% block script %}
+
+{% if env['service'] == 'server' %}
+<script src="https://cdn.bootcdn.net/ajax/libs/zTree.v3/3.5.42/js/jquery.ztree.core.min.js"></script>
+{% else %}
+<script src="{{ url_for('static', filename='zTree/js/jquery.ztree.core.min.js') }}"></script>
+{% endif %}
+
+<script type="text/javascript">
+  var setting_odb = {
+    data: {
+      simpleData: {
+        enable: true
+      }
+    },
+    async: {
+      enable: true,
+      url:"{{ url_for('abaqus.postproc_prescan_odb_data', filename=filename) }}",
+      type: "get",
+    }
+  };
+
+  $(document).ready(function(){
+    $.fn.zTree.init($("#ztree-odb"), setting_odb);
+  });
+
+  $(document).on('click', '.checkAll_frame', function () {
+    $('.checkOne_frame').prop('checked', $(this).prop('checked'));
+  });
+  $(document).on('click', '.checkOne_frame', function () {
+    var flag = $('.checkOne_frame:checked').length == $('.checkOne_frame').length;
+    $('.checkAll_frame').prop('checked', flag);
+  });
+
+  $(document).on('click', '.checkAll_var', function () {
+    $('.checkOne_var').prop('checked', $(this).prop('checked'));
+  });
+  $(document).on('click', '.checkOne_var', function () {
+    var flag = $('.checkOne_var:checked').length == $('.checkOne_var').length;
+    $('.checkAll_var').prop('checked', flag);
+  });
+
+  $(document).ready(function () {
+    $('#btn_update').on('click', function () {
+      var checked_item = $('.checkOne_var:checked')
+      var checked_items = []
+      for (var i=0; i<checked_item.length; i++) {
+        checked_items.push(checked_item[i].id);
+      }
+      document.getElementById('variable_id').value = checked_items;
+
+      var checked_item = $('.checkOne_frame:checked')
+      var checked_items = []
+      for (var i=0; i<checked_item.length; i++) {
+        checked_items.push(checked_item[i].id);
+      }
+      document.getElementById('frame_id').value = checked_items;
+
+      var checked_item = $('.checkOne_region:checked')
+      var checked_items = []
+      for (var i=0; i<checked_item.length; i++) {
+        checked_items.push(checked_item[i].id);
+      }
+      document.getElementById('region_id').value = checked_items;
+    });
+  });
+
+  document.getElementById('variable_id').style.display = 'none'
+  document.getElementById('frame_id').style.display = 'none'
+  document.getElementById('region_id').style.display = 'none'
+
+</script>
+{% endblock script %}
