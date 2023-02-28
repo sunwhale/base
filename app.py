@@ -12,7 +12,7 @@ if os.path.exists(dotenv_path):
     load_dotenv(dotenv_path)
 
 from base import create_app
-app = create_app('production')
+app = create_app('development')
 
 
 def resize(window):
@@ -20,5 +20,5 @@ def resize(window):
 
 
 if __name__ == "__main__":
-    window = webview.create_window('桌面应用', app, min_size=(800, 600))
+    window = webview.create_window('固体力学与数值模拟', app, min_size=(800, 600))
     webview.start(resize, window, debug=False)

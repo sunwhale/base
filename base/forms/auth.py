@@ -10,7 +10,12 @@ from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
 from base.models import User
 
 
-class LoginForm(FlaskForm):
+class ChineseBaseForm(FlaskForm):
+    class Meta:
+        locales = ['zh']
+
+
+class LoginForm(ChineseBaseForm):
     email = StringField(
         '邮箱/Email', validators=[DataRequired(), Length(1, 254), Email()])
     password = PasswordField('密码/Password', validators=[DataRequired()])
@@ -18,7 +23,7 @@ class LoginForm(FlaskForm):
     submit = SubmitField('登录/Submit')
 
 
-class RegisterForm(FlaskForm):
+class RegisterForm(ChineseBaseForm):
     name = StringField('姓名/Name', validators=[DataRequired(), Length(1, 30)])
     email = StringField(
         '邮箱/Email', validators=[DataRequired(), Length(1, 254), Email()])
@@ -39,13 +44,13 @@ class RegisterForm(FlaskForm):
             raise ValidationError('该用户名已被注册。/The username is already in use.')
 
 
-class ForgetPasswordForm(FlaskForm):
+class ForgetPasswordForm(ChineseBaseForm):
     email = StringField(
         '请输入要重置密码的邮箱帐号', validators=[DataRequired(), Length(1, 254), Email()])
     submit = SubmitField('下一步')
 
 
-class ResetPasswordForm(FlaskForm):
+class ResetPasswordForm(ChineseBaseForm):
     email = StringField(
         '邮箱/Email', validators=[DataRequired(), Length(1, 254), Email()])
     password = PasswordField(

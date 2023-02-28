@@ -30,6 +30,7 @@ login_manager.login_message_category = 'warning'
 
 login_manager.refresh_view = 'auth.re_authenticate'
 login_manager.needs_refresh_message_category = 'warning'
+login_manager.login_message = '请登录后访问该页面。'
 
 
 class Guest(AnonymousUserMixin):
