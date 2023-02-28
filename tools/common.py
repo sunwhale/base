@@ -28,17 +28,17 @@ def make_dir(path):
         os.makedirs(path)
 
 
-def dump_json(file_name, data, encoding='utf-8'):
+def dump_json(file_path, data, encoding='utf-8'):
     """
     Write JSON data to file.
     """
-    with open(file_name, 'w', encoding=encoding) as f:
+    with open(file_path, 'w', encoding=encoding) as f:
         return json.dump(data, f, ensure_ascii=False)
 
 
-def load_json(file_name, encoding='utf-8'):
+def load_json(file_path, encoding='utf-8'):
     """
     Read JSON data from file.
     """
-    with open(file_name, 'r', encoding=encoding) as f:
+    with open(file_path, 'r', encoding=encoding) as f:
         return json.load(f)

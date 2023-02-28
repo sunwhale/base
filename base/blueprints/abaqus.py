@@ -29,13 +29,6 @@ from tools.read_prescan import read_prescan
 abaqus_bp = Blueprint('abaqus', __name__)
 
 
-@abaqus_bp.route('/observer', methods=['GET', 'POST'])
-@login_required
-def observer():
-    print('event_message', event_message)
-    return event_message
-
-
 @abaqus_bp.route('/manage_projects', methods=['GET', 'POST'])
 @login_required
 def manage_projects():
@@ -61,6 +54,7 @@ def create_project():
         }
         msg_file = os.path.join(project_path, '.project_msg')
         dump_json(msg_file, message)
+        flash('项目创建成功。', 'success')
         return redirect(url_for('.view_project', project_id=project_id))
 
     return render_template('abaqus/create_project.html', form=form)
@@ -830,6 +824,7 @@ def postproc():
     setting_file = os.path.join(abaqus_post_path, 'postproc.json')
     prescan_status_file = os.path.join(abaqus_post_path, '.prescan_status')
     odb_json_file = os.path.join(abaqus_post_path, 'prescan_odb.json')
+    odb_to_npz_file = os.path.join(abaqus_post_path, 'odb_to_npz.json')
 
     if os.path.exists(setting_file):
         message = load_json(setting_file)
@@ -854,16 +849,43 @@ def postproc():
                 f.write('Submitting')
             flash('预扫描开始', 'success')
             dump_json(setting_file, message)
-            
-            return redirect(request.referrer)
         else:
             if os.path.exists(odb_json_file):
                 os.remove(odb_json_file)
             flash('%s不存在。' % odb_name, 'warning')
+        return redirect(request.referrer)
             
     if request.method == 'POST':
         data = request.form.to_dict()
         print(data)
+        variables = eval('[' + data['variable_id'] + ']')
+        frames = eval('[' + data['frame_id'] + ']')
+        regions = eval('[' + data['region_id'] + ']')
+
+        steps = []
+        for frame in frames:
+            if frame[0] not in steps:
+                steps.append(frame[0])
+
+        new_frames = []
+        for step in steps:
+            step_frames = [step, []]
+            for frame in frames:
+                if frame[0] == step:
+                    step_frames[1].append(frame[1])
+            new_frames.append(step_frames)
+
+        message = load_json(setting_file)
+        odb_path = os.path.abspath(message['odb_name'])
+
+        odb_to_npz_dict = {
+            "Frames": new_frames,
+            "Regions": regions,
+            "Variables": variables,
+            "ODB": [odb_path]
+        }
+
+        dump_json(odb_to_npz_file, odb_to_npz_dict)
 
     if os.path.exists(odb_json_file):
         variables, regions, frames = read_prescan(odb_json_file)
@@ -872,7 +894,12 @@ def postproc():
         regions = []
         frames = []
 
-    return render_template('abaqus/postproc.html', form_odb=form_odb, filename=odb_json_file, variables=variables, regions=regions, frames=frames)
+    if os.path.exists(odb_to_npz_file):
+        odb_to_npz_json = load_json(odb_to_npz_file)
+    else:
+        odb_to_npz_json = ''
+
+    return render_template('abaqus/postproc.html', form_odb=form_odb, filename=odb_json_file, variables=variables, regions=regions, frames=frames, odb_to_npz_json=odb_to_npz_json)
 
 
 @abaqus_bp.route('/postproc_prescan_odb_data/<path:filename>', methods=['GET', 'POST'])

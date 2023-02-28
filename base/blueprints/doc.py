@@ -22,10 +22,9 @@ doc_bp = Blueprint('doc', __name__)
 def createmd():
     doc_id = create_id(current_app.config['DOC_PATH'])
     doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
-    if not os.path.isdir(doc_path):
-        os.makedirs(doc_path)
-    with open(os.path.join(doc_path, 'article.md'), 'w', encoding='utf-8') as f:
-        f.write(' ')
+    os.makedirs(doc_path, exist_ok=True)  # create directory if it does not exist
+    with open(os.path.join(doc_path, 'article.md'), 'w', encoding='utf-8'):
+        pass  # create empty file
     return redirect(url_for('.editmd', doc_id=doc_id))
 
 
@@ -35,14 +34,9 @@ def editmd(doc_id):
     doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
     md_file = os.path.join(doc_path, 'article.md')
     msg_file = os.path.join(doc_path, 'article.msg')
-    try:
-        with open(msg_file, 'r', encoding='utf-8') as f:
-            message = json.load(f)
-    except:
-        message = {}
+    message = {}
     if request.method == 'POST':
         data = request.form.to_dict()
-        message = {}
         message['title'] = data['title']
         content = data['editormd-markdown-doc'].replace('\n', '')
         with open(md_file, 'w', encoding='utf-8') as f:
@@ -50,6 +44,11 @@ def editmd(doc_id):
         with open(msg_file, 'w', encoding='utf-8') as f:
             json.dump(message, f, ensure_ascii=False)
         return render_template('doc/editmd.html', doc_id=doc_id, message=message)
+    try:
+        with open(msg_file, 'r', encoding='utf-8') as f:
+            message = json.load(f)
+    except:
+        pass
     if os.path.exists(md_file):
         return render_template('doc/editmd.html', doc_id=doc_id, message=message)
     else:
@@ -59,13 +58,18 @@ def editmd(doc_id):
 @doc_bp.route('/viewmd/<int:doc_id>')
 def viewmd(doc_id):
     doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
+    md_file = os.path.join(doc_path, 'article.md')
     msg_file = os.path.join(doc_path, 'article.msg')
+    message = {}
     try:
         with open(msg_file, 'r', encoding='utf-8') as f:
             message = json.load(f)
-    except:
-        message = {}
-    return render_template('doc/viewmd.html', doc_id=doc_id, message=message)
+    except FileNotFoundError:
+        pass
+    if os.path.exists(md_file):
+        return render_template('doc/viewmd.html', doc_id=doc_id, message=message)
+    else:
+        abort(404)
 
 
 @doc_bp.route('/getmd/<int:doc_id>')
@@ -117,11 +121,11 @@ def manage_docs():
 def deletemd(doc_id):
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该文章！', 'warning')
-        return redirect(url_for('.manage_docs'))
-    doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
-    if os.path.exists(doc_path):
-        shutil.rmtree(doc_path)
-        flash('文章%s删除成功。' % doc_id, 'success')
     else:
-        flash('文章%s不存在！' % doc_id, 'warning')
+        doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
+        if os.path.exists(doc_path):
+            shutil.rmtree(doc_path)
+            flash('文章%s删除成功。' % doc_id, 'success')
+        else:
+            flash('文章%s不存在！' % doc_id, 'warning')
     return redirect(url_for('.manage_docs'))

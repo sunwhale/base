@@ -51,7 +51,7 @@
                     <table class="table table-sm table-hover">
                       <thead>
                         <tr>
-                          <th>Pick <input type="checkbox" class="checkAll_var"></th>
+                          <th><input type="checkbox" class="checkAll_var"> Select</th>
                           <th>Name</th>
                           <th>Description</th>
                           <th>Type</th>
@@ -62,7 +62,7 @@
                       <tbody>
                         {% for key, var in variables.items() %}
                         <tr>
-                          <td> <input type="checkbox" class="checkOne_var" id={{key}}> </td>
+                          <td> <input type="checkbox" class="checkOne_var" id="['{{var['name']}}', '{{var['position']}}']"> </td>
                           <td> {{ var['name'] }} </td>
                           <td> {{ var['description'] }} </td>
                           <td> {{ var['type'] }} </td>
@@ -78,7 +78,7 @@
                     <table class="table table-sm table-hover">
                       <thead>
                         <tr>
-                          <th>Pick <input type="checkbox" class="checkAll_frame"></th>
+                          <th><input type="checkbox" class="checkAll_frame"> Select</th>
                           <th>Step name</th>
                           <th>Frame index</th>
                           <th>Description</th>
@@ -88,7 +88,7 @@
                       <tbody>
                         {% for f in frames %}
                         <tr>
-                          <td> <input type="checkbox" class="checkOne_frame" id={{f[1]}}> </td>
+                          <td> <input type="checkbox" class="checkOne_frame" id="['{{f[0]}}', {{f[1]}}]"> </td>
                           <td> {{ f[0] }} </td>
                           <td> {{ f[1] }} </td>
                           <td> {{ f[2] }} </td>
@@ -103,7 +103,7 @@
                     <table class="table table-sm table-hover">
                       <thead>
                         <tr>
-                          <th>Pick <input type="checkbox" class="checkAll_region"></th>
+                          <th><input type="checkbox" class="checkAll_region"> Select</th>
                           <th>Name</th>
                           <th>Type</th>
                           <th>Elements</th>
@@ -135,6 +135,7 @@
                       <textarea class="form-control" id="frame_id" name="frame_id"></textarea>
                       <textarea class="form-control" id="region_id" name="region_id"></textarea>
                     </form>
+                    <textarea id="textarea_log" class="form-control" style="height: 319.5px;">{{ odb_to_npz_json }}</textarea>
                   </div>
 
                 </div>
@@ -188,6 +189,14 @@
   $(document).on('click', '.checkOne_var', function () {
     var flag = $('.checkOne_var:checked').length == $('.checkOne_var').length;
     $('.checkAll_var').prop('checked', flag);
+  });
+
+  $(document).on('click', '.checkAll_region', function () {
+    $('.checkOne_region').prop('checked', $(this).prop('checked'));
+  });
+  $(document).on('click', '.checkOne_region', function () {
+    var flag = $('.checkOne_region:checked').length == $('.checkOne_region').length;
+    $('.checkAll_region').prop('checked', flag);
   });
 
   $(document).ready(function () {

@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+"""
+
+"""
 import webview
 import os
 
@@ -16,5 +20,5 @@ def resize(window):
 
 
 if __name__ == "__main__":
-    window = webview.create_window('固体推进剂测试', app, min_size=(800, 600))
+    window = webview.create_window('桌面应用', app, min_size=(800, 600))
     webview.start(resize, window, debug=False)
