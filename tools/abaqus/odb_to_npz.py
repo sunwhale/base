@@ -187,8 +187,8 @@ def odb_to_npz(setting_file):
                         frames_in_step = range(len(frames))
 
                     if float(len(frames_in_step))/len(frames) > 0.1:
-                        for frame in frames:
-                            if frame.frameId in frames_in_step:
+                        for i, frame in enumerate(frames):
+                            if i in frames_in_step:
                                 time.append(frame.frameValue)
                                 current_count += 1
                                 if is_write(current_count, total_count):
@@ -211,6 +211,7 @@ def odb_to_npz(setting_file):
 
                     else:
                         for frame_id in frames_in_step:
+                            print(frame_id)
                             time.append(frames[frame_id].frameValue)
                             current_count += 1
                             if is_write(current_count, total_count):
