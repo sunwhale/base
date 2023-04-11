@@ -269,6 +269,31 @@ def get_project_status(path, project_id):
     return status
 
 
+def get_experiment_status(path, experiment_id):
+    msg_file = os.path.join(path, str(experiment_id), '.project_msg')
+    status = {}
+    if os.path.exists(msg_file):
+        status['experiment_id'] = experiment_id
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            status['name'] = message['name']
+            status['project_time'] = file_time(msg_file)
+            status['descript'] = message['descript']
+            if 'link' in message.keys():
+                status['link'] = message['link']
+            else:
+                status['link'] = 'None'
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                'view_project/'+str(experiment_id), 'edit_project/'+str(experiment_id), 'delete_project/'+str(experiment_id))
+        except (FileNotFoundError, KeyError):
+            for key in ['name', 'project_time', 'descript', 'job', 'user', 'cpus', 'link']:
+                status[key] = 'None'
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                'view_project/'+str(experiment_id), 'edit_project/'+str(experiment_id), 'delete_project/'+str(experiment_id))
+    return status
+
+
 def get_template_status(path, template_id):
     msg_file = os.path.join(path, str(template_id), '.template_msg')
     status = {}
@@ -448,6 +473,20 @@ def docs_detail(path):
     doc_id_list = sub_dirs_int(path)
     for doc_id in doc_id_list:
         status = get_doc_status(path, doc_id)
+        data_list.append(status)
+
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def experiments_detail(path):
+    data_list = []
+    experiment_id_list = sub_dirs_int(path)
+    for experiment_id in experiment_id_list:
+        status = get_experiment_status(path, experiment_id)
         data_list.append(status)
 
     data = {
