@@ -12,7 +12,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
                    render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.experiment import ExperimentForm, UploadForm
+from base.forms.experiment import ExperimentForm, UploadForm, SpecimenForm
 from tools.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status,
                               get_experiment_status, get_template_status,
                               experiments_detail, templates_detail, sub_dirs_int)
@@ -108,7 +108,8 @@ def view_experiment(experiment_id):
         return redirect(url_for('experiment.view_experiment', experiment_id=experiment_id))
     
     if os.path.exists(experiment_path):
-        status = get_experiment_status(experiment_path, experiment_id)
+        status = get_experiment_status(experiments_path, experiment_id)
+        print('status', status)
         files = files_in_dir(experiment_path)
         return render_template('experiment/view_experiment.html', experiment_id=experiment_id, status=status, files=files, form_upload=form_upload)
     else:
@@ -149,6 +150,38 @@ def delete_experiment_file(experiment_id, filename):
     else:
         flash('文件%s不存在。' % filename, 'warning')
     return redirect(url_for('.view_experiment', experiment_id=experiment_id))
+
+
+@experiment_bp.route('/create_specimen/<int:experiment_id>', methods=['GET', 'POST'])
+@login_required
+def create_specimen(experiment_id):
+    form = SpecimenForm()
+    experiments_path = current_app.config['EXPERIMENT_PATH']
+    experiment_path = os.path.join(experiments_path, str(experiment_id))
+
+    if form.validate_on_submit():
+        specimen_id = create_id(experiment_path)
+        specimen_path = os.path.join(experiment_path, str(specimen_id))
+        make_dir(specimen_path)
+        message = {
+            'specimen': form.specimen.data,
+            'user': form.user.data,
+            'cpus': form.cpus.data
+        }
+        msg_file = os.path.join(specimen_path, '.specimen_msg')
+        dump_json(msg_file, message)
+        files = files_in_dir(experiment_path)
+        for file in files:
+            shutil.copy(os.path.join(experiment_path, file['name']),
+                        os.path.join(specimen_path, file['name']))
+        return redirect(url_for('.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
+
+    # msg_file = os.path.join(experiment_path, '.experiment_msg')
+    # message = load_json(msg_file)
+    # form.specimen.data = message['specimen']
+    # form.user.data = message['user']
+    # form.cpus.data = message['cpus']
+    return render_template('experiment/create_specimen.html', form=form)
 
 
 @experiment_bp.route('/experiment_specimens_status/<int:experiment_id>')

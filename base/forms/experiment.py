@@ -21,3 +21,9 @@ class ExperimentForm(FlaskForm):
     name = StringField('项目名称', validators=[DataRequired(), Length(1, 60)])
     descript = TextAreaField('项目描述', render_kw={'rows': 12})
     submit = SubmitField('提交')
+
+
+class SpecimenForm(FlaskForm):
+    specimen = StringField('试件号', default='1', validators=[DataRequired(), Length(1, 128)])
+    descript = TextAreaField('实验实例描述', render_kw={'rows': 12})
+    submit = SubmitField('提交')

@@ -32,6 +32,7 @@
               <div class="card-body">
                 <div class="row">
                   <div class="col-6">
+
                     <h5 class="text-primary">项目信息</h5>
                     <ul class="list-unstyled">
                       <li> 项目名称：{{ status['name'] }} </li>
@@ -39,21 +40,16 @@
                       <li> 创建时间：{{ status['experiment_time'] }} </li>
                       <li> 项目简介：</li>
                       <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
+                      <p></p>
                       <a class='btn btn-primary' href="{{ url_for('experiment.edit_experiment', experiment_id=experiment_id) }}"><strong>编辑信息</strong></a>
                       {% if env['service'] == 'client' %}
                       <a href="{{ url_for('experiment.open_experiment', experiment_id=experiment_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
                       {% endif %}
+                      <a class='btn btn-success' href="{{ url_for('experiment.create_specimen', experiment_id=experiment_id) }}"><strong>新建试件</strong></a>
                     </ul>
-                    {% if status['link']=='None' %}
-                    <h5 class="text-primary">创建新算例</h5>
-                    复制当前项目文件到算例文件夹，并生成新的参数文件。<br>
-                    <a class='btn btn-primary' href="{{ url_for('experiment.create_job', experiment_id=experiment_id) }}"><strong>新建算例</strong></a>
-                    {% endif %}
                     
                   </div>
                   <div class="col-6">
-
-                  <h5 class="text-primary">从模板导入文件</h5>
 
                     <h5 class="text-primary">上传文件</h5>
                     <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
@@ -84,6 +80,7 @@
                         {% endfor %}
                       </tbody>
                     </table>
+
                   </div>
                 </div>
               </div>
@@ -92,7 +89,7 @@
           <div class="col-12">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">{{ experiment_id }}号ABAQUS项目的算例列表</h3>
+                <h3 class="card-title">{{ experiment_id }}号实验项目的试件列表</h3>
                 <div class="card-tools">
                   <button type="button" class="btn btn-tool" data-card-widget="maximize">
                     <i class="fas fa-expand"></i>
@@ -107,23 +104,7 @@
                   {{ form_upload.csrf_token }}
                   <button class="btn btn-success" type="submit" id="submit_queue_solver">
                     <i class="fa fa-upload"></i>
-                    <strong>提交至队列（求解）</strong>
-                  </button>
-                  <button class="btn btn-success" type="submit" id="submit_queue_odb_to_npz">
-                    <i class="fa fa-upload"></i>
-                    <strong>提交至队列（导出）</strong>
-                  </button>
-                  <button class="btn btn-success" type="submit" id="submit_queue_all">
-                    <i class="fa fa-upload"></i>
-                    <strong>提交至队列（求解+导出）</strong>
-                  </button>
-                  <button class="btn btn-primary" id="hide_para">
-                    <i class="fa fa-eye-slash" id="hide_para_icon"></i>
-                    <strong id="hide_para_text">隐藏模型参数列</strong>
-                  </button>
-                  <button class="btn btn-primary" id="hide_solver">
-                    <i class="fa fa-eye-slash" id="hide_solver_icon"></i>
-                    <strong id="hide_solver_text">隐藏求解文件列</strong>
+                    <strong>下载选中的试件数据</strong>
                   </button>
                   <textarea class="form-control" id="queue_value" name="queue_value"></textarea>
                   <textarea class="form-control" id="queue_type" name="queue_type"></textarea>
