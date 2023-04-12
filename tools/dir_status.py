@@ -270,7 +270,7 @@ def get_project_status(path, project_id):
 
 
 def get_experiment_status(path, experiment_id):
-    msg_file = os.path.join(path, str(experiment_id), '.project_msg')
+    msg_file = os.path.join(path, str(experiment_id), '.experiment_msg')
     status = {}
     if os.path.exists(msg_file):
         status['experiment_id'] = experiment_id
@@ -278,19 +278,19 @@ def get_experiment_status(path, experiment_id):
             with open(msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
             status['name'] = message['name']
-            status['project_time'] = file_time(msg_file)
+            status['experiment_time'] = file_time(msg_file)
             status['descript'] = message['descript']
             if 'link' in message.keys():
                 status['link'] = message['link']
             else:
                 status['link'] = 'None'
             status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
-                'view_project/'+str(experiment_id), 'edit_project/'+str(experiment_id), 'delete_project/'+str(experiment_id))
+                'view_experiment/'+str(experiment_id), 'edit_experiment/'+str(experiment_id), 'delete_experiment/'+str(experiment_id))
         except (FileNotFoundError, KeyError):
-            for key in ['name', 'project_time', 'descript', 'job', 'user', 'cpus', 'link']:
+            for key in ['name', 'experiment_time', 'descript', 'job', 'user', 'cpus', 'link']:
                 status[key] = 'None'
             status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
-                'view_project/'+str(experiment_id), 'edit_project/'+str(experiment_id), 'delete_project/'+str(experiment_id))
+                'view_experiment/'+str(experiment_id), 'edit_experiment/'+str(experiment_id), 'delete_experiment/'+str(experiment_id))
     return status
 
 

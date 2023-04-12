@@ -166,6 +166,33 @@
           </li>
           {% endif %}
           {% endblock nav_sheet %}
+          {% block nav_experiment %}
+          {% if current_user.is_authenticated %}
+          <li class="nav-item" id="experiments">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-microscope"></i>
+              <p>
+                实验
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('experiment.manage_experiments') }}" class="nav-link" id="manage_experiments">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>实验项目管理</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('experiment.create_experiment') }}" target="_blank" class="nav-link" id="create_experiment">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>新建实验项目</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          {% endblock nav_experiment %}
           {% block nav_abaqus %}
           {% if current_user.is_authenticated %}
           <li class="nav-item" id="abaqus">

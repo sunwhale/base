@@ -41,9 +41,9 @@ def create_experiment():
     form = ExperimentForm()
 
     if form.validate_on_submit():
-        experiment_path = current_app.config['EXPERIMENT_PATH']
-        experiment_id = create_id(experiment_path)
-        experiment_path = os.path.join(experiment_path, str(experiment_id))
+        experiments_path = current_app.config['EXPERIMENT_PATH']
+        experiment_id = create_id(experiments_path)
+        experiment_path = os.path.join(experiments_path, str(experiment_id))
         make_dir(experiment_path)
         message = {
             'name': form.name.data,
@@ -60,9 +60,9 @@ def create_experiment():
 @experiment_bp.route('/edit_experiment/<int:experiment_id>', methods=['GET', 'POST'])
 @login_required
 def edit_experiment(experiment_id):
-    form = ProjectForm()
-    experiment_path = current_app.config['EXPERIMENT_PATH']
-    experiment_path = os.path.join(experiment_path, str(experiment_id))
+    form = ExperimentForm()
+    experiments_path = current_app.config['EXPERIMENT_PATH']
+    experiment_path = os.path.join(experiments_path, str(experiment_id))
     msg_file = os.path.join(experiment_path, '.experiment_msg')
 
     if form.validate_on_submit():
@@ -79,11 +79,27 @@ def edit_experiment(experiment_id):
     return render_template('experiment/create_experiment.html', form=form)
 
 
+@experiment_bp.route('/delete_experiment/<int:experiment_id>')
+@login_required
+def delete_experiment(experiment_id):
+    experiments_path = current_app.config['EXPERIMENT_PATH']
+    experiment_path = os.path.join(experiments_path, str(experiment_id))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该项目！', 'warning')
+        return redirect(url_for('.manage_experiments'))
+    if os.path.exists(experiment_path):
+        shutil.rmtree(experiment_path)
+        flash('ABAQUS项目%s删除成功。' % experiment_id, 'success')
+    else:
+        flash('ABAQUS项目%s不存在。' % experiment_id, 'warning')
+    return redirect(url_for('.manage_experiments'))
+
+
 @experiment_bp.route('/view_experiment/<int:experiment_id>', methods=['GET', 'POST'])
 @login_required
 def view_experiment(experiment_id):
-    experiment_path = current_app.config['EXPERIMENT_PATH']
-    experiment_path = os.path.join(experiment_path, str(experiment_id))
+    experiments_path = current_app.config['EXPERIMENT_PATH']
+    experiment_path = os.path.join(experiments_path, str(experiment_id))
     form_upload = UploadForm()
     if form_upload.validate_on_submit():
         f = form_upload.filename.data
@@ -97,3 +113,51 @@ def view_experiment(experiment_id):
         return render_template('experiment/view_experiment.html', experiment_id=experiment_id, status=status, files=files, form_upload=form_upload)
     else:
         abort(404)
+
+
+@experiment_bp.route('/open_experiment/<int:experiment_id>')
+@login_required
+def open_experiment(experiment_id):
+    experiments_path = current_app.config['EXPERIMENT_PATH']
+    experiment_path = os.path.join(experiments_path, str(experiment_id))
+    print(experiment_path)
+    if os.path.exists(experiment_path):
+        cmd = 'explorer %s' % experiment_path
+        proc = subprocess.run(cmd)
+        return redirect(url_for('.view_experiment', experiment_id=experiment_id))
+    else:
+        abort(404)
+
+
+@experiment_bp.route('/get_experiment_file/<int:experiment_id>/<path:filename>')
+@login_required
+def get_experiment_file(experiment_id, filename):
+    return send_from_directory(os.path.join(current_app.config['EXPERIMENT_PATH'], str(experiment_id)), filename)
+
+
+@experiment_bp.route('/delete_experiment_file/<int:experiment_id>/<path:filename>')
+@login_required
+def delete_experiment_file(experiment_id, filename):
+    experiments_path = current_app.config['EXPERIMENT_PATH']
+    file = os.path.join(experiments_path, str(experiment_id), str(filename))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该文件！', 'warning')
+        return redirect(url_for('.view_experiment', experiment_id=experiment_id))
+    if os.path.exists(file):
+        os.remove(file)
+        flash('文件%s删除成功。' % filename, 'success')
+    else:
+        flash('文件%s不存在。' % filename, 'warning')
+    return redirect(url_for('.view_experiment', experiment_id=experiment_id))
+
+
+@experiment_bp.route('/experiment_specimens_status/<int:experiment_id>')
+def experiment_specimens_status(experiment_id):
+    # experiments_path = current_app.config['EXPERIMENT_PATH']
+    # specimen_id_list = sub_dirs_int(os.path.join(experiments_path, str(experiment_id)))
+    # for specimen_id in specimen_id_list:
+    #     specimen_path = os.path.join(experiments_path, str(experiment_id), str(specimen_id))
+    #     s = Solver(job_path)
+    #     s.solver_status()
+    # data = experiment_specimenss_detail(experiments_path, experiment_id)
+    return jsonify({"data": []})
