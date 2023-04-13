@@ -5,13 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>编辑-{{ message['title'] }}</title>
-<link type="image-icon" href="{{ url_for('static', filename='imgs/faveicon.png') }}" rel="icon"/>
+<link type="image-icon" href="{{ url_for('static', filename='imgs/logo.svg') }}" rel="icon"/>
 
 {% block css %}
+{% if env['service'] == 'server' %}
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/plugins.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css' />
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css' />
+{% else %}
 <link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/plugins/css/pluginsCss.css') }}"/>
 <link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/plugins/plugins.css') }}"/>
 <link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/css/luckysheet.css') }}"/>
 <link rel="stylesheet" href="{{ url_for('static', filename='luckysheet/assets/iconfont/iconfont.css') }}"/>
+{% endif %}
 {% endblock css %}
 </head>
 
@@ -21,8 +28,13 @@
 {% endblock content %}
 
 {% block script %}
+{% if env['service'] == 'server' %}
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
+{% else %}
 <script src="{{ url_for('static', filename='luckysheet/plugins/js/plugin.js') }}"></script>
 <script src="{{ url_for('static', filename='luckysheet/luckysheet.umd.js') }}"></script>
+{% endif %}
 
 <script type="text/javascript">
   $(function () {

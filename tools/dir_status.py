@@ -294,6 +294,30 @@ def get_experiment_status(path, experiment_id):
     return status
 
 
+def get_specimen_status(path, experiment_id, specimen_id):
+    msg_file = os.path.join(path, str(experiment_id), str(specimen_id), '.specimen_msg')
+    status = {}
+    status['experiment_id'] = experiment_id
+    status['specimen_id'] = specimen_id
+    try:
+        with open(msg_file, 'r', encoding='utf-8') as f:
+            message = json.load(f)
+        status['specimen'] = message['specimen']
+        status['descript'] = message['descript']
+        button = ""
+        button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % (
+            '../view_specimen/'+str(experiment_id)+'/'+str(specimen_id))
+        button += "<a class='btn btn-primary btn-sm' onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a> " % (
+            '../delete_specimen/'+str(experiment_id)+'/'+str(specimen_id))
+        status['operation'] = button
+    except FileNotFoundError:
+        for key in ['specimen', 'descript']:
+            status[key] = 'None'
+        status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+            '../delete_specimen/'+str(experiment_id)+'/'+str(specimen_id))
+    return status
+
+
 def get_template_status(path, template_id):
     msg_file = os.path.join(path, str(template_id), '.template_msg')
     status = {}

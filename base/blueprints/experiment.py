@@ -14,7 +14,7 @@ from flask_login import current_user, login_required
 
 from base.forms.experiment import ExperimentForm, UploadForm, SpecimenForm
 from tools.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status,
-                              get_experiment_status, get_template_status,
+                              get_experiment_status, get_specimen_status,
                               experiments_detail, templates_detail, sub_dirs_int)
 from tools.common import make_dir, dump_json, load_json
 
@@ -165,23 +165,32 @@ def create_specimen(experiment_id):
         make_dir(specimen_path)
         message = {
             'specimen': form.specimen.data,
-            'user': form.user.data,
-            'cpus': form.cpus.data
+            'descript': form.descript.data,
         }
         msg_file = os.path.join(specimen_path, '.specimen_msg')
         dump_json(msg_file, message)
-        files = files_in_dir(experiment_path)
-        for file in files:
-            shutil.copy(os.path.join(experiment_path, file['name']),
-                        os.path.join(specimen_path, file['name']))
         return redirect(url_for('.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
 
-    # msg_file = os.path.join(experiment_path, '.experiment_msg')
-    # message = load_json(msg_file)
-    # form.specimen.data = message['specimen']
-    # form.user.data = message['user']
-    # form.cpus.data = message['cpus']
     return render_template('experiment/create_specimen.html', form=form)
+
+
+@experiment_bp.route('/view_specimen/<int:experiment_id>/<int:specimen_id>', methods=['GET', 'POST'])
+@login_required
+def view_specimen(experiment_id, specimen_id):
+    experiments_path = current_app.config['EXPERIMENT_PATH']
+    specimen_path = os.path.join(experiments_path, str(experiment_id), str(specimen_id))
+    if os.path.exists(specimen_path):
+        # form = ParameterForm()
+        # if form.validate_on_submit():
+        #     para = form.para.data
+        #     s.save_parameters(para)
+        #     flash('parameters.inp保存成功。', 'success')
+        #     return redirect(url_for('.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
+        # form.para.data = para
+        status = get_specimen_status(specimen_path, experiment_id, specimen_id)
+        return render_template('experiment/view_specimen.html', experiment_id=experiment_id, specimen_id=specimen_id, status=status)
+    else:
+        abort(404)
 
 
 @experiment_bp.route('/experiment_specimens_status/<int:experiment_id>')
