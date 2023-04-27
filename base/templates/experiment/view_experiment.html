@@ -117,13 +117,7 @@
                         {% for parameter in parameters %}
                         <th>{{ parameter }}</th>
                         {% endfor %}
-                        <th>inp 时间</th>
-                        <th>inp 大小</th>
-                        <th>odb 时间</th>
-                        <th>odb 大小</th>
-                        <th>npz 时间</th>
-                        <th>npz 大小</th>
-                        <th>求解状态</th>
+                        <th>实验时间</th>
                         <th width=150px>操作</th>
                       </tr>
                     </thead>
@@ -185,17 +179,11 @@
             return data='<input type="checkbox" class="checkOne" id="'+data['job_id']+'">';
           },
           sClass: 'text-center'},
-        { data: 'job_id' },
+        { data: 'specimen_id' },
         {% for parameter in parameters %}
         { data: '{{ parameter }}' },
         {% endfor %}
-        { data: 'inp_time' },
-        { data: 'inp_size' },
-        { data: 'odb_time' },
-        { data: 'odb_size' },
-        { data: 'npz_time' },
-        { data: 'npz_size' },
-        { data: 'solver_status' },
+        { data: 'specimen_time' },
         { data: 'operation' },
       ],
     });

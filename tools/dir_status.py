@@ -304,6 +304,7 @@ def get_specimen_status(path, experiment_id, specimen_id):
             message = json.load(f)
         status['specimen'] = message['specimen']
         status['descript'] = message['descript']
+        status['specimen_time'] = file_time(msg_file)
         button = ""
         button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % (
             '../view_specimen/'+str(experiment_id)+'/'+str(specimen_id))
@@ -311,7 +312,7 @@ def get_specimen_status(path, experiment_id, specimen_id):
             '../delete_specimen/'+str(experiment_id)+'/'+str(specimen_id))
         status['operation'] = button
     except FileNotFoundError:
-        for key in ['specimen', 'descript']:
+        for key in ['specimen', 'descript', 'specimen_time']:
             status[key] = 'None'
         status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
             '../delete_specimen/'+str(experiment_id)+'/'+str(specimen_id))
@@ -511,6 +512,20 @@ def experiments_detail(path):
     experiment_id_list = sub_dirs_int(path)
     for experiment_id in experiment_id_list:
         status = get_experiment_status(path, experiment_id)
+        data_list.append(status)
+
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def experiment_specimens_detail(path, experiment_id):
+    data_list = []
+    specimen_id_list = sub_dirs_int(os.path.join(path, str(experiment_id)))
+    for specimen_id in specimen_id_list:
+        status = get_specimen_status(path, experiment_id, specimen_id)
         data_list.append(status)
 
     data = {

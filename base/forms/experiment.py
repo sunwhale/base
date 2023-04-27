@@ -17,6 +17,11 @@ class UploadForm(FlaskForm):
     submit = SubmitField('上传')
 
 
+class ParameterForm(FlaskForm):
+    para = TextAreaField('parameters.txt')
+    submit = SubmitField('保存')
+
+
 class ExperimentForm(FlaskForm):
     name = StringField('项目名称', validators=[DataRequired(), Length(1, 60)])
     descript = TextAreaField('项目描述', render_kw={'rows': 12})
