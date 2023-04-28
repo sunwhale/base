@@ -278,6 +278,8 @@ def get_experiment_status(path, experiment_id):
             with open(msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
             status['name'] = message['name']
+            status['type'] = message['type']
+            status['standard'] = message['standard']
             status['experiment_time'] = file_time(msg_file)
             status['descript'] = message['descript']
             if 'link' in message.keys():
@@ -296,13 +298,22 @@ def get_experiment_status(path, experiment_id):
 
 def get_specimen_status(path, experiment_id, specimen_id):
     msg_file = os.path.join(path, str(experiment_id), str(specimen_id), '.specimen_msg')
+    para_json_file = os.path.join(
+        path, str(experiment_id), str(specimen_id), 'parameters.json')
     status = {}
     status['experiment_id'] = experiment_id
     status['specimen_id'] = specimen_id
     try:
         with open(msg_file, 'r', encoding='utf-8') as f:
             message = json.load(f)
-        status['specimen'] = message['specimen']
+        if os.path.exists(para_json_file):
+            with open(para_json_file, 'r', encoding='utf-8') as f:
+                parameters = json.load(f)
+        else:
+            parameters = {}
+        for p in parameters.keys():
+            status[p] = parameters[p]
+        status['name'] = message['name']
         status['descript'] = message['descript']
         status['specimen_time'] = file_time(msg_file)
         button = ""
@@ -312,7 +323,7 @@ def get_specimen_status(path, experiment_id, specimen_id):
             '../delete_specimen/'+str(experiment_id)+'/'+str(specimen_id))
         status['operation'] = button
     except FileNotFoundError:
-        for key in ['specimen', 'descript', 'specimen_time']:
+        for key in ['name', 'descript', 'specimen_time']:
             status[key] = 'None'
         status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
             '../delete_specimen/'+str(experiment_id)+'/'+str(specimen_id))

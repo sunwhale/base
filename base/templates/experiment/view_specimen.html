@@ -37,7 +37,8 @@
                       <div class="col-12">
                         <h5 class="text-primary">实验信息</h5>
                         <ul class="list-unstyled">
-                          <li> 试件编号：{{ specimen_id }} </li>
+                          <li> 实验序号：{{ specimen_id }} </li>
+                          <li> 试件编号：{{ status['name'] }} </li>
                           <li> 创建时间：{{ status['specimen_time'] }}</li>
                           <li> 实验简介：</li>
                           <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>

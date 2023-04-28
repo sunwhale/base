@@ -119,7 +119,7 @@ if __name__ == "__main__":
     with open('parameters.json', 'r', encoding='utf-8') as f:
         parameters = json.load(f)
     period = float(parameters['period'])
-    amplitude = create_amplitude(loading_cycles=1000,
+    amplitude = create_amplitude(loading_cycles=10000,
                                  period=period,
                                  amp_max=1,
                                  amp_min=0.1)

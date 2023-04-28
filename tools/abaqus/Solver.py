@@ -199,7 +199,7 @@ class Solver:
     def get_parameters(self):
         para_file = os.path.join(self.path, 'parameters.inp')
         if os.path.exists(para_file):
-            with open(para_file, 'r') as f:
+            with open(para_file, 'r', encoding='utf-8') as f:
                 para = f.read()
         else:
             para = ''
@@ -223,7 +223,7 @@ class Solver:
     def parameters_to_json(self):
         para_file = os.path.join(self.path, 'parameters.inp')
         if os.path.exists(para_file):
-            with open(para_file, 'r') as f:
+            with open(para_file, 'r', encoding='utf-8') as f:
                 para = f.readlines()
         else:
             para = ''
@@ -239,7 +239,7 @@ class Solver:
     def parameter_keys(self):
         para_file = os.path.join(self.path, 'parameters.inp')
         if os.path.exists(para_file):
-            with open(para_file, 'r') as f:
+            with open(para_file, 'r', encoding='utf-8') as f:
                 para = f.readlines()
         else:
             para = ''

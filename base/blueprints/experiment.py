@@ -17,6 +17,7 @@ from tools.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_
                               get_experiment_status, get_specimen_status,
                               experiments_detail, experiment_specimens_detail, sub_dirs_int)
 from tools.common import make_dir, dump_json, load_json
+from tools.abaqus.Solver import Solver
 
 experiment_bp = Blueprint('experiment', __name__)
 
@@ -46,10 +47,16 @@ def create_experiment():
         make_dir(experiment_path)
         message = {
             'name': form.name.data,
+            'type': form.type.data,
+            'standard': form.standard.data,
+            'parameters': form.parameters.data,
             'descript': form.descript.data
         }
         msg_file = os.path.join(experiment_path, '.experiment_msg')
         dump_json(msg_file, message)
+        para_file = os.path.join(experiment_path, 'parameters.inp')
+        with open(para_file, 'w', encoding='utf-8') as f:
+            f.write(message['parameters'].replace('\r', ''))
         flash('项目创建成功。', 'success')
         return redirect(url_for('.view_experiment', experiment_id=experiment_id))
 
@@ -67,13 +74,22 @@ def edit_experiment(experiment_id):
     if form.validate_on_submit():
         message = {
             'name': form.name.data,
-            'descript': form.descript.data,
+            'type': form.type.data,
+            'standard': form.standard.data,
+            'parameters': form.parameters.data,
+            'descript': form.descript.data
         }
         dump_json(msg_file, message)
+        para_file = os.path.join(experiment_path, 'parameters.inp')
+        with open(para_file, 'w', encoding='utf-8') as f:
+            f.write(message['parameters'].replace('\r', ''))
         return redirect(url_for('.view_experiment', experiment_id=experiment_id))
 
     message = load_json(msg_file)
     form.name.data = message['name']
+    form.type.data = message['type']
+    form.standard.data = message['standard']
+    form.parameters.data = message['parameters']
     form.descript.data = message['descript']
     return render_template('experiment/create_experiment.html', form=form)
 
@@ -99,6 +115,8 @@ def delete_experiment(experiment_id):
 def view_experiment(experiment_id):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     experiment_path = os.path.join(experiments_path, str(experiment_id))
+    s = Solver(experiment_path)
+    parameters = s.parameter_keys()
     form_upload = UploadForm()
     if form_upload.validate_on_submit():
         f = form_upload.filename.data
@@ -110,7 +128,7 @@ def view_experiment(experiment_id):
         status = get_experiment_status(experiments_path, experiment_id)
         files = files_in_dir(experiment_path)
         return render_template('experiment/view_experiment.html', experiment_id=experiment_id, status=status,
-                               files=files, form_upload=form_upload)
+                               files=files, form_upload=form_upload, parameters=parameters)
     else:
         abort(404)
 
@@ -163,11 +181,16 @@ def create_specimen(experiment_id):
         specimen_path = os.path.join(experiment_path, str(specimen_id))
         make_dir(specimen_path)
         message = {
-            'specimen': form.specimen.data,
+            'name': form.name.data,
             'descript': form.descript.data
         }
         msg_file = os.path.join(specimen_path, '.specimen_msg')
         dump_json(msg_file, message)
+        para_file = os.path.join(experiment_path, 'parameters.inp')
+        if os.path.exists(para_file):
+            shutil.copy(os.path.join(experiment_path, 'parameters.inp'),
+                        os.path.join(specimen_path, 'parameters.inp'))
+
         return redirect(url_for('.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
 
     return render_template('experiment/create_specimen.html', form=form)
@@ -180,12 +203,15 @@ def view_specimen(experiment_id, specimen_id):
     specimen_path = os.path.join(experiments_path, str(experiment_id), str(specimen_id))
     if os.path.exists(specimen_path):
         form = ParameterForm()
-        # if form.validate_on_submit():
-        #     para = form.para.data
-        #     s.save_parameters(para)
-        #     flash('parameters.inp保存成功。', 'success')
-        #     return redirect(url_for('.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
-        # form.para.data = para
+        s = Solver(specimen_path)
+        para = s.get_parameters()
+        if form.validate_on_submit():
+            para = form.para.data
+            s.save_parameters(para)
+            flash('parameters.inp保存成功。', 'success')
+            return redirect(url_for('.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
+        form.para.data = para
+        s.parameters_to_json()
         status = get_specimen_status(experiments_path, experiment_id, specimen_id)
         files = files_in_dir(specimen_path)
         return render_template('experiment/view_specimen.html', experiment_id=experiment_id, specimen_id=specimen_id,
@@ -203,14 +229,14 @@ def edit_specimen(experiment_id, specimen_id):
     msg_file = os.path.join(specimen_path, '.specimen_msg')
     if form.validate_on_submit():
         message = {
-            'specimen': form.specimen.data,
+            'name': form.name.data,
             'descript': form.descript.data
         }
         dump_json(msg_file, message)
         return redirect(url_for('.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
 
     message = load_json(msg_file)
-    form.specimen.data = message['specimen']
+    form.name.data = message['name']
     form.descript.data = message['descript']
     return render_template('experiment/create_specimen.html', form=form)
 

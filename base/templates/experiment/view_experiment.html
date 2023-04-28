@@ -37,6 +37,8 @@
                     <ul class="list-unstyled">
                       <li> 项目名称：{{ status['name'] }} </li>
                       <li> 项目编号：{{ experiment_id }} </li>
+                      <li> 实验类型：{{ status['type'] }} </li>
+                      <li> 参考标准：{{ status['standard'] }} </li>
                       <li> 创建时间：{{ status['experiment_time'] }} </li>
                       <li> 项目简介：</li>
                       <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
@@ -106,6 +108,10 @@
                     <i class="fa fa-upload"></i>
                     <strong>下载选中的试件数据</strong>
                   </button>
+                  <button class="btn btn-primary" id="hide_para">
+                    <i class="fa fa-eye-slash" id="hide_para_icon"></i>
+                    <strong id="hide_para_text">隐藏实验参数列</strong>
+                  </button>
                   <textarea class="form-control" id="queue_value" name="queue_value"></textarea>
                   <textarea class="form-control" id="queue_type" name="queue_type"></textarea>
                   <p></p>
@@ -117,6 +123,7 @@
                         {% for parameter in parameters %}
                         <th>{{ parameter }}</th>
                         {% endfor %}
+                        <th>试件名称</th>
                         <th>实验时间</th>
                         <th width=150px>操作</th>
                       </tr>
@@ -183,26 +190,11 @@
         {% for parameter in parameters %}
         { data: '{{ parameter }}' },
         {% endfor %}
+        { data: 'name' },
         { data: 'specimen_time' },
         { data: 'operation' },
       ],
     });
-
-    // 初始时隐藏参数列
-    var table = $('#data').DataTable()
-    for (var i=2; i<{{ parameters|length }}+2; i++) {
-      var column = table.column(i);
-      column.visible(false);
-      var text = document.getElementById('hide_para_text');
-      var icon = document.getElementById('hide_para_icon');
-      if (column.visible()) {
-        text.innerHTML = '隐藏模型参数列'
-        icon.setAttribute('class','fa fa-eye-slash')
-      } else {
-        text.innerHTML = '显示模型参数列'
-        icon.setAttribute('class','fa fa-eye')
-      }
-    }
   });
 
   $('#hide_para').on('click', function (e) {
