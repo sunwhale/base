@@ -138,7 +138,6 @@ def view_experiment(experiment_id):
 def open_experiment(experiment_id):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     experiment_path = os.path.join(experiments_path, str(experiment_id))
-    print(experiment_path)
     if os.path.exists(experiment_path):
         cmd = 'explorer %s' % experiment_path
         proc = subprocess.run(cmd)
@@ -202,20 +201,27 @@ def view_specimen(experiment_id, specimen_id):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     specimen_path = os.path.join(experiments_path, str(experiment_id), str(specimen_id))
     if os.path.exists(specimen_path):
-        form = ParameterForm()
+        form_para = ParameterForm()
+        form_upload = UploadForm()
         s = Solver(specimen_path)
         para = s.get_parameters()
-        if form.validate_on_submit():
-            para = form.para.data
+        if form_upload.validate_on_submit():
+            f = form_upload.filename.data
+            f.save(os.path.join(specimen_path, f.filename))
+            flash('上传文件%s成功。' % f.filename, 'success')
+            return redirect(url_for('experiment.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
+        elif form_para.validate_on_submit():
+            para = form_para.para.data
             s.save_parameters(para)
             flash('parameters.inp保存成功。', 'success')
             return redirect(url_for('.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
-        form.para.data = para
+
+        form_para.para.data = para
         s.parameters_to_json()
         status = get_specimen_status(experiments_path, experiment_id, specimen_id)
         files = files_in_dir(specimen_path)
         return render_template('experiment/view_specimen.html', experiment_id=experiment_id, specimen_id=specimen_id,
-                               status=status, form=form, files=files)
+                               status=status, form_para=form_para, form_upload=form_upload, files=files)
     else:
         abort(404)
 

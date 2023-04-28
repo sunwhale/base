@@ -40,7 +40,7 @@
                       <li> 实验类型：{{ status['type'] }} </li>
                       <li> 参考标准：{{ status['standard'] }} </li>
                       <li> 创建时间：{{ status['experiment_time'] }} </li>
-                      <li> 项目简介：</li>
+                      <li> 项目详情：</li>
                       <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
                       <p></p>
                       <a class='btn btn-primary' href="{{ url_for('experiment.edit_experiment', experiment_id=experiment_id) }}"><strong>编辑信息</strong></a>
@@ -124,7 +124,7 @@
                         <th>{{ parameter }}</th>
                         {% endfor %}
                         <th>试件名称</th>
-                        <th>实验时间</th>
+                        <th>录入时间</th>
                         <th width=150px>操作</th>
                       </tr>
                     </thead>
