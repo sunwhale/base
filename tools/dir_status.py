@@ -279,6 +279,7 @@ def get_experiment_status(path, experiment_id):
                 message = json.load(f)
             status['name'] = message['name']
             status['type'] = message['type']
+            status['material'] = message['material']
             status['standard'] = message['standard']
             status['experiment_time'] = file_time(msg_file)
             status['descript'] = message['descript']
@@ -289,7 +290,7 @@ def get_experiment_status(path, experiment_id):
             status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
                 'view_experiment/'+str(experiment_id), 'edit_experiment/'+str(experiment_id), 'delete_experiment/'+str(experiment_id))
         except (FileNotFoundError, KeyError):
-            for key in ['name', 'experiment_time', 'descript', 'job', 'user', 'cpus', 'link']:
+            for key in ['name', 'experiment_time', 'type', 'material', 'standard', 'descript']:
                 status[key] = 'None'
             status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
                 'view_experiment/'+str(experiment_id), 'edit_experiment/'+str(experiment_id), 'delete_experiment/'+str(experiment_id))

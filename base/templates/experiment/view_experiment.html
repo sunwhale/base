@@ -37,6 +37,7 @@
                     <ul class="list-unstyled">
                       <li> 项目名称：{{ status['name'] }} </li>
                       <li> 项目编号：{{ experiment_id }} </li>
+                      <li> 实验材料：{{ status['material'] }} </li>
                       <li> 实验类型：{{ status['type'] }} </li>
                       <li> 参考标准：{{ status['standard'] }} </li>
                       <li> 创建时间：{{ status['experiment_time'] }} </li>
@@ -47,7 +48,7 @@
                       {% if env['service'] == 'client' %}
                       <a href="{{ url_for('experiment.open_experiment', experiment_id=experiment_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
                       {% endif %}
-                      <a class='btn btn-success' href="{{ url_for('experiment.create_specimen', experiment_id=experiment_id) }}"><strong>新建试件</strong></a>
+                      <a class='btn btn-success' href="{{ url_for('experiment.create_specimen', experiment_id=experiment_id) }}"><strong>新建实验</strong></a>
                     </ul>
                     
                   </div>
@@ -91,7 +92,7 @@
           <div class="col-12">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">{{ experiment_id }}号实验项目的试件列表</h3>
+                <h3 class="card-title">{{ experiment_id }}号实验项目的实验列表</h3>
                 <div class="card-tools">
                   <button type="button" class="btn btn-tool" data-card-widget="maximize">
                     <i class="fas fa-expand"></i>
@@ -104,9 +105,9 @@
               <div class="card-body">
                 <form method="POST" id="form_queue" name="form_queue">
                   {{ form_upload.csrf_token }}
-                  <button class="btn btn-success" type="submit" id="submit_queue_solver">
-                    <i class="fa fa-upload"></i>
-                    <strong>下载选中的试件数据</strong>
+                  <button class="btn btn-success" type="submit" id="submit_download">
+                    <i class="fa fa-download"></i>
+                    <strong>下载选中的实验数据</strong>
                   </button>
                   <button class="btn btn-primary" id="hide_para">
                     <i class="fa fa-eye-slash" id="hide_para_icon"></i>
@@ -183,7 +184,7 @@
       columns: [
         { data : null, 
           render: function (data) {
-            return data='<input type="checkbox" class="checkOne" id="'+data['job_id']+'">';
+            return data='<input type="checkbox" class="checkOne" id="'+data['specimen_id']+'">';
           },
           sClass: 'text-center'},
         { data: 'specimen_id' },
@@ -246,14 +247,14 @@
   });
 
   $(document).ready(function () {
-    $('#submit_queue_solver').on('click', function () {
+    $('#submit_download').on('click', function () {
       var checked_item = $('.checkOne:checked')
       var checked_items = []
       for (var i=0; i<checked_item.length; i++) {
         checked_items.push(checked_item[i].id);
       }
       document.getElementById('queue_value').value = checked_items;
-      document.getElementById('queue_type').value = 'Solver';
+      document.getElementById('queue_type').value = 'Download';
     });
   });
 

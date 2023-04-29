@@ -2,14 +2,14 @@
 """
 
 """
-import json
+import uuid
 import os
 import shutil
 import subprocess
-import time
+import zipfile
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
-                   render_template, request, send_from_directory, url_for)
+                   render_template, request, send_file, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
 from base.forms.experiment import ExperimentForm, UploadForm, SpecimenForm, ParameterForm
@@ -47,6 +47,7 @@ def create_experiment():
         make_dir(experiment_path)
         message = {
             'name': form.name.data,
+            'material': form.material.data,
             'type': form.type.data,
             'standard': form.standard.data,
             'parameters': form.parameters.data,
@@ -74,6 +75,7 @@ def edit_experiment(experiment_id):
     if form.validate_on_submit():
         message = {
             'name': form.name.data,
+            'material': form.material.data,
             'type': form.type.data,
             'standard': form.standard.data,
             'parameters': form.parameters.data,
@@ -87,6 +89,7 @@ def edit_experiment(experiment_id):
 
     message = load_json(msg_file)
     form.name.data = message['name']
+    form.material.data = message['material']
     form.type.data = message['type']
     form.standard.data = message['standard']
     form.parameters.data = message['parameters']
@@ -123,6 +126,27 @@ def view_experiment(experiment_id):
         f.save(os.path.join(experiment_path, f.filename))
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('experiment.view_experiment', experiment_id=experiment_id))
+
+    if request.method == 'POST':
+        data = request.form.to_dict()
+        if 'queue_value' in data.keys():
+            queue_list = [int(specimen_id) for specimen_id in data['queue_value'].split(',') if specimen_id != '']
+            queue_type = data['queue_type']
+            print(queue_list, queue_type)
+            if queue_type == 'Download':
+                folder_path = experiment_path
+                specimen_paths = [os.path.join(experiment_path, str(queue_id)) for queue_id in queue_list]
+                zip_path = os.path.join(experiment_path, f'experiment_{experiment_id}_{str(uuid.uuid4())}.zip')
+
+                with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                    for root, dirs, files in os.walk(folder_path):
+                        for file in files:
+                            if root in specimen_paths:
+                                file_path = os.path.join(root, file)
+                                rel_path = os.path.relpath(file_path, folder_path)
+                                zip_file.write(file_path, rel_path)
+
+                return send_file(zip_path, as_attachment=True)
 
     if os.path.exists(experiment_path):
         status = get_experiment_status(experiments_path, experiment_id)

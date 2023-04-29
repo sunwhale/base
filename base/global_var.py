@@ -1,5 +1,3 @@
-# -*- coding:utf-8 -*-
-
 from tools.events_manager import EventManager, SolverListener, PostprocListener, EventSource
 
 solver_listener = SolverListener('Solver')
@@ -18,6 +16,6 @@ def create_thread_id():
     if num_of_threads == 0:
         thread_id = 1
     else:
-        thread_id = max(num_of_threads, max(list(exporting_threads.keys())))+1
+        thread_id = max(num_of_threads, max(list(exporting_threads.keys()))) + 1
 
     return thread_id

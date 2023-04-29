@@ -23,7 +23,8 @@ class ParameterForm(FlaskForm):
 
 
 class ExperimentForm(FlaskForm):
-    name = StringField('项目名称', validators=[DataRequired(), Length(1, 60)])
+    name = StringField('项目名称', validators=[DataRequired(), Length(1, 64)])
+    material = StringField('材料', validators=[DataRequired(), Length(1, 64)])
     type = SelectField('实验类型', coerce=str)
     standard = StringField('参考标准', default='无')
     parameters = TextAreaField('实验参数', default='请按照以下格式输入实验参数，例如：\nTemperature, ℃ = \nKt = ', render_kw={'rows': 12})

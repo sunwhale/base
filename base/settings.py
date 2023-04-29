@@ -23,7 +23,7 @@ class Operations:
 
 class BaseConfig:
     STATIC_PATH = os.path.join(basedir, 'base', 'static')
-    if os.getenv('FILE_PATH') != None:
+    if os.getenv('FILE_PATH') is not None:
         FILE_PATH = os.getenv('FILE_PATH')
     else:
         FILE_PATH = os.path.join(basedir, 'files')
@@ -41,9 +41,9 @@ class BaseConfig:
     PACKING_MODELS_PATH = os.path.join(FILE_PATH, 'packing', 'models')
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
+
     SECRET_KEY = os.getenv('SECRET_KEY', 'secret string')
-    
+
     ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'sunjingyu@imech.ac.cn')
     BASE_MAIL_SUBJECT_PREFIX = '[Base]'
     MAIL_SERVER = os.getenv('MAIL_SERVER')
@@ -60,7 +60,7 @@ class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = prefix + os.path.join(basedir, 'data.db')
     REDIS_URL = "redis://localhost"
     SERVICE = 'client'
-    
+
 
 class TestingConfig(BaseConfig):
     TESTING = True
