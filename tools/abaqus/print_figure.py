@@ -2,14 +2,13 @@
 """
 
 """
-from abaqus import *
-from abaqusConstants import *
-from viewerModules import *
-from driverUtils import executeOnCaeStartup
 import json
 import os
 import shutil
-import subprocess
+
+from abaqus import *
+from abaqusConstants import *
+from viewerModules import *
 
 
 def dump_json(file_name, data):
@@ -74,7 +73,7 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
 
     viewport.enableMultipleColors()
     viewport.setColor(initialColor='#BDBDBD')
-    cmap=viewport.colorMappings[setting['colorMappings']]
+    cmap = viewport.colorMappings[setting['colorMappings']]
     viewport.setColor(colorMapping=cmap)
     viewport.disableMultipleColors()
 
@@ -106,27 +105,27 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
 
     frames_len = len(odb.steps[setting['step']].frames)
     if setting['animate'] == "OFF":
-        if setting['frame'] > frames_len-1:
-            setting['frame'] = frames_len-1
+        if setting['frame'] > frames_len - 1:
+            setting['frame'] = frames_len - 1
         display.setFrame(step=setting['step'], frame=setting['frame'])
 
         if setting['refinement'] != ():
             figurename = '%s_%s.png' % (setting['refinement'][-1], setting['frame'])
         else:
             figurename = '%s_%s.png' % (setting['variableLabel'], setting['frame'])
-        if setting['plotState'] == (UNDEFORMED, ):
+        if setting['plotState'] == (UNDEFORMED,):
             figurename = 'UNDEFORMED_%s_%s.png' % (setting['colorMappings'], setting['frame'])
-        elif setting['plotState'] == (DEFORMED, ):
+        elif setting['plotState'] == (DEFORMED,):
             figurename = 'DEFORMED_%s_%s.png' % (setting['colorMappings'], setting['frame'])
 
         session.printToFile(fileName=figurename, format=PNG,
-                            canvasObjects=(viewport, ))
+                            canvasObjects=(viewport,))
 
     elif setting['animate'] == "ON":
         start = setting['startFrame']
         end = setting['endFrame']
-        if end > frames_len-1:
-            end = frames_len-1
+        if end > frames_len - 1:
+            end = frames_len - 1
         elif end < 0:
             end += frames_len
         interval = setting['frameInterval']
@@ -135,16 +134,16 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
             path = '%s' % (setting['refinement'][-1])
         else:
             path = '%s' % (setting['variableLabel'])
-        if setting['plotState'] == (UNDEFORMED, ):
+        if setting['plotState'] == (UNDEFORMED,):
             path = 'UNDEFORMED_%s' % (setting['colorMappings'])
-        elif setting['plotState'] == (DEFORMED, ):
+        elif setting['plotState'] == (DEFORMED,):
             path = 'DEFORMED_%s' % (setting['colorMappings'])
 
         if os.path.exists(path):
             shutil.rmtree(path)
         os.mkdir(path)
 
-        frame_ids = [i for i in range(start, end+1, interval)]
+        frame_ids = [i for i in range(start, end + 1, interval)]
         if end not in frame_ids:
             frame_ids.append(end)
         for frame_id in frame_ids:
@@ -153,13 +152,13 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
                 figurename = '%s%s%s_%s.png' % (path, os.sep, setting['refinement'][-1], frame_id)
             else:
                 figurename = '%s%s%s_%s.png' % (path, os.sep, setting['variableLabel'], frame_id)
-            if setting['plotState'] == (UNDEFORMED, ):
+            if setting['plotState'] == (UNDEFORMED,):
                 figurename = '%s%sUNDEFORMED_%s_%s.png' % (path, os.sep, setting['colorMappings'], frame_id)
-            elif setting['plotState'] == (DEFORMED, ):
+            elif setting['plotState'] == (DEFORMED,):
                 figurename = '%s%sDEFORMED_%s_%s.png' % (path, os.sep, setting['colorMappings'], frame_id)
 
             session.printToFile(fileName=figurename, format=PNG,
-                                canvasObjects=(viewport, ))
+                                canvasObjects=(viewport,))
 
         with open('.print_figure_status', 'w') as f:
             f.write('Done')

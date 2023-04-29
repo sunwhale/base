@@ -3,13 +3,9 @@
 
 """
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileAllowed, FileField, FileRequired
-from wtforms import (BooleanField, DateField, DecimalField, FileField,
-                     FloatField, HiddenField, IntegerField, MultipleFileField,
-                     PasswordField, SelectField, StringField, SubmitField,
-                     TextAreaField, ValidationError)
-from wtforms.validators import (URL, DataRequired, Length, NumberRange,
-                                Optional, Regexp, ValidationError)
+from flask_wtf.file import FileRequired
+from wtforms import (DecimalField, FileField, IntegerField, SelectField, StringField, SubmitField, TextAreaField)
+from wtforms.validators import (DataRequired, Length, NumberRange)
 
 
 class PackingForm(FlaskForm):
@@ -17,10 +13,13 @@ class PackingForm(FlaskForm):
     gap = DecimalField('两球间距', default=0.0, validators=[NumberRange(0, 0.1)])
     num_add = IntegerField('最大填充次数', default=10000, validators=[DataRequired(), NumberRange(0, 1000000)])
     dt0 = DecimalField('初始时间步长', default=0.01, validators=[DataRequired(), NumberRange(0, 1)])
-    dt_interval = IntegerField('运动/每填充次数', default=1000000, validators=[DataRequired(), NumberRange(0, 1000000000)])
-    max_iter = IntegerField('计算球体碰撞的最大迭代次数', default=1000, validators=[DataRequired(), NumberRange(0, 1024)])
+    dt_interval = IntegerField('运动/每填充次数', default=1000000,
+                               validators=[DataRequired(), NumberRange(0, 1000000000)])
+    max_iter = IntegerField('计算球体碰撞的最大迭代次数', default=1000,
+                            validators=[DataRequired(), NumberRange(0, 1024)])
     size = StringField('计算域尺寸，毫米', default='[[0,1],[0,1]]', validators=[DataRequired()])
-    rayleigh_para = DecimalField('球体直径瑞利分布参数，微米', default=20.32, validators=[DataRequired(), NumberRange(0, 100)])
+    rayleigh_para = DecimalField('球体直径瑞利分布参数，微米', default=20.32,
+                                 validators=[DataRequired(), NumberRange(0, 100)])
     num_ball = IntegerField('填充球体数量', default=1200, validators=[DataRequired(), NumberRange(0, 10000)])
     rad_max = DecimalField('最大球体直径，微米', default=100, validators=[DataRequired(), NumberRange(0, 1000)])
     rad_min = DecimalField('最小球体直径，微米', default=10, validators=[DataRequired(), NumberRange(0, 1000)])
@@ -35,8 +34,8 @@ class SubmodelForm(FlaskForm):
 
 class MeshForm(FlaskForm):
     gap = DecimalField('两圆间距，gap', default=0.0, validators=[NumberRange(0, 0.1)])
-    node_shape = StringField('划分网格节点维度',default='[129,129]',validators=[DataRequired()])
-    element_type = StringField('单元类型，CPE4/CPS4/C3D8等',default='CPS4T',validators=[DataRequired()])
+    node_shape = StringField('划分网格节点维度', default='[129,129]', validators=[DataRequired()])
+    element_type = StringField('单元类型，CPE4/CPS4/C3D8等', default='CPS4T', validators=[DataRequired()])
     submit = SubmitField('提交')
 
 
@@ -52,7 +51,7 @@ class PostForm(FlaskForm):
 
 
 class ABAQUSForm(FlaskForm):
-    name = StringField('项目名称', render_kw = {'readonly': True})
+    name = StringField('项目名称', render_kw={'readonly': True})
     descript = TextAreaField('项目描述')
     job = StringField('缺省算例名', default='Job-1')
     user = StringField('缺省user文件', default='user.for')

@@ -2,11 +2,11 @@
 """
 读取odb文件，输出npz格式数据文件
 """
+import json
+
+import numpy as np
 from abaqusConstants import *
 from odbAccess import *
-import json
-import os
-import numpy as np
 
 position = {
     'INTEGRATION_POINT': INTEGRATION_POINT,
@@ -45,16 +45,15 @@ def is_write(n, total, seg=100):
     if total < seg:
         return True
     else:
-        a = int(total/seg)
-        if n%a == 0:
+        a = int(total / seg)
+        if n % a == 0:
             return True
         if n == total:
             return True
-        return False    
-    
+        return False
+
 
 def odb_to_npz(setting_file):
-
     f_proc = open('.odb_to_npz_proc', 'w')
     with open('.odb_to_npz_status', 'w') as f:
         f.write('Running')
@@ -186,19 +185,20 @@ def odb_to_npz(setting_file):
                     if frames_in_step == []:
                         frames_in_step = range(len(frames))
 
-                    if float(len(frames_in_step))/len(frames) > 0.1:
+                    if float(len(frames_in_step)) / len(frames) > 0.1:
                         for i, frame in enumerate(frames):
                             if i in frames_in_step:
                                 time.append(frame.frameValue)
                                 current_count += 1
                                 if is_write(current_count, total_count):
-                                    f_proc.write('%.1f\n' % (float(current_count)*100/total_count))
+                                    f_proc.write('%.1f\n' % (float(current_count) * 100 / total_count))
                                     f_proc.flush()
                                 # loop of variables
                                 for v in variables:
                                     v_name = str(v[0])
                                     v_position = str(v[1])
-                                    field_output = frame.fieldOutputs[v_name].getSubset(position=position[v_position], region=region)
+                                    field_output = frame.fieldOutputs[v_name].getSubset(position=position[v_position],
+                                                                                        region=region)
                                     if len(field_output.bulkDataBlocks) > 0:
                                         bulk_data = field_output.bulkDataBlocks[0]
                                         field_var = data[r_name]['fieldOutputs'][v_name]
@@ -215,13 +215,14 @@ def odb_to_npz(setting_file):
                             time.append(frames[frame_id].frameValue)
                             current_count += 1
                             if is_write(current_count, total_count):
-                                f_proc.write('%.1f\n' % (float(current_count)*100/total_count))
+                                f_proc.write('%.1f\n' % (float(current_count) * 100 / total_count))
                                 f_proc.flush()
                             # loop of variables
                             for v in variables:
                                 v_name = str(v[0])
                                 v_position = str(v[1])
-                                field_output = frames[frame_id].fieldOutputs[v_name].getSubset(position=position[v_position], region=region)
+                                field_output = frames[frame_id].fieldOutputs[v_name].getSubset(
+                                    position=position[v_position], region=region)
                                 if len(field_output.bulkDataBlocks) > 0:
                                     bulk_data = field_output.bulkDataBlocks[0]
                                     field_var = data[r_name]['fieldOutputs'][v_name]
@@ -257,6 +258,7 @@ def odb_to_npz(setting_file):
                 f.write('Error')
 
     f_proc.close()
+
 
 if __name__ == '__main__':
     setting_file = sys.argv[-1]

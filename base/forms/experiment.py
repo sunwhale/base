@@ -3,13 +3,9 @@
 
 """
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileAllowed, FileField, FileRequired
-from wtforms import (BooleanField, DateField, DecimalField, FloatField,
-                     HiddenField, IntegerField, MultipleFileField,
-                     DateTimeField, SelectField, StringField, SubmitField,
-                     TextAreaField, ValidationError)
-from wtforms.validators import (URL, DataRequired, Length, NumberRange,
-                                Optional, Regexp, ValidationError)
+from flask_wtf.file import FileField, FileRequired
+from wtforms import (SelectField, StringField, SubmitField, TextAreaField)
+from wtforms.validators import (DataRequired, Length)
 
 
 class UploadForm(FlaskForm):
@@ -23,11 +19,12 @@ class ParameterForm(FlaskForm):
 
 
 class ExperimentForm(FlaskForm):
-    name = StringField('项目名称', validators=[DataRequired(), Length(1, 64)])
-    material = StringField('材料', validators=[DataRequired(), Length(1, 64)])
+    name = StringField('项目名称', validators=[DataRequired(), Length(1, 62)])
+    material = StringField('材料', validators=[DataRequired(), Length(1, 62)])
     type = SelectField('实验类型', coerce=str)
     standard = StringField('参考标准', default='无')
-    parameters = TextAreaField('实验参数', default='请按照以下格式输入实验参数，例如：\nTemperature, ℃ = \nKt = ', render_kw={'rows': 12})
+    parameters = TextAreaField('实验参数', default='请按照以下格式输入实验参数，例如：\nTemperature, ℃ = \nKt = ',
+                               render_kw={'rows': 12})
     descript = TextAreaField('项目详情', render_kw={'rows': 12})
     submit = SubmitField('提交')
 
@@ -37,7 +34,6 @@ class ExperimentForm(FlaskForm):
 
 
 class SpecimenForm(FlaskForm):
-    name = StringField('试件编号', default='1', validators=[DataRequired(), Length(1, 128)])
-    # time = DateTimeField('实验时间', format='%Y-%m-%d %H:%M:%S')
+    name = StringField('试件编号', default='1', validators=[DataRequired(), Length(1, 62)])
     descript = TextAreaField('实验详情', render_kw={'rows': 12})
     submit = SubmitField('提交')

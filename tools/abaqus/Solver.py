@@ -2,13 +2,11 @@
 """
 
 """
-
+import glob
 import json
 import os
 import subprocess
 import threading
-import glob
-
 
 ABAQUS = os.getenv('ABAQUS')
 ABAQUS_FORTRAN = os.getenv('ABAQUS_FORTRAN')
@@ -44,7 +42,7 @@ def is_number(s):
 def write_log(proc, logfile):
     f = open(logfile, 'w', encoding='utf-8')
     for line in iter(proc.stdout.readline, b''):
-        log = line.decode('UTF-8').replace('\n','')
+        log = line.decode('UTF-8').replace('\n', '')
         f.write(log)
         f.flush()
         if not subprocess.Popen.poll(proc) is None:
@@ -144,7 +142,7 @@ class Solver:
         remove_files(self.path, '{}.msg'.format(self.job))
         remove_files(self.path, '{}.odb'.format(self.job))
         remove_files(self.path, '{}.npz'.format(self.job))
-        
+
     def terminate(self):
         os.chdir(self.path)
         cmd = '%s terminate job=%s' % (ABAQUS, self.job)
@@ -299,14 +297,14 @@ class Solver:
         solver_status = self.solver_status()
         button = ""
         button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % (
-            '../view_job/'+str(project_id)+'/'+str(job_id))
+                '../view_job/' + str(project_id) + '/' + str(job_id))
         button += "<a class='btn btn-primary btn-sm' onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a> " % (
-            '../delete_job/'+str(project_id)+'/'+str(job_id))
+                '../delete_job/' + str(project_id) + '/' + str(job_id))
         if solver_status == 'Submitting' or solver_status == 'Running' or solver_status == 'Pause' or solver_status == 'Stopping':
             button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>计算</button> "
         else:
             button += "<a href='%s' class='btn btn-success btn-sm'>计算</a> " % (
-                '../run_job/'+str(project_id)+'/'+str(job_id))
+                    '../run_job/' + str(project_id) + '/' + str(job_id))
         if solver_status == 'Running':
             button += "<a href='#' class='btn btn-warning btn-sm'>暂停</a> "
         else:
@@ -317,7 +315,7 @@ class Solver:
             button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>继续</button> "
         if solver_status == 'Running':
             button += "<a href='%s' class='btn btn-danger btn-sm'>终止</a>" % (
-                '../terminate_job/'+str(project_id)+'/'+str(job_id))
+                    '../terminate_job/' + str(project_id) + '/' + str(job_id))
         else:
             button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>终止</button>"
         return button

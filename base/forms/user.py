@@ -4,20 +4,16 @@
 """
 from flask_login import current_user
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileAllowed, FileField, FileRequired
-from wtforms import (BooleanField, HiddenField, PasswordField, StringField,
-                     SubmitField, TextAreaField, ValidationError)
-from wtforms.validators import (DataRequired, Email, EqualTo, Length, Optional,
-                                Regexp)
+from wtforms import (BooleanField, PasswordField, StringField, SubmitField, ValidationError)
+from wtforms.validators import (DataRequired, Email, EqualTo, Length, Regexp)
 
 from base.models import User
 
 
 class EditProfileForm(FlaskForm):
     name = StringField('姓名/Name', validators=[DataRequired(), Length(1, 30)])
-    username = StringField('用户名/Username', validators=[DataRequired(), Length(1, 20),
-                                                   Regexp('^[a-zA-Z0-9]*$',
-                                                          message='The username should contain only a-z, A-Z and 0-9.')])
+    username = StringField('用户名/Username', validators=[DataRequired(), Length(1, 30), Regexp('^[a-zA-Z0-9]*$',
+                                                                                                message='The username should contain only a-z, A-Z and 0-9.')])
     submit = SubmitField('提交/Submit')
 
     def validate_username(self, field):
@@ -48,7 +44,7 @@ class PrivacySettingForm(FlaskForm):
 
 
 class DeleteAccountForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(1, 20)])
+    username = StringField('Username', validators=[DataRequired(), Length(1, 30)])
     submit = SubmitField()
 
     def validate_username(self, field):

@@ -6,8 +6,7 @@ import json
 import os
 import shutil
 
-from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
-                   render_template, request, send_from_directory, url_for)
+from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, url_for)
 from flask_login import current_user, login_required
 
 from base.extensions import csrf
@@ -112,7 +111,7 @@ def manage_sheets():
 
 @sheet_bp.route('/delete_sheet/<int:sheet_id>')
 @login_required
-def deletemd(sheet_id):
+def delete_sheet(sheet_id):
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该数据表格！', 'warning')
         return redirect(url_for('.manage_sheets'))

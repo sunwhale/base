@@ -2,18 +2,10 @@
 """
 
 """
-import json
-import os
-import shutil
-import subprocess
-import time
+from flask import (Blueprint, jsonify, redirect, render_template, url_for)
+from flask_login import login_required
 
-from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
-                   render_template, request, send_from_directory, url_for)
-from flask_login import current_user, login_required
-
-from base.global_var import event_manager, event_source
-
+from base.global_var import event_manager
 
 queue_bp = Blueprint('queue', __name__)
 

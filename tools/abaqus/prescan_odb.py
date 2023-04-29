@@ -2,11 +2,12 @@
 """
 
 """
+import json
+
 from abaqus import *
 from abaqusConstants import *
 from odbAccess import *
 from textRepr import *
-import json
 
 
 def len_1_level(x):
@@ -27,7 +28,6 @@ def len_2_level(x):
 
 
 def prescan_odb(odb_file):
-
     with open('.prescan_status', 'w') as f:
         f.write('Scanning')
 
@@ -49,7 +49,7 @@ def prescan_odb(odb_file):
 
             odb_dict['jobData'] = {
                 'precision': str(odb.jobData.precision),
-                'version':  odb.jobData.version
+                'version': odb.jobData.version
             }
 
             odb_dict['rootAssembly'] = {
@@ -139,8 +139,8 @@ def prescan_odb(odb_file):
                 if frames_len < max_len:
                     frame_ids = [i for i in range(frames_len)]
                 else:
-                    frame_ids = [i for i in range(max_len/2)]
-                    frame_ids += [i for i in range(frames_len-int(max_len/2), frames_len)]
+                    frame_ids = [i for i in range(max_len / 2)]
+                    frame_ids += [i for i in range(frames_len - int(max_len / 2), frames_len)]
 
                 for i in frame_ids:
                     frame = frames[i]
@@ -193,7 +193,7 @@ def prescan_odb(odb_file):
     else:
         print('The odb file is not found.\n')
         with open('.prescan_status', 'w') as f:
-                f.write('Error')
+            f.write('Error')
 
     return odb_dict
 

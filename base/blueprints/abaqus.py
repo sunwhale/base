@@ -8,23 +8,22 @@ import shutil
 import subprocess
 import time
 
-from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
-                   render_template, request, send_from_directory, url_for)
+from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request,
+                   send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.abaqus import JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm, FigureSettingFrom, OdbForm
-from tools.abaqus.Solver import Solver
-from tools.abaqus.Postproc import Postproc
-from tools.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status,
-                              get_project_status, get_template_status, project_jobs_detail,
-                              projects_detail, templates_detail, sub_dirs_int)
-from tools.tree import json_to_ztree, odb_json_to_ztree
-from tools.common import make_dir, dump_json, load_json
+from base.forms.abaqus import (JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm,
+                               FigureSettingFrom, OdbForm)
 from base.global_var import event_source
+from tools.abaqus.Postproc import Postproc
+from tools.abaqus.Solver import Solver
+from tools.common import make_dir, dump_json, load_json
+from tools.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status,
+                              get_template_status, project_jobs_detail, projects_detail, templates_detail, sub_dirs_int)
 from tools.events_new import update_events_new
 from tools.make_gif import make_gif
 from tools.read_prescan import read_prescan
-
+from tools.tree import json_to_ztree, odb_json_to_ztree
 
 abaqus_bp = Blueprint('abaqus', __name__)
 
@@ -182,7 +181,7 @@ def view_project(project_id):
         f.save(os.path.join(project_path, f.filename))
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('abaqus.view_project', project_id=project_id))
-    
+
     if form_template.validate_on_submit():
         template_id = int(form_template.name.data.split('_')[0])
         template_path = os.path.join(templates_path, str(template_id))
@@ -195,10 +194,9 @@ def view_project(project_id):
 
     if request.method == 'POST':
         data = request.form.to_dict()
-        print(data)
         if 'queue_value' in data.keys():
             queue_list = [int(job_id)
-                           for job_id in data['queue_value'].split(',') if job_id != '']
+                          for job_id in data['queue_value'].split(',') if job_id != '']
             queue_type = data['queue_type']
             new_jobs = []
             if queue_type == 'Solver':
@@ -272,7 +270,8 @@ def view_project(project_id):
     if os.path.exists(project_path):
         status = get_project_status(abaqus_path, project_id)
         files = files_in_dir(project_path)
-        return render_template('abaqus/view_project.html', project_id=project_id, status=status, files=files, parameters=parameters, form_upload=form_upload, form_template=form_template)
+        return render_template('abaqus/view_project.html', project_id=project_id, status=status, files=files,
+                               parameters=parameters, form_upload=form_upload, form_template=form_template)
     else:
         abort(404)
 
@@ -347,7 +346,7 @@ def delete_job_file(project_id, job_id, filename):
 def delete_job_subpath(project_id, job_id, pathname):
     abaqus_path = current_app.config['ABAQUS_PATH']
     subpath = os.path.join(abaqus_path, str(project_id),
-                        str(job_id), str(pathname))
+                           str(job_id), str(pathname))
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该文件夹！', 'warning')
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
@@ -394,7 +393,9 @@ def view_job(project_id, job_id):
         files = files_in_dir(job_path)
         solver_status = s.solver_status()
         status = get_job_status(abaqus_path, project_id, job_id)
-        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status, logs=logs[-5000:], sta=sta[-100:], run_logs=run_logs, form=form, solver_status=solver_status, files=files)
+        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status,
+                               logs=logs[-5000:], sta=sta[-100:], run_logs=run_logs, form=form,
+                               solver_status=solver_status, files=files)
     else:
         abort(404)
 
@@ -621,7 +622,9 @@ def print_figure(project_id, job_id):
                 proc = p.print_figure()
                 with open(os.path.join(job_path, '.print_figure_status'), 'w', encoding='utf-8') as f:
                     f.write('Submitting')
-                return redirect(url_for('.print_figure', project_id=project_id, job_id=job_id, form=form, files=png_files, subpaths=subpaths))
+                return redirect(
+                    url_for('.print_figure', project_id=project_id, job_id=job_id, form=form, files=png_files,
+                            subpaths=subpaths))
         else:
             flash('缺少odb文件。', 'warning')
 
@@ -658,7 +661,8 @@ def print_figure(project_id, job_id):
 
         status = get_job_status(abaqus_path, project_id, job_id)
         logs = p.get_print_figure_log()
-        return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, logs=logs, status=status, files=png_files, subpaths=subpaths)
+        return render_template('abaqus/print_figure.html', project_id=project_id, job_id=job_id, form=form, logs=logs,
+                               status=status, files=png_files, subpaths=subpaths)
     else:
         abort(404)
 
@@ -749,7 +753,8 @@ def view_template(template_id):
     if os.path.exists(template_path):
         status = get_template_status(templates_path, template_id)
         files = files_in_dir(template_path)
-        return render_template('abaqus/view_template.html', template_id=template_id, status=status, files=files, form=form)
+        return render_template('abaqus/view_template.html', template_id=template_id, status=status, files=files,
+                               form=form)
     else:
         abort(404)
 
@@ -854,7 +859,7 @@ def postproc():
                 os.remove(odb_json_file)
             flash('%s不存在。' % odb_name, 'warning')
         return redirect(request.referrer)
-            
+
     if request.method == 'POST':
         data = request.form.to_dict()
         print(data)
@@ -899,7 +904,8 @@ def postproc():
     else:
         odb_to_npz_json = ''
 
-    return render_template('abaqus/postproc.html', form_odb=form_odb, filename=odb_json_file, variables=variables, regions=regions, frames=frames, odb_to_npz_json=odb_to_npz_json)
+    return render_template('abaqus/postproc.html', form_odb=form_odb, filename=odb_json_file, variables=variables,
+                           regions=regions, frames=frames, odb_to_npz_json=odb_to_npz_json)
 
 
 @abaqus_bp.route('/postproc_prescan_odb_data/<path:filename>', methods=['GET', 'POST'])
@@ -914,21 +920,21 @@ def postproc_prescan_odb_data(filename):
     return ztree
 
 
-@abaqus_bp.route('/postproc_prescan_odb/<path:odbname>')
-@login_required
-def postproc_prescan_odb(odbname):
-    dirname = os.path.dirname(odbname)
-    basename = os.path.basename(odbname)
-    jobname = basename.split('.')[0]
-    if os.path.exists(odbname):
-        p = Postproc(dirname, job=jobname)
-        proc = p.prescan_odb()
-        with open(os.path.join(job_path, '.prescan_status'), 'w', encoding='utf-8') as f:
-            f.write('Submitting')
-            flash('预扫描开始', 'success')
-        return redirect(request.referrer)
-    else:
-        abort(404)
+# @abaqus_bp.route('/postproc_prescan_odb/<path:odbname>')
+# @login_required
+# def postproc_prescan_odb(odbname):
+#     dirname = os.path.dirname(odbname)
+#     basename = os.path.basename(odbname)
+#     jobname = basename.split('.')[0]
+#     if os.path.exists(odbname):
+#         p = Postproc(dirname, job=jobname)
+#         proc = p.prescan_odb()
+#         with open(os.path.join(job_path, '.prescan_status'), 'w', encoding='utf-8') as f:
+#             f.write('Submitting')
+#             flash('预扫描开始', 'success')
+#         return redirect(request.referrer)
+#     else:
+#         abort(404)
 
 
 @abaqus_bp.route('/prescan')

@@ -5,10 +5,9 @@
 import json
 import os
 import shutil
-import time
 
-from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
-                   render_template, request, send_from_directory, url_for)
+from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request,
+                   send_from_directory, url_for)
 from flask_login import current_user, login_required
 
 from base.extensions import csrf

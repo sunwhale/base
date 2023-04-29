@@ -2,9 +2,9 @@
 """
 
 """
+import os
 
 import imageio
-import os
 
 
 def make_gif(path, gif_path, fps):

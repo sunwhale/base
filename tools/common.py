@@ -2,11 +2,8 @@
 """
 
 """
-
 import json
 import os
-import numpy as np
-
 
 invariant_dict = {
     'MAGNITUDE': 'Magnitude',
@@ -20,8 +17,8 @@ invariant_dict = {
     'TRESCA': 'Tresca',
     'PRESS': 'Pressure',
     'INV3': 'Third Invariant',
-    }
-    
+}
+
 
 def make_dir(path):
     if not os.path.isdir(path):

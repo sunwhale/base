@@ -2,16 +2,13 @@
 """
 
 """
-from flask import (Blueprint, current_app, flash, redirect, render_template,
-                   url_for)
-from flask_login import (confirm_login, current_user, login_fresh,
-                         login_required, login_user, logout_user)
+from flask import (Blueprint, flash, redirect, render_template, url_for)
+from flask_login import (confirm_login, current_user, login_fresh, login_required, login_user, logout_user)
 
-from base.decorators import admin_required, permission_required
-from base.emails import send_confirm_email, send_reset_password_email
+from base.decorators import admin_required
+from base.emails import send_reset_password_email
 from base.extensions import db
-from base.forms.auth import (ForgetPasswordForm, LoginForm, RegisterForm,
-                             ResetPasswordForm)
+from base.forms.auth import (ForgetPasswordForm, LoginForm, RegisterForm, ResetPasswordForm)
 from base.models import User
 from base.settings import Operations
 from base.utils import generate_token, redirect_back, validate_token
@@ -85,8 +82,7 @@ def reset_password(token):
         user = User.query.filter_by(email=form.email.data.lower()).first()
         if user is None:
             return redirect(url_for('main.index'))
-        if validate_token(user=user, token=token, operation=Operations.RESET_PASSWORD,
-                          new_password=form.password.data):
+        if validate_token(user=user, token=token, operation=Operations.RESET_PASSWORD, new_password=form.password.data):
             flash('密码更新成功。/Password updated.', 'success')
             return redirect(url_for('.login'))
         else:

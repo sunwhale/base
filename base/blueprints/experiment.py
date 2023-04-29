@@ -2,22 +2,21 @@
 """
 
 """
-import uuid
 import os
 import shutil
 import subprocess
+import uuid
 import zipfile
 
-from flask import (Blueprint, abort, current_app, flash, jsonify, redirect,
-                   render_template, request, send_file, send_from_directory, url_for)
+from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_file,
+                   send_from_directory, url_for)
 from flask_login import current_user, login_required
 
 from base.forms.experiment import ExperimentForm, UploadForm, SpecimenForm, ParameterForm
-from tools.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status,
-                              get_experiment_status, get_specimen_status,
-                              experiments_detail, experiment_specimens_detail, sub_dirs_int)
-from tools.common import make_dir, dump_json, load_json
 from tools.abaqus.Solver import Solver
+from tools.common import make_dir, dump_json, load_json
+from tools.dir_status import (create_id, files_in_dir, get_experiment_status, get_specimen_status, experiments_detail,
+                              experiment_specimens_detail)
 
 experiment_bp = Blueprint('experiment', __name__)
 
@@ -290,7 +289,8 @@ def delete_specimen(experiment_id, specimen_id):
 @experiment_bp.route('/get_specimen_file/<int:experiment_id>/<int:specimen_id>/<path:filename>')
 @login_required
 def get_specimen_file(experiment_id, specimen_id, filename):
-    return send_from_directory(os.path.join(current_app.config['EXPERIMENT_PATH'], str(experiment_id), str(specimen_id)), filename)
+    return send_from_directory(
+        os.path.join(current_app.config['EXPERIMENT_PATH'], str(experiment_id), str(specimen_id)), filename)
 
 
 @experiment_bp.route('/delete_specimen_file/<int:experiment_id>/<int:specimen_id>/<path:filename>')

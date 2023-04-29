@@ -2,18 +2,18 @@
 """
 
 """
-
-import os
 import json
+import os
 import time
 from queue import Queue, Empty
 from threading import Thread
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-from tools.abaqus.Solver import Solver
-from tools.abaqus.Postproc import Postproc
-from tools.events_new import get_events_new
 
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
+
+from tools.abaqus.Postproc import Postproc
+from tools.abaqus.Solver import Solver
+from tools.events_new import get_events_new
 
 MAX_CPUS = int(os.getenv('MAX_CPUS'))
 
@@ -63,7 +63,7 @@ class EventManager:
     def set_filename(self, f_in_queue, f_running):
         self.f_in_queue = f_in_queue
         self.f_running = f_running
-        
+
     def __run(self):
         """引擎运行"""
         print('{}_run'.format(self.count))
@@ -131,7 +131,7 @@ class EventManager:
                     self.__events_running.remove(event)
                     self.__events_done.append(event)
                     self.__used_cpus -= int(event.dict['cpus'])
-                    
+
     def start(self):
         """启动"""
         print('{}_start'.format(self.count))
@@ -215,17 +215,17 @@ class EventManager:
         events_dict_running = [event.dict for event in self.__events_running]
         dump_json(self.f_in_queue, events_dict_in_queue)
         dump_json(self.f_running, events_dict_running)
-        
+
     def get_status(self):
         in_queue = [event.dict for event in self.__event_queue.queue]
         running = [event.dict for event in self.__events_running]
         done = [event.dict for event in self.__events_done]
         return in_queue, running, done
-    
+
     def get_active(self):
         return self.__active
 
-            
+
 class Event:
     """事件对象"""
 
@@ -326,7 +326,7 @@ class PostprocListener:
             print('不存在目录%s。' % job_path, 'warning')
         return is_reload
 
-            
+
 class StatusEventHandler(FileSystemEventHandler):
     def __init__(self, status_file, event_source):
         self.status_file = status_file
@@ -353,7 +353,6 @@ class StatusEventHandler(FileSystemEventHandler):
 
 
 def monitor(path, f_new, f_in_queue, f_running):
-    
     # 1.实例化『监听器』
     solver_listener = SolverListener('Solver')
 
@@ -387,8 +386,8 @@ def monitor(path, f_new, f_in_queue, f_running):
     except KeyboardInterrupt:
         observer.stop()
         event_manager.stop()
-        
-        
+
+
 if __name__ == '__main__':
     path = 'F:\\Github\\base\\files\\queue'
     f_new = 'F:\\Github\\base\\files\\queue\\.events_new'

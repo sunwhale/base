@@ -2,12 +2,10 @@
 """
 
 """
-
 import json
 import os
 import subprocess
 import threading
-
 
 ABAQUS = os.getenv('ABAQUS')
 ABAQUS_FORTRAN = os.getenv('ABAQUS_FORTRAN')
@@ -49,7 +47,7 @@ def load_json(file_name, encoding='utf-8'):
 def write_log(proc, logfile):
     f = open(logfile, 'w', encoding='utf-8')
     for line in iter(proc.stdout.readline, b''):
-        log = line.decode('UTF-8').replace('\n','')
+        log = line.decode('UTF-8').replace('\n', '')
         f.write(log)
         f.flush()
         if not subprocess.Popen.poll(proc) is None:

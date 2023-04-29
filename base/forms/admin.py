@@ -2,8 +2,7 @@
 """
 
 """
-from wtforms import (BooleanField, SelectField, StringField, SubmitField,
-                     ValidationError)
+from wtforms import (BooleanField, SelectField, StringField, SubmitField, ValidationError)
 from wtforms.validators import DataRequired, Email, Length
 
 from base.forms.user import EditProfileForm
