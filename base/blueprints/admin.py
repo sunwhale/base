@@ -119,7 +119,6 @@ def manage_user():
         filtered_users = User.query.filter_by(role=moderator)
     else:
         filtered_users = User.query
-
-    pagination = filtered_users.order_by(User.member_since.desc()).paginate(page, per_page)
+    pagination = filtered_users.order_by(User.member_since.desc()).paginate(page=page, per_page=per_page)
     users = pagination.items
     return render_template('admin/manage_user.html', pagination=pagination, users=users)

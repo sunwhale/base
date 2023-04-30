@@ -112,6 +112,7 @@
           </li>
           {% endif %}
           {% endblock nav_packing %}
+
           {% block nav_doc %}
           {% if current_user.is_authenticated %}
           <li class="nav-item" id="docs">
@@ -139,6 +140,7 @@
           </li>
           {% endif %}
           {% endblock nav_doc %}
+
           {% block nav_sheet %}
           {% if current_user.is_authenticated %}
           <li class="nav-item" id="sheets">
@@ -166,6 +168,7 @@
           </li>
           {% endif %}
           {% endblock nav_sheet %}
+
           {% block nav_experiment %}
           {% if current_user.is_authenticated %}
           <li class="nav-item" id="experiments">
@@ -193,6 +196,7 @@
           </li>
           {% endif %}
           {% endblock nav_experiment %}
+
           {% block nav_abaqus %}
           {% if current_user.is_authenticated %}
           <li class="nav-item" id="abaqus">
@@ -232,6 +236,7 @@
           </li>
           {% endif %}
           {% endblock nav_abaqus %}
+
           {% block nav_monitor %}
           {% if current_user.is_authenticated %}
           <li class="nav-item" id="monitor">
@@ -261,6 +266,7 @@
           </li>
           {% endif %}
           {% endblock nav_monitor %}
+
           {% block nav_others %}
           {% if current_user.is_authenticated %}
           <li class="nav-item" id="others">
@@ -287,7 +293,7 @@
               <li class="nav-item">
                 <a href="https://chat.sunjingyu.com/" target="_blank" class="nav-link" id="chatgpt">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>ChatGPT(自用)</p>
+                  <p>ChatGPT(API)</p>
                 </a>
               </li>
               {% if env['service'] == 'server' %}
@@ -302,6 +308,7 @@
           </li>
           {% endif %}
           {% endblock nav_others %}
+
           {% block nav_admin %}
           {% if current_user.is_admin %}
           <li class="nav-item" id="user">
@@ -329,6 +336,28 @@
           </li>
           {% endif %}
           {% endblock nav_admin %}
+
+          {% block nav_configure %}
+          <li class="nav-item" id="configure">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-cog"></i>
+              <p>
+                设置
+              </p>
+            </a>
+          </li>
+          {% endblock nav_configure %}
+
+          {% block nav_help %}
+          <li class="nav-item" id="help">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-question"></i>
+              <p>
+                帮助
+              </p>
+            </a>
+          </li>
+          {% endblock nav_help %}
         </ul>
       </nav>
       <!-- /.sidebar-menu -->
