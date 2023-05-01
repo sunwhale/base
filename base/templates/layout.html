@@ -338,19 +338,21 @@
           {% endblock nav_admin %}
 
           {% block nav_configure %}
+          {% if current_user.is_admin %}
           <li class="nav-item" id="configure">
-            <a href="#" class="nav-link">
+            <a href="{{ url_for('main.configure') }}" class="nav-link" id="configure_main">
               <i class="nav-icon fas fa-cog"></i>
               <p>
                 设置
               </p>
             </a>
           </li>
+          {% endif %}
           {% endblock nav_configure %}
 
           {% block nav_help %}
           <li class="nav-item" id="help">
-            <a href="#" class="nav-link">
+            <a href="{{ url_for('main.help') }}" class="nav-link" id="help_main">
               <i class="nav-icon fas fa-question"></i>
               <p>
                 帮助

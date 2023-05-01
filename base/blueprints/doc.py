@@ -11,7 +11,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, rend
 from flask_login import current_user, login_required
 
 from base.extensions import csrf
-from tools.dir_status import create_id, docs_detail
+from utils.dir_status import create_id, docs_detail
 
 doc_bp = Blueprint('doc', __name__)
 

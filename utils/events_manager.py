@@ -11,9 +11,9 @@ from threading import Thread
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from tools.abaqus.Postproc import Postproc
-from tools.abaqus.Solver import Solver
-from tools.events_new import get_events_new
+from utils.abaqus.Postproc import Postproc
+from utils.abaqus.Solver import Solver
+from utils.events_new import get_events_new
 
 MAX_CPUS = int(os.getenv('MAX_CPUS'))
 
