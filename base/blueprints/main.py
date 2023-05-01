@@ -2,11 +2,14 @@
 """
 
 """
+import os.path
+
 from flask import (Blueprint, render_template, redirect, url_for, flash)
 
 from base.decorators import admin_required
 from base.forms.main import ConfigurationForm
 from base.utils.common import dump_json, load_json
+from base.settings import DEFAULT_CONF_FILE, USER_CONF_FILE
 
 main_bp = Blueprint('main', __name__)
 
@@ -25,7 +28,6 @@ def help():
 @admin_required
 def configure():
     form = ConfigurationForm()
-    conf_file = '.conf'
 
     if form.validate_on_submit():
         message = {
@@ -33,13 +35,14 @@ def configure():
             'ABAQUS_FORTRAN': form.ABAQUS_FORTRAN.data,
             'MAX_CPUS': form.MAX_CPUS.data
         }
-        dump_json(conf_file, message)
+        dump_json(USER_CONF_FILE, message)
         flash('保存设置成功。', 'success')
         return redirect(url_for('.configure'))
 
-    message = load_json(conf_file)
-    form.ABAQUS.data = message['ABAQUS']
-    form.ABAQUS_FORTRAN.data = message['ABAQUS_FORTRAN']
-    form.MAX_CPUS.data = message['MAX_CPUS']
+    if os.path.exists(USER_CONF_FILE):
+        message = load_json(USER_CONF_FILE)
+        form.ABAQUS.data = message['ABAQUS']
+        form.ABAQUS_FORTRAN.data = message['ABAQUS_FORTRAN']
+        form.MAX_CPUS.data = message['MAX_CPUS']
 
     return render_template('main/configure.html', form=form)

@@ -82,8 +82,14 @@ config = {
     'production': ProductionConfig,
 }
 
-conf_file = '.conf'
-message = load_json(conf_file)
+DEFAULT_CONF_FILE = '.conf_default'
+USER_CONF_FILE = '.conf_user'
+
+if os.path.exists(USER_CONF_FILE):
+    message = load_json(DEFAULT_CONF_FILE)
+else:
+    message = load_json(USER_CONF_FILE)
+
 ABAQUS = message['ABAQUS']
 ABAQUS_FORTRAN = message['ABAQUS_FORTRAN']
 MAX_CPUS = int(message['MAX_CPUS'])

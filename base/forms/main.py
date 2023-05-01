@@ -13,4 +13,4 @@ class ConfigurationForm(FlaskForm):
                                  validators=[DataRequired(), Length(1, 62)])
     MAX_CPUS = IntegerField('计算可以使用的CPU总数量', default=4,
                             validators=[DataRequired(), NumberRange(1, 1024)])
-    submit = SubmitField('提交')
+    submit = SubmitField('保存')
