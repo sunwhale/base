@@ -5,6 +5,8 @@
 import os
 import sys
 
+from base.utils.common import load_json
+
 basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 # SQLite URI compatible
@@ -79,3 +81,9 @@ config = {
     'testing': TestingConfig,
     'production': ProductionConfig,
 }
+
+conf_file = '.conf'
+message = load_json(conf_file)
+ABAQUS = message['ABAQUS']
+ABAQUS_FORTRAN = message['ABAQUS_FORTRAN']
+MAX_CPUS = int(message['MAX_CPUS'])

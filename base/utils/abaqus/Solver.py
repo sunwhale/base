@@ -8,8 +8,7 @@ import os
 import subprocess
 import threading
 
-ABAQUS = os.getenv('ABAQUS')
-ABAQUS_FORTRAN = os.getenv('ABAQUS_FORTRAN')
+from base.settings import ABAQUS, ABAQUS_FORTRAN
 
 
 def files(curr_dir='.', ext='*.txt'):

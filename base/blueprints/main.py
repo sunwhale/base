@@ -2,7 +2,7 @@
 """
 
 """
-from flask import (Blueprint, render_template, redirect, url_for)
+from flask import (Blueprint, render_template, redirect, url_for, flash)
 
 from base.decorators import admin_required
 from base.forms.main import ConfigurationForm
@@ -21,7 +21,7 @@ def help():
     return render_template('main/help.html')
 
 
-@main_bp.route('/configure')
+@main_bp.route('/configure', methods=['GET', 'POST'])
 @admin_required
 def configure():
     form = ConfigurationForm()
@@ -31,12 +31,15 @@ def configure():
         message = {
             'ABAQUS': form.ABAQUS.data,
             'ABAQUS_FORTRAN': form.ABAQUS_FORTRAN.data,
+            'MAX_CPUS': form.MAX_CPUS.data
         }
         dump_json(conf_file, message)
-        return redirect(url_for('.conf'))
+        flash('保存设置成功。', 'success')
+        return redirect(url_for('.configure'))
 
     message = load_json(conf_file)
     form.ABAQUS.data = message['ABAQUS']
     form.ABAQUS_FORTRAN.data = message['ABAQUS_FORTRAN']
+    form.MAX_CPUS.data = message['MAX_CPUS']
 
     return render_template('main/configure.html', form=form)

@@ -11,11 +11,10 @@ from threading import Thread
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
+from base.settings import MAX_CPUS
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Solver import Solver
 from base.utils.events_new import get_events_new
-
-MAX_CPUS = int(os.getenv('MAX_CPUS'))
 
 
 def dump_json(file_name, data):
