@@ -3,11 +3,10 @@
 
 """
 from flask import (Blueprint, render_template, redirect, url_for)
-from flask_login import current_user, login_required
 
 from base.decorators import admin_required
 from base.forms.main import ConfigurationForm
-from utils.common import dump_json, load_json
+from base.utils.common import dump_json, load_json
 
 main_bp = Blueprint('main', __name__)
 

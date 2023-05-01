@@ -11,9 +11,9 @@ from threading import Thread
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-from utils.abaqus.Postproc import Postproc
-from utils.abaqus.Solver import Solver
-from utils.events_new import get_events_new
+from base.utils.abaqus.Postproc import Postproc
+from base.utils.abaqus.Solver import Solver
+from base.utils.events_new import get_events_new
 
 MAX_CPUS = int(os.getenv('MAX_CPUS'))
 
@@ -389,7 +389,7 @@ def monitor(path, f_new, f_in_queue, f_running):
 
 
 if __name__ == '__main__':
-    path = 'F:\\Github\\base\\files\\queue'
+    path = '/files/queue'
     f_new = 'F:\\Github\\base\\files\\queue\\.events_new'
     f_in_queue = 'F:\\Github\\base\\files\\queue\\.events_in_queue'
     f_running = 'F:\\Github\\base\\files\\queue\\.events_running'

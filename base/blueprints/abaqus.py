@@ -15,15 +15,16 @@ from flask_login import current_user, login_required
 from base.forms.abaqus import (JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm,
                                FigureSettingFrom, OdbForm)
 from base.global_var import event_source
-from utils.abaqus.Postproc import Postproc
-from utils.abaqus.Solver import Solver
-from utils.common import make_dir, dump_json, load_json
-from utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status,
-                              get_template_status, project_jobs_detail, projects_detail, templates_detail, sub_dirs_int)
-from utils.events_new import update_events_new
-from utils.make_gif import make_gif
-from utils.read_prescan import read_prescan
-from utils.tree import json_to_ztree, odb_json_to_ztree
+from base.utils.abaqus.Postproc import Postproc
+from base.utils.abaqus.Solver import Solver
+from base.utils.common import make_dir, dump_json, load_json
+from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status,
+                                   get_template_status, project_jobs_detail, projects_detail, templates_detail,
+                                   sub_dirs_int)
+from base.utils.events_new import update_events_new
+from base.utils.make_gif import make_gif
+from base.utils.read_prescan import read_prescan
+from base.utils.tree import json_to_ztree, odb_json_to_ztree
 
 abaqus_bp = Blueprint('abaqus', __name__)
 
@@ -566,7 +567,7 @@ def print_figure(project_id, job_id):
         if p.has_odb():
             if os.path.exists(prescan_odb_json_file):
                 prescan_odb_dict = load_json(prescan_odb_json_file)
-                from utils.common import invariant_dict
+                from base.utils.common import invariant_dict
                 refinement_list = []
                 variableLabel_list = []
                 for step in prescan_odb_dict['steps'].keys():
@@ -678,7 +679,7 @@ def print_figure_dict(project_id, job_id):
         for step in prescan_odb_dict['steps'].keys():
             print_figure_dict[step] = {}
             fieldOutputs = prescan_odb_dict['steps'][step]['frames'][0]['fieldOutputs']
-            from utils.common import invariant_dict
+            from base.utils.common import invariant_dict
             print_figure_dict[step]['refinement'] = {}
             print_figure_dict[step]['outputPosition'] = {}
             for key in fieldOutputs.keys():

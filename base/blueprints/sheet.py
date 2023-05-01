@@ -10,7 +10,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, rend
 from flask_login import current_user, login_required
 
 from base.extensions import csrf
-from utils.dir_status import create_id, sheets_detail
+from base.utils.dir_status import create_id, sheets_detail
 
 sheet_bp = Blueprint('sheet', __name__)
 

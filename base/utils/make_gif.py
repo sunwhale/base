@@ -27,6 +27,6 @@ def make_gif(path, gif_path, fps):
 
 
 if __name__ == '__main__':
-    path = 'F:\\Github\\base\\files\\abaqus\\7\\1'
-    gif_path = 'F:\\Github\\base\\files\\abaqus\\7\\1\\NT11'
+    path = '/files/abaqus/7/1'
+    gif_path = '/files/abaqus/7/1/NT11'
     make_gif(path, gif_path, 8)

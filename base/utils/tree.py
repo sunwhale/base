@@ -353,7 +353,7 @@ if __name__ == '__main__':
     # ztree = json_to_ztree(data)
     # print(data['PART-1-1.COHESIVESEAM-1-ELEMENTS']['elements'][0])
 
-    odb_json_file = 'F:\\Github\\base\\files\\abaqus\\2\\1\\prescan_odb.json'
+    odb_json_file = '/files/abaqus/2/1/prescan_odb.json'
     with open(odb_json_file, 'r', encoding='utf-8') as f:
         odb_dict = json.load(f)
     print(list(odb_dict['steps'].keys()))

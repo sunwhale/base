@@ -2,7 +2,7 @@
 """
 
 """
-from utils.events_manager import EventManager, SolverListener, PostprocListener, EventSource
+from base.utils.events_manager import EventManager, SolverListener, PostprocListener, EventSource
 
 solver_listener = SolverListener('Solver')
 postproc_listener = PostprocListener('Postproc')

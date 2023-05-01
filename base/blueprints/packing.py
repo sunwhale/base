@@ -16,9 +16,10 @@ from psic.packing_spheres_in_cube import create_model as psic_create_model
 
 from base.forms.packing import (MeshForm, PackingForm, SubmodelForm, UploadForm, ABAQUSForm, ImportTemplateForm)
 from base.global_var import create_thread_id, exporting_threads
-from utils.common import make_dir, dump_json, load_json
-from utils.dir_status import (create_id, get_mesh_status, get_model_status, get_submodel_status, packing_models_detail,
-                              packing_submodels_detail, sub_dirs_int, files_in_dir, templates_detail)
+from base.utils.common import make_dir, dump_json, load_json
+from base.utils.dir_status import (create_id, get_mesh_status, get_model_status, get_submodel_status,
+                                   packing_models_detail, packing_submodels_detail, sub_dirs_int, files_in_dir,
+                                   templates_detail)
 
 packing_bp = Blueprint('packing', __name__)
 

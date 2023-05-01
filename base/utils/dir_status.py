@@ -617,5 +617,5 @@ def templates_detail(path):
 
 
 if __name__ == '__main__':
-    path = 'F:\\Github\\base\\files\\abaqus\\7\\1'
+    path = '/files/abaqus/7/1'
     print(subpaths_in_dir(path))
