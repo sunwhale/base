@@ -2,7 +2,6 @@
 """
 
 """
-
 from flask_bootstrap import Bootstrap4
 from flask_login import AnonymousUserMixin, LoginManager
 from flask_mail import Mail

@@ -2,19 +2,14 @@
 """
 
 """
-import os
-import uuid
-
 try:
     from urlparse import urljoin, urlparse
 except ImportError:
     from urllib.parse import urlparse, urljoin
 
-import PIL
 from flask import current_app, flash, redirect, request, url_for
 from itsdangerous import BadSignature, SignatureExpired
 from itsdangerous.serializer import Serializer
-from PIL import Image
 
 from base.extensions import db
 from base.models import User
@@ -62,7 +57,7 @@ def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
     return test_url.scheme in ('http', 'https') and \
-           ref_url.netloc == test_url.netloc
+        ref_url.netloc == test_url.netloc
 
 
 def redirect_back(default='main.index', **kwargs):

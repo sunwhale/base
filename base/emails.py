@@ -34,4 +34,5 @@ def send_reset_password_email(user, token):
 
 
 def send_change_email_email(user, token, to=None):
-    send_mail(subject='Change Email Confirm', to=to or user.email, template='emails/change_email', user=user, token=token)
+    send_mail(subject='Change Email Confirm', to=to or user.email, template='emails/change_email', user=user,
+              token=token)

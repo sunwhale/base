@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+"""
+
+"""
 from utils.events_manager import EventManager, SolverListener, PostprocListener, EventSource
 
 solver_listener = SolverListener('Solver')

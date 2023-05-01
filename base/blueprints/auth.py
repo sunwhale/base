@@ -11,7 +11,7 @@ from base.extensions import db
 from base.forms.auth import (ForgetPasswordForm, LoginForm, RegisterForm, ResetPasswordForm)
 from base.models import User
 from base.settings import Operations
-from base.utils import generate_token, redirect_back, validate_token
+from base.security import generate_token, redirect_back, validate_token
 
 auth_bp = Blueprint('auth', __name__)
 

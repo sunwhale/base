@@ -9,7 +9,7 @@ from base.decorators import admin_required, permission_required
 from base.extensions import db
 from base.forms.admin import EditProfileAdminForm
 from base.models import Role, User
-from base.utils import redirect_back
+from base.security import redirect_back
 
 admin_bp = Blueprint('admin', __name__)
 
