@@ -6,10 +6,12 @@ import os.path
 
 from flask import (Blueprint, render_template, redirect, url_for, flash)
 
-from base.decorators import admin_required
+from flask_login import login_required
+
+from base.decorators import admin_required, permission_required
 from base.forms.main import ConfigurationForm
+from base.settings import USER_CONF_FILE
 from base.utils.common import dump_json, load_json
-from base.settings import DEFAULT_CONF_FILE, USER_CONF_FILE
 
 main_bp = Blueprint('main', __name__)
 
@@ -25,6 +27,7 @@ def help():
 
 
 @main_bp.route('/configure', methods=['GET', 'POST'])
+@login_required
 @admin_required
 def configure():
     form = ConfigurationForm()
