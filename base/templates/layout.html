@@ -86,7 +86,7 @@
           <!-- Add icons to the links using the .nav-icon class
                with font-awesome or any other icon font library -->
           {% block nav_packing %}
-          {% if current_user.is_authenticated %}
+          {% if current_user.is_moderator or current_user.is_admin %}
           <li class="nav-item" id="packing">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-th"></i>
@@ -131,7 +131,7 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{{ url_for('doc.createmd') }}" target="_blank" class="nav-link" id="createmd">
+                <a href="{{ url_for('doc.createmd') }}" class="nav-link" id="createmd">
                   <i class="far fa-circle nav-icon"></i>
                   <p>新建文章</p>
                 </a>
@@ -159,7 +159,7 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{{ url_for('sheet.create_sheet') }}" target="_blank" class="nav-link" id="create_sheet">
+                <a href="{{ url_for('sheet.create_sheet') }}" class="nav-link" id="create_sheet">
                   <i class="far fa-circle nav-icon"></i>
                   <p>新建数据表格</p>
                 </a>
@@ -187,7 +187,7 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{{ url_for('experiment.create_experiment') }}" target="_blank" class="nav-link" id="create_experiment">
+                <a href="{{ url_for('experiment.create_experiment') }}" class="nav-link" id="create_experiment">
                   <i class="far fa-circle nav-icon"></i>
                   <p>新建实验项目</p>
                 </a>
@@ -198,7 +198,7 @@
           {% endblock nav_experiment %}
 
           {% block nav_abaqus %}
-          {% if current_user.is_authenticated %}
+          {% if current_user.is_moderator or current_user.is_admin %}
           <li class="nav-item" id="abaqus">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-cubes"></i>
@@ -215,7 +215,7 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{{ url_for('abaqus.create_project') }}" target="_blank" class="nav-link" id="create_project">
+                <a href="{{ url_for('abaqus.create_project') }}" class="nav-link" id="create_project">
                   <i class="far fa-circle nav-icon"></i>
                   <p>新建ABAQUS项目</p>
                 </a>
@@ -238,7 +238,7 @@
           {% endblock nav_abaqus %}
 
           {% block nav_monitor %}
-          {% if current_user.is_authenticated %}
+          {% if current_user.is_moderator or current_user.is_admin %}
           <li class="nav-item" id="monitor">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-tasks"></i>

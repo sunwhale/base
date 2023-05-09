@@ -12,6 +12,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, rend
                    send_from_directory, url_for)
 from flask_login import current_user, login_required
 
+from base.decorators import permission_required
 from base.forms.experiment import ExperimentForm, UploadForm, SpecimenForm, ParameterForm
 from base.utils.abaqus.Solver import Solver
 from base.utils.common import make_dir, dump_json, load_json
@@ -277,13 +278,13 @@ def delete_specimen(experiment_id, specimen_id):
     specimen_path = os.path.join(experiments_path, str(experiment_id), str(specimen_id))
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该项目！', 'warning')
-        return redirect(url_for('.manage_experiments'))
+        return redirect(url_for('.view_experiment', experiment_id=experiment_id))
     if os.path.exists(specimen_path):
         shutil.rmtree(specimen_path)
         flash('%s号实验项目%s号试件删除成功。' % (experiment_id, specimen_id), 'success')
     else:
         flash('%s号实验项目%s号试件不存在。' % (experiment_id, specimen_id), 'warning')
-    return redirect(url_for('.view_experiment', experiment_id=experiment_id))
+    return redirect(url_for('.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
 
 
 @experiment_bp.route('/get_specimen_file/<int:experiment_id>/<int:specimen_id>/<path:filename>')
@@ -300,16 +301,17 @@ def delete_specimen_file(experiment_id, specimen_id, filename):
     file = os.path.join(experiments_path, str(experiment_id), str(specimen_id), str(filename))
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该文件！', 'warning')
-        return redirect(url_for('.view_job', project_id=experiment_id, job_id=specimen_id))
+        return redirect(url_for('.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
     if os.path.exists(file):
         os.remove(file)
         flash('文件%s删除成功。' % filename, 'success')
     else:
         flash('文件%s不存在。' % filename, 'warning')
-    return redirect(request.referrer or url_for('.view_job', project_id=experiment_id, job_id=specimen_id))
+    return redirect(request.referrer or url_for('.view_specimen', experiment_id=experiment_id, specimen_id=specimen_id))
 
 
 @experiment_bp.route('/experiment_specimens_status/<int:experiment_id>')
+@login_required
 def experiment_specimens_status(experiment_id):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     data = experiment_specimens_detail(experiments_path, experiment_id)

@@ -110,6 +110,10 @@ class User(db.Model, UserMixin):
         return self.role.name == 'Administrator'
 
     @property
+    def is_moderator(self):
+        return self.role.name == 'Moderator'
+
+    @property
     def is_active(self):
         return self.active
 
