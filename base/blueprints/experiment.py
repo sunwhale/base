@@ -311,7 +311,6 @@ def delete_specimen_file(experiment_id, specimen_id, filename):
 
 
 @experiment_bp.route('/experiment_specimens_status/<int:experiment_id>')
-@login_required
 def experiment_specimens_status(experiment_id):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     data = experiment_specimens_detail(experiments_path, experiment_id)
