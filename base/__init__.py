@@ -18,6 +18,7 @@ from base.blueprints.packing import packing_bp
 from base.blueprints.queue import queue_bp
 from base.blueprints.sheet import sheet_bp
 from base.blueprints.tools import tools_bp
+from base.blueprints.virtual import virtual_bp
 from base.extensions import bootstrap, csrf, db, login_manager, mail, moment
 from base.models import Role
 from base.settings import config
@@ -61,6 +62,7 @@ def register_blueprints(app):
     app.register_blueprint(queue_bp, url_prefix='/queue')
     app.register_blueprint(sheet_bp, url_prefix='/sheet')
     app.register_blueprint(tools_bp, url_prefix='/tools')
+    app.register_blueprint(virtual_bp, url_prefix='/virtual')
 
 
 def register_errorhandlers(app):
