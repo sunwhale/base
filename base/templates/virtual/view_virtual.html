@@ -19,7 +19,7 @@
     <section class="content">
       <div class="container-fluid">
         <div class="row">
-          <div class="col-6">
+          <div class="col-12">
             <div class="card card-primary">
               <div class="card-header">
                 <h3 class="card-title">{{ virtual_id }}号虚拟实验</h3>
@@ -31,10 +31,14 @@
               </div>
               <div class="card-body">
                 <div class="row">
-                  <div class="col-12">
+                  <div class="col-6">
+                    <h5 class="text-primary">轴向应力云图</h5>
                     <img src="{{ url_for('virtual.get_virtual_file', virtual_id=virtual_id, filename='S11.gif') }}" width="100%">
                   </div>
-
+                  <div class="col-6">
+                    <h5 class="text-primary">力位移曲线</h5>
+                    <img src="{{ url_for('virtual.get_virtual_file', virtual_id=virtual_id, filename='disp-force.png') }}" width="80%">
+                  </div>
                   <div class="col-12">
                     <h5 class="text-primary">求解控制</h5>
                     当前状态：{{ solver_status }}
@@ -82,7 +86,7 @@
                   <div class="col-12">
                     <form action="" method="post" class="form" role="form">
                       {{ form.csrf_token() }}
-                      {{ render_field(form.para, style="height: 200px;") }}
+                      {{ render_field(form.para, style="height: 450px;") }}
                       {{ render_field(form.submit, button_style='btn btn-primary') }}
                     </form>
                   </div>
