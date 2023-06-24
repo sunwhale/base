@@ -277,6 +277,35 @@ def get_project_status(path, project_id):
     return status
 
 
+def get_virtual_status(path, virtual_id):
+    msg_file = os.path.join(path, str(virtual_id), '.virtual_msg')
+    status = {}
+    if os.path.exists(msg_file):
+        status['virtual_id'] = virtual_id
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            status['name'] = message['name']
+            status['template'] = message['template']
+            status['virtual_time'] = file_time(msg_file)
+            status['descript'] = message['descript']
+            status['job'] = message['job']
+            status['user'] = message['user']
+            status['cpus'] = message['cpus']
+            if 'link' in message.keys():
+                status['link'] = message['link']
+            else:
+                status['link'] = 'None'
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                'view_virtual/' + str(virtual_id), 'edit_virtual/' + str(virtual_id), 'delete_virtual/' + str(virtual_id))
+        except (FileNotFoundError, KeyError):
+            for key in ['name', 'template', 'project_time', 'descript', 'job', 'user', 'cpus', 'link']:
+                status[key] = 'None'
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                'view_virtual/' + str(virtual_id), 'edit_virtual/' + str(virtual_id), 'delete_virtual/' + str(virtual_id))
+    return status
+
+
 def get_experiment_status(path, experiment_id):
     msg_file = os.path.join(path, str(experiment_id), '.experiment_msg')
     status = {}
@@ -593,6 +622,20 @@ def project_jobs_detail(path, project_id):
     job_id_list = sub_dirs_int(os.path.join(path, str(project_id)))
     for job_id in job_id_list:
         status = get_job_status(path, project_id, job_id)
+        data_list.append(status)
+
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def virtuals_detail(path):
+    data_list = []
+    virtual_id_list = sub_dirs_int(path)
+    for virtual_id in virtual_id_list:
+        status = get_virtual_status(path, virtual_id)
         data_list.append(status)
 
     data = {

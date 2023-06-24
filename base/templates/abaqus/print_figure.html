@@ -41,13 +41,16 @@
                           <h5 class="text-primary">基本设置</h5><hr/>
                           {{ render_form_row([form.width, form.height]) }}
                           {{ render_form_row([form.imageSize, form.legend]) }}
+                          {{ render_form_row([form.legendPosition, form.triad]) }}
+                          {{ render_form_row([form.projection, form.views]) }}
                           {{ render_form_row([form.plotState, form.uniformScaleFactor]) }}
                           {{ render_form_row([form.step, form.frame]) }}
                           {{ render_form_row([form.variableLabel, form.refinement]) }}
                           {{ render_form_row([form.outputPosition, form.visibleEdges]) }}
                           {{ render_form_row([form.maxAutoCompute, form.maxValue]) }}
                           {{ render_form_row([form.minAutoCompute, form.minValue]) }}
-                          {{ render_form_row([form.colorMappings]) }}
+                          {{ render_form_row([form.colorMappings, form.mirrorAboutXyPlane]) }}
+                          {{ render_form_row([form.mirrorAboutXzPlane, form.mirrorAboutYzPlane]) }}
                           <h5 class="text-primary">状态变量</h5><hr/>
                           {{ render_form_row([form.useStatus, form.statusLabel]) }}
                           {{ render_form_row([form.statusPosition, form.statusRefinement]) }}

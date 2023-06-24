@@ -594,6 +594,11 @@ def print_figure(project_id, job_id):
                     'height': form.height.data,
                     'imageSize': form.imageSize.data,
                     'legend': form.legend.data,
+                    'triad': form.triad.data,
+                    'legendPosition': form.legendPosition.data,
+                    'mirrorAboutXyPlane': form.mirrorAboutXyPlane.data,
+                    'mirrorAboutXzPlane': form.mirrorAboutXzPlane.data,
+                    'mirrorAboutYzPlane': form.mirrorAboutYzPlane.data,
                     'plotState': form.plotState.data,
                     'uniformScaleFactor': form.uniformScaleFactor.data,
                     'step': form.step.data,
@@ -607,6 +612,8 @@ def print_figure(project_id, job_id):
                     'minAutoCompute': form.minAutoCompute.data,
                     'minValue': form.minValue.data,
                     'colorMappings': form.colorMappings.data,
+                    'projection': form.projection.data,
+                    'views': form.views.data,
                     'useStatus': form.useStatus.data,
                     'statusLabel': form.statusLabel.data,
                     'statusPosition': form.statusPosition.data,
@@ -630,35 +637,45 @@ def print_figure(project_id, job_id):
             flash('缺少odb文件。', 'warning')
 
         if os.path.exists(setting_file):
-            message = load_json(setting_file)
-            form.width.data = message['width']
-            form.height.data = message['height']
-            form.imageSize.data = message['imageSize']
-            form.legend.data = message['legend']
-            form.plotState.data = message['plotState']
-            form.uniformScaleFactor.data = message['uniformScaleFactor']
-            form.step.data = message['step']
-            form.frame.data = message['frame']
-            form.variableLabel.data = message['variableLabel']
-            form.refinement.data = message['refinement']
-            form.outputPosition.data = message['outputPosition']
-            form.visibleEdges.data = message['visibleEdges']
-            form.maxAutoCompute.data = message['maxAutoCompute']
-            form.maxValue.data = message['maxValue']
-            form.minAutoCompute.data = message['minAutoCompute']
-            form.minValue.data = message['minValue']
-            form.colorMappings.data = message['colorMappings']
-            form.useStatus.data = message['useStatus']
-            form.statusLabel.data = message['statusLabel']
-            form.statusPosition.data = message['statusPosition']
-            form.statusRefinement.data = message['statusRefinement']
-            form.statusMinimum.data = message['statusMinimum']
-            form.statusMaximum.data = message['statusMaximum']
-            form.animate.data = message['animate']
-            form.frameInterval.data = message['frameInterval']
-            form.startFrame.data = message['startFrame']
-            form.endFrame.data = message['endFrame']
-            form.fps.data = message['fps']
+            try:
+                message = load_json(setting_file)
+                form.width.data = message['width']
+                form.height.data = message['height']
+                form.imageSize.data = message['imageSize']
+                form.legend.data = message['legend']
+                form.triad.data = message['triad']
+                form.legendPosition.data = message['legendPosition']
+                form.mirrorAboutXyPlane.data = message['mirrorAboutXyPlane']
+                form.mirrorAboutXzPlane.data = message['mirrorAboutXzPlane']
+                form.mirrorAboutYzPlane.data = message['mirrorAboutYzPlane']
+                form.plotState.data = message['plotState']
+                form.uniformScaleFactor.data = message['uniformScaleFactor']
+                form.step.data = message['step']
+                form.frame.data = message['frame']
+                form.variableLabel.data = message['variableLabel']
+                form.refinement.data = message['refinement']
+                form.outputPosition.data = message['outputPosition']
+                form.visibleEdges.data = message['visibleEdges']
+                form.maxAutoCompute.data = message['maxAutoCompute']
+                form.maxValue.data = message['maxValue']
+                form.minAutoCompute.data = message['minAutoCompute']
+                form.minValue.data = message['minValue']
+                form.colorMappings.data = message['colorMappings']
+                form.projection.data = message['projection']
+                form.views.data = message['views']
+                form.useStatus.data = message['useStatus']
+                form.statusLabel.data = message['statusLabel']
+                form.statusPosition.data = message['statusPosition']
+                form.statusRefinement.data = message['statusRefinement']
+                form.statusMinimum.data = message['statusMinimum']
+                form.statusMaximum.data = message['statusMaximum']
+                form.animate.data = message['animate']
+                form.frameInterval.data = message['frameInterval']
+                form.startFrame.data = message['startFrame']
+                form.endFrame.data = message['endFrame']
+                form.fps.data = message['fps']
+            except KeyError:
+                pass
 
         status = get_job_status(abaqus_path, project_id, job_id)
         logs = p.get_print_figure_log()

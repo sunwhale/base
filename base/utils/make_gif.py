@@ -21,12 +21,12 @@ def make_gif(path, gif_path, fps):
     result = zip(*sorted_images_ids)
     sorted_ids, sorted_images = [list(x) for x in result]
 
-    gif_images = [imageio.imread(image) for image in sorted_images]
+    gif_images = [imageio.v3.imread(image) for image in sorted_images]
     gif_name = gif_path.split(os.sep)[-1] + '.gif'
-    imageio.mimsave(os.path.join(path, gif_name), gif_images, fps=fps)
+    imageio.mimsave(os.path.join(path, gif_name), gif_images, duration=1000*1/fps)
 
 
 if __name__ == '__main__':
-    path = '/files/abaqus/7/1'
-    gif_path = '/files/abaqus/7/1/NT11'
+    path = r'H:\files\virtual\1'
+    gif_path = r'H:\files\virtual\1\S11'
     make_gif(path, gif_path, 8)

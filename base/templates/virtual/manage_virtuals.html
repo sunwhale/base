@@ -82,11 +82,11 @@
       "info": true,
       "autoWidth": false,
       "responsive": true,
-      "ajax": "{{ url_for('abaqus.projects_status') }}",
+      "ajax": "{{ url_for('virtual.virtuals_status') }}",
       "columns": [
-          { data: 'project_id' },
+          { data: 'virtual_id' },
           { data: 'name' },
-          { data: 'project_time' },
+          { data: 'virtual_time' },
           { data: 'operation' },
       ],
     });

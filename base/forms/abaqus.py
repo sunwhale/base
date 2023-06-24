@@ -58,6 +58,11 @@ class FigureSettingFrom(FlaskForm):
     height = FloatField('height', default=200.0)
     imageSize = StringField('imageSize', default='(600, 600)', validators=[DataRequired()])
     legend = SelectField('legend', coerce=str)
+    triad = SelectField('triad', coerce=str)
+    legendPosition = StringField('legendPosition', default='(2, 98)', validators=[DataRequired()])
+    mirrorAboutXyPlane = SelectField('mirrorAboutXyPlane', coerce=str)
+    mirrorAboutXzPlane = SelectField('mirrorAboutXzPlane', coerce=str)
+    mirrorAboutYzPlane = SelectField('mirrorAboutYzPlane', coerce=str)
     plotState = SelectField('plotState', coerce=str)
     uniformScaleFactor = FloatField('uniformScaleFactor', default=1.0, validators=[DataRequired()])
     step = SelectField('step', coerce=str)
@@ -71,6 +76,8 @@ class FigureSettingFrom(FlaskForm):
     minAutoCompute = SelectField('minAutoCompute', coerce=str)
     minValue = FloatField('minValue', default=0.0)
     colorMappings = SelectField('colorMappings', coerce=str)
+    projection = SelectField('projection', coerce=str)
+    views = SelectField('views', coerce=str)
 
     useStatus = SelectField('useStatus', coerce=str)
     statusLabel = SelectField('statusLabel', coerce=str)
@@ -90,6 +97,10 @@ class FigureSettingFrom(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(FigureSettingFrom, self).__init__(*args, **kwargs)
         self.legend.choices = ['ON', 'OFF']
+        self.triad.choices = ['ON', 'OFF']
+        self.mirrorAboutXyPlane.choices = ['False', 'True']
+        self.mirrorAboutXzPlane.choices = ['False', 'True']
+        self.mirrorAboutYzPlane.choices = ['False', 'True']
         self.plotState.choices = ['(CONTOURS_ON_DEF, )', '(CONTOURS_ON_UNDEF, )', '(UNDEFORMED, )', '(DEFORMED, )']
         self.step.choices = ['Step-1']
         self.variableLabel.choices = ['S']
@@ -100,6 +111,8 @@ class FigureSettingFrom(FlaskForm):
         self.minAutoCompute.choices = ['ON', 'OFF']
         self.colorMappings.choices = ['Default', 'Part instance', 'Set', 'Material', 'Section', 'Element type',
                                       'Averaging region', 'Internal set', 'Composite layup', 'Composite ply']
+        self.projection.choices = ['PARALLEL', 'PERSPECTIVE']
+        self.views.choices = ['Front', 'Back', 'Top', 'Bottom', 'Left', 'Right', 'Iso']
 
         self.useStatus.choices = ['False', 'True']
         self.statusLabel.choices = ['NT11']
