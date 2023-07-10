@@ -358,6 +358,7 @@ def get_specimen_status(path, experiment_id, specimen_id):
         status['name'] = message['name']
         status['descript'] = message['descript']
         status['specimen_time'] = file_time(msg_file)
+        status['path'] = os.path.join(path, str(experiment_id), str(specimen_id))
         button = ""
         button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % (
                 '../view_specimen/' + str(experiment_id) + '/' + str(specimen_id))
@@ -365,7 +366,7 @@ def get_specimen_status(path, experiment_id, specimen_id):
                 '../delete_specimen/' + str(experiment_id) + '/' + str(specimen_id))
         status['operation'] = button
     except FileNotFoundError:
-        for key in ['name', 'descript', 'specimen_time']:
+        for key in ['name', 'descript', 'specimen_time', 'path']:
             status[key] = 'None'
         status['operation'] = "<a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
                 '../delete_specimen/' + str(experiment_id) + '/' + str(specimen_id))
