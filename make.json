@@ -19,7 +19,7 @@
   },
   {
    "optionDest": "icon_file",
-   "value": "F:/Github/base/base/static/imgs/logo_black.ico"
+   "value": "F:/Github/base/base/static/imgs/logo_blue.ico"
   },
   {
    "optionDest": "ascii",
@@ -83,35 +83,39 @@
   },
   {
    "optionDest": "datas",
-   "value": "F:/Github/base/tools;tools/"
-  },
-  {
-   "optionDest": "datas",
    "value": "F:/Github/base/.env;."
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/SunJi/.conda/envs/flask/Lib/site-packages/wtforms/locale;wtforms/locale/"
+   "value": "C:/Users/Jsun/.conda/envs/flask/Lib/site-packages/wtforms/locale;wtforms/locale/"
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/SunJi/.conda/envs/flask/Lib/site-packages/mayavi;mayavi/"
+   "value": "C:/Users/Jsun/.conda/envs/flask/Lib/site-packages/mayavi;mayavi/"
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/SunJi/.conda/envs/flask/Lib/site-packages/traitsui;traitsui/"
+   "value": "C:/Users/Jsun/.conda/envs/flask/Lib/site-packages/traitsui;traitsui/"
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/SunJi/.conda/envs/flask/Lib/site-packages/pyface;pyface/"
+   "value": "C:/Users/Jsun/.conda/envs/flask/Lib/site-packages/pyface;pyface/"
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/SunJi/.conda/envs/flask/Lib/site-packages/tvtk;tvtk/"
+   "value": "C:/Users/Jsun/.conda/envs/flask/Lib/site-packages/tvtk;tvtk/"
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/SunJi/.conda/envs/flask/Lib/site-packages/vtkmodules;vtkmodules/"
+   "value": "C:/Users/Jsun/.conda/envs/flask/Lib/site-packages/vtkmodules;vtkmodules/"
+  },
+  {
+   "optionDest": "datas",
+   "value": "F:/Github/base/.conf_default;."
+  },
+  {
+   "optionDest": "datas",
+   "value": "F:/Github/base/.conf_user;."
   }
  ],
  "nonPyinstallerOptions": {

@@ -19,7 +19,7 @@
   },
   {
    "optionDest": "icon_file",
-   "value": "F:/Github/base/base/static/imgs/logo_black.ico"
+   "value": "F:/Github/base/base/static/imgs/logo_blue.ico"
   },
   {
    "optionDest": "ascii",
@@ -83,15 +83,23 @@
   },
   {
    "optionDest": "datas",
-   "value": "F:/Github/base/tools;tools/"
-  },
-  {
-   "optionDest": "datas",
    "value": "F:/Github/base/.env;."
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/SunJi/.conda/envs/flask/Lib/site-packages/wtforms/locale;wtforms/locale/"
+   "value": "F:/Github/base/.conf_default;."
+  },
+  {
+   "optionDest": "datas",
+   "value": "F:/Github/base/.conf_user;."
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:\\Users\\JSun\\.conda\\envs\\flask311\\Lib\\site-packages\\flask_bootstrap;flask_bootstrap"
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:\\Users\\JSun\\.conda\\envs\\flask311\\Lib\\site-packages\\wtforms;wtforms"
   }
  ],
  "nonPyinstallerOptions": {
