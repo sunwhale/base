@@ -6,7 +6,7 @@
 {% block pageheader %}子模型信息{% endblock pageheader %}
 
 {% block level %}
-<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item"><a href="/">主界面</a></li>
 <li class="breadcrumb-item"><a href="{{ url_for('packing.manage_models') }}">球体填充模型管理</a></li>
 <li class="breadcrumb-item"><a href="{{ url_for('packing.view_model', model_id=model_id) }}">{{ model_id }}号主模型</a>
 <li class="breadcrumb-item active">{{ submodel_id }}号子模型</li>

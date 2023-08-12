@@ -30,7 +30,7 @@
         <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
       </li>
       <li class="nav-item d-none d-sm-inline-block">
-        <a href="/" class="nav-link">主页</a>
+        <a href="/" class="nav-link">主界面</a>
       </li>
       {% if current_user.is_authenticated %}
       <li class="nav-item d-none d-sm-inline-block">
@@ -402,12 +402,12 @@
       <div class="container-fluid">
         <div class="row mb-2">
           <div class="col-sm-6">
-            <h1 class="m-0">{% block pageheader %}主页{% endblock pageheader %}</h1>
+            <h1 class="m-0">{% block pageheader %}主界面{% endblock pageheader %}</h1>
           </div><!-- /.col -->
           <div class="col-sm-6">
             <ol class="breadcrumb float-sm-right">
               {% block level %}
-              <li class="breadcrumb-item"><a href="#">主页</a></li>
+              <li class="breadcrumb-item"><a href="#">主界面</a></li>
               {% endblock level %}
             </ol>
           </div><!-- /.col -->

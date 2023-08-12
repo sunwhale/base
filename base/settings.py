@@ -77,10 +77,16 @@ class ProductionConfig(BaseConfig):
     SERVICE = 'server'
 
 
+class ClientConfig(BaseConfig):
+    SQLALCHEMY_DATABASE_URI = prefix + os.path.join(basedir, 'data.db')
+    SERVICE = 'client'
+
+
 config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': ProductionConfig,
+    'client': ClientConfig,
 }
 
 DEFAULT_CONF_FILE = os.path.join(basedir, '.conf_default')

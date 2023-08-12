@@ -10,7 +10,7 @@
 {% block pageheader %}图片输出{% endblock pageheader %}
 
 {% block level %}
-<li class="breadcrumb-item"><a href="/">主页</a></li>
+<li class="breadcrumb-item"><a href="/">主界面</a></li>
 <li class="breadcrumb-item"><a href="{{ url_for('abaqus.manage_projects') }}">ABAQUS项目管理</a></li>
 <li class="breadcrumb-item"><a href="{{ url_for('abaqus.view_project', project_id=project_id) }}">{{ project_id }}号ABAQUS项目</a></li>
 <li class="breadcrumb-item active"><a href="{{ url_for('abaqus.view_job', project_id=project_id, job_id=job_id) }}">{{ job_id }}号算例</a></li>
