@@ -7,7 +7,7 @@
   },
   {
    "optionDest": "filenames",
-   "value": "F:/Github/base/app.py"
+   "value": "F:/Github/base/Base.py"
   },
   {
    "optionDest": "onefile",
@@ -76,6 +76,10 @@
   {
    "optionDest": "datas",
    "value": "F:/Github/base/base/templates;base/templates/"
+  },
+  {
+   "optionDest": "datas",
+   "value": "F:/Github/base/base/utils;base/utils/"
   },
   {
    "optionDest": "datas",

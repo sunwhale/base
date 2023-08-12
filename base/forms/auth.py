@@ -2,6 +2,7 @@
 """
 
 """
+import os
 from flask_wtf import FlaskForm
 from wtforms import (BooleanField, PasswordField, StringField, SubmitField, ValidationError)
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Regexp
@@ -15,7 +16,10 @@ class ChineseBaseForm(FlaskForm):
 
 
 class LoginForm(ChineseBaseForm):
-    email = StringField('邮箱/Email', validators=[DataRequired(), Length(1, 254), Email()])
+    if os.getenv('CLIENT') == 'True':
+        email = StringField('邮箱/Email', validators=[DataRequired(), Length(1, 254), Email()], default='admin@admin.com')
+    else:
+        email = StringField('邮箱/Email', validators=[DataRequired(), Length(1, 254), Email()])
     password = PasswordField('密码/Password', validators=[DataRequired()])
     remember_me = BooleanField('记住我的登录状态')
     submit = SubmitField('登录/Submit')

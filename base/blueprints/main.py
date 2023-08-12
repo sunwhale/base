@@ -2,14 +2,16 @@
 """
 
 """
+import os
 import os.path
 
 from flask import (Blueprint, render_template, redirect, url_for, flash)
 
-from flask_login import login_required
+from flask_login import login_required, login_user, current_user
 
 from base.decorators import admin_required, permission_required
 from base.forms.main import ConfigurationForm
+from base.models import User
 from base.settings import USER_CONF_FILE
 from base.utils.common import dump_json, load_json
 
@@ -18,6 +20,12 @@ main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
 def index():
+    if os.getenv('CLIENT') == 'True':
+        if current_user.is_authenticated:
+            pass
+        else:
+            user = User.query.filter_by(email='admin@admin.com').first()
+            login_user(user)
     return render_template('main/index.html')
 
 

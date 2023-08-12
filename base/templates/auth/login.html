@@ -25,14 +25,16 @@
           {{ form.csrf_token() }}
           {{ render_field(form.email) }}
           {{ render_field(form.password) }}
-          {{ render_field(form.remember_me) }}
+          {% if env['service'] == 'server' %}{{ render_field(form.remember_me) }}{% endif %}
           <div class="col-12" align="center">
           {{ render_field(form.submit, button_style='btn btn-primary') }}
           </div>
         </form>
+        {% if env['service'] == 'server' %}
         <p class="mb-1" align="center">
-          <small><a href="{{ url_for('auth.forget_password') }}">忘记密码</a>{% if env['service'] == 'server' %} | <a href="#">注册新用户</a>{% endif %}</small>
+          <small><a href="{{ url_for('auth.forget_password') }}">忘记密码</a> | <a href="#">注册新用户</a></small>
         </p>
+        {% endif %}
       </div>
     </div>
 
