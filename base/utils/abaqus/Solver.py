@@ -105,13 +105,22 @@ class Solver:
         return proc
 
     def run(self):
+        """
+        可以使用以下的连续执行过程定义命令：
+        cmd = "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\" x86 amd64 && "
+        cmd += "\"C:\\Program Files (x86)\\IntelSWTools\\compilers_and_libraries_2020.1.216\\windows\\bin\\ifortvars.bat\" intel64 vs2019 && "
+        cmd += f"C:\SIMULIA\EstProducts\2020\win_b64\code\bin\ABQLauncher.exe job={self.job} user={self.user} cpus={self.cpus} ask=off"
+
+        注意：
+        在使用 pywebview 在 python 命令行预览的时候会发生无法连接到 ifort 的错误，错误原因尚不明确，但在 flask run 和打包为 exe 执行的过程中没有发生该错误。
+        """
         os.chdir(self.path)
         self.preproc()
         if self.user == '':
             cmd = '%s job=%s cpus=%s ask=off' % (ABAQUS, self.job, self.cpus)
         else:
             cmd = '%s job=%s user=%s cpus=%s ask=off' % (ABAQUS_FORTRAN, self.job, self.user, self.cpus)
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path)
         logfile = 'run.log'
         thread = threading.Thread(target=write_log, args=(proc, logfile))
         thread.start()
@@ -324,6 +333,6 @@ class Solver:
 
 
 if __name__ == '__main__':
-    s = Solver(path='/files/abaqus/1/1',
-               job='Job-1', user='umat_visco_maxwell_phasefield.for')
+    s = Solver(path='F:/Github/base/files/abaqus/5/1', job='Job-1', user='umat_cpfem_czm.for')
     s.clear()
+    s.run()

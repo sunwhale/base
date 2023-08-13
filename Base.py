@@ -50,6 +50,7 @@ if __name__ == "__main__":
         ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
         sys.exit()
 
+    # 需要 python >= 3.10 否则添加菜单时会报错
     menu_items = [
         wm.MenuAction('主界面', return_to_main),
         wm.Menu(
