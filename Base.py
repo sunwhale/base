@@ -61,5 +61,5 @@ if __name__ == "__main__":
         )
     ]
 
-    window = webview.create_window('固体力学与数值模拟', app, min_size=(800, 600))
-    webview.start(resize, window, debug=True, menu=menu_items)
+    window = webview.create_window('固体力学与数值模拟', app, min_size=(800, 600), text_select=True)
+    webview.start(resize, window, debug=False, menu=menu_items)

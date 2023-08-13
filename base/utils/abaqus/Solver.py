@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import threading
+import chardet
 
 from base.settings import ABAQUS, ABAQUS_FORTRAN
 
@@ -41,7 +42,9 @@ def is_number(s):
 def write_log(proc, logfile):
     f = open(logfile, 'w', encoding='utf-8')
     for line in iter(proc.stdout.readline, b''):
-        log = line.decode('UTF-8').replace('\n', '')
+        result = chardet.detect(line)
+        encoding = result['encoding']
+        log = line.decode(encoding).replace('\n', '')
         f.write(log)
         f.flush()
         if not subprocess.Popen.poll(proc) is None:
