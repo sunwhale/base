@@ -237,6 +237,34 @@
           {% endif %}
           {% endblock nav_abaqus %}
 
+          {% block nav_pyfem %}
+          {% if current_user.is_moderator or current_user.is_admin %}
+          <li class="nav-item" id="pyfem">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-cube"></i>
+              <p>
+                PYFEM
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('pyfem.manage_projects') }}" class="nav-link" id="pyfem_manage_projects">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>PYFEM项目管理</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('pyfem.create_project') }}" class="nav-link" id="pyfem_create_project">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>新建PYFEM项目</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          {% endblock nav_pyfem %}
+
           {% block nav_virtual %}
           {% if current_user.is_moderator or current_user.is_admin %}
           <li class="nav-item" id="virtual">

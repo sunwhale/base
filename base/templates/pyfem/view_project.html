@@ -1,0 +1,351 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}{{ project_id }}号PYFEM项目{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+{% endblock css %}
+
+{% block pageheader %}PYFEM项目信息{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主界面</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('pyfem.manage_projects') }}">PYFEM项目管理</a></li>
+<li class="breadcrumb-item active">PYFEM项目信息</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ project_id }}号PYFEM项目信息</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-6">
+                    <h5 class="text-primary">项目信息</h5>
+                    <ul class="list-unstyled">
+                      <li> 项目名称：{{ status['name'] }} </li>
+                      <li> 项目编号：{{ project_id }} </li>
+                      <li> 创建时间：{{ status['project_time'] }} </li>
+                      <li> 缺省算例名：{{ status['job'] }} </li>
+                      <li> 缺省user文件：{{ status['user'] }} </li>
+                      <li> 缺省算例使用CPU核心数量：{{ status['cpus'] }} </li>
+                      <li> 项目简介：</li>
+                      <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
+                      <a class='btn btn-primary' href="{{ url_for('pyfem.edit_project', project_id=project_id) }}"><strong>编辑信息</strong></a>
+                      {% if env['service'] == 'client' %}
+                      <a href="{{ url_for('pyfem.open_project', project_id=project_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
+                      {% endif %}
+                      {% if status['link']!='None' %}
+                      <a href="{{ status['link'] }}" class='btn btn-warning'><strong>外部关联项目</strong></a>
+                      {% endif %}
+                    </ul>
+                    {% if status['link']=='None' %}
+                    <h5 class="text-primary">创建新算例</h5>
+                    复制当前项目文件到算例文件夹，并生成新的参数文件。<br>
+                    <a class='btn btn-primary' href="{{ url_for('abaqus.create_job', project_id=project_id) }}"><strong>新建算例</strong></a>
+                    {% endif %}
+                    
+                  </div>
+                  <div class="col-6">
+
+                    <h5 class="text-primary">从模板导入文件</h5>
+                    <form action="" method="post" class="form-horizontal" enctype="multipart/form-data" role="form">
+                      {{ form_template.csrf_token() }}
+                      <div class="form-row">
+                        <div class="col-10">
+                          {{ form_template.name(class_="form-control") }}
+                        </div>
+                        <div class="col-2">
+                          {{ form_template.submit(class_="btn btn-primary") }}
+                        </div>
+                      </div>
+                    </form>
+
+                    <p></p>
+                    <h5 class="text-primary">上传文件</h5>
+                    <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+                      {{ form_upload.csrf_token }}
+                      <div class="form-group">
+                      {{ form_upload.submit }}{{ form_upload.filename }}
+                      </div>
+                    </form>
+
+                    <h5 class="text-primary">项目文件</h5>
+                    <table class="table table-sm table-hover">
+                      <thead>
+                        <tr>
+                          <th width=40%>文件名</th>
+                          <th width=30%>修改日期</th>
+                          <th width=10%>大小</th>
+                          <th width=20%>操作</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for file in files %}
+                        <tr>
+                          <td> {{ file['name'] }} </td>
+                          <td> {{ file['time'] }} </td>
+                          <td> {{ file['size'] }} </td>
+                          <td> <a href="{{ url_for('pyfem.get_project_file', project_id=project_id, filename=file['name']) }}" target="_blank">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('pyfem.delete_project_file', project_id=project_id, filename=file['name']) }}">删除</a> </td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ project_id }}号PYFEM项目的算例列表</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="maximize">
+                    <i class="fas fa-expand"></i>
+                  </button>
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <form method="POST" id="form_queue" name="form_queue">
+                  {{ form_upload.csrf_token }}
+                  <button class="btn btn-success" type="submit" id="submit_queue_solver">
+                    <i class="fa fa-upload"></i>
+                    <strong>提交至队列（求解）</strong>
+                  </button>
+                  <button class="btn btn-success" type="submit" id="submit_queue_odb_to_npz">
+                    <i class="fa fa-upload"></i>
+                    <strong>提交至队列（导出）</strong>
+                  </button>
+                  <button class="btn btn-success" type="submit" id="submit_queue_all">
+                    <i class="fa fa-upload"></i>
+                    <strong>提交至队列（求解+导出）</strong>
+                  </button>
+                  <button class="btn btn-primary" id="hide_para">
+                    <i class="fa fa-eye-slash" id="hide_para_icon"></i>
+                    <strong id="hide_para_text">隐藏模型参数列</strong>
+                  </button>
+                  <button class="btn btn-primary" id="hide_solver">
+                    <i class="fa fa-eye-slash" id="hide_solver_icon"></i>
+                    <strong id="hide_solver_text">隐藏求解文件列</strong>
+                  </button>
+                  <textarea class="form-control" id="queue_value" name="queue_value"></textarea>
+                  <textarea class="form-control" id="queue_type" name="queue_type"></textarea>
+                  <p></p>
+                  <table id="data" class="table table-bordered table-striped">
+                    <thead>
+                      <tr>
+                        <th width=20px><input type="checkbox" id="customCheck" class="checkAll"></th>
+                        <th width=20px>ID</th>
+                        {% for parameter in parameters %}
+                        <th>{{ parameter }}</th>
+                        {% endfor %}
+                        <th>inp 时间</th>
+                        <th>inp 大小</th>
+                        <th>odb 时间</th>
+                        <th>odb 大小</th>
+                        <th>npz 时间</th>
+                        <th>npz 大小</th>
+                        <th>求解状态</th>
+                        <th width=150px>操作</th>
+                      </tr>
+                    </thead>
+                  </table>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+{% endblock content %}
+
+{% block script %}
+<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+
+<script type="text/javascript">
+
+  $.fn.dataTable.defaults.oLanguage = {
+    "sProcessing": "处理中...",
+    "sLengthMenu": "显示 _MENU_ 项结果",
+    "sZeroRecords": "没有匹配结果",
+    "sInfo": "显示第 _START_ 至 _END_ 项结果，共 _TOTAL_ 项",
+    "sInfoEmpty": "显示第 0 至 0 项结果，共 0 项",
+    "sInfoFiltered": "(由 _MAX_ 项结果过滤)",
+    "sInfoPostFix": "",
+    "sSearch": "搜索：",
+    "sUrl": "",
+    "sEmptyTable": "表中数据为空",
+    "sLoadingRecords": "载入中...",
+    "sInfoThousands": ",",
+    "oPaginate": {
+      "sFirst": "首页",
+      "sPrevious": "上页",
+      "sNext": "下页",
+      "sLast": "末页"
+    },
+    "oAria": {
+      "sSortAscending": ": 以升序排列此列",
+      "sSortDescending": ": 以降序排列此列"
+    }
+  };
+
+  $(function (e) {
+    $('#data').DataTable({
+      paging: true,
+      pageLength: 50,
+      ordering: true,
+      order: [1, 'asc'],
+      info: true,
+      autoWidth: false,
+      responsive: true,
+      ajax: "{{ url_for('abaqus.project_jobs_status', project_id=project_id) }}",
+      columns: [
+        { data : null, 
+          render: function (data) {
+            return data='<input type="checkbox" class="checkOne" id="'+data['job_id']+'">';
+          },
+          sClass: 'text-center'},
+        { data: 'job_id' },
+        {% for parameter in parameters %}
+        { data: '{{ parameter }}' },
+        {% endfor %}
+        { data: 'inp_time' },
+        { data: 'inp_size' },
+        { data: 'odb_time' },
+        { data: 'odb_size' },
+        { data: 'npz_time' },
+        { data: 'npz_size' },
+        { data: 'solver_status' },
+        { data: 'operation' },
+      ],
+    });
+
+    // 初始时隐藏参数列
+    var table = $('#data').DataTable()
+    for (var i=2; i<{{ parameters|length }}+2; i++) {
+      var column = table.column(i);
+      column.visible(false);
+      var text = document.getElementById('hide_para_text');
+      var icon = document.getElementById('hide_para_icon');
+      if (column.visible()) {
+        text.innerHTML = '隐藏模型参数列'
+        icon.setAttribute('class','fa fa-eye-slash')
+      } else {
+        text.innerHTML = '显示模型参数列'
+        icon.setAttribute('class','fa fa-eye')
+      }
+    }
+  });
+
+  $('#hide_para').on('click', function (e) {
+    var table = $('#data').DataTable()
+    e.preventDefault();
+    // Toggle the visibility
+    for (var i=2; i<{{ parameters|length }}+2; i++) {
+      var column = table.column(i);
+      column.visible( ! column.visible() );
+      var text = document.getElementById('hide_para_text');
+      var icon = document.getElementById('hide_para_icon');
+      if (column.visible()) {
+        text.innerHTML = '隐藏模型参数列'
+        icon.setAttribute('class','fa fa-eye-slash')
+      } else {
+        text.innerHTML = '显示模型参数列'
+        icon.setAttribute('class','fa fa-eye')
+      }
+    }
+  });
+
+  $('#hide_solver').on('click', function (e) {
+    var table = $('#data').DataTable()
+    e.preventDefault();
+    // Toggle the visibility
+    for (var i={{ parameters|length }}+2; i<{{ parameters|length }}+8; i++) {
+      var column = table.column(i);
+      column.visible( ! column.visible() );
+      var text = document.getElementById('hide_solver_text');
+      var icon = document.getElementById('hide_solver_icon');
+      if (column.visible()) {
+        text.innerHTML = '隐藏求解文件列'
+        icon.setAttribute('class','fa fa-eye-slash')
+      } else {
+        text.innerHTML = '显示求解文件列'
+        icon.setAttribute('class','fa fa-eye')
+      }
+    }
+  });
+
+  // https://blog.csdn.net/weixin_43235307/article/details/121795990
+  $(document).on('click', '.checkAll', function () {
+    $('.checkOne').prop('checked', $(this).prop('checked'));
+  });
+
+  $(document).on('click', '.checkOne', function () {
+    var flag = $('.checkOne:checked').length == $('.checkOne').length;
+    $('.checkAll').prop('checked', flag);
+  });
+
+  $(document).ready(function () {
+    $('#submit_queue_solver').on('click', function () {
+      var checked_item = $('.checkOne:checked')
+      var checked_items = []
+      for (var i=0; i<checked_item.length; i++) {
+        checked_items.push(checked_item[i].id);
+      }
+      document.getElementById('queue_value').value = checked_items;
+      document.getElementById('queue_type').value = 'Solver';
+    });
+  });
+
+  $(document).ready(function () {
+    $('#submit_queue_odb_to_npz').on('click', function () {
+      var checked_item = $('.checkOne:checked')
+      var checked_items = []
+      for (var i=0; i<checked_item.length; i++) {
+        checked_items.push(checked_item[i].id);
+      }
+      document.getElementById('queue_value').value = checked_items;
+      document.getElementById('queue_type').value = 'odb_to_npz';
+    });
+  });
+
+  $(document).ready(function () {
+    $('#submit_queue_all').on('click', function () {
+      var checked_item = $('.checkOne:checked')
+      var checked_items = []
+      for (var i=0; i<checked_item.length; i++) {
+        checked_items.push(checked_item[i].id);
+      }
+      document.getElementById('queue_value').value = checked_items;
+      document.getElementById('queue_type').value = 'All';
+    });
+  });
+
+  $(document).ready(function () {
+    $('#descript').attr('disabled', true)
+  });
+
+  document.getElementById('queue_value').style.display = 'none'
+  document.getElementById('queue_type').style.display = 'none'
+
+  document.getElementById('pyfem').className = 'nav-item menu-open'
+
+</script>
+{% endblock script %}

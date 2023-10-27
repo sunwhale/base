@@ -42,6 +42,7 @@ class BaseConfig:
     SHEET_PATH = os.path.join(FILE_PATH, 'sheet')
     PACKING_PATH = os.path.join(FILE_PATH, 'packing')
     PACKING_MODELS_PATH = os.path.join(FILE_PATH, 'packing', 'models')
+    PYFEM_PATH = os.path.join(FILE_PATH, 'pyfem')
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
