@@ -1,0 +1,299 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_field %}
+
+{% block title %}{{ project_id }}.{{ job_id }}号算例{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='zTree/css/zTreeStyle/zTreeStyle.css') }}">
+{% endblock css %}
+
+{% block pageheader %}算例信息{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主界面</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('pyfem.manage_projects') }}">PYFEM项目管理</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('pyfem.view_project', project_id=project_id) }}">{{ project_id }}号PYFEM项目</a></li>
+<li class="breadcrumb-item active">算例信息</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-6">
+            <div class="column">
+              <div class="col-12">
+                <div class="card card-primary">
+                  <div class="card-header">
+                    <h3 class="card-title">{{ project_id }}号PYFEM项目：{{ job_id }}号算例</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                        <i class="fas fa-minus"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        <h5 class="text-primary">算例信息</h5>
+                        <ul class="list-unstyled">
+                          <li> 算例编号：{{ job_id }} </li>
+                          <li> 创建时间：{{ status['inp_time'] }}</li>
+                          <li> 算例inp文件：{{ status['job'] }}.inp</li>
+                          <li> 算例user文件：{{ status['user'] }}</li>
+                          <li> 算例使用CPU核心数量：{{ status['cpus'] }}</li>
+                          <a class='btn btn-primary' href="{{ url_for('pyfem.edit_job', project_id=project_id, job_id=job_id) }}"><strong>编辑信息</strong></a>
+                          {% if env['service'] == 'client' %}
+                          <a href="{{ url_for('pyfem.open_job', project_id=project_id, job_id=job_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
+                          {% endif %}
+                        </ul>
+                        <h5 class="text-primary">求解控制</h5>
+                        当前状态：{{ solver_status }}
+                        <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止PYFEM的计算，并通过<a href="javascript:location.reload();">刷新</a>页面获取算例状态。</p>
+
+                        {% if solver_status=='Submitting' or solver_status=='Running' or solver_status=='Pause' or solver_status=='Stopping' %}
+                        <button class="btn btn-secondary" disabled="disabled"><strong>计 算</strong></button>
+                        {% else %}
+                        <a href="{{ url_for('abaqus.run_job', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>计 算</strong></a>
+                        {% endif %}
+
+                        {% if solver_status=='Running' %}
+                        <a href="#" class="btn btn-warning"><strong>暂 停</strong></a>
+                        {% else %}
+                        <button class="btn btn-secondary" disabled="disabled"><strong>暂 停</strong></button>
+                        {% endif %}
+
+                        {% if solver_status=='Pause' %}
+                        <a href="#" class="btn btn-info"><strong>继 续</strong></a>
+                        {% else %}
+                        <button class="btn btn-secondary" disabled="disabled"><strong>继 续</strong></button>
+                        {% endif %}
+
+                        {% if solver_status=='Running' %}
+                        <a href="{{ url_for('abaqus.terminate_job', project_id=project_id, job_id=job_id) }}" class="btn btn-danger"><strong>终 止</strong></a>
+                        {% else %}
+                        <button class="btn btn-secondary" disabled="disabled"><strong>终 止</strong></button>
+                        {% endif %}
+                        {{ button }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary">
+                  <div class="card-header">
+                    <h3 class="card-title">参数文件</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        <form action="" method="post" class="form" role="form">
+                          {{ form.csrf_token() }}
+                          {{ render_field(form.para, style="height: 200px;") }}
+                          {{ render_field(form.submit, button_style='btn btn-primary') }}
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary">
+                  <div class="card-header">
+                    <h3 class="card-title">文件列表</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        <table class="table table-sm table-hover">
+                          <thead>
+                            <tr>
+                              <th width=40%>文件名</th>
+                              <th width=30%>修改日期</th>
+                              <th width=10%>大小</th>
+                              <th width=20%>操作</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {% for file in files %}
+                            <tr>
+                              <td> {{ file['name'] }} </td>
+                              <td> {{ file['time'] }} </td>
+                              <td> {{ file['size'] }} </td>
+                              <td> <a href="{{ url_for('abaqus.get_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}" target="_blank">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">删除</a> </td>
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="column">
+              <div class="col-12">
+                <!-- Custom Tabs -->
+                <div class="card">
+                  <div class="card-header d-flex p-0">
+                    <h3 class="card-title p-3">求解状态</h3>
+                    <ul class="nav nav-pills ml-auto p-2">
+                      <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">状态文件 {{ status['job'] }}.sta</a></li>
+                      <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
+                      <li class="nav-item"><a class="nav-link" href="#tab_3" data-toggle="tab">求解日志 {{ status['job'] }}.log</a></li>
+                    </ul>
+                  </div><!-- /.card-header -->
+                  <div class="card-body">
+                    <div class="tab-content">
+                      <div class="tab-pane active" id="tab_1">
+                        <div class="card-body table-responsive p-0" style="height: 319.5px;">
+                          <table class="table table-sm table-hover table-head-fixed text-nowrap" id="table_sta">
+                            <thead>
+                              <tr>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Step</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Increment</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Att</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Severe<br>Discon<br>Iter</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Equil<br>Iter</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Iter</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Time/Freq</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Step<br>Time/LPF</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Time/LPF<br>Inc</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {% for row in sta %}
+                              <tr style="vertical-align: middle;text-align: center;">
+                                {% for item in row %}
+                                  <td> {{ item }} </td>
+                                {% endfor %}
+                              </tr>
+                              {% endfor %}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <!-- /.tab-pane -->
+                      <div class="tab-pane" id="tab_2">
+                        <textarea id="textarea_run_log" class="form-control" style="height: 319.5px;">{{ run_logs }}</textarea>
+                      </div>
+                      <!-- /.tab-pane -->
+                      <div class="tab-pane" id="tab_3">
+                        <textarea id="textarea_log" class="form-control" style="height: 319.5px;">{{ logs }}</textarea>
+                      </div>
+                      <!-- /.tab-pane -->
+                    </div>
+                    <!-- /.tab-content -->
+                  </div><!-- /.card-body -->
+                </div>
+                <!-- ./card -->
+              </div>
+              <div class="col-12">
+                <div class="card card-primary">
+                  <div class="card-header">
+                    <h3 class="card-title">后处理</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        <p class="mb-1">您可以通过点击下面的按钮进行PYFEM计算结果的后处理，并通过<a href="javascript:location.reload();">刷新</a>页面更新状态。</p>
+                        
+                        {% if status['prescan_status']!='Scanning' and status['prescan_status']!='Submitting' %}
+                        <a href="{{ url_for('abaqus.prescan_odb', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>odb 预扫描</strong></a>
+                        {% else %}
+                        <button class="btn btn-secondary" disabled="disabled"><strong>odb 预扫描</strong></button>
+                        {% endif %}
+
+                        {% if status['odb_to_npz_status']!='Running' and status['odb_to_npz_status']!='Submitting' %}
+                        <a href="{{ url_for('abaqus.odb_to_npz', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>odb_to_npz</strong></a>
+                        {% else %}
+                        <button class="btn btn-secondary" disabled="disabled"><strong>odb_to_npz</strong></button>
+                        {% endif %}
+
+                        <a href="{{ url_for('abaqus.print_figure', project_id=project_id, job_id=job_id) }}" class="btn btn-info"><strong>odb图片输出</strong></a>
+
+                        <p></p>
+                        <p class="mb-1">预扫描树状图（{{ status['prescan_status'] }}）：</p>
+                        <ul id="ztree-odb" class="ztree"></ul>
+                        <p></p>
+                        <p class="mb-1">npz文件结构（{{ status['odb_to_npz_status'] }} {{ status['odb_to_npz_proc'] }}%）：</p>
+                        <ul id="ztree-npz" class="ztree"></ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock content %}
+
+{% block script %}
+{% if env['service'] == 'server' %}
+<script src="https://cdn.bootcdn.net/ajax/libs/zTree.v3/3.5.42/js/jquery.ztree.core.min.js"></script>
+{% else %}
+<script src="{{ url_for('static', filename='zTree/js/jquery.ztree.core.min.js') }}"></script>
+{% endif %}
+<script type="text/javascript">
+
+  var textarea_log = document.getElementById('textarea_log');
+  textarea_log.scrollTop = textarea_log.scrollHeight;
+
+  var textarea_log = document.getElementById('textarea_run_log');
+  textarea_log.scrollTop = textarea_log.scrollHeight;
+
+  // var table_sta = document.getElementById('table_sta');
+  // table_sta.scrollTop = table_sta.scrollHeight;
+
+  var setting_odb = {
+    data: {
+      simpleData: {
+        enable: true
+      }
+    },
+    async: {
+      enable: true,
+      url:"{{ url_for('abaqus.prescan_odb_data', project_id=project_id, job_id=job_id) }}",
+      type: "get",
+    }
+  };
+
+  $(document).ready(function(){
+    $.fn.zTree.init($("#ztree-odb"), setting_odb);
+  });
+
+  var setting_npz = {
+    data: {
+      simpleData: {
+        enable: true
+      }
+    },
+    async: {
+      enable: true,
+      url:"{{ url_for('abaqus.odb_to_npz_data', project_id=project_id, job_id=job_id) }}",
+      type: "get",
+    }
+  };
+
+  $(document).ready(function(){
+    $.fn.zTree.init($("#ztree-npz"), setting_npz);
+  });
+
+  document.getElementById('pyfem').className = 'nav-item menu-open'
+  
+</script>
+{% endblock script %}

@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}新建/编辑PYFEM算例{% endblock title %}
+
+{% block pageheader %}新建/编辑PYFEM算例{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主界面</a></li>
+<li class="breadcrumb-item active">新建/编辑PYFEM算例</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- left column -->
+          <div class="col-md-6">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">根据模型参数提交作业</h3>
+              </div>
+              <div class="card-body">
+                <form action="" method="post" class="form" role="form">
+                  {{ render_form(form) }}
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+{% endblock content %}
+
+{% block script %}
+<script type="text/javascript">
+
+  document.getElementById("abaqus").className = "nav-item menu-open"
+  document.getElementById("create_project").className = "nav-link active"
+  
+</script>
+{% endblock script %}
+

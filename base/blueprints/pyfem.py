@@ -258,3 +258,149 @@ def delete_project_file(project_id, filename):
     else:
         flash('文件%s不存在。' % filename, 'warning')
     return redirect(url_for('.view_project', project_id=project_id))
+
+
+@pyfem_bp.route('/create_job/<int:project_id>', methods=['GET', 'POST'])
+@login_required
+def create_job(project_id):
+    form = JobForm()
+    pyfem_path = current_app.config['PYFEM_PATH']
+    project_path = os.path.join(pyfem_path, str(project_id))
+
+    if form.validate_on_submit():
+        job_id = create_id(project_path)
+        job_path = os.path.join(project_path, str(job_id))
+        make_dir(job_path)
+        message = {
+            'job': form.job.data,
+            'user': form.user.data,
+            'cpus': form.cpus.data
+        }
+        msg_file = os.path.join(job_path, '.job_msg')
+        dump_json(msg_file, message)
+        files = files_in_dir(project_path)
+        for file in files:
+            shutil.copy(os.path.join(project_path, file['name']),
+                        os.path.join(job_path, file['name']))
+        return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+
+    msg_file = os.path.join(project_path, '.project_msg')
+    message = load_json(msg_file)
+    form.job.data = message['job']
+    form.user.data = message['user']
+    form.cpus.data = message['cpus']
+    return render_template('pyfem/create_job.html', form=form)
+
+
+@pyfem_bp.route('/view_job/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+def view_job(project_id, job_id):
+    pyfem_path = current_app.config['PYFEM_PATH']
+    job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
+    if os.path.exists(job_path):
+        s = Solver(job_path)
+        s.read_msg()
+        sta = s.get_sta()
+        logs = s.get_log()
+        run_logs = s.get_run_log()
+        para = s.get_parameters()
+        form = ParameterForm()
+        if form.validate_on_submit():
+            para = form.para.data
+            s.save_parameters(para)
+            flash('parameters.inp保存成功。', 'success')
+            return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+        form.para.data = para
+        s.parameters_to_json()
+        files = files_in_dir(job_path)
+        solver_status = s.solver_status()
+        status = get_job_status(pyfem_path, project_id, job_id)
+        return render_template('pyfem/view_job.html', project_id=project_id, job_id=job_id, status=status,
+                               logs=logs[-5000:], sta=sta[-100:], run_logs=run_logs, form=form,
+                               solver_status=solver_status, files=files)
+    else:
+        abort(404)
+
+
+@pyfem_bp.route('/project_jobs_status/<int:project_id>')
+def project_jobs_status(project_id):
+    pyfem_path = current_app.config['PYFEM_PATH']
+    job_id_list = sub_dirs_int(os.path.join(pyfem_path, str(project_id)))
+    for job_id in job_id_list:
+        job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
+        s = Solver(job_path)
+        s.solver_status()
+    data = project_jobs_detail(pyfem_path, project_id)
+    return jsonify(data)
+
+
+@pyfem_bp.route('/edit_job/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+def edit_job(project_id, job_id):
+    form = JobForm()
+    pyfem_path = current_app.config['PYFEM_PATH']
+    job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
+    msg_file = os.path.join(job_path, '.job_msg')
+
+    if form.validate_on_submit():
+        message = {}
+        message['job'] = form.job.data
+        message['user'] = form.user.data
+        message['cpus'] = form.cpus.data
+        dump_json(msg_file, message)
+        return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+
+    message = load_json(msg_file)
+    form.job.data = message['job']
+    form.user.data = message['user']
+    form.cpus.data = message['cpus']
+    return render_template('pyfem/create_job.html', form=form)
+
+
+@pyfem_bp.route('/delete_job/<int:project_id>/<int:job_id>')
+@login_required
+def delete_job(project_id, job_id):
+    pyfem_path = current_app.config['PYFEM_PATH']
+    job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该项目！', 'warning')
+        return redirect(url_for('.manage_projects'))
+    if os.path.exists(job_path):
+        shutil.rmtree(job_path)
+        flash('ABAQUS项目%s算例%s删除成功。' % (project_id, job_id), 'success')
+    else:
+        flash('ABAQUS项目%s算例%s不存在。' % (project_id, job_id), 'warning')
+    return redirect(url_for('.view_project', project_id=project_id))
+
+
+@pyfem_bp.route('/open_job/<int:project_id>/<int:job_id>')
+@login_required
+def open_job(project_id, job_id):
+    pyfem_path = current_app.config['PYFEM_PATH']
+    job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
+    if os.path.exists(job_path):
+        cmd = 'explorer %s' % job_path
+        proc = subprocess.run(cmd)
+        return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+    else:
+        abort(404)
+
+
+@pyfem_bp.route('/run_job/<int:project_id>/<int:job_id>')
+@login_required
+def run_job(project_id, job_id):
+    pyfem_path = current_app.config['PYFEM_PATH']
+    job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
+    if os.path.exists(job_path):
+        s = Solver(job_path)
+        s.read_msg()
+        s.clear()
+        if s.check_files():
+            proc = s.run()
+            with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
+                f.write('Submitting')
+        else:
+            flash('缺少必要的计算文件。', 'warning')
+        return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
+    else:
+        abort(404)

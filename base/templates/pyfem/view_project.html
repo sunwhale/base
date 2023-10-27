@@ -53,7 +53,7 @@
                     {% if status['link']=='None' %}
                     <h5 class="text-primary">创建新算例</h5>
                     复制当前项目文件到算例文件夹，并生成新的参数文件。<br>
-                    <a class='btn btn-primary' href="{{ url_for('abaqus.create_job', project_id=project_id) }}"><strong>新建算例</strong></a>
+                    <a class='btn btn-primary' href="{{ url_for('pyfem.create_job', project_id=project_id) }}"><strong>新建算例</strong></a>
                     {% endif %}
                     
                   </div>
@@ -215,7 +215,7 @@
       info: true,
       autoWidth: false,
       responsive: true,
-      ajax: "{{ url_for('abaqus.project_jobs_status', project_id=project_id) }}",
+      ajax: "{{ url_for('pyfem.project_jobs_status', project_id=project_id) }}",
       columns: [
         { data : null, 
           render: function (data) {
