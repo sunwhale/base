@@ -54,7 +54,7 @@
                         {% if solver_status=='Submitting' or solver_status=='Running' or solver_status=='Pause' or solver_status=='Stopping' %}
                         <button class="btn btn-secondary" disabled="disabled"><strong>计 算</strong></button>
                         {% else %}
-                        <a href="{{ url_for('abaqus.run_job', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>计 算</strong></a>
+                        <a href="{{ url_for('pyfem.run_job', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>计 算</strong></a>
                         {% endif %}
 
                         {% if solver_status=='Running' %}
@@ -70,7 +70,7 @@
                         {% endif %}
 
                         {% if solver_status=='Running' %}
-                        <a href="{{ url_for('abaqus.terminate_job', project_id=project_id, job_id=job_id) }}" class="btn btn-danger"><strong>终 止</strong></a>
+                        <a href="{{ url_for('pyfem.terminate_job', project_id=project_id, job_id=job_id) }}" class="btn btn-danger"><strong>终 止</strong></a>
                         {% else %}
                         <button class="btn btn-secondary" disabled="disabled"><strong>终 止</strong></button>
                         {% endif %}
@@ -127,7 +127,7 @@
                               <td> {{ file['name'] }} </td>
                               <td> {{ file['time'] }} </td>
                               <td> {{ file['size'] }} </td>
-                              <td> <a href="{{ url_for('abaqus.get_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}" target="_blank">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">删除</a> </td>
+                              <td> <a href="{{ url_for('abaqus.get_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}" target="_blank">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('pyfem.delete_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">删除</a> </td>
                             </tr>
                             {% endfor %}
                           </tbody>

@@ -15,7 +15,7 @@ from flask_login import current_user, login_required
 from base.forms.pyfem import (JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm, OdbForm)
 from base.global_var import event_source
 from base.utils.abaqus.Postproc import Postproc
-from base.utils.abaqus.Solver import Solver
+from base.utils.pyfem.Solver import Solver
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status,
                                    get_template_status, project_jobs_detail, projects_detail, templates_detail,
@@ -399,8 +399,59 @@ def run_job(project_id, job_id):
             proc = s.run()
             with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
                 f.write('Submitting')
+            with open(os.path.join(job_path, '.pid'), 'w', encoding='utf-8') as f:
+                f.write(f'{proc.pid}')
+            print(proc)
+            current_app.config['PYFEM_PROC_DICT'][f'{project_id}{job_id}'] = proc
+            print(current_app.config['PYFEM_PROC_DICT'])
         else:
             flash('缺少必要的计算文件。', 'warning')
         return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
     else:
         abort(404)
+
+
+@pyfem_bp.route('/terminate_job/<int:project_id>/<int:job_id>')
+@login_required
+def terminate_job(project_id, job_id):
+    pyfem_path = current_app.config['PYFEM_PATH']
+    job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
+    if os.path.exists(job_path):
+        s = Solver(job_path)
+        s.read_msg()
+        with open(os.path.join(job_path, '.pid'), 'r', encoding='utf-8') as f:
+            pid = int(f.read())
+
+        print(current_app.config['PYFEM_PROC_DICT'])
+        proc = current_app.config['PYFEM_PROC_DICT'][f'{project_id}{job_id}']
+        print(proc)
+        # proc.terminate()
+        import signal
+        os.kill(pid, signal.SIGTERM)
+        # with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
+        #     f.write('Stopping')
+        return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
+    else:
+        abort(404)
+
+
+@pyfem_bp.route('/get_job_file/<int:project_id>/<int:job_id>/<path:filename>')
+@login_required
+def get_job_file(project_id, job_id, filename):
+    return send_from_directory(os.path.join(current_app.config['PYFEM_PATH'], str(project_id), str(job_id)), filename)
+
+
+@pyfem_bp.route('/delete_job_file/<int:project_id>/<int:job_id>/<path:filename>')
+@login_required
+def delete_job_file(project_id, job_id, filename):
+    pyfem_path = current_app.config['PYFEM_PATH']
+    file = os.path.join(pyfem_path, str(project_id), str(job_id), str(filename))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该文件！', 'warning')
+        return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
+    if os.path.exists(file):
+        os.remove(file)
+        flash('文件%s删除成功。' % filename, 'success')
+    else:
+        flash('文件%s不存在。' % filename, 'warning')
+    return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))

@@ -44,12 +44,13 @@ def write_log(proc, logfile):
     for line in iter(proc.stdout.readline, b''):
         result = chardet.detect(line)
         encoding = result['encoding']
-        log = line.decode(encoding).replace('\n', '')
-        f.write(log)
-        f.flush()
-        if not subprocess.Popen.poll(proc) is None:
-            if line == "":
-                break
+        if result['encoding'] is not None:
+            log = line.decode(encoding).replace('\n', '')
+            f.write(log)
+            f.flush()
+            if not subprocess.Popen.poll(proc) is None:
+                if line == "":
+                    break
     proc.stdout.close()
     f.close()
 
@@ -88,7 +89,8 @@ class Solver:
         return message
 
     def check_files(self):
-        inp_file = os.path.join(self.path, '{}.inp'.format(self.job))
+        inp_file = os.path.join(self.path, f'{self.job}.toml')
+        print(inp_file)
         user_file = os.path.join(self.path, self.user)
         if not os.path.exists(inp_file):
             return False
@@ -106,20 +108,14 @@ class Solver:
 
     def run(self):
         """
-        可以使用以下的连续执行过程定义命令：
-        cmd = "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\" x86 amd64 && "
-        cmd += "\"C:\\Program Files (x86)\\IntelSWTools\\compilers_and_libraries_2020.1.216\\windows\\bin\\ifortvars.bat\" intel64 vs2019 && "
-        cmd += f"C:\SIMULIA\EstProducts\2020\win_b64\code\bin\ABQLauncher.exe job={self.job} user={self.user} cpus={self.cpus} ask=off"
 
-        注意：
-        在使用 pywebview 在 python 命令行预览的时候会发生无法连接到 ifort 的错误，错误原因尚不明确，但在 flask run 和打包为 exe 执行的过程中没有发生该错误。
         """
         os.chdir(self.path)
         self.preproc()
         if self.user == '':
-            cmd = 'pyfem -i %s' % (self.job)
+            cmd = f'pyfem -i {self.job}.toml'
         else:
-            cmd = 'pyfem -i %s' % (self.job)
+            cmd = f'pyfem -i {self.job}.toml'
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path)
         logfile = 'run.log'
         thread = threading.Thread(target=write_log, args=(proc, logfile))
@@ -129,24 +125,9 @@ class Solver:
     def clear(self):
         os.chdir(self.path)
         exts = [
-            '*.rpy.*',
-            '*.dmp',
-            '*.lck',
-            'fort.*',
-            'abaqus.*',
-            '*.exception',
-            '*.jnl',
-            '*.SMABulk',
-            '*.odb_f',
-            '*.com',
-            '*.dat',
-            '*.prt',
-            '*.sim',
-            '*.sta',
-            '*.par',
-            '*.pes',
-            '*.pmg',
-            '*.log'
+            '*.pvd',
+            '*.log',
+            '*.vtu',
         ]
         for ext in exts:
             remove_files(self.path, ext)
@@ -292,7 +273,7 @@ class Solver:
             solver_status = 'Completed'
         elif 'exited' in logs:
             solver_status = 'Stopped'
-        elif 'Run standard' in logs and solver_status != 'Stopping':
+        elif 'Running' in logs and solver_status != 'Stopping':
             solver_status = 'Running'
 
         # 如果发生异常，则赋予默认值'Setting'
@@ -333,6 +314,6 @@ class Solver:
 
 
 if __name__ == '__main__':
-    s = Solver(path='F:/Github/base/files/pyfem/1/1', job='Job-1', user='')
+    s = Solver(path='F:/Github/base/files/pyfem/1/2', job='Job-1', user='')
     s.clear()
-    s.run()
+    proc = s.run()
