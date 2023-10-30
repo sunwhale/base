@@ -113,7 +113,7 @@ class Solver:
         os.chdir(self.path)
         self.preproc()
         if self.user == '':
-            cmd = f'pyfem -i {self.job}.toml'
+            cmd = f'C:\\Users\\SunJingyu\\.conda\\envs\\pyfem311\\python.exe F:\\GitHub\\pyfem\\app.py -i {self.job}.toml'
         else:
             cmd = f'pyfem -i {self.job}.toml'
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path)
@@ -271,9 +271,9 @@ class Solver:
         logs = self.get_log()
         if 'COMPLETED' in logs:
             solver_status = 'Completed'
-        elif 'exited' in logs:
+        elif 'EXITED' in logs:
             solver_status = 'Stopped'
-        elif 'Running' in logs and solver_status != 'Stopping':
+        elif 'RUNNING' in logs and solver_status != 'Stopping':
             solver_status = 'Running'
 
         # 如果发生异常，则赋予默认值'Setting'

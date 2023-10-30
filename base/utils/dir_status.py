@@ -463,11 +463,16 @@ def get_job_status(path, project_id, job_id):
         inp_file = os.path.join(path, str(project_id), str(job_id), '%s.inp' % job_name)
         odb_file = os.path.join(path, str(project_id), str(job_id), '%s.odb' % job_name)
         npz_file = os.path.join(path, str(project_id), str(job_id), '%s.npz' % job_name)
+        toml_file = os.path.join(path, str(project_id), str(job_id), '%s.toml' % job_name)
         status['job'] = message['job']
         status['user'] = message['user']
         status['cpus'] = message['cpus']
-        status['inp_time'] = file_time(inp_file)
-        status['inp_size'] = file_size(inp_file)
+        if os.path.exists(inp_file):
+            status['inp_time'] = file_time(inp_file)
+            status['inp_size'] = file_size(inp_file)
+        elif os.path.exists(toml_file):
+            status['inp_time'] = file_time(toml_file)
+            status['inp_size'] = file_size(toml_file)
         status['odb_time'] = file_time(odb_file)
         status['odb_size'] = file_size(odb_file)
         status['npz_time'] = file_time(npz_file)
