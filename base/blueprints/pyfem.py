@@ -343,10 +343,11 @@ def edit_job(project_id, job_id):
     msg_file = os.path.join(job_path, '.job_msg')
 
     if form.validate_on_submit():
-        message = {}
-        message['job'] = form.job.data
-        message['user'] = form.user.data
-        message['cpus'] = form.cpus.data
+        message = {
+            'job': form.job.data,
+            'user': form.user.data,
+            'cpus': form.cpus.data
+        }
         dump_json(msg_file, message)
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
 

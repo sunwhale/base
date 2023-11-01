@@ -43,7 +43,7 @@ class JobForm(FlaskForm):
 
 
 class ParameterForm(FlaskForm):
-    para = TextAreaField('parameters.inp')
+    para = TextAreaField('parameters.toml')
     submit = SubmitField('保存')
 
 

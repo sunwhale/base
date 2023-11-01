@@ -187,7 +187,7 @@ class Solver:
         return inp
 
     def get_parameters(self):
-        para_file = os.path.join(self.path, 'parameters.inp')
+        para_file = os.path.join(self.path, 'parameters.toml')
         if os.path.exists(para_file):
             with open(para_file, 'r', encoding='utf-8') as f:
                 para = f.read()
@@ -205,13 +205,13 @@ class Solver:
         return logs
 
     def save_parameters(self, para):
-        para_file = os.path.join(self.path, 'parameters.inp')
+        para_file = os.path.join(self.path, 'parameters.toml')
         para = para.replace('\r', '')
         with open(para_file, 'w', encoding='utf-8') as f:
             f.write(para)
 
     def parameters_to_json(self):
-        para_file = os.path.join(self.path, 'parameters.inp')
+        para_file = os.path.join(self.path, 'parameters.toml')
         if os.path.exists(para_file):
             with open(para_file, 'r', encoding='utf-8') as f:
                 para = f.readlines()
@@ -227,7 +227,7 @@ class Solver:
             json.dump(para_dict, f, ensure_ascii=False)
 
     def parameter_keys(self):
-        para_file = os.path.join(self.path, 'parameters.inp')
+        para_file = os.path.join(self.path, 'parameters.toml')
         if os.path.exists(para_file):
             with open(para_file, 'r', encoding='utf-8') as f:
                 para = f.readlines()
