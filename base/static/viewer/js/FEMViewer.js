@@ -677,12 +677,12 @@ class FEMViewer {
     }
 
     async loadJSON(json_path, be) {
-        this.notiBar.setMessage("Loading model..." + "⌛", true);
+        this.notiBar.setMessage("加载模型..." + "⌛", true);
         this.json_path = json_path;
         this.filename = json_path;
         const response = await fetch(this.json_path);
         const jsondata = await response.json();
-        if (be != undefined) {
+        if (be !== undefined) {
             jsondata["border_elements"] = be;
         }
         this.parseJSON(jsondata);
@@ -1616,7 +1616,7 @@ class FEMViewer {
         this.renderer.render(this.scene, this.camera);
         this.zoomExtents();
 
-        this.notiBar.setMessage("Drawing model..." + "⌛");
+        this.notiBar.setMessage("绘制模型..." + "⌛");
         await allowUpdate();
         let geo = new THREE.SphereGeometry(this.nodeSearchRadius / 2, 8, 8);
         this.meshSelectedNode = new THREE.LineSegments(
@@ -1626,12 +1626,12 @@ class FEMViewer {
         this.meshSelectedNode.visible = false;
         this.model.add(this.meshSelectedNode);
         this.calculate_jacobians_worker();
-        this.notiBar.setMessage("Done!");
+        this.notiBar.setMessage("加载完成");
         await allowUpdate();
     }
 
     calculate_jacobians_worker() {
-        this.notiBar.setMessage("Calculating jacobians..." + "⌛");
+        this.notiBar.setMessage("计算雅克比..." + "⌛");
         let OBJ = this;
         const myWorker = new Worker("./js/worker_jacobianos.js", {
             type: "module",
@@ -2048,7 +2048,7 @@ class FEMViewer {
             let percentage = (i / this.dictionary.length) * 100;
             if (percentage > times) {
                 times += 1;
-                this.notiBar.setProgressBar("Loading model", percentage);
+                this.notiBar.setProgressBar("加载模型...", percentage);
                 await allowUpdate();
             }
         }

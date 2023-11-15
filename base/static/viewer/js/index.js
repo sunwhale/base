@@ -7,7 +7,7 @@ let axis = 6;
 let zoom = 1;
 let lines = true;
 
-let path_str = "2D_I_SHAPE";
+let path_str = "3D_FEMUR_LIGHT_MODEL";
 let queryString = window.location.search;
 let vis_param = 0;
 let theme = "Default";
@@ -62,10 +62,10 @@ const container = document.getElementById("models-container");
 
 const O = new FEMViewer(container, magnif, rot, axis === 1, zoom);
 O.theme = themes[theme] || {};
-// O.updateStylesheet();
-// O.updateColors();
-// O.updateMaterial();
-// O.draw_lines = lines;
+O.updateStylesheet();
+O.updateColors();
+O.updateMaterial();
+O.draw_lines = lines;
 await O.loadJSON(path);
 O.step = mode;
 await O.init();
