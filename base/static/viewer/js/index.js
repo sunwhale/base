@@ -7,11 +7,13 @@ let axis = 6;
 let zoom = 1;
 let lines = true;
 
-let path_str = "3D_FEMUR_LIGHT_MODEL";
+// let path_str = "2D_SINGLE_TRIANGLE";
+// let path_str = "2D_SINGLE_SQUARE";
+let path_str = "2D_BEAM_PLANE_STRESS";
 let queryString = window.location.search;
 let vis_param = 0;
-let theme = "Default";
-let theme_param = "Default";
+let theme = "默认";
+let theme_param = "默认";
 if (queryString !== "") {
     queryString = queryString.split("?")[1];
     let parametros = new URLSearchParams(queryString);

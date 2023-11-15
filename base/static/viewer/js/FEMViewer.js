@@ -82,24 +82,22 @@ const types = {
 };
 
 const themes = {
-    Default: {},
-    "Transparent background": {
-        ...{
-            "--gui-background-color": "#f6f6f6",
-            "--gui-text-color": "#3d3d3d",
-            "--gui-title-background-color": "#efefef",
-            "--gui-title-text-color": "#3d3d3d",
-            "--gui-widget-color": "#eaeaea",
-            "--gui-hover-color": "#f0f0f0",
-            "--gui-focus-color": "#fafafa",
-            "--gui-number-color": "#07aacf",
-            "--gui-string-color": "#8da300",
-            "--focus-color": "#dc2c41",
-        },
+    "默认": {},
+    "透明": {
+        "--gui-background-color": "#f6f6f6",
+        "--gui-text-color": "#3d3d3d",
+        "--gui-title-background-color": "#efefef",
+        "--gui-title-text-color": "#3d3d3d",
+        "--gui-widget-color": "#eaeaea",
+        "--gui-hover-color": "#f0f0f0",
+        "--gui-focus-color": "#fafafa",
+        "--gui-number-color": "#07aacf",
+        "--gui-string-color": "#8da300",
+        "--focus-color": "#dc2c41",
         "--backbround-color": "transparent",
         emmisive: true,
     },
-    Light: {
+    "明亮": {
         "--gui-background-color": "#f6f6f6",
         "--gui-text-color": "#3d3d3d",
         "--gui-title-background-color": "#efefef",
@@ -112,7 +110,7 @@ const themes = {
         "--focus-color": "#dc2c41",
         emmisive: true,
     },
-    Dark: {
+    "黑暗": {
         "--gui-background-color": "#1f1f1f",
         "--gui-text-color": "#ebebeb",
         "--gui-title-background-color": "#111111",
@@ -125,7 +123,7 @@ const themes = {
         "--focus-color": "var(--gui-focus-color)",
         "--plot-grid-color": "#616161",
     },
-    "Solarized Light": {
+    "半明亮": {
         "--gui-background-color": "#fdf6e3",
         "--gui-text-color": "#657b83",
         "--gui-title-background-color": "#f5efdc",
@@ -137,7 +135,7 @@ const themes = {
         "--gui-string-color": "#97ad00",
         "--focus-color": "var(--gui-focus-color)",
     },
-    "Solarized Dark": {
+    "半黑暗": {
         "--gui-background-color": "#002b36",
         "--gui-text-color": "#b2c2c2",
         "--gui-title-background-color": "#001f27",
@@ -150,7 +148,7 @@ const themes = {
         "--focus-color": "var(--gui-focus-color)",
         "--plot-grid-color": "#616161",
     },
-    Tennis: {
+    "黄绿": {
         "--gui-background-color": "#32405e",
         "--gui-text-color": "#ebe193",
         "--gui-title-background-color": "#713154",
@@ -194,7 +192,7 @@ class FEMViewer {
         this.loaderIcon.setAttribute("class", "loaderIcon");
         this.container.appendChild(this.loaderIcon);
 
-        this.theme = themes["Default"];
+        this.theme = themes["默认"];
         this.element_views = new Set();
         this.refreshing = true;
         this.wireframe = false;
@@ -267,7 +265,7 @@ class FEMViewer {
         this.side = 1.0;
         this.max_disp = 0.0;
         this.draw_lines = true;
-        this.colormap = "rainbow";
+        this.colormap = "彩虹色";
         this.show_model = true;
         this.octreeMesh = undefined;
         this.showOctree = false;
@@ -278,8 +276,8 @@ class FEMViewer {
         this.lut = new Lut(this.colormap);
         this.filename = "";
 
-        this.gui = new GUI({title: "Menu", container: this.container});
-        this.gui.close();
+        this.gui = new GUI({title: "根目录", container: this.container});
+        // this.gui.close();
         this.loaded = false;
         this.colorOptions = "nocolor";
         this.clickMode = "Inspect element";
@@ -949,25 +947,25 @@ class FEMViewer {
         if (this.settingsFolder) {
             this.settingsFolder.destroy();
         }
-        this.settingsFolder = this.gui.addFolder("Settings");
-        this.settingsFolder.add(this, "modalManager").name("Load JSON File");
-        this.settingsFolder
-            .add(this, "modalManager2")
-            .name("Show properties histogram");
-        this.settingsFolder
-            .add(this, "modalManager3")
-            .name("Show scaled jacobian histogram");
-        this.settingsFolder
-            .add(this, "detectBorderElements2")
-            .name("Detect border elements");
-        this.settingsFolder
-            .add(this, "downloadAsJson")
-            .name("Donwload JSON file");
-        this.settingsFolder.add(this, "createRegion").name("Create Region");
-        this.settingsFolder.add(this, "modalManager4").name("Assign BC");
+        this.settingsFolder = this.gui.addFolder("设置");
+        // this.settingsFolder.add(this, "modalManager").name("Load JSON File");
+        // this.settingsFolder
+        //     .add(this, "modalManager2")
+        //     .name("Show properties histogram");
+        // this.settingsFolder
+        //     .add(this, "modalManager3")
+        //     .name("Show scaled jacobian histogram");
+        // this.settingsFolder
+        //     .add(this, "detectBorderElements2")
+        //     .name("Detect border elements");
+        // this.settingsFolder
+        //     .add(this, "downloadAsJson")
+        //     .name("Donwload JSON file");
+        // this.settingsFolder.add(this, "createRegion").name("Create Region");
+        // this.settingsFolder.add(this, "modalManager4").name("Assign BC");
 
-        this.settingsFolder.add(this.gh, "visible").listen().name("Axis");
-        this.settingsFolder.add(this, "rot").name("Rotation").listen();
+        this.settingsFolder.add(this.gh, "visible").listen().name("坐标轴");
+        this.settingsFolder.add(this, "rot").name("自动旋转").listen();
 
         this.settingsFolder
             .add(this, "wireframe")
@@ -976,26 +974,26 @@ class FEMViewer {
                 this.updateMaterial();
                 this.updateGeometry();
             })
-            .name("Wireframe");
+            .name("线框");
         this.settingsFolder
             .add(this, "draw_lines")
             .onChange(this.updateLines.bind(this))
-            .name("Draw lines")
+            .name("显示线条")
             .listen();
 
         this.settingsFolder
             .add(this, "showOctree")
             .onChange(this.updateShowOctree.bind(this))
             .listen()
-            .name("Show Octree");
+            .name("显示八叉树");
         this.settingsFolder
             .add(this, "show_model")
-            .name("Show model")
+            .name("显示模型")
             .onChange(this.updateShowModel.bind(this))
             .listen();
         this.settingsFolder
             .add(this.regionModel, "visible")
-            .name("Show regions")
+            .name("显示区域")
             .listen();
 
         if (this.config_dict["displacements"]) {
@@ -1004,34 +1002,35 @@ class FEMViewer {
                 this.settingsFolder
                     .add(this, "solution_as_displacement")
                     .listen()
-                    .name("Solution as disp")
+                    .name("变形图")
                     .onFinishChange(this.toogleSolutionAsDisp.bind(this));
             }
         }
 
+        // this.settingsFolder
+        //     .add(this, "clickMode", [
+        //         "Inspect element",
+        //         "Delete element",
+        //         "Detect nodes",
+        //         "Detect region",
+        //     ])
+        //     .listen()
+        //     .name("Click mode");
+        // this.settingsFolder
+        //     .add(this, "resolution", {
+        //         "Low (only vertices) (1)": 1,
+        //         "Medium (2)": 2,
+        //         "High (4)": 3,
+        //         "Ultra (8)": 4,
+        //         "PC becomes room heater (16)": 5,
+        //     })
+        //     .listen()
+        //     .onChange(this.updateResolution.bind(this))
+        //     .name("LOD ⚠️ (expensive)");
+
         this.settingsFolder
-            .add(this, "clickMode", [
-                "Inspect element",
-                "Delete element",
-                "Detect nodes",
-                "Detect region",
-            ])
-            .listen()
-            .name("Click mode");
-        this.settingsFolder
-            .add(this, "resolution", {
-                "Low (only vertices) (1)": 1,
-                "Medium (2)": 2,
-                "High (4)": 3,
-                "Ultra (8)": 4,
-                "PC becomes room heater (16)": 5,
-            })
-            .listen()
-            .onChange(this.updateResolution.bind(this))
-            .name("LOD ⚠️ (expensive)");
-        this.settingsFolder
-            .add(this, "theme", themes, "Default")
-            .name("Theme")
+            .add(this, "theme", themes, "默认")
+            .name("风格")
             .listen()
             .onChange(this.updateTheme.bind(this));
         if (this.example_file_paths) {
@@ -1514,52 +1513,52 @@ class FEMViewer {
         if (this.guifolder) {
             this.guifolder.destroy();
         }
-        this.guifolder = this.gui.addFolder("Solutions");
+        this.guifolder = this.gui.addFolder("后处理");
         this.color_select_option = this.guifolder
             .add(this, "colorOptions", {
-                "No color": "nocolor",
+                "无": "nocolor",
                 "|U|": "dispmag",
                 "Scaled Jacobian": "scaled_jac",
                 ...this.config_dict["dict"],
                 ...this.prop_dict_names,
             })
-            .name("Show color")
+            .name("云图")
             .listen()
             .onChange(this.updateColorVariable.bind(this))
             .onFinishChange(this.renderMath.bind(this));
         this.guifolder
             .add(this, "colormap", [
-                "rainbow",
-                "cooltowarm",
-                "blackbody",
-                "grayscale",
+                "彩虹色",
+                "冷热图",
+                "热力图",
+                "灰度图",
             ])
             .listen()
-            .name("Colormap")
+            .name("颜色")
             .onChange(this.updateLut.bind(this));
         this.max_color_value_slider = this.guifolder
             .add(this, "max_color_value", 0.0, 1.0)
-            .name("Max solution value")
+            .name("最大值")
             .listen()
             .onChange(this.updateLut.bind(this));
         this.min_color_value_slider = this.guifolder
             .add(this, "min_color_value", 0.0, 1.0)
-            .name("Min solution value")
+            .name("最小值")
             .listen()
             .onChange(this.updateLut.bind(this));
         this.guifolder
             .add(this, "step", this.solutions_info_str)
             .onChange(this.updateSolution.bind(this))
             .listen()
-            .name("Solution");
-        this.guifolder
-            .add(this, "info", Object.keys(this.solutions_info[this.step]))
-            .listen()
-            .onChange(this.updateSolutionInfo.bind(this));
-        this.guifolder
-            .add(this, "infoDetail", this.infoDetail)
-            .listen()
-            .disable();
+            .name("帧");
+        // this.guifolder
+        //     .add(this, "info", Object.keys(this.solutions_info[this.step]))
+        //     .listen()
+        //     .onChange(this.updateSolutionInfo.bind(this));
+        // this.guifolder
+        //     .add(this, "infoDetail", this.infoDetail)
+        //     .listen()
+        //     .disable();
     }
 
     async init(animate = true) {
