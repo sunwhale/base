@@ -248,7 +248,7 @@ class FEMViewer {
 
         this.not_draw_elements = [];
         this.delta = 0;
-        this.interval = 1 / 60;
+        this.interval = 1 / 12;
         this.clock = new THREE.Clock();
         this.bufferGeometries = [];
         this.bufferLines = [];
@@ -277,7 +277,7 @@ class FEMViewer {
         this.filename = "";
 
         this.gui = new GUI({title: "根目录", container: this.container});
-        // this.gui.close();
+        this.gui.close();
         this.loaded = false;
         this.colorOptions = "nocolor";
         this.clickMode = "Inspect element";
@@ -327,14 +327,14 @@ class FEMViewer {
 
     onDocumentKeyDown(event) {
         const keyCode = event.which;
-        if (keyCode == 39) {
+        if (keyCode === 39) {
             this.nextSolution();
-        } else if (keyCode == 37) {
+        } else if (keyCode === 37) {
             this.prevSolution();
-        } else if (keyCode == 27) {
+        } else if (keyCode === 27) {
             this.destroy_element_views();
             this.unselectAllNodes();
-        } else if (keyCode == 77) {
+        } else if (keyCode === 77) {
             this.menuCerrado = !this.menuCerrado;
             this.updateMenuCerrado();
         }
@@ -537,7 +537,7 @@ class FEMViewer {
         let en_comun = 0;
         for (const c1 of e1.coords) {
             for (const c2 of e2.coords) {
-                if (c2 == c1) {
+                if (c2 === c1) {
                     en_comun += 1;
                     if (en_comun >= MIN_VERTICES) {
                         return true;
@@ -558,11 +558,11 @@ class FEMViewer {
         );
         let nb = [];
         for (const ie2 of potential) {
-            if (e["id"] != ie2["id"]) {
+            if (e["id"] !== ie2["id"]) {
                 if (this.testNeighborg(e["id"], ie2["id"])) {
                     neighbors += 1;
                     nb.push(ie2);
-                    if (neighbors == nfaces) {
+                    if (neighbors === nfaces) {
                         break;
                     }
                 }
@@ -822,7 +822,8 @@ class FEMViewer {
                 map: new THREE.CanvasTexture(this.lut.createCanvas()),
             })
         );
-        this.sprite.scale.x = 0.125;
+
+        this.sprite.scale.x = 0.02;
         this.uiScene.add(this.sprite);
 
         this.gh = new AxisGridHelper(this.scene, 0);
@@ -873,16 +874,16 @@ class FEMViewer {
 
     _createRegionCoords(selectedNodes, id) {
         let region;
-        if (selectedNodes.length == 2) {
+        if (selectedNodes.length === 2) {
             let p1 = selectedNodes[0];
             let p2 = selectedNodes[1];
             region = new LineRegion(p1, p2);
-        } else if (selectedNodes.length == 3) {
+        } else if (selectedNodes.length === 3) {
             let p1 = selectedNodes[0];
             let p2 = selectedNodes[1];
             let p3 = selectedNodes[2];
             region = new TriangularPlaneRegion(p1, p2, p3);
-        } else if (selectedNodes.length == 4) {
+        } else if (selectedNodes.length === 4) {
             let p1 = selectedNodes[0];
             let p2 = selectedNodes[1];
             let p3 = selectedNodes[2];
@@ -948,21 +949,21 @@ class FEMViewer {
             this.settingsFolder.destroy();
         }
         this.settingsFolder = this.gui.addFolder("设置");
-        // this.settingsFolder.add(this, "modalManager").name("Load JSON File");
-        // this.settingsFolder
-        //     .add(this, "modalManager2")
-        //     .name("Show properties histogram");
-        // this.settingsFolder
-        //     .add(this, "modalManager3")
-        //     .name("Show scaled jacobian histogram");
-        // this.settingsFolder
-        //     .add(this, "detectBorderElements2")
-        //     .name("Detect border elements");
-        // this.settingsFolder
-        //     .add(this, "downloadAsJson")
-        //     .name("Donwload JSON file");
-        // this.settingsFolder.add(this, "createRegion").name("Create Region");
-        // this.settingsFolder.add(this, "modalManager4").name("Assign BC");
+        this.settingsFolder.add(this, "modalManager").name("Load JSON File");
+        this.settingsFolder
+            .add(this, "modalManager2")
+            .name("Show properties histogram");
+        this.settingsFolder
+            .add(this, "modalManager3")
+            .name("Show scaled jacobian histogram");
+        this.settingsFolder
+            .add(this, "detectBorderElements2")
+            .name("Detect border elements");
+        this.settingsFolder
+            .add(this, "downloadAsJson")
+            .name("Donwload JSON file");
+        this.settingsFolder.add(this, "createRegion").name("Create Region");
+        this.settingsFolder.add(this, "modalManager4").name("Assign BC");
 
         this.settingsFolder.add(this.gh, "visible").listen().name("坐标轴");
         this.settingsFolder.add(this, "rot").name("自动旋转").listen();
@@ -998,7 +999,7 @@ class FEMViewer {
 
         if (this.config_dict["displacements"]) {
         } else {
-            if (this.ndim != 3) {
+            if (this.ndim !== 3) {
                 this.settingsFolder
                     .add(this, "solution_as_displacement")
                     .listen()
@@ -1153,7 +1154,7 @@ class FEMViewer {
     updateColorVariable() {
         let msg = "";
         const co = this.colorOptions;
-        if (co != "nocolor") {
+        if (co !== "nocolor") {
             this.colors = true;
             msg =
                 "Showing " +
@@ -1183,7 +1184,7 @@ class FEMViewer {
             min_disp = Math.min(min_disp, ...variable);
         }
         let delta = max_disp - min_disp;
-        if (delta == 0) {
+        if (delta === 0) {
             delta = 1;
             max_disp += 0.5;
             min_disp -= 0.5;
@@ -1200,10 +1201,10 @@ class FEMViewer {
         this.max_color_value_slider.min(min_disp);
         let max_str = this.max_color_value.toFixed(4);
         let min_str = this.min_color_value.toFixed(4);
-        if (Math.abs(max_str) == "0.0000") {
+        if (Math.abs(max_str) === "0.0000") {
             max_str = this.max_color_value.toExponential(4);
         }
-        if (Math.abs(min_str) == "0.0000") {
+        if (Math.abs(min_str) === "0.0000") {
             min_str = this.min_color_value.toExponential(4);
         }
 
@@ -1638,7 +1639,7 @@ class FEMViewer {
         myWorker.postMessage([...OBJ.elements]);
 
         myWorker.onmessage = function (msg) {
-            if (msg.data[0] == "MSG") {
+            if (msg.data[0] === "MSG") {
                 OBJ.notiBar.setProgressBar(
                     "Calculating jacobians",
                     msg.data[1]
@@ -1685,10 +1686,10 @@ class FEMViewer {
     }
 
     calculate_border_elements_worker() {
-        if (this.ndim == 3) {
+        if (this.ndim === 3) {
             let e = undefined;
             for (const controller of this.settingsFolder.controllers) {
-                if (controller.property == "detectBorderElements2") {
+                if (controller.property === "detectBorderElements2") {
                     e = controller.$name;
                 }
             }
@@ -1705,7 +1706,7 @@ class FEMViewer {
             ]);
 
             myWorker.onmessage = function (msg) {
-                if (msg.data[0] == "MSG") {
+                if (msg.data[0] === "MSG") {
                     OBJ.notiBar.setMessage(msg.data[1]);
                 } else {
                     const be = msg.data;
@@ -1771,7 +1772,7 @@ class FEMViewer {
             }
         }
         if (!jsondata["solutions"]) {
-            if (!jsondata["disp_field"] || jsondata["disp_field"].length == 0) {
+            if (!jsondata["disp_field"] || jsondata["disp_field"].length === 0) {
                 this.solutions = [
                     Array(this.nodes.length * this.nvn).fill(0.0),
                 ];
@@ -1787,7 +1788,7 @@ class FEMViewer {
                 }
             }
         } else {
-            if (jsondata["solutions"].length == 0) {
+            if (jsondata["solutions"].length === 0) {
                 this.solutions = [
                     Array(this.nodes.length * this.nvn).fill(0.0),
                 ];
@@ -1884,10 +1885,10 @@ class FEMViewer {
         let h = this.size / 20;
         let kk = 0;
         for (const n of this.nodes) {
-            if (this.ndim == 1 || this.ndim == 2) {
+            if (this.ndim === 1 || this.ndim === 2) {
                 let node = [n[0], n[1], n[2] + h];
                 this._nodes.push({_xcenter: node, id: kk});
-                if (this.ndim == 1) {
+                if (this.ndim === 1) {
                     node = [n[0], n[1] + h, n[2] + h];
                     this._nodes.push({_xcenter: node, id: kk});
                     node = [n[0], n[1] + h, n[2]];
@@ -2087,7 +2088,7 @@ class FEMViewer {
             let p = [...this.nodes[indexx]];
             let possible_coords_index = [];
             possible_coords_index.push(p);
-            if (this.ndim == 1) {
+            if (this.ndim === 1) {
                 possible_coords_index.push([
                     p[0],
                     p[1] + this.size / 20,
@@ -2095,7 +2096,7 @@ class FEMViewer {
                 ]);
                 possible_coords_index.push([p[0], p[1] + this.size / 20, p[2]]);
                 possible_coords_index.push([p[0], p[1], p[2] + this.size / 20]);
-            } else if (this.ndim == 2) {
+            } else if (this.ndim === 2) {
                 possible_coords_index.push([p[0], p[1], p[2] + this.size / 20]);
             }
 
@@ -2118,7 +2119,7 @@ class FEMViewer {
 
     onDocumentMouseDown(event) {
         if (this.loaded) {
-            if (this.clickMode != "Nothing") {
+            if (this.clickMode !== "Nothing") {
                 event.preventDefault();
                 const mouse3D = new THREE.Vector2(
                     (event.clientX / window.innerWidth) * 2 - 1,
@@ -2126,7 +2127,7 @@ class FEMViewer {
                 );
                 this.raycaster.setFromCamera(mouse3D, this.camera);
 
-                if (this.clickMode == "Detect region") {
+                if (this.clickMode === "Detect region") {
                     const regionsintersects = this.raycaster.intersectObjects(
                         this.regionModelGeometries.children
                     );
@@ -2145,7 +2146,7 @@ class FEMViewer {
                     if (intersects.length > 0) {
                         const i = intersects[0].object.userData.elementId;
                         const e = this.elements[i];
-                        if (this.clickMode == "Delete element") {
+                        if (this.clickMode === "Delete element") {
                             intersects[0].object.geometry.dispose();
                             intersects[0].object.material.dispose();
                             this.invisibleModel.remove(intersects[0].object);
@@ -2166,22 +2167,22 @@ class FEMViewer {
                                     elementId: i,
                                 };
                             }
-                        } else if (this.clickMode == "Inspect element") {
+                        } else if (this.clickMode === "Inspect element") {
                             this.createElementView(e);
-                        } else if (this.clickMode == "Detect nodes") {
+                        } else if (this.clickMode === "Detect nodes") {
                             let vector_point = [...intersects[0].point];
                             let possible_coords = [];
                             for (let k = 0; k < e.coords.length; k++) {
                                 let p = [...e.coords[k]];
                                 possible_coords.push([p]);
                             }
-                            if (this.ndim == 1 || this.ndim == 2) {
+                            if (this.ndim === 1 || this.ndim === 2) {
                                 for (let k = 0; k < e.coords.length; k++) {
                                     let p = [...e.coords[k]];
                                     p[2] += this.size / 20;
                                     possible_coords[k].push(p);
                                 }
-                                if (this.ndim == 1) {
+                                if (this.ndim === 1) {
                                     for (let k = 0; k < e.coords.length; k++) {
                                         let p = [...e.coords[k]];
                                         p[1] += this.size / 20;
@@ -2235,7 +2236,7 @@ class FEMViewer {
 
     onDocumentMouseMove(event) {
         if (this.loaded) {
-            if (this.clickMode == "Detect nodes") {
+            if (this.clickMode === "Detect nodes") {
                 event.preventDefault();
                 const mouse3D = new THREE.Vector2(
                     (event.clientX / window.innerWidth) * 2 - 1,
@@ -2254,13 +2255,13 @@ class FEMViewer {
                         let p = [...e.coords[k]];
                         possible_coords.push([p]);
                     }
-                    if (this.ndim == 1 || this.ndim == 2) {
+                    if (this.ndim === 1 || this.ndim === 2) {
                         for (let k = 0; k < e.coords.length; k++) {
                             let p = [...e.coords[k]];
                             p[2] += this.size / 20;
                             possible_coords[k].push(p);
                         }
-                        if (this.ndim == 1) {
+                        if (this.ndim === 1) {
                             for (let k = 0; k < e.coords.length; k++) {
                                 let p = [...e.coords[k]];
                                 p[1] += this.size / 20;
