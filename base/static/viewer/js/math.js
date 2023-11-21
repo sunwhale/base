@@ -33,7 +33,7 @@ function matInverse(m) {
     let b = vecMake(n, 0.0);
     for (let i = 0; i < n; ++i) {
         for (let j = 0; j < n; ++j) {
-            if (i == perm[j]) b[j] = 1.0;
+            if (i === perm[j]) b[j] = 1.0;
             else b[j] = 0.0;
         }
 
@@ -68,7 +68,7 @@ function matDecompose(m, lum, perm) {
             }
         } // i
 
-        if (piv != j) {
+        if (piv !== j) {
             let tmp = lum[piv]; // swap rows j, piv
             lum[piv] = lum[j];
             lum[j] = tmp;
@@ -81,7 +81,7 @@ function matDecompose(m, lum, perm) {
         }
 
         let xjj = lum[j][j];
-        if (xjj != 0.0) {
+        if (xjj !== 0.0) {
             // TODO: fix bad compare here
             for (let i = j + 1; i < n; ++i) {
                 let xij = lum[i][j] / xjj;
@@ -200,10 +200,10 @@ function multiplyScalar(a, escalar) {
     var aNumRows = a.length;
     var m = new Array(aNumRows);
     let ndim = 2;
-    if (a[0].length == undefined) {
+    if (a[0].length === undefined) {
         ndim = 1;
     }
-    if (ndim == 2) {
+    if (ndim === 2) {
         var aNumCols = a[0].length;
         for (var r = 0; r < aNumRows; ++r) {
             m[r] = new Array(aNumCols);
@@ -211,7 +211,7 @@ function multiplyScalar(a, escalar) {
                 m[r][c] = a[r][c] * escalar;
             }
         }
-    } else if (ndim == 1) {
+    } else if (ndim === 1) {
         for (var r = 0; r < aNumRows; ++r) {
             m[r] = a[r] * escalar;
         }
@@ -220,16 +220,16 @@ function multiplyScalar(a, escalar) {
 }
 
 const det = (m) =>
-    m.length == 1
+    m.length === 1
         ? m[0][0]
-        : m.length == 2
+        : m.length === 2
             ? m[0][0] * m[1][1] - m[0][1] * m[1][0]
             : m[0].reduce(
                 (r, e, i) =>
                     r +
                     (-1) ** (i + 2) *
                     e *
-                    det(m.slice(1).map((c) => c.filter((_, j) => i != j))),
+                    det(m.slice(1).map((c) => c.filter((_, j) => i !== j))),
                 0
             );
 
