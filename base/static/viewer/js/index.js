@@ -9,7 +9,11 @@ let lines = true;
 
 // let path_str = "2D_SINGLE_TRIANGLE";
 // let path_str = "2D_SINGLE_SQUARE";
-let path_str = "2D_BEAM_PLANE_STRESS";
+// let path_str = "2D_BEAM_PLANE_STRESS";
+// let path_str = "3D_SPHERE_LIGHT_MODEL";
+let path_str = "2D_PLANE_STRESS";
+// let path_str = "2D_PLATE";
+// let path_str = "2D_";
 let queryString = window.location.search;
 let vis_param = 0;
 let theme = "默认";

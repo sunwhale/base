@@ -185,6 +185,7 @@ class FEMViewer {
         let canvas = document.createElement("canvas");
         canvas.setAttribute("class", "box side-pane");
         canvas.setAttribute("willReadFrequently", "true");
+        // canvas.getContext('2d').willReadFrequently = true;
         this.container.appendChild(canvas);
         this.canvas = canvas;
 
@@ -248,7 +249,7 @@ class FEMViewer {
 
         this.not_draw_elements = [];
         this.delta = 0;
-        this.interval = 1 / 12;
+        this.interval = 1 / 2;
         this.clock = new THREE.Clock();
         this.bufferGeometries = [];
         this.bufferLines = [];
@@ -280,7 +281,7 @@ class FEMViewer {
         this.gui.close();
         this.loaded = false;
         this.colorOptions = "nocolor";
-        this.clickMode = "Inspect element";
+        this.clickMode = "无";
         this.createModals();
         this.histogram = document.getElementById("histogram");
 
@@ -1008,26 +1009,26 @@ class FEMViewer {
             }
         }
 
-        // this.settingsFolder
-        //     .add(this, "clickMode", [
-        //         "Inspect element",
-        //         "Delete element",
-        //         "Detect nodes",
-        //         "Detect region",
-        //     ])
-        //     .listen()
-        //     .name("Click mode");
-        // this.settingsFolder
-        //     .add(this, "resolution", {
-        //         "Low (only vertices) (1)": 1,
-        //         "Medium (2)": 2,
-        //         "High (4)": 3,
-        //         "Ultra (8)": 4,
-        //         "PC becomes room heater (16)": 5,
-        //     })
-        //     .listen()
-        //     .onChange(this.updateResolution.bind(this))
-        //     .name("LOD ⚠️ (expensive)");
+        this.settingsFolder
+            .add(this, "clickMode", [
+                "查看单元",
+                "删除单元",
+                "发现节点",
+                "发现区域",
+            ])
+            .listen()
+            .name("左键点击");
+        this.settingsFolder
+            .add(this, "resolution", {
+                "低 (1)": 1,
+                "中 (2)": 2,
+                "高 (4)": 3,
+                "极高 (8)": 4,
+                "最高 (16)": 5,
+            })
+            .listen()
+            .onChange(this.updateResolution.bind(this))
+            .name("分辨率");
 
         this.settingsFolder
             .add(this, "theme", themes, "默认")
@@ -2119,7 +2120,7 @@ class FEMViewer {
 
     onDocumentMouseDown(event) {
         if (this.loaded) {
-            if (this.clickMode !== "Nothing") {
+            if (this.clickMode !== "无") {
                 event.preventDefault();
                 const mouse3D = new THREE.Vector2(
                     (event.clientX / window.innerWidth) * 2 - 1,
@@ -2127,7 +2128,7 @@ class FEMViewer {
                 );
                 this.raycaster.setFromCamera(mouse3D, this.camera);
 
-                if (this.clickMode === "Detect region") {
+                if (this.clickMode === "发现区域") {
                     const regionsintersects = this.raycaster.intersectObjects(
                         this.regionModelGeometries.children
                     );
@@ -2146,7 +2147,7 @@ class FEMViewer {
                     if (intersects.length > 0) {
                         const i = intersects[0].object.userData.elementId;
                         const e = this.elements[i];
-                        if (this.clickMode === "Delete element") {
+                        if (this.clickMode === "删除单元") {
                             intersects[0].object.geometry.dispose();
                             intersects[0].object.material.dispose();
                             this.invisibleModel.remove(intersects[0].object);
@@ -2167,9 +2168,9 @@ class FEMViewer {
                                     elementId: i,
                                 };
                             }
-                        } else if (this.clickMode === "Inspect element") {
+                        } else if (this.clickMode === "查看单元") {
                             this.createElementView(e);
-                        } else if (this.clickMode === "Detect nodes") {
+                        } else if (this.clickMode === "发现节点") {
                             let vector_point = [...intersects[0].point];
                             let possible_coords = [];
                             for (let k = 0; k < e.coords.length; k++) {
