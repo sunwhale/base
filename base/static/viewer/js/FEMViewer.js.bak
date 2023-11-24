@@ -1,4 +1,5 @@
 import * as THREE from "./build/three.module.js";
+// import {ElementView} from "./ElementView.js";
 import {ResourceTracker} from "./ResourceTracker.js";
 import GUI from "https://cdn.jsdelivr.net/npm/lil-gui@0.17/+esm";
 import {OrbitControls} from "./build/OrbitControls.js";
@@ -7,6 +8,11 @@ import {AxisGridHelper} from "./build/minigui.js";
 import {Lut} from "./build/Lut.js";
 import {CONFIG_DICT} from "./ConfigDicts.js";
 import {Geometree, Quadrant3D} from "./Octree.js";
+// import {
+//     LineRegion,
+//     RectangularPlaneRegion,
+//     TriangularPlaneRegion,
+// } from "./Regions.js";
 import {
     Brick,
     BrickO2,
@@ -22,9 +28,12 @@ import {
 import {
     max,
     min,
-    transpose
+    transpose,
+    multiplyScalar,
+    squared_distance,
 } from "./math.js";
 import {NotificationBar} from "./NotificationBar.js";
+import {Modal} from "./ModalManager.js";
 
 function allowUpdate() {
     return new Promise((f) => {
@@ -157,12 +166,17 @@ const themes = {
 const styleElement = document.createElement("style");
 document.body.appendChild(styleElement);
 
+var GOBAL_DRAG = false;
+
+Dropzone.autoDiscover = false;
+
 class FEMViewer {
     constructor(container, magnif, rot, axis = false, iz = 1.05) {
         if (!magnif) {
             magnif = 0;
         }
         // FEM
+
         this.selectedNodes = [];
         this.regions = [];
         this.nodeSearchRadius = 0.01;
@@ -171,6 +185,7 @@ class FEMViewer {
         let canvas = document.createElement("canvas");
         canvas.setAttribute("class", "box side-pane");
         canvas.setAttribute("willReadFrequently", "true");
+        // canvas.getContext('2d').willReadFrequently = true;
         this.container.appendChild(canvas);
         this.canvas = canvas;
 
@@ -273,6 +288,58 @@ class FEMViewer {
         this.settings();
         this.createListeners();
     }
+
+    // createModals() {
+    //     this.JSONModal = new Modal(this.container, "File input");
+    //     let content = document.createElement("div");
+    //     content.innerHTML =
+    //         '<div class="dropzone-container"><form id="json-file-input" class="dropzone" action="/" method="post"></form></div>';
+    //     this.JSONModal.addContent(content);
+    //
+    //     this.histogramModal = new Modal(this.container, "Histogram view");
+    //     this.histogramModal.content.innerHTML =
+    //         '<div id="histogram" style="width: 100%; height: 85%"></div>';
+    //
+    //     this.borderConditionModal = new Modal(
+    //         this.container,
+    //         "Border condition"
+    //     );
+    //     let contentt = document.createElement("div");
+    //     let input = document.createElement("input");
+    //     let cbncbe = document.createElement("select");
+    //     let a1 = document.createElement("option");
+    //     a1.innerHTML = "Essential";
+    //     cbncbe.append(a1);
+    //     let a2 = document.createElement("option");
+    //     a2.innerHTML = "Natural";
+    //     cbncbe.append(a2);
+    //     let nvn = document.createElement("select");
+    //     for (let i = 0; i < 3; i++) {
+    //         let n1 = document.createElement("option");
+    //         n1.innerHTML = i + 1;
+    //         nvn.append(n1);
+    //     }
+    //
+    //     contentt.appendChild(input);
+    //     contentt.appendChild(cbncbe);
+    //     contentt.appendChild(nvn);
+    //     this.borderConditionModal.addContent(contentt);
+    // }
+
+    // onDocumentKeyDown(event) {
+    //     const keyCode = event.which;
+    //     if (keyCode === 39) {
+    //         this.nextSolution();
+    //     } else if (keyCode === 37) {
+    //         this.prevSolution();
+    //     } else if (keyCode === 27) {
+    //         this.destroy_element_views();
+    //         this.unselectAllNodes();
+    //     } else if (keyCode === 77) {
+    //         this.menuCerrado = !this.menuCerrado;
+    //         this.updateMenuCerrado();
+    //     }
+    // }
 
     createListeners() {
         // document.addEventListener(
@@ -411,6 +478,57 @@ class FEMViewer {
         }
 
         return this.refreshing;
+    }
+
+    modalManager() {
+        this.JSONModal.show();
+        this.gui.close();
+    }
+
+    modalManager2() {
+        this.histogramModal.show();
+        this.createHistogram();
+        this.gui.close();
+    }
+
+    modalManager3() {
+        this.histogramModal.show();
+        this.createHistogram2();
+        this.gui.close();
+    }
+
+    modalManager4() {
+        this.borderConditionModal.show();
+        this.gui.close();
+    }
+
+    createHistogram() {
+        let data = [];
+        for (const p of Object.keys(this.prop_dict)) {
+            let trace = {
+                x: this.prop_dict[p][1],
+                type: "histogram",
+                name: p,
+            };
+            data.push(trace);
+        }
+        Plotly.newPlot(this.histogram, data, PLOT_STYLE, {responsive: true});
+    }
+
+    createHistogram2() {
+        let data = [];
+        let trace = {
+            x: this.elements.map((e) => {
+                return e.sJ;
+            }),
+            type: "histogram",
+            name: "Scaled Jacobian",
+            marker: {
+                color: FOCUS_COLOR,
+            },
+        };
+        data.push(trace);
+        Plotly.newPlot(this.histogram, data, PLOT_STYLE, {responsive: true});
     }
 
     testNeighborg(ide1, ide2) {
@@ -712,6 +830,32 @@ class FEMViewer {
         this.gh = new AxisGridHelper(this.scene, 0);
         this.gh.visible = this.axis;
 
+        // let O = this;
+        // this.dropzone = new Dropzone("form#json-file-input", {
+        //     paramName: "file",
+        //     maxFilesize: 50,
+        //     autoQueue: false,
+        //     acceptedFiles: ".json",
+        //     dictDefaultMessage:
+        //         "Drop JSON file here! (click to select from storage)",
+        //     accept: function (file, done) {
+        //         var reader = new FileReader();
+        //         reader.addEventListener("loadend", function (event) {
+        //             const json_txt = event.target.result;
+        //             const jsondata = JSON.parse(json_txt);
+        //             O.reset();
+        //             O.parseJSON(jsondata);
+        //             O.init(false);
+        //             O.after_load();
+        //             O.dropzone.emit("success", file, "success", null);
+        //             O.dropzone.emit("complete", file);
+        //             O.dropzone.removeAllFiles();
+        //         });
+        //         reader.readAsText(file);
+        //         done();
+        //         document.getElementById("myModal").style.display = "none";
+        //     },
+        // });
         this.guiSettingsBasic();
     }
 
@@ -729,11 +873,99 @@ class FEMViewer {
         }
     }
 
+    // _createRegionCoords(selectedNodes, id) {
+    //     let region;
+    //     if (selectedNodes.length === 2) {
+    //         let p1 = selectedNodes[0];
+    //         let p2 = selectedNodes[1];
+    //         region = new LineRegion(p1, p2);
+    //     } else if (selectedNodes.length === 3) {
+    //         let p1 = selectedNodes[0];
+    //         let p2 = selectedNodes[1];
+    //         let p3 = selectedNodes[2];
+    //         region = new TriangularPlaneRegion(p1, p2, p3);
+    //     } else if (selectedNodes.length === 4) {
+    //         let p1 = selectedNodes[0];
+    //         let p2 = selectedNodes[1];
+    //         let p3 = selectedNodes[2];
+    //         let p4 = selectedNodes[3];
+    //         region = new RectangularPlaneRegion(p1, p2, p3, p4);
+    //     } else {
+    //         this.notiBar.sendMessage(
+    //             "Regions can only be created with at least 2 nodes"
+    //         );
+    //     }
+    //     if (region) {
+    //         this.deselectAllNodes();
+    //         region.setNodesOfRegionOctree(this.OctTree);
+    //         for (const node of region.nodes) {
+    //             this.selectNode(node["index"]);
+    //         }
+    //         region.geometry = region.giveGeometry(
+    //             this.norm,
+    //             this.size,
+    //             this.ndim,
+    //             this.nodeSearchRadius
+    //         );
+    //         region.mesh = new THREE.Mesh(region.geometry, this.material);
+    //         region.mesh.userData = {id: id};
+    //         region.edges = new THREE.LineSegments(
+    //             new THREE.EdgesGeometry(region.geometry),
+    //             this.line_material
+    //         );
+    //         region.edges.userData = {id: id};
+    //         this.regionModelGeometries.add(region.mesh);
+    //         this.regionModelContours.add(region.edges);
+    //         this.regions.push(region);
+    //     }
+    // }
+
+    // _createRegion(selectedNodes, id) {
+    //     let coords = [];
+    //     for (const co of selectedNodes) {
+    //         coords.push(this.nodes[co]);
+    //     }
+    //     this._createRegionCoords(coords, id);
+    // }
+    //
+    // createRegion() {
+    //     let id = this.regions.length;
+    //     this._createRegion(this.selectedNodes, id);
+    // }
+
+    // deselectAllNodes() {
+    //     for (const i of this.selectedNodes) {
+    //         for (const smm of this.selectedNodesMesh[i]) {
+    //             this.model.remove(smm);
+    //             smm.material.dispose();
+    //             smm.geometry.dispose();
+    //         }
+    //         delete this.selectedNodesMesh[i];
+    //     }
+    //     this.selectedNodes = [];
+    // }
+
     guiSettingsBasic() {
         if (this.settingsFolder) {
             this.settingsFolder.destroy();
         }
         this.settingsFolder = this.gui.addFolder("设置");
+        // this.settingsFolder.add(this, "modalManager").name("Load JSON File");
+        // this.settingsFolder
+        //     .add(this, "modalManager2")
+        //     .name("Show properties histogram");
+        // this.settingsFolder
+        //     .add(this, "modalManager3")
+        //     .name("Show scaled jacobian histogram");
+        // this.settingsFolder
+        //     .add(this, "detectBorderElements2")
+        //     .name("Detect border elements");
+        // this.settingsFolder
+        //     .add(this, "downloadAsJson")
+        //     .name("Donwload JSON file");
+        // this.settingsFolder.add(this, "createRegion").name("Create Region");
+        // this.settingsFolder.add(this, "modalManager4").name("Assign BC");
+
         this.settingsFolder.add(this.gh, "visible").listen().name("坐标轴");
         this.settingsFolder.add(this, "rot").name("自动旋转").listen();
 
@@ -895,6 +1127,18 @@ class FEMViewer {
         await this.init(false);
         this.after_load();
     }
+
+    // updateBorderElements(be) {
+    //     this.reset();
+    //     this.before_load();
+    //     this.notiBar.setMessage("Reloading model..." + "⌛");
+    //     const resp = this.loadJSON(this.filename, be);
+    //     resp.then(() => {
+    //         this.notiBar.resetMessage();
+    //         this.init(false);
+    //         this.after_load();
+    //     });
+    // }
 
     updateLut() {
         this.lut.setColorMap(this.colormap);
@@ -1172,6 +1416,52 @@ class FEMViewer {
         }
     }
 
+    // createElementView(e) {
+    //     if (this.element_views.size >= 3) {
+    //         const values = this.element_views.values();
+    //         const obj = values.next();
+    //         const first = obj.value;
+    //         this.destroy_element_view(first);
+    //     }
+    //     let element_view = new ElementView(
+    //         e,
+    //         this,
+    //         this.resolution,
+    //         this.container
+    //     );
+    //     this.element_views.add(element_view);
+    //     //this.show_element_views();
+    // }
+
+    // show_element_views() {
+    //     for (const ev of this.element_views) {
+    //         ev.show();
+    //     }
+    // }
+    //
+    // destroy_element_views() {
+    //     for (const ev of this.element_views) {
+    //         this.destroy_element_view(ev, true);
+    //     }
+    // }
+    //
+    // destroy_element_view(ev, noclose) {
+    //     ev.close();
+    //     this.element_views.delete(ev);
+    //     if (!noclose) {
+    //         this.updateLut();
+    //     }
+    // }
+
+    // addExamples(file_paths) {
+    //     this.example_file_paths = file_paths;
+    //     this.settingsFolder
+    //         .add(this, "filename", this.example_file_paths)
+    //         .name("Examples")
+    //         .listen()
+    //         .onChange(this.changeExample.bind(this));
+    // }
+
     changeExample() {
         this.gui.close();
         this.json_path = this.filename;
@@ -1263,6 +1553,14 @@ class FEMViewer {
             .onChange(this.updateSolution.bind(this))
             .listen()
             .name("帧");
+        // this.guifolder
+        //     .add(this, "info", Object.keys(this.solutions_info[this.step]))
+        //     .listen()
+        //     .onChange(this.updateSolutionInfo.bind(this));
+        // this.guifolder
+        //     .add(this, "infoDetail", this.infoDetail)
+        //     .listen()
+        //     .disable();
     }
 
     async init(animate = true) {
@@ -1292,19 +1590,21 @@ class FEMViewer {
             this.line_material
         );
         // this.model.add(this.contour);
+
         this.mesh = new THREE.Mesh(this.mergedGeometry, this.material);
         this.notiBar.setMessage("生成网格..." + "⌛");
         await allowUpdate();
 
         this.updateU();
         this.model.add(this.mesh);
-        // this.regionModel.add(this.regionModelContours);
-        // this.regionModel.add(this.regionModelGeometries);
-        // this.model.add(this.regionModel);
+        this.regionModel.add(this.regionModelContours);
+        this.regionModel.add(this.regionModelGeometries);
+        this.model.add(this.regionModel);
 
         this.scene.add(this.model);
         this.scene.add(this.invisibleModel);
-
+        //this.renderer.render(this.scene, this.camera);
+        //this.zoomExtents();
         this.updateLines();
         if (!this.corriendo) {
             this.corriendo = true;
@@ -1330,6 +1630,29 @@ class FEMViewer {
         this.notiBar.setMessage("加载完成");
         await allowUpdate();
     }
+
+    // calculate_jacobians_worker() {
+    //     this.notiBar.setMessage("计算雅克比..." + "⌛");
+    //     let OBJ = this;
+    //     const myWorker = new Worker("./js/worker_jacobianos.js", {
+    //         type: "module",
+    //     });
+    //     myWorker.postMessage([...OBJ.elements]);
+    //
+    //     myWorker.onmessage = function (msg) {
+    //         if (msg.data[0] === "MSG") {
+    //             OBJ.notiBar.setProgressBar(
+    //                 "Calculating jacobians",
+    //                 msg.data[1]
+    //             );
+    //         } else {
+    //             for (let i = 0; i < OBJ.elements.length; i++) {
+    //                 OBJ.elements[i].scaledJacobian = msg.data[i];
+    //             }
+    //             OBJ.notiBar.sendMessage("Jacobians calculated successfully!");
+    //         }
+    //     };
+    // }
 
     giveRegionsAsCoords() {
         let r = [];
@@ -1575,8 +1898,26 @@ class FEMViewer {
             }
             kk++;
         }
+        // this.createRegions();
     }
 
+    // createRegions() {
+    //     console.log("creating octree");
+    //     this.createOctree();
+    //     console.log("Octree created");
+    //     let id_region = 0;
+    //     console.log(this.regiones.length);
+    //     for (const re of this.regiones) {
+    //         for (const co of re) {
+    //             co[0] -= this.dimens[0];
+    //             co[1] -= this.dimens[1];
+    //             co[2] -= this.dimens[2];
+    //         }
+    //         this._createRegionCoords(re, id_region);
+    //         id_region++;
+    //     }
+    //     this.deselectAllNodes();
+    // }
 
     updateSolutionInfo() {
         this.infoDetail = this.solutions_info[this.step][this.info];
@@ -1720,6 +2061,261 @@ class FEMViewer {
             this.bufferLines.push(e.line_geometry);
         }
     }
+
+    // unselectAllNodes() {
+    //     for (const sn of [...this.selectedNodes]) {
+    //         this.selectNode(sn);
+    //     }
+    // }
+    //
+    // selectNode(indexx, reselect) {
+    //     let radius = this.nodeSearchRadius / 2;
+    //     if (this.selectedNodes.includes(indexx)) {
+    //         if (!reselect) {
+    //             this.selectedNodes.splice(
+    //                 this.selectedNodes.indexOf(indexx),
+    //                 1
+    //             );
+    //             for (const smm of this.selectedNodesMesh[indexx]) {
+    //                 this.model.remove(smm);
+    //                 smm.material.dispose();
+    //                 smm.geometry.dispose();
+    //             }
+    //             delete this.selectedNodesMesh[indexx];
+    //         }
+    //     } else {
+    //         this.selectedNodes.push(indexx);
+    //         this.selectedNodesMesh[indexx] = [];
+    //         let p = [...this.nodes[indexx]];
+    //         let possible_coords_index = [];
+    //         possible_coords_index.push(p);
+    //         if (this.ndim === 1) {
+    //             possible_coords_index.push([
+    //                 p[0],
+    //                 p[1] + this.size / 20,
+    //                 p[2] + this.size / 20,
+    //             ]);
+    //             possible_coords_index.push([p[0], p[1] + this.size / 20, p[2]]);
+    //             possible_coords_index.push([p[0], p[1], p[2] + this.size / 20]);
+    //         } else if (this.ndim === 2) {
+    //             possible_coords_index.push([p[0], p[1], p[2] + this.size / 20]);
+    //         }
+    //
+    //         for (let node = 0; node < possible_coords_index.length; node++) {
+    //             const possible_coord = possible_coords_index[node];
+    //             const p = multiplyScalar(possible_coord, this.norm);
+    //             let geo = new THREE.SphereGeometry(radius, 8, 8);
+    //             let mesh = new THREE.LineSegments(
+    //                 new THREE.EdgesGeometry(geo),
+    //                 this.line_material
+    //             );
+    //             mesh.translateX(p[0]);
+    //             mesh.translateY(p[1]);
+    //             mesh.translateZ(p[2]);
+    //             this.model.add(mesh);
+    //             this.selectedNodesMesh[indexx].push(mesh);
+    //         }
+    //     }
+    // }
+
+    // onDocumentMouseDown(event) {
+    //     if (this.loaded) {
+    //         if (this.clickMode !== "无") {
+    //             event.preventDefault();
+    //             const mouse3D = new THREE.Vector2(
+    //                 (event.clientX / window.innerWidth) * 2 - 1,
+    //                 -(event.clientY / window.innerHeight) * 2 + 1
+    //             );
+    //             this.raycaster.setFromCamera(mouse3D, this.camera);
+    //
+    //             if (this.clickMode === "发现区域") {
+    //                 const regionsintersects = this.raycaster.intersectObjects(
+    //                     this.regionModelGeometries.children
+    //                 );
+    //                 if (regionsintersects.length > 0) {
+    //                     let index = regionsintersects[0].object.userData["id"];
+    //                     let region = this.regions[index];
+    //                     region.selected = !region.selected;
+    //                     for (const node of region.nodes) {
+    //                         this.selectNode(node["index"], region.selected);
+    //                     }
+    //                 }
+    //             } else {
+    //                 const intersects = this.raycaster.intersectObjects(
+    //                     this.invisibleModel.children
+    //                 );
+    //                 if (intersects.length > 0) {
+    //                     const i = intersects[0].object.userData.elementId;
+    //                     const e = this.elements[i];
+    //                     if (this.clickMode === "删除单元") {
+    //                         intersects[0].object.geometry.dispose();
+    //                         intersects[0].object.material.dispose();
+    //                         this.invisibleModel.remove(intersects[0].object);
+    //                         this.not_draw_elements.push(i);
+    //                         this.bufferGeometries[i].dispose();
+    //                         this.bufferLines[i].dispose();
+    //                         e.geometry.dispose();
+    //                         this.elements.splice(i, 1);
+    //                         this.bufferGeometries.splice(i, 1);
+    //                         this.bufferLines.splice(i, 1);
+    //
+    //                         for (
+    //                             let i = 0;
+    //                             i < this.invisibleModel.children.length;
+    //                             i++
+    //                         ) {
+    //                             this.invisibleModel.children[i].userData = {
+    //                                 elementId: i,
+    //                             };
+    //                         }
+    //                     } else if (this.clickMode === "查看单元") {
+    //                         this.createElementView(e);
+    //                     } else if (this.clickMode === "发现节点") {
+    //                         let vector_point = [...intersects[0].point];
+    //                         let possible_coords = [];
+    //                         for (let k = 0; k < e.coords.length; k++) {
+    //                             let p = [...e.coords[k]];
+    //                             possible_coords.push([p]);
+    //                         }
+    //                         if (this.ndim === 1 || this.ndim === 2) {
+    //                             for (let k = 0; k < e.coords.length; k++) {
+    //                                 let p = [...e.coords[k]];
+    //                                 p[2] += this.size / 20;
+    //                                 possible_coords[k].push(p);
+    //                             }
+    //                             if (this.ndim === 1) {
+    //                                 for (let k = 0; k < e.coords.length; k++) {
+    //                                     let p = [...e.coords[k]];
+    //                                     p[1] += this.size / 20;
+    //                                     p[2] += this.size / 20;
+    //                                     possible_coords[k].push(p);
+    //                                     p = e.coords[k];
+    //                                     p[1] += this.size / 20;
+    //                                     possible_coords[k].push(p);
+    //                                 }
+    //                             }
+    //                         }
+    //                         let encontrado = false;
+    //                         let radius = this.nodeSearchRadius / 2;
+    //                         for (
+    //                             let index = 0;
+    //                             index < possible_coords.length;
+    //                             index++
+    //                         ) {
+    //                             let possible_coords_index =
+    //                                 possible_coords[index];
+    //                             for (
+    //                                 let node = 0;
+    //                                 node < possible_coords_index.length;
+    //                                 node++
+    //                             ) {
+    //                                 const possible_coord =
+    //                                     possible_coords_index[node];
+    //                                 const p = multiplyScalar(
+    //                                     possible_coord,
+    //                                     this.norm
+    //                                 );
+    //                                 let d = squared_distance(p, vector_point);
+    //                                 if (d <= radius ** 2) {
+    //                                     encontrado = true;
+    //                                     break;
+    //                                 }
+    //                             }
+    //                             if (encontrado) {
+    //                                 let indexx = e.gdls[0][index] / this.nvn;
+    //                                 this.selectNode(indexx);
+    //                                 break;
+    //                             }
+    //                         }
+    //                     }
+    //                     this.updateGeometry();
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
+
+    // onDocumentMouseMove(event) {
+    //     if (this.loaded) {
+    //         if (this.clickMode === "Detect nodes") {
+    //             event.preventDefault();
+    //             const mouse3D = new THREE.Vector2(
+    //                 (event.clientX / window.innerWidth) * 2 - 1,
+    //                 -(event.clientY / window.innerHeight) * 2 + 1
+    //             );
+    //             this.raycaster.setFromCamera(mouse3D, this.camera);
+    //             const intersects = this.raycaster.intersectObjects(
+    //                 this.invisibleModel.children
+    //             );
+    //             if (intersects.length > 0) {
+    //                 const i = intersects[0].object.userData.elementId;
+    //                 const e = this.elements[i];
+    //                 let vector_point = [...intersects[0].point];
+    //                 let possible_coords = [];
+    //                 for (let k = 0; k < e.coords.length; k++) {
+    //                     let p = [...e.coords[k]];
+    //                     possible_coords.push([p]);
+    //                 }
+    //                 if (this.ndim === 1 || this.ndim === 2) {
+    //                     for (let k = 0; k < e.coords.length; k++) {
+    //                         let p = [...e.coords[k]];
+    //                         p[2] += this.size / 20;
+    //                         possible_coords[k].push(p);
+    //                     }
+    //                     if (this.ndim === 1) {
+    //                         for (let k = 0; k < e.coords.length; k++) {
+    //                             let p = [...e.coords[k]];
+    //                             p[1] += this.size / 20;
+    //                             p[2] += this.size / 20;
+    //                             possible_coords[k].push(p);
+    //                             p = e.coords[k];
+    //                             p[1] += this.size / 20;
+    //                             possible_coords[k].push(p);
+    //                         }
+    //                     }
+    //                 }
+    //                 let encontrado = false;
+    //                 let radius = this.nodeSearchRadius / 2;
+    //                 for (
+    //                     let index = 0;
+    //                     index < possible_coords.length;
+    //                     index++
+    //                 ) {
+    //                     let p;
+    //                     let possible_coords_index = possible_coords[index];
+    //                     for (
+    //                         let node = 0;
+    //                         node < possible_coords_index.length;
+    //                         node++
+    //                     ) {
+    //                         const possible_coord = possible_coords_index[node];
+    //                         p = multiplyScalar(possible_coord, this.norm);
+    //                         let d = squared_distance(p, vector_point);
+    //                         if (d <= radius ** 2) {
+    //                             encontrado = true;
+    //                             break;
+    //                         }
+    //                     }
+    //                     if (encontrado) {
+    //                         this.meshSelectedNode.translateX(
+    //                             p[0] - this.meshSelectedNode.position.x
+    //                         );
+    //                         this.meshSelectedNode.translateY(
+    //                             p[1] - this.meshSelectedNode.position.y
+    //                         );
+    //                         this.meshSelectedNode.translateZ(
+    //                             p[2] - this.meshSelectedNode.position.z
+    //                         );
+    //                         this.meshSelectedNode.visible = true;
+    //                         break;
+    //                     }
+    //                     this.meshSelectedNode.visible = false;
+    //                 }
+    //                 this.updateGeometry();
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 export {FEMViewer, themes};

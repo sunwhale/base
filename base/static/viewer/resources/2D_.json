@@ -1,0 +1,40 @@
+{
+	"nodes": [
+		[0.0, 0.0],
+		[1, 0.0],
+		[1, 1],
+		[0, 1],
+		[1.5, 0],
+		[2.5, 1]
+	],
+	"dictionary": [[0, 1, 2, 3], [1, 4, 5, 2]],
+	"types": ["C1V", "C1V"],
+	"regions": [],
+	"ebc": [],
+	"nbc": [],
+	"nvn": 1,
+	"ngdl": 4,
+	"holes": null,
+	"fillets": null,
+	"solutions": [
+		{
+			"info": { "solver-type": "lineal" },
+			"U": [
+				[0.0],
+				[0.0],
+				[0.0],
+				[1.0],
+				[0.0],
+				[0.0]
+			]
+		}],
+	"properties": {
+		"verbose": false,
+		"name": "",
+		"problem": "Torsion2D",
+		"_phi": null,
+		"G": [1],
+		"duration": 1,
+		"description": ""
+	}
+}
