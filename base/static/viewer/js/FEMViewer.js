@@ -1,6 +1,7 @@
 import * as THREE from "./build/three.module.js";
 import {ResourceTracker} from "./ResourceTracker.js";
-import GUI from "https://cdn.jsdelivr.net/npm/lil-gui@0.17/+esm";
+// import GUI from "https://cdn.jsdelivr.net/npm/lil-gui@0.17/+esm";
+import GUI from "./build/lil-gui.esm.js";
 import {OrbitControls} from "./build/OrbitControls.js";
 import * as BufferGeometryUtils from "./build/BufferGeometryUtils.js";
 import {AxisGridHelper} from "./build/minigui.js";
@@ -275,12 +276,6 @@ class FEMViewer {
     }
 
     createListeners() {
-        // document.addEventListener(
-        //     "keydown",
-        //     this.onDocumentKeyDown.bind(this),
-        //     false
-        // );
-
         window.addEventListener("resize", this.render.bind(this));
 
         document.addEventListener("visibilitychange", (e) =>
@@ -290,17 +285,8 @@ class FEMViewer {
         this.notiBar.addButton("fa fa-refresh", this.reload.bind(this));
         this.playButton = this.notiBar.addButton(
             "fa fa-pause",
-            this.toogleRefresh.bind(this)
+            this.toggleRefresh.bind(this)
         );
-
-        // this.canvas.addEventListener("mousedown", () => (GOBAL_DRAG = false));
-        // this.canvas.addEventListener("mousemove", (e) => {
-        //     GOBAL_DRAG = true;
-        //     this.onDocumentMouseMove(e);
-        // });
-        // this.canvas.addEventListener("mouseup", (e) => {
-        //     GOBAL_DRAG ? "drag" : this.onDocumentMouseDown(e);
-        // });
     }
 
     updateMenuCerrado() {
@@ -367,12 +353,6 @@ class FEMViewer {
         this.updateColors();
         this.updateMaterial();
         this.updateGeometry();
-        this.updateGraphs();
-    }
-
-    updateGraphs() {
-        Plotly.relayout(this.histogram, PLOT_STYLE);
-        Plotly.restyle(this.histogram, {"marker.color": FOCUS_COLOR});
     }
 
     updateResolution() {
@@ -399,7 +379,7 @@ class FEMViewer {
         }
     }
 
-    toogleRefresh() {
+    toggleRefresh() {
         this.refreshing = !this.refreshing;
         this.updateRefresh();
         if (this.refreshing) {
@@ -413,7 +393,7 @@ class FEMViewer {
         return this.refreshing;
     }
 
-    testNeighborg(ide1, ide2) {
+    isNeighbor(ide1, ide2) {
         const e1 = this.elements[ide1];
         const e2 = this.elements[ide2];
         let MIN_VERTICES = 3;
@@ -442,7 +422,7 @@ class FEMViewer {
         let nb = [];
         for (const ie2 of potential) {
             if (e["id"] !== ie2["id"]) {
-                if (this.testNeighborg(e["id"], ie2["id"])) {
+                if (this.isNeighbor(e["id"], ie2["id"])) {
                     neighbors += 1;
                     nb.push(ie2);
                     if (neighbors === nfaces) {
@@ -458,7 +438,7 @@ class FEMViewer {
     }
 
     createOctree() {
-        this.notiBar.setMessage("Creating Oct Tree... ⌛");
+        this.notiBar.setMessage("创建八叉树... ⌛");
         let nnodes = this._nodes.map((x) => {
             return x["_xcenter"];
         });
@@ -480,81 +460,11 @@ class FEMViewer {
                 id: this._nodes[i]["id"],
             };
             this.OctTree.add_point(p);
-            this.notiBar.sendMessage("Octree created!");
+            this.notiBar.sendMessage("八叉树创建完成");
         }
         const geo_list = this.OctTree.giveContours(this.norm);
         const geo = BufferGeometryUtils.mergeBufferGeometries(geo_list, true);
         this.octreeMesh = new THREE.LineSegments(geo, this.line_material);
-    }
-
-    async createOctreeBorderDetect() {
-        this.notiBar.setMessage("Creating Oct Tree... ⌛");
-        let bounding = new Quadrant3D(this.center, this.dimens);
-        this.OctTree = new Geometree(bounding);
-        let times = 0;
-        for (let i = 0; i < this.elements.length; i++) {
-            let p = {_xcenter: this.elements[i]._xcenter.slice(), id: i};
-            this.OctTree.add_point(p);
-            let percentage = (i / this.elements.length) * 100;
-            if (percentage > times) {
-                times += 10;
-                this.notiBar.setProgressBar("Creating Oct Tree", percentage);
-                await allowUpdate();
-            }
-            this.notiBar.sendMessage("Octree created!");
-        }
-        const geo_list = this.OctTree.giveContours(this.norm);
-        const geo = BufferGeometryUtils.mergeBufferGeometries(geo_list, true);
-        this.octreeMesh = new THREE.LineSegments(geo, this.line_material);
-    }
-
-    async detectBorderElements2() {
-        this.createOctreeBorderDetect();
-        this.calculate_border_elements_worker();
-    }
-
-    async detectBorderElements() {
-        this.createOctreeBorderDetect();
-        this.before_load();
-        this.visited = new Array(this.elements.length).fill(false);
-        console.log("Encontrando elementos de borde");
-        const e = this.OctTree.query_first_point_set()[0];
-        let [res, vecinos] = this._detectBorderElementsIterative(e);
-        this.visited = new Array(this.elements.length).fill(false);
-        console.log("Se encontraron " + res.length + " elementos de borde");
-        let be = [];
-        for (const b of res) {
-            be.push(b["id"]);
-        }
-        this.updateBorderElements(be);
-        return res;
-    }
-
-    _detectBorderElementsIterative(e) {
-        let i = 0;
-        let le = [e];
-        let vecinos = [];
-        this.visited[e["id"]] = true;
-        let [isBorder, neighbors] = this.isBorder(e);
-        vecinos.push(neighbors);
-        while (i < le.length) {
-            let ele_index = le[i]["id"];
-            e = {_xcenter: this.elements[ele_index]._xcenter, id: ele_index};
-            neighbors = vecinos[i];
-            for (const nb of neighbors) {
-                if (!this.visited[nb["id"]]) {
-                    this.visited[nb["id"]] = true;
-                    let [ib, nbn] = this.isBorder(nb);
-                    if (ib) {
-                        le.push(nb);
-                        vecinos.push(nbn);
-                    }
-                }
-            }
-            i += 1;
-            console.log("Encontrados " + le.length + " elementos de borde");
-        }
-        return [le, vecinos];
     }
 
     async loadJSON(json_path, be) {
@@ -585,7 +495,7 @@ class FEMViewer {
     reset() {
         this.solution_as_displacement = false;
         this.variable_as_displacement = 2;
-        this.toogleSolutionAsDisp(); // THIS TOOGLE DISPLACEMENTS!!!
+        this.toggleSolutionAsDisp(); // THIS TOGGLE DISPLACEMENTS!!!
         const track = this.resource_tracker.track.bind(this.resource_tracker);
 
         track(this.model);
@@ -773,7 +683,7 @@ class FEMViewer {
                     .add(this, "solution_as_displacement")
                     .listen()
                     .name("变形图")
-                    .onFinishChange(this.toogleSolutionAsDisp.bind(this));
+                    .onFinishChange(this.toggleSolutionAsDisp.bind(this));
             }
         }
 
@@ -812,7 +722,7 @@ class FEMViewer {
         }
     }
 
-    toogleSolutionAsDisp() {
+    toggleSolutionAsDisp() {
         this.config_dict["displacements"] = this.solution_as_displacement;
         this.guiSettings();
         if (!this.solution_as_displacement) {
@@ -970,6 +880,12 @@ class FEMViewer {
         this.updateLut();
     }
 
+    viewFront() {
+        this.camera.position.set(1, 0, 0);
+        this.camera.lookAt(0, 0, 0);
+        this.zoomExtents();
+    }
+    
     updateCamera() {
         this.camera.updateProjectionMatrix();
     }
@@ -990,8 +906,8 @@ class FEMViewer {
                 wireframe: this.wireframe,
                 side: THREE.DoubleSide,
             });
-            this.light2.intensity = 1.0;
             this.light.intensity = 0.0;
+            this.light2.intensity = 1.0;
         } else {
             if (this.theme["emmisive"]) {
                 this.material = new THREE.MeshLambertMaterial({
@@ -1000,16 +916,16 @@ class FEMViewer {
                     wireframe: this.wireframe,
                     side: THREE.DoubleSide,
                 });
-                this.light2.intensity = 0.0;
                 this.light.intensity = 1.0;
+                this.light2.intensity = 0.0;
             } else {
                 this.material = new THREE.MeshBasicMaterial({
                     color: FOCUS_COLOR,
                     wireframe: this.wireframe,
                     side: THREE.DoubleSide,
                 });
-                this.light2.intensity = 1.0;
                 this.light.intensity = 0.0;
+                this.light2.intensity = 1.0;
             }
         }
         this.line_material = new THREE.LineBasicMaterial({
@@ -1226,6 +1142,9 @@ class FEMViewer {
             this.guifolder.destroy();
         }
         this.guifolder = this.gui.addFolder("后处理");
+        this.settingsFolder
+            .add(this, "viewFront")
+            .name("正视图");
         this.color_select_option = this.guifolder
             .add(this, "colorOptions", {
                 "无": "nocolor",
@@ -1347,60 +1266,6 @@ class FEMViewer {
         return r;
     }
 
-    async downloadAsJson() {
-        const response = await fetch(this.json_path);
-        const jsondata = await response.json();
-        jsondata["border_elements"] = this.border_elements;
-        jsondata["regions"] = this.giveRegionsAsCoords();
-        var dataStr =
-            "data:text/json;charset=utf-8," +
-            encodeURIComponent(JSON.stringify(jsondata));
-        var downloadAnchorNode = document.createElement("a");
-        downloadAnchorNode.setAttribute("href", dataStr);
-        downloadAnchorNode.setAttribute("download", this.filename + ".json");
-        document.body.appendChild(downloadAnchorNode); // required for firefox
-        downloadAnchorNode.click();
-        downloadAnchorNode.remove();
-    }
-
-    calculate_border_elements_worker() {
-        if (this.ndim === 3) {
-            let e = undefined;
-            for (const controller of this.settingsFolder.controllers) {
-                if (controller.property === "detectBorderElements2") {
-                    e = controller.$name;
-                }
-            }
-            e.innerHTML = e.innerHTML + "⌛";
-            this.notiBar.setMessage("Border elements started..." + "⌛");
-            let OBJ = this;
-            const myWorker = new Worker("./js/worker_border_elements.js", {
-                type: "module",
-            });
-            myWorker.postMessage([
-                [...OBJ.elements],
-                OBJ.OctTree,
-                OBJ.min_search_radius,
-            ]);
-
-            myWorker.onmessage = function (msg) {
-                if (msg.data[0] === "MSG") {
-                    OBJ.notiBar.setMessage(msg.data[1]);
-                } else {
-                    const be = msg.data;
-                    OBJ.updateBorderElements(be);
-                    const original = "Detect border elements";
-                    e.innerHTML = original;
-                    OBJ.notiBar.sendMessage("Border elements finished!");
-                }
-            };
-        } else {
-            this.notiBar.sendMessage(
-                "Border element detection only avaliable in 3D geometry"
-            );
-        }
-    }
-
     setStep(step) {
         this.step = step;
         this.updateU();
@@ -1410,28 +1275,21 @@ class FEMViewer {
 
     parseJSON(jsondata) {
         this.norm = 1.0 / max(jsondata["nodes"].flat());
-        // console.log(norm);
         this.nodes = [];
         this.nodes = jsondata["nodes"];
 
-        // for (let i = 0; i < this.nodes.length; i++) {
-        // 	const node = this.nodes[i];
-        // 	for (let j = 0; j < node.length; j++) {
-        // 		this.nodes[i][j] *= norm;
-        // 	}
-        // }
         this.nvn = jsondata["nvn"];
         this.ndim = this.nodes[0].length;
         for (let i = 0; i < this.nodes.length; i++) {
             for (let j = this.nodes[i].length; j < 3; j++) {
-                this.nodes[i].push(0.0); //Coordinate completition
+                this.nodes[i].push(0.0); //Coordinate completion
             }
         }
         this.regiones = jsondata["regions"];
         for (const re of this.regiones) {
             for (const co of re) {
                 for (let j = co.length; j < 3; j++) {
-                    co.push(0.0); //Coordinate completition for regions
+                    co.push(0.0); //Coordinate completion for regions
                 }
             }
         }
@@ -1644,23 +1502,23 @@ class FEMViewer {
         this.elements = new Array(this.dictionary.length).fill(0.0);
         let times = 0;
         for (let i = 0; i < this.dictionary.length; i++) {
-            const gdls = this.dictionary[i];
-            const egdls = [];
+            const conns = this.dictionary[i];
+            const econns = [];
             for (let i = 0; i < this.nvn; i++) {
                 const a = [];
-                for (const gdl of gdls) {
+                for (const gdl of conns) {
                     a.push(gdl * this.nvn + i);
                 }
-                egdls.push(a);
+                econns.push(a);
             }
             const coords = [];
-            for (const node of gdls) {
+            for (const node of conns) {
                 coords.push(this.nodes[node]);
             }
 
             this.elements[i] = new types[this.types[i]](
                 coords,
-                egdls,
+                econns,
                 this.size * this.norm
             );
 

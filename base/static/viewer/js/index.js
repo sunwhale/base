@@ -10,11 +10,12 @@ let lines = true;
 // let path_str = "2D_SINGLE_TRIANGLE";
 // let path_str = "2D_SINGLE_SQUARE";
 // let path_str = "2D_BEAM_PLANE_STRESS";
-// let path_str = "3D_SPHERE_LIGHT_MODEL";
+let path_str = "3D_SPHERE_LIGHT_MODEL";
+// let path_str = "3D_SPHERE_HEAVY_MODEL";
 // let path_str = "2D_PLANE_STRESS";
 // let path_str = "2D_PLATE";
 // let path_str = "2D_";
-let path_str = "3D_DRAGON_LIGHT_MODEL";
+// let path_str = "3D_DRAGON_LIGHT_MODEL";
 // let path_str = "3D_DRAGON_HEAVY_MODEL";
 let queryString = window.location.search;
 let vis_param = 0;
@@ -22,19 +23,19 @@ let theme = "默认";
 let theme_param = "默认";
 if (queryString !== "") {
     queryString = queryString.split("?")[1];
-    let parametros = new URLSearchParams(queryString);
-    let funcion_param = parametros.get("mesh");
-    let magnif_param = parametros.get("magnif");
-    let rot_param = parametros.get("rot");
-    let mode_param = parametros.get("mode");
-    let axis_param = parametros.get("axis");
-    let zoom_param = parametros.get("zoom");
-    let lines_param = parametros.get("lines");
-    theme_param = parametros.get("theme");
+    let parameters = new URLSearchParams(queryString);
+    let funcion_param = parameters.get("mesh");
+    let magnif_param = parameters.get("magnif");
+    let rot_param = parameters.get("rot");
+    let mode_param = parameters.get("mode");
+    let axis_param = parameters.get("axis");
+    let zoom_param = parameters.get("zoom");
+    let lines_param = parameters.get("lines");
+    theme_param = parameters.get("theme");
     if (theme_param) {
         theme = theme_param;
     }
-    vis_param = parametros.get("menu");
+    vis_param = parameters.get("menu");
     if (funcion_param) {
         path_str = funcion_param;
     }
@@ -77,10 +78,10 @@ O.draw_lines = lines;
 await O.loadJSON(path);
 O.step = mode;
 await O.init();
-if (vis_param === 1) {
-    O.menuCerrado = false;
-    O.updateMenuCerrado();
-}
+// if (vis_param === 1) {
+//     O.menuCerrado = false;
+//     O.updateMenuCerrado();
+// }
 
 console.log(O);
 O.after_load();

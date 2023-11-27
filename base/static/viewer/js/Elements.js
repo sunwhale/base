@@ -36,14 +36,14 @@ function newTet(n = 1) {
 
 class Element {
 	coords;
-	gdls;
+	conns;
 	Ue;
 	geometry;
-	constructor(coords, gdls) {
+	constructor(coords, conns) {
 		this.coords = coords;
-		this.gdls = gdls;
+		this.conns = conns;
 		this.Ue = [];
-		this.nvn = gdls.length;
+		this.nvn = conns.length;
 		this.scaledJacobian = undefined;
 		this.res = 1;
 	}
@@ -63,7 +63,7 @@ class Element {
 	}
 	setUe(U, svs = true, displacements = false) {
 		this.Ue = [];
-		for (const v of this.gdls) {
+		for (const v of this.conns) {
 			const u = [];
 			for (const d of v) {
 				u.push(U[d]);
@@ -363,8 +363,8 @@ class Element {
 	}
 }
 class Element3D extends Element {
-	constructor(coords, gdls) {
-		super(coords, gdls);
+	constructor(coords, conns) {
+		super(coords, conns);
 	}
 	isInside(x) {
 		return false;
@@ -399,8 +399,8 @@ class Element3D extends Element {
 class Brick extends Element3D {
 	order;
 	line_order;
-	constructor(coords, gdls) {
-		super(coords, gdls);
+	constructor(coords, conns) {
+		super(coords, conns);
 		this.type = "B1V";
 		this.nfaces = 6;
 		this.coords_o = coords;
@@ -555,8 +555,8 @@ class Tetrahedral extends Element3D {
 	order;
 	line_order;
 
-	constructor(coords, gdls) {
-		super(coords, gdls);
+	constructor(coords, conns) {
+		super(coords, conns);
 		this.type = "TE1V";
 		this.ndim = 3;
 		this.nfaces = 4;
@@ -637,8 +637,8 @@ class Tetrahedral extends Element3D {
 class Lineal extends Element3D {
 	order;
 	line_order;
-	constructor(coords, gdls, tama) {
-		super(coords, gdls);
+	constructor(coords, conns, tama) {
+		super(coords, conns);
 		this.tama = tama;
 		this.type = "L1V";
 		this.ndim = 1;
@@ -714,8 +714,8 @@ class Lineal extends Element3D {
 class Triangular extends Element3D {
 	order;
 	line_order;
-	constructor(coords, gdls, tama) {
-		super(coords, gdls);
+	constructor(coords, conns, tama) {
+		super(coords, conns);
 		this.type = "T1V";
 		this.ndim = 2;
 		this.tama = tama;
@@ -796,8 +796,8 @@ class Triangular extends Element3D {
 class Quadrilateral extends Element3D {
 	order;
 	line_order;
-	constructor(coords, gdls, tama) {
-		super(coords, gdls);
+	constructor(coords, conns, tama) {
+		super(coords, conns);
 		this.tama = tama;
 		this.type = "C1V";
 		this.ndim = 2;
@@ -888,8 +888,8 @@ class Quadrilateral extends Element3D {
 }
 
 class LinealO2 extends Lineal {
-	constructor(coords, gdls, tama) {
-		super(coords, gdls, tama);
+	constructor(coords, conns, tama) {
+		super(coords, conns, tama);
 		this.type = "L2V";
 	}
 	psi(z) {
@@ -906,8 +906,8 @@ class LinealO2 extends Lineal {
 }
 
 class TetrahedralO2 extends Tetrahedral {
-	constructor(coords, gdls) {
-		super(coords, gdls);
+	constructor(coords, conns) {
+		super(coords, conns);
 		this.type = "TE2V";
 	}
 	psi(_z) {
@@ -956,8 +956,8 @@ class TetrahedralO2 extends Tetrahedral {
 }
 
 class BrickO2 extends Brick {
-	constructor(coords, gdls) {
-		super(coords, gdls);
+	constructor(coords, conns) {
+		super(coords, conns);
 		this.type = "B2V";
 	}
 	psi(_z) {
@@ -1145,8 +1145,8 @@ class BrickO2 extends Brick {
 }
 
 class TriangularO2 extends Triangular {
-	constructor(coords, gdls, tama) {
-		super(coords, gdls, tama);
+	constructor(coords, conns, tama) {
+		super(coords, conns, tama);
 		this.type = "T2V";
 		let c = [coords[0], coords[1], coords[2]];
 		let gdl = [-1, -1, -1];
@@ -1178,8 +1178,8 @@ class TriangularO2 extends Triangular {
 }
 
 class Serendipity extends Quadrilateral {
-	constructor(coords, gdls, tama) {
-		super(coords, gdls, tama);
+	constructor(coords, conns, tama) {
+		super(coords, conns, tama);
 		this.type = "C2V";
 	}
 	psi(z) {
@@ -1236,9 +1236,9 @@ const types = {
 function fromElement(e) {
 	let nee = undefined;
 	if (e.tama) {
-		nee = new types[e.type](e.coords, e.gdls, e.tama);
+		nee = new types[e.type](e.coords, e.conns, e.tama);
 	} else {
-		nee = new types[e.type](e.coords, e.gdls);
+		nee = new types[e.type](e.coords, e.conns);
 	}
 	nee = Object.assign(nee, e);
 	console.log(nee, e);

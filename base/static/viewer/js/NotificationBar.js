@@ -24,7 +24,7 @@ class NotificationBar {
 		this.status_text.setAttribute("id", "status-bar");
 		this.status_text.setAttribute("class", "notification-buttom noselect");
 		this.status_text.setAttribute("style", "float: left");
-		this.status_text.innerHTML = "Ready!";
+		this.status_text.innerHTML = "完成";
 
 		this.container.appendChild(this.status_text);
 		notification_container.appendChild(this.container);

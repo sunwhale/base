@@ -16,7 +16,7 @@ function detectBorderElements(elements, Octree, min_search_radius) {
 	return be;
 }
 
-function testNeighborg(elements, ide1, ide2) {
+function isNeighbor(elements, ide1, ide2) {
 	const e1 = elements[ide1];
 	const e2 = elements[ide2];
 	let MIN_VERTICES = 3;
@@ -45,7 +45,7 @@ function _isBorder(elements, OctTree, min_search_radius, e) {
 	let nb = [];
 	for (const ie2 of potential) {
 		if (e["id"] != ie2["id"]) {
-			if (testNeighborg(elements, e["id"], ie2["id"])) {
+			if (isNeighbor(elements, e["id"], ie2["id"])) {
 				neighbors += 1;
 				nb.push(ie2);
 				if (neighbors == nfaces) {
