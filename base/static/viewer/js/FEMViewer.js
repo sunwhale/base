@@ -885,7 +885,7 @@ class FEMViewer {
         this.camera.lookAt(0, 0, 0);
         this.zoomExtents();
     }
-    
+
     updateCamera() {
         this.camera.updateProjectionMatrix();
     }
@@ -1193,8 +1193,8 @@ class FEMViewer {
             this.animate = false;
         }
         await this.createElements();
+        console.log(this.elements[0])
         this.createLines();
-
         this.mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
             this.bufferGeometries,
             true
@@ -1238,14 +1238,13 @@ class FEMViewer {
 
         this.notiBar.setMessage("绘制模型..." + "⌛");
         await allowUpdate();
-        let geo = new THREE.SphereGeometry(this.nodeSearchRadius / 2, 8, 8);
-        this.meshSelectedNode = new THREE.LineSegments(
-            new THREE.EdgesGeometry(geo),
-            this.line_material
-        );
-        this.meshSelectedNode.visible = false;
-        this.model.add(this.meshSelectedNode);
-        // this.calculate_jacobians_worker();
+        // let geo = new THREE.SphereGeometry(this.nodeSearchRadius / 2, 8, 8);
+        // this.meshSelectedNode = new THREE.LineSegments(
+        //     new THREE.EdgesGeometry(geo),
+        //     this.line_material
+        // );
+        // this.meshSelectedNode.visible = false;
+        // this.model.add(this.meshSelectedNode);
         this.notiBar.setMessage("加载完成");
         await allowUpdate();
     }
@@ -1406,11 +1405,11 @@ class FEMViewer {
             centery - sizey / 2,
             centerz - sizez / 2,
         ];
-        for (let i = 0; i < this.nodes.length; i++) {
-            this.nodes[i][0] -= sizex / 2;
-            this.nodes[i][1] -= sizey / 2;
-            this.nodes[i][2] -= sizez / 2;
-        }
+        // for (let i = 0; i < this.nodes.length; i++) {
+        //     this.nodes[i][0] -= sizex / 2;
+        //     this.nodes[i][1] -= sizey / 2;
+        //     this.nodes[i][2] -= sizez / 2;
+        // }
 
         this.size = max(this.nodes.flat()) - min(this.nodes.flat());
         this.dimens = [sizex / 2, sizey / 2, sizez / 2];
