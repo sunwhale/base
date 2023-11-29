@@ -37,8 +37,11 @@ function newTet(n = 1) {
 class Element {
 	coords;
 	conns;
+	outputFields;
 	Ue;
 	geometry;
+	domain;
+	_domain;
 	constructor(coords, conns) {
 		this.coords = coords;
 		this.conns = conns;
@@ -63,17 +66,26 @@ class Element {
 	}
 	setUe(U, svs = true, displacements = false) {
 		this.Ue = [];
-		for (const v of this.conns) {
+		for (const conn of this.conns) {
 			const u = [];
-			for (const d of v) {
-				u.push(U[d]);
+			for (const id of conn) {
+				u.push(U[id]);
 			}
 			this.Ue.push(u);
 		}
 		this.updateCoordinates(this.Ue, displacements);
 		this.giveSecondVariableSolution(svs);
 	}
-
+	setOutputField(V) {
+		this.outputFields = [];
+		for (const conn of this.conns) {
+			const v = [];
+			for (const id of conn) {
+				v.push(V[id]);
+			}
+			this.outputFields.push(v);
+		}
+	}
 	giveSecondVariableSolution(strain = false) {
 		this.dus = [];
 		try {
@@ -136,7 +148,7 @@ class Element {
 		for (let i = 0; i < this.U.length; i++) {
 			const _U = [];
 			for (let j = 0; j < 3; j++) {
-				if (j == variable) {
+				if (j === variable) {
 					_U.push(this.U[i][0]);
 				} else {
 					_U.push(0.0);
@@ -147,7 +159,7 @@ class Element {
 		for (let i = 0; i < this.ULines.length; i++) {
 			const _U = [];
 			for (let j = 0; j < 3; j++) {
-				if (j == variable) {
+				if (j === variable) {
 					_U.push(this.ULines[i][0]);
 				} else {
 					_U.push(0.0);
@@ -290,8 +302,9 @@ class Element {
 		const dpx = multiply(_J, dpz);
 		let du = multiply(this.Ue, transpose(dpx));
 		let variable = this.Ue;
+		let variable2 = this.outputFields;
 		let result = 0;
-		if (colorMode == "dispmag") {
+		if (colorMode === "dispmag") {
 			for (let i = 0; i < this.Ue[0].length; i++) {
 				let color = 0.0;
 				for (let j = 0; j < this.nvn; j++) {
@@ -303,15 +316,27 @@ class Element {
 			for (let i = 0; i < P.length; i++) {
 				result += P[i] * solution[i];
 			}
-		} else if (colorMode == "scaled_jac") {
+		} else if (colorMode === "A") {
+			for (let i = 0; i < this.outputFields[0].length; i++) {
+				let color = 0.0;
+				for (let j = 0; j < 1; j++) {
+					let v = variable2[j][i];
+					color += v ** 2;
+				}
+				solution[i] = color ** 0.5;
+			}
+			for (let i = 0; i < P.length; i++) {
+				result += P[i] * solution[i];
+			}
+		} else if (colorMode === "scaled_jac") {
 			result = this.sJ;
-		} else if (colorMode[0] == "PROP") {
+		} else if (colorMode[0] === "PROP") {
 			let prop_name = colorMode[1];
 			result = this.properties[prop_name];
-		} else if (strain && colorMode != "nocolor") {
+		} else if (strain && colorMode !== "nocolor") {
 			let C = Cfuntion(this.properties);
 			let epsilon = [0, 0, 0, 0, 0, 0];
-			if (du.length == 3) {
+			if (du.length === 3) {
 				const exx = du[0][0];
 				const eyy = du[1][1];
 				const ezz = du[2][2];
@@ -320,7 +345,7 @@ class Element {
 				const exz = du[0][2] + du[2][0];
 				const eyz = du[1][2] + du[2][1];
 				epsilon = [exx, eyy, ezz, exz, eyz, exy];
-			} else if (du.length == 2) {
+			} else if (du.length === 2) {
 				const exx = du[0][0];
 				const eyy = du[1][1];
 				const exy = du[0][1] + du[1][0];
@@ -330,7 +355,7 @@ class Element {
 			let sigmas = multiply(C, eps);
 			sigmas = transpose(sigmas)[0];
 			epsilon.push(...sigmas);
-			if (du.length == 2) {
+			if (du.length === 2) {
 				let sx = sigmas[0];
 				let sy = sigmas[1];
 				let txy = sigmas[2];
@@ -344,7 +369,7 @@ class Element {
 				epsilon.push(s3);
 			}
 			result = epsilon[colorMode];
-		} else if (colorMode != "nocolor") {
+		} else if (colorMode !== "nocolor") {
 			result = du[colorMode[0]][colorMode[1]];
 		}
 		return result;
@@ -372,7 +397,7 @@ class Element3D extends Element {
 	calculateStrain() {
 		this.epsilons = [];
 		for (const du of this.dus) {
-			if (du.length == 3) {
+			if (du.length === 3) {
 				const exx = du[0][0];
 				const eyy = du[1][1];
 				const ezz = du[2][2];
@@ -382,7 +407,7 @@ class Element3D extends Element {
 				const eyz = du[1][2] + du[2][1];
 				const epsilon = [exx, eyy, ezz, exz, eyz, exy];
 				this.epsilons.push(epsilon);
-			} else if (du.length == 2) {
+			} else if (du.length === 2) {
 				const exx = du[0][0];
 				const eyy = du[1][1];
 

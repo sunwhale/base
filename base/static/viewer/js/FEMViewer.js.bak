@@ -357,7 +357,7 @@ class FEMViewer {
         this.notiBar.addButton("fa fa-refresh", this.reload.bind(this));
         this.playButton = this.notiBar.addButton(
             "fa fa-pause",
-            this.toogleRefresh.bind(this)
+            this.toggleRefresh.bind(this)
         );
 
         // this.canvas.addEventListener("mousedown", () => (GOBAL_DRAG = false));
@@ -466,7 +466,7 @@ class FEMViewer {
         }
     }
 
-    toogleRefresh() {
+    toggleRefresh() {
         this.refreshing = !this.refreshing;
         this.updateRefresh();
         if (this.refreshing) {
@@ -531,7 +531,7 @@ class FEMViewer {
         Plotly.newPlot(this.histogram, data, PLOT_STYLE, {responsive: true});
     }
 
-    testNeighborg(ide1, ide2) {
+    isNeighbor(ide1, ide2) {
         const e1 = this.elements[ide1];
         const e2 = this.elements[ide2];
         let MIN_VERTICES = 3;
@@ -560,7 +560,7 @@ class FEMViewer {
         let nb = [];
         for (const ie2 of potential) {
             if (e["id"] !== ie2["id"]) {
-                if (this.testNeighborg(e["id"], ie2["id"])) {
+                if (this.isNeighbor(e["id"], ie2["id"])) {
                     neighbors += 1;
                     nb.push(ie2);
                     if (neighbors === nfaces) {
@@ -703,7 +703,7 @@ class FEMViewer {
     reset() {
         this.solution_as_displacement = false;
         this.variable_as_displacement = 2;
-        this.toogleSolutionAsDisp(); // THIS TOOGLE DISPLACEMENTS!!!
+        this.toggleSolutionAsDisp(); // THIS TOGGLE DISPLACEMENTS!!!
         const track = this.resource_tracker.track.bind(this.resource_tracker);
 
         track(this.model);
@@ -1005,7 +1005,7 @@ class FEMViewer {
                     .add(this, "solution_as_displacement")
                     .listen()
                     .name("变形图")
-                    .onFinishChange(this.toogleSolutionAsDisp.bind(this));
+                    .onFinishChange(this.toggleSolutionAsDisp.bind(this));
             }
         }
 
@@ -1044,7 +1044,7 @@ class FEMViewer {
         }
     }
 
-    toogleSolutionAsDisp() {
+    toggleSolutionAsDisp() {
         this.config_dict["displacements"] = this.solution_as_displacement;
         this.guiSettings();
         if (!this.solution_as_displacement) {
@@ -1985,23 +1985,23 @@ class FEMViewer {
         this.elements = new Array(this.dictionary.length).fill(0.0);
         let times = 0;
         for (let i = 0; i < this.dictionary.length; i++) {
-            const gdls = this.dictionary[i];
-            const egdls = [];
+            const conns = this.dictionary[i];
+            const econns = [];
             for (let i = 0; i < this.nvn; i++) {
                 const a = [];
-                for (const gdl of gdls) {
+                for (const gdl of conns) {
                     a.push(gdl * this.nvn + i);
                 }
-                egdls.push(a);
+                econns.push(a);
             }
             const coords = [];
-            for (const node of gdls) {
+            for (const node of conns) {
                 coords.push(this.nodes[node]);
             }
 
             this.elements[i] = new types[this.types[i]](
                 coords,
-                egdls,
+                econns,
                 this.size * this.norm
             );
 
@@ -2222,7 +2222,7 @@ class FEMViewer {
     //                                 }
     //                             }
     //                             if (encontrado) {
-    //                                 let indexx = e.gdls[0][index] / this.nvn;
+    //                                 let indexx = e.conns[0][index] / this.nvn;
     //                                 this.selectNode(indexx);
     //                                 break;
     //                             }

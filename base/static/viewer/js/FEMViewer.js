@@ -1149,6 +1149,7 @@ class FEMViewer {
             .add(this, "colorOptions", {
                 "无": "nocolor",
                 "|U|": "dispmag",
+                "A": "A",
                 "Scaled Jacobian": "scaled_jac",
                 ...this.config_dict["dict"],
                 ...this.prop_dict_names,
@@ -1193,7 +1194,7 @@ class FEMViewer {
             this.animate = false;
         }
         await this.createElements();
-        console.log(this.elements[0])
+        // console.log(this.elements[0])
         this.createLines();
         this.mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
             this.bufferGeometries,
@@ -1296,6 +1297,7 @@ class FEMViewer {
         this.types = [];
         this.solutions_info = [];
         this.solutions = [];
+        this.outputFields = [];
         this.original_dict = jsondata["dictionary"];
         this.dictionary.push(...this.original_dict);
         this.types = jsondata["types"];
@@ -1331,9 +1333,9 @@ class FEMViewer {
             }
             for (let i = 0; i < jsondata["solutions"].length; i++) {
                 let solution = jsondata["solutions"][i];
-
                 this.solutions.push(solution["U"]);
                 this.solutions_info.push({...solution["info"], index: i});
+                this.outputFields.push(solution["V"]);
             }
         }
         this.solutions_info_str = [];
@@ -1370,6 +1372,7 @@ class FEMViewer {
                 d["d" + variables[i] + "/d" + this.dimensions[j]] = [i, j];
             }
         }
+        // console.log(d)
         this.config_dict["dict"] = d;
         if (jsondata["properties"]) {
             if (CONFIG_DICT[jsondata["properties"]["problem"]]) {
@@ -1452,6 +1455,7 @@ class FEMViewer {
 
     updateU() {
         this.U = this.solutions[this.step].flat();
+        this.V = this.outputFields[this.step].flat();
 
         this.updateDispSlider();
 
@@ -1460,6 +1464,9 @@ class FEMViewer {
                 this.U,
                 this.config_dict["calculateStrain"],
                 this.config_dict["displacements"]
+            );
+            e.setOutputField(
+                this.V
             );
             if (this.solution_as_displacement) {
                 e.variableAsDisplacement(this.variable_as_displacement);
