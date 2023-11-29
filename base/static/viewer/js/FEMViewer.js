@@ -1,6 +1,5 @@
 import * as THREE from "./build/three.module.js";
 import {ResourceTracker} from "./ResourceTracker.js";
-// import GUI from "https://cdn.jsdelivr.net/npm/lil-gui@0.17/+esm";
 import GUI from "./build/lil-gui.esm.js";
 import {OrbitControls} from "./build/OrbitControls.js";
 import * as BufferGeometryUtils from "./build/BufferGeometryUtils.js";
@@ -33,30 +32,30 @@ function allowUpdate() {
     });
 }
 
-var style = getComputedStyle(document.body);
-var TEXT_COLOR = style.getPropertyValue("--gui-text-color").trim();
-var BACKGROUND_COLOR = style.getPropertyValue("--gui-background-color").trim();
-var TITLE_BACKGROUND_COLOR = style
+let style = getComputedStyle(document.body);
+let TEXT_COLOR = style.getPropertyValue("--gui-text-color").trim();
+let BACKGROUND_COLOR = style.getPropertyValue("--gui-background-color").trim();
+let TITLE_BACKGROUND_COLOR = style
     .getPropertyValue("--gui-title-background-color")
     .trim();
-var PLOT_GRID_COLOR = style.getPropertyValue("--plot-grid-color").trim();
-var FONT_FAMILY = style.getPropertyValue("--font-family").trim();
-var FOCUS_COLOR = style.getPropertyValue("--focus-color").trim();
-var LINES_COLOR = style.getPropertyValue("--gui-text-color").trim();
+let PLOT_GRID_COLOR = style.getPropertyValue("--plot-grid-color").trim();
+let FONT_FAMILY = style.getPropertyValue("--font-family").trim();
+let FOCUS_COLOR = style.getPropertyValue("--focus-color").trim();
+let LINES_COLOR = style.getPropertyValue("--gui-text-color").trim();
 
-var PLOT_STYLE = {
+let PLOT_STYLE = {
     margin: {t: 0},
-    paper_bgcolor: BACKGROUND_COLOR,
-    plot_bgcolor: BACKGROUND_COLOR,
+    paper_bg_color: BACKGROUND_COLOR,
+    plot_bg_color: BACKGROUND_COLOR,
     font: {
         color: TEXT_COLOR,
         family: FONT_FAMILY,
     },
-    xaxis: {
-        gridcolor: PLOT_GRID_COLOR,
+    x_axis: {
+        grid_color: PLOT_GRID_COLOR,
     },
     yaxis: {
-        gridcolor: PLOT_GRID_COLOR,
+        grid_color: PLOT_GRID_COLOR,
     },
 };
 
@@ -164,7 +163,6 @@ class FEMViewer {
         // FEM
         this.selectedNodes = [];
         this.regions = [];
-        this.nodeSearchRadius = 0.01;
 
         this.container = container;
         let canvas = document.createElement("canvas");
@@ -184,7 +182,6 @@ class FEMViewer {
         this.corriendo = false;
         this.animationFrameID = undefined;
         this.min_search_radius = -Infinity;
-        this.not_draw_elements = [];
         this.max_color_value = 0;
         this.min_color_value = 0;
         this.initial_zoom = iz;
@@ -217,7 +214,6 @@ class FEMViewer {
         this.size = 0.0;
         this.elements = [];
         this.info = "";
-        this.infoDetail = "";
         this.ndim = -1;
         this.border_elements = [];
         this.config_dict = CONFIG_DICT["GENERAL"];
@@ -257,7 +253,6 @@ class FEMViewer {
         this.regionModel.visible = false;
 
         this.MenuClosed = true;
-
         this.lut = new Lut(this.colormap);
         this.filename = "";
 
@@ -266,8 +261,6 @@ class FEMViewer {
         this.loaded = false;
         this.colorOptions = "nocolor";
         this.clickMode = "无";
-        // this.createModals();
-        this.histogram = document.getElementById("histogram");
 
         this.settings();
         this.createListeners();
@@ -331,17 +324,17 @@ class FEMViewer {
 
         PLOT_STYLE = {
             margin: {t: 0},
-            paper_bgcolor: BACKGROUND_COLOR,
-            plot_bgcolor: BACKGROUND_COLOR,
+            paper_bg_color: BACKGROUND_COLOR,
+            plot_bg_color: BACKGROUND_COLOR,
             font: {
                 color: TEXT_COLOR,
                 family: FONT_FAMILY,
             },
-            xaxis: {
-                gridcolor: PLOT_GRID_COLOR,
+            x_axis: {
+                grid_color: PLOT_GRID_COLOR,
             },
             yaxis: {
-                gridcolor: PLOT_GRID_COLOR,
+                grid_color: PLOT_GRID_COLOR,
             },
         };
     }
@@ -420,14 +413,14 @@ class FEMViewer {
         this.octreeMesh = new THREE.LineSegments(geo, this.line_material);
     }
 
-    async loadJSON(json_path, be) {
+    async loadJSON(json_path, border_elements) {
         this.notiBar.setMessage("加载模型..." + "⌛", true);
         this.json_path = json_path;
         this.filename = json_path;
         const response = await fetch(this.json_path);
         const jsondata = await response.json();
-        if (be !== undefined) {
-            jsondata["border_elements"] = be;
+        if (border_elements !== undefined) {
+            jsondata["border_elements"] = border_elements;
         }
         this.parseJSON(jsondata);
         this.notiBar.resetMessage();
@@ -442,7 +435,7 @@ class FEMViewer {
         } else {
             this.model.remove(this.octreeMesh);
         }
-        this.updateShowModel();
+        await this.updateShowModel();
     }
 
     reset() {
@@ -464,8 +457,6 @@ class FEMViewer {
         this.renderer.renderLists.dispose();
         this.material.dispose();
         this.line_material.dispose();
-
-        // this.destroy_element_views();
         this.resource_tracker.dispose();
 
         if (this.octreeMesh) {
@@ -503,7 +494,7 @@ class FEMViewer {
         this.colorOptions = "nocolor";
         this.config_dict = CONFIG_DICT["GENERAL"];
         this.min_search_radius = -Infinity;
-        this.not_draw_elements = []; // quitar
+        this.not_draw_elements = [];
         this.bufferGeometries = [];
         this.bufferLines = [];
 
@@ -553,11 +544,11 @@ class FEMViewer {
         this.controls.update();
 
         // Lights
-        this.light2 = new THREE.AmbientLight(0xffffff, 0.0);
         const color = 0xffffff;
         const intensity = 0.8;
-        this.light = new THREE.PointLight(color, intensity);
-        this.camera.add(this.light);
+        this.light1 = new THREE.PointLight(color, intensity);
+        this.light2 = new THREE.AmbientLight(0xffffff, 0.0);
+        this.camera.add(this.light1);
         this.scene.add(this.light2);
 
         this.orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 2);
@@ -859,7 +850,7 @@ class FEMViewer {
                 wireframe: this.wireframe,
                 side: THREE.DoubleSide,
             });
-            this.light.intensity = 0.0;
+            this.light1.intensity = 0.0;
             this.light2.intensity = 1.0;
         } else {
             if (this.theme["emmisive"]) {
@@ -869,7 +860,7 @@ class FEMViewer {
                     wireframe: this.wireframe,
                     side: THREE.DoubleSide,
                 });
-                this.light.intensity = 1.0;
+                this.light1.intensity = 1.0;
                 this.light2.intensity = 0.0;
             } else {
                 this.material = new THREE.MeshBasicMaterial({
@@ -877,7 +868,7 @@ class FEMViewer {
                     wireframe: this.wireframe,
                     side: THREE.DoubleSide,
                 });
-                this.light.intensity = 0.0;
+                this.light1.intensity = 0.0;
                 this.light2.intensity = 1.0;
             }
         }
@@ -1403,7 +1394,7 @@ class FEMViewer {
 
     updateU() {
         this.U = this.solutions[this.step].flat();
-        this.V = this.outputFields[this.step].flat();
+        // this.V = this.outputFields[this.step].flat();
 
         this.updateDispSlider();
 
@@ -1413,9 +1404,9 @@ class FEMViewer {
                 this.config_dict["calculateStrain"],
                 this.config_dict["displacements"]
             );
-            e.setOutputField(
-                this.V
-            );
+            // e.setOutputField(
+            //     this.V
+            // );
             if (this.solution_as_displacement) {
                 e.variableAsDisplacement(this.variable_as_displacement);
             }

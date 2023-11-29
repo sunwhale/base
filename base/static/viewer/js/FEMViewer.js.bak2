@@ -46,17 +46,17 @@ var LINES_COLOR = style.getPropertyValue("--gui-text-color").trim();
 
 var PLOT_STYLE = {
     margin: {t: 0},
-    paper_bgcolor: BACKGROUND_COLOR,
-    plot_bgcolor: BACKGROUND_COLOR,
+    paper_bg_color: BACKGROUND_COLOR,
+    plot_bg_color: BACKGROUND_COLOR,
     font: {
         color: TEXT_COLOR,
         family: FONT_FAMILY,
     },
-    xaxis: {
-        gridcolor: PLOT_GRID_COLOR,
+    x_axis: {
+        grid_color: PLOT_GRID_COLOR,
     },
     yaxis: {
-        gridcolor: PLOT_GRID_COLOR,
+        grid_color: PLOT_GRID_COLOR,
     },
 };
 
@@ -333,17 +333,17 @@ class FEMViewer {
 
         PLOT_STYLE = {
             margin: {t: 0},
-            paper_bgcolor: BACKGROUND_COLOR,
-            plot_bgcolor: BACKGROUND_COLOR,
+            paper_bg_color: BACKGROUND_COLOR,
+            plot_bg_color: BACKGROUND_COLOR,
             font: {
                 color: TEXT_COLOR,
                 family: FONT_FAMILY,
             },
-            xaxis: {
-                gridcolor: PLOT_GRID_COLOR,
+            x_axis: {
+                grid_color: PLOT_GRID_COLOR,
             },
             yaxis: {
-                gridcolor: PLOT_GRID_COLOR,
+                grid_color: PLOT_GRID_COLOR,
             },
         };
     }
