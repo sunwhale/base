@@ -35,7 +35,6 @@
 	"fillets": [],
 	"solutions": [
 	{
-		"info": { "solver-type": "lineal" },
 		"U": [
 			[1.0],
 			[1.0],

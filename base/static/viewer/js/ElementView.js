@@ -36,7 +36,7 @@ class ElementView {
             this.parent.config_dict["calculateStrain"]
         );
         this.element.setGeometryCoords(
-            this.parent.magnif * this.parent.mult,
+            this.parent.magnification * this.parent.mult,
             this.parent.norm
         );
         let Cfuntion = undefined;

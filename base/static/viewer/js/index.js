@@ -1,6 +1,6 @@
 import {FEMViewer, themes} from "./FEMViewer.js";
 
-let magnif = 0;
+let magnification = 0;
 let rot = false;
 let mode = 0;
 let axis = 1;
@@ -25,8 +25,8 @@ let theme_param = "默认";
 if (queryString !== "") {
     queryString = queryString.split("?")[1];
     let parameters = new URLSearchParams(queryString);
-    let funcion_param = parameters.get("mesh");
-    let magnif_param = parameters.get("magnif");
+    let function_param = parameters.get("mesh");
+    let magnification_param = parameters.get("magnification");
     let rot_param = parameters.get("rot");
     let mode_param = parameters.get("mode");
     let axis_param = parameters.get("axis");
@@ -37,11 +37,11 @@ if (queryString !== "") {
         theme = theme_param;
     }
     vis_param = parameters.get("menu");
-    if (funcion_param) {
-        path_str = funcion_param;
+    if (function_param) {
+        path_str = function_param;
     }
-    if (magnif_param) {
-        magnif = parseFloat(magnif_param);
+    if (magnification_param) {
+        magnification = parseFloat(magnification_param);
     }
     if (rot_param) {
         rot = true;
@@ -70,7 +70,7 @@ console.log(path);
 
 const container = document.getElementById("models-container");
 
-const O = new FEMViewer(container, magnif, rot, axis === 1, zoom);
+const O = new FEMViewer(container, magnification, rot, axis === 1, zoom);
 O.theme = themes[theme] || {};
 O.updateStylesheet();
 O.updateColors();

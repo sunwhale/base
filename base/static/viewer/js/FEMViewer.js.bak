@@ -171,9 +171,9 @@ var GOBAL_DRAG = false;
 Dropzone.autoDiscover = false;
 
 class FEMViewer {
-    constructor(container, magnif, rot, axis = false, iz = 1.05) {
-        if (!magnif) {
-            magnif = 0;
+    constructor(container, magnification, rot, axis = false, iz = 1.05) {
+        if (!magnification) {
+            magnification = 0;
         }
         // FEM
 
@@ -261,7 +261,7 @@ class FEMViewer {
         this.invisibleModel = new THREE.Object3D();
         this.colors = false;
         this.animate = true;
-        this.magnif = magnif;
+        this.magnification = magnification;
         this.mult = 1.0;
         this.side = 1.0;
         this.max_disp = 0.0;
@@ -581,16 +581,16 @@ class FEMViewer {
             return x["_xcenter"];
         });
         let nodes = transpose(nnodes);
-        let centerx = (max(nodes[0]) + min(nodes[0])) / 2;
-        let sizex = (max(nodes[0]) - min(nodes[0])) / 2;
-        let centery = (max(nodes[1]) + min(nodes[1])) / 2;
-        let sizey = (max(nodes[1]) - min(nodes[1])) / 2;
-        let centerz = (max(nodes[2]) + min(nodes[2])) / 2;
-        let sizez = (max(nodes[2]) - min(nodes[2])) / 2;
+        let center_x = (max(nodes[0]) + min(nodes[0])) / 2;
+        let size_x = (max(nodes[0]) - min(nodes[0])) / 2;
+        let center_y = (max(nodes[1]) + min(nodes[1])) / 2;
+        let size_y = (max(nodes[1]) - min(nodes[1])) / 2;
+        let center_z = (max(nodes[2]) + min(nodes[2])) / 2;
+        let size_z = (max(nodes[2]) - min(nodes[2])) / 2;
 
         let FF = 1.01;
-        let dimension = [sizex * FF, sizey * FF, sizez * FF];
-        let bounding = new Quadrant3D([centerx, centery, centerz], dimension);
+        let dimension = [size_x * FF, size_y * FF, size_z * FF];
+        let bounding = new Quadrant3D([center_x, center_y, center_z], dimension);
         this.OctTree = new Geometree(bounding, 10);
         for (let i = 0; i < this._nodes.length; i++) {
             let p = {
@@ -770,7 +770,7 @@ class FEMViewer {
         this.step = 0;
         this.elements = [];
         this.types = [];
-        this.magnif = 0.0;
+        this.magnification = 0.0;
         this.max_abs_disp = undefined;
         this.border_elements = [];
         this.scene.remove(this.model);
@@ -1048,7 +1048,7 @@ class FEMViewer {
         this.config_dict["displacements"] = this.solution_as_displacement;
         this.guiSettings();
         if (!this.solution_as_displacement) {
-            this.magnif = 0.0;
+            this.magnification = 0.0;
             this.updateSolutionAsDisplacement();
         } else {
             this.updateVariableAsSolution();
@@ -1058,7 +1058,7 @@ class FEMViewer {
     updateVariableAsSolution() {
         this.animate = false;
         this.mult = 1;
-        this.magnif = 0.4 / this.max_abs_disp;
+        this.magnification = 0.4 / this.max_abs_disp;
         this.updateDispSlider();
         this.updateSolutionAsDisplacement();
     }
@@ -1104,8 +1104,8 @@ class FEMViewer {
                         this.notiBar.resetMessage();
                     }
                 });
-            this.magnifSlider = this.disp_gui_disp_folder
-                .add(this, "magnif", 0, 1)
+            this.magnificationSlider = this.disp_gui_disp_folder
+                .add(this, "magnification", 0, 1)
                 .name("Disp multiplier")
                 .listen()
                 .onChange(() => {
@@ -1299,9 +1299,9 @@ class FEMViewer {
         for (let i = 0; i < this.elements.length; i++) {
             const e = this.elements[i];
             if (this.draw_lines) {
-                e.setGeometryCoords(this.magnif * this.mult, this.norm);
+                e.setGeometryCoords(this.magnification * this.mult, this.norm);
             } else {
-                e.setGeometryCoords(this.magnif * this.mult, this.norm);
+                e.setGeometryCoords(this.magnification * this.mult, this.norm);
             }
         }
         if (this.colors) {
@@ -1859,26 +1859,26 @@ class FEMViewer {
             this.nodes.map((row) => row[colIndex])
         );
 
-        let sizex = max(secon_coords[0].flat()) - min(secon_coords[0].flat());
-        let sizey = max(secon_coords[1].flat()) - min(secon_coords[1].flat());
-        let sizez = max(secon_coords[2].flat()) - min(secon_coords[2].flat());
+        let size_x = max(secon_coords[0].flat()) - min(secon_coords[0].flat());
+        let size_y = max(secon_coords[1].flat()) - min(secon_coords[1].flat());
+        let size_z = max(secon_coords[2].flat()) - min(secon_coords[2].flat());
 
-        let centerx = (max(secon_coords[0]) + min(secon_coords[0])) / 2;
-        let centery = (max(secon_coords[1]) + min(secon_coords[1])) / 2;
-        let centerz = (max(secon_coords[2]) + min(secon_coords[2])) / 2;
+        let center_x = (max(secon_coords[0]) + min(secon_coords[0])) / 2;
+        let center_y = (max(secon_coords[1]) + min(secon_coords[1])) / 2;
+        let center_z = (max(secon_coords[2]) + min(secon_coords[2])) / 2;
         this.center = [
-            centerx - sizex / 2,
-            centery - sizey / 2,
-            centerz - sizez / 2,
+            center_x - size_x / 2,
+            center_y - size_y / 2,
+            center_z - size_z / 2,
         ];
         for (let i = 0; i < this.nodes.length; i++) {
-            this.nodes[i][0] -= sizex / 2;
-            this.nodes[i][1] -= sizey / 2;
-            this.nodes[i][2] -= sizez / 2;
+            this.nodes[i][0] -= size_x / 2;
+            this.nodes[i][1] -= size_y / 2;
+            this.nodes[i][2] -= size_z / 2;
         }
 
         this.size = max(this.nodes.flat()) - min(this.nodes.flat());
-        this.dimens = [sizex / 2, sizey / 2, sizez / 2];
+        this.dimens = [size_x / 2, size_y / 2, size_z / 2];
         this._nodes = [];
         for (let kk = 0; kk < this.nodes.length; kk++) {
             this._nodes.push({_xcenter: this.nodes[kk], id: kk});
@@ -1929,8 +1929,8 @@ class FEMViewer {
         this.max_abs_disp =
             Math.max(Math.abs(max_disp), Math.abs(min_disp)) * this.norm;
         if (this.config_dict["displacements"]) {
-            this.magnifSlider.min(0.0);
-            this.magnifSlider.max(0.4 / this.max_abs_disp);
+            this.magnificationSlider.min(0.0);
+            this.magnificationSlider.max(0.4 / this.max_abs_disp);
         }
     }
 

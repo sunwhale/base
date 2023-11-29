@@ -87,6 +87,7 @@ const themes = {
         "--gui-string-color": "#8da300",
         "--focus-color": "#dc2c41",
         "--backbround-color": "transparent",
+        emmisive: true,
     },
     "明亮": {
         "--gui-background-color": "#f6f6f6",
@@ -99,6 +100,7 @@ const themes = {
         "--gui-number-color": "#07aacf",
         "--gui-string-color": "#8da300",
         "--focus-color": "#dc2c41",
+        emmisive: true,
     },
     "黑暗": {
         "--gui-background-color": "#1f1f1f",
@@ -387,7 +389,52 @@ class FEMViewer {
         } else {
             cancelAnimationFrame(this.animationFrameID);
         }
+
         return this.refreshing;
+    }
+
+    isNeighbor(ide1, ide2) {
+        const e1 = this.elements[ide1];
+        const e2 = this.elements[ide2];
+        let MIN_VERTICES = 3;
+        let en_comun = 0;
+        for (const c1 of e1.coords) {
+            for (const c2 of e2.coords) {
+                if (c2 === c1) {
+                    en_comun += 1;
+                    if (en_comun >= MIN_VERTICES) {
+                        return true;
+                    }
+                    break;
+                }
+            }
+        }
+        return false;
+    }
+
+    isBorder(e) {
+        let nfaces = this.elements[e["id"]].nfaces;
+        let neighbors = 0;
+        let potential = this.OctTree.query_range_point_radius(
+            e["_xcenter"],
+            this.min_search_radius
+        );
+        let nb = [];
+        for (const ie2 of potential) {
+            if (e["id"] !== ie2["id"]) {
+                if (this.isNeighbor(e["id"], ie2["id"])) {
+                    neighbors += 1;
+                    nb.push(ie2);
+                    if (neighbors === nfaces) {
+                        break;
+                    }
+                }
+            }
+        }
+        if (neighbors < nfaces) {
+            return [true, nb];
+        }
+        return [false, potential];
     }
 
     createOctree() {

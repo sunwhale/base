@@ -38,21 +38,21 @@ class Region {
 	}
 	setNodesOfRegionOctree(octree, tol = 1 * 10 ** -6) {
 		let coordinates = transpose(this.coordinates);
-		let sizex = max(coordinates[0]) - min(coordinates[0]);
-		let sizey = max(coordinates[1]) - min(coordinates[1]);
-		let sizez = max(coordinates[2]) - min(coordinates[2]);
+		let size_x = max(coordinates[0]) - min(coordinates[0]);
+		let size_y = max(coordinates[1]) - min(coordinates[1]);
+		let size_z = max(coordinates[2]) - min(coordinates[2]);
 
-		sizex = Math.max(sizex, tol);
-		sizey = Math.max(sizey, tol);
-		sizez = Math.max(sizez, tol);
+		size_x = Math.max(size_x, tol);
+		size_y = Math.max(size_y, tol);
+		size_z = Math.max(size_z, tol);
 
-		let centerx = (max(coordinates[0]) + min(coordinates[0])) / 2;
-		let centery = (max(coordinates[1]) + min(coordinates[1])) / 2;
-		let centerz = (max(coordinates[2]) + min(coordinates[2])) / 2;
+		let center_x = (max(coordinates[0]) + min(coordinates[0])) / 2;
+		let center_y = (max(coordinates[1]) + min(coordinates[1])) / 2;
+		let center_z = (max(coordinates[2]) + min(coordinates[2])) / 2;
 
 		let bounding = new Quadrant3D(
-			[centerx, centery, centerz],
-			[sizex / 2, sizey / 2, sizez / 2]
+			[center_x, center_y, center_z],
+			[size_x / 2, size_y / 2, size_z / 2]
 		);
 		let nodes = octree.query_range(bounding);
 		this.nodes = [];
