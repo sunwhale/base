@@ -7,23 +7,8 @@ import {AxisGridHelper} from "./build/minigui.js";
 import {Lut} from "./build/Lut.js";
 import {CONFIG_DICT} from "./ConfigDicts.js";
 import {Geometree, Quadrant3D} from "./Octree.js";
-import {
-    Brick,
-    BrickO2,
-    Tetrahedral,
-    TetrahedralO2,
-    Lineal,
-    Triangular,
-    TriangularO2,
-    Quadrilateral,
-    Serendipity,
-    LinealO2,
-} from "./Elements.js";
-import {
-    max,
-    min,
-    transpose
-} from "./math.js";
+import {Brick, BrickO2, Lineal, LinealO2, Quadrilateral, Serendipity, Tetrahedral, TetrahedralO2, Triangular, TriangularO2,} from "./Elements.js";
+import {max, min, transpose} from "./math.js";
 import {NotificationBar} from "./NotificationBar.js";
 
 function allowUpdate() {
@@ -54,7 +39,7 @@ let PLOT_STYLE = {
     x_axis: {
         grid_color: PLOT_GRID_COLOR,
     },
-    yaxis: {
+    y_axis: {
         grid_color: PLOT_GRID_COLOR,
     },
 };
@@ -85,7 +70,7 @@ const themes = {
         "--gui-number-color": "#07aacf",
         "--gui-string-color": "#8da300",
         "--focus-color": "#dc2c41",
-        "--backbround-color": "transparent",
+        "--background-color": "transparent",
     },
     "明亮": {
         "--gui-background-color": "#f6f6f6",
@@ -210,7 +195,6 @@ class FEMViewer {
         this.solutions_info = [];
         this.U = [];
         this.step = 0;
-        this.max_disp = 0.0;
         this.size = 0.0;
         this.elements = [];
         this.info = "";
@@ -227,7 +211,6 @@ class FEMViewer {
         });
         this.renderer.autoClear = false;
 
-        this.not_draw_elements = [];
         this.delta = 0;
         this.interval = 1 / 12;
         this.clock = new THREE.Clock();
@@ -244,7 +227,6 @@ class FEMViewer {
         this.magnification = magnification;
         this.mult = 1.0;
         this.side = 1.0;
-        this.max_disp = 0.0;
         this.draw_lines = true;
         this.colormap = "冷热图";
         this.show_model = true;
@@ -333,7 +315,7 @@ class FEMViewer {
             x_axis: {
                 grid_color: PLOT_GRID_COLOR,
             },
-            yaxis: {
+            y_axis: {
                 grid_color: PLOT_GRID_COLOR,
             },
         };
@@ -494,7 +476,6 @@ class FEMViewer {
         this.colorOptions = "nocolor";
         this.config_dict = CONFIG_DICT["GENERAL"];
         this.min_search_radius = -Infinity;
-        this.not_draw_elements = [];
         this.bufferGeometries = [];
         this.bufferLines = [];
 
@@ -657,13 +638,6 @@ class FEMViewer {
             .name("风格")
             .listen()
             .onChange(this.updateTheme.bind(this));
-        if (this.example_file_paths) {
-            this.settingsFolder
-                .add(this, "filename", this.example_file_paths)
-                .name("Examples")
-                .listen()
-                .onChange(this.changeExample.bind(this));
-        }
     }
 
     toggleSolutionAsDisp() {
@@ -702,7 +676,7 @@ class FEMViewer {
                 })
                 .listen()
 
-                .name("Variabe")
+                .name("Variable")
                 .onChange(this.updateVariableAsSolution.bind(this));
             this.variable_as_displacement = 2;
         }
@@ -763,7 +737,7 @@ class FEMViewer {
     }
 
     updateColorVariable() {
-        let msg = "";
+        let msg;
         const co = this.colorOptions;
         if (co !== "nocolor") {
             this.colors = true;
@@ -853,7 +827,7 @@ class FEMViewer {
             this.light1.intensity = 0.0;
             this.light2.intensity = 1.0;
         } else {
-            if (this.theme["emmisive"]) {
+            if (this.theme["emissive"]) {
                 this.material = new THREE.MeshLambertMaterial({
                     color: FOCUS_COLOR,
                     emissive: FOCUS_COLOR,
@@ -878,7 +852,7 @@ class FEMViewer {
         });
     }
 
-    handleVisibilityChange(e) {
+    handleVisibilityChange() {
         if (document.visibilityState === "hidden") {
             this.clock.stop();
         } else {
@@ -1021,8 +995,7 @@ class FEMViewer {
         }
         if (this.resizeRendererToDisplaySize()) {
             const canvas = this.renderer.domElement;
-            const aspect = canvas.clientWidth / canvas.clientHeight;
-            this.camera.aspect = aspect;
+            this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
             this.camera.updateProjectionMatrix();
             this.zoomExtents();
         }
@@ -1094,7 +1067,7 @@ class FEMViewer {
                 "无": "nocolor",
                 "|U|": "dispmag",
                 "A": "A",
-                "Scaled Jacobian": "scaled_jac",
+                "Scaled Jacobi": "scaled_jac",
                 ...this.config_dict["dict"],
                 ...this.prop_dict_names,
             })
@@ -1199,11 +1172,11 @@ class FEMViewer {
         for (const reg of this.regions) {
             let region = [];
             for (const cord of reg.coordinates) {
-                let coordenada = [];
+                let coordinate = [];
                 for (let i = 0; i < this.ndim; i++) {
-                    coordenada.push(cord[i] + this.dimens[i]);
+                    coordinate.push(cord[i] + this.dimens[i]);
                 }
-                region.push(coordenada);
+                region.push(coordinate);
             }
             r.push(region);
         }
@@ -1479,14 +1452,6 @@ class FEMViewer {
                 this.min_search_radius,
                 2 * d ** 0.5
             );
-            const colors = [];
-            for (
-                let j = 0;
-                j < this.elements[i].geometry.attributes.position.count;
-                ++j
-            ) {
-                colors.push(1, 1, 1);
-            }
             this.elements[i].index = i;
             const p = {};
             for (const [key, value] of Object.entries(this.prop_dict)) {

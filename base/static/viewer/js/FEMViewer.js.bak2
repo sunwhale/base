@@ -55,7 +55,7 @@ var PLOT_STYLE = {
     x_axis: {
         grid_color: PLOT_GRID_COLOR,
     },
-    yaxis: {
+    y_axis: {
         grid_color: PLOT_GRID_COLOR,
     },
 };
@@ -86,7 +86,7 @@ const themes = {
         "--gui-number-color": "#07aacf",
         "--gui-string-color": "#8da300",
         "--focus-color": "#dc2c41",
-        "--backbround-color": "transparent",
+        "--background-color": "transparent",
         emmisive: true,
     },
     "明亮": {
@@ -342,7 +342,7 @@ class FEMViewer {
             x_axis: {
                 grid_color: PLOT_GRID_COLOR,
             },
-            yaxis: {
+            y_axis: {
                 grid_color: PLOT_GRID_COLOR,
             },
         };
@@ -1255,11 +1255,11 @@ class FEMViewer {
         for (const reg of this.regions) {
             let region = [];
             for (const cord of reg.coordinates) {
-                let coordenada = [];
+                let coordinate = [];
                 for (let i = 0; i < this.ndim; i++) {
-                    coordenada.push(cord[i] + this.dimens[i]);
+                    coordinate.push(cord[i] + this.dimens[i]);
                 }
-                region.push(coordenada);
+                region.push(coordinate);
             }
             r.push(region);
         }

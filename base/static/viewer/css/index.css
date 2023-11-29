@@ -11,8 +11,8 @@
 	--gui-number-color: #07aacf;
 	--gui-string-color: #8da300;
 
-	--backbround-color: var(--gui-background-color);
-	--over-backbround-color: var(--gui-background-color);
+	--background-color: var(--gui-background-color);
+	--over-background-color: var(--gui-background-color);
 	--focus-color: #dc2c41;
 	--lines-color: var(--gui-text-color);
 	--font-family: "Roboto", sans-serif;
@@ -31,8 +31,8 @@
 		--gui-string-color: #a2db3c;
 
 		--focus-color: var(--gui-focus-color);
-		--backbround-color: var(--gui-background-color);
-		--over-backbround-color: var(--gui-background-color);
+		--background-color: var(--gui-background-color);
+		--over-background-color: var(--gui-background-color);
 		--plot-grid-color: #616161;
 	}
 }
@@ -56,7 +56,7 @@ body {
 	height: 100%;
 
 	font-family: var(--font-family);
-	background-color: var(--backbround-color);
+	background-color: var(--background-color);
 	color: var(--gui-text-color);
 }
 
@@ -80,7 +80,7 @@ body {
 
 .mini-box {
 	position: absolute;
-	background-color: var(--over-backbround-color);
+	background-color: var(--over-background-color);
 	top: 20px;
 	left: 20px;
 	height: 320px;
@@ -91,7 +91,7 @@ body {
 }
 .mini-box-center {
 	position: absolute;
-	background-color: var(--over-backbround-color);
+	background-color: var(--over-background-color);
 	height: 400px;
 	width: 700px;
 	left: calc(50% - 700px / 2);
