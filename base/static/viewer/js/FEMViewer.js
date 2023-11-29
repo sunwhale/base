@@ -256,7 +256,7 @@ class FEMViewer {
         this.showOctree = false;
         this.regionModel.visible = false;
 
-        this.menuCerrado = true;
+        this.MenuClosed = true;
 
         this.lut = new Lut(this.colormap);
         this.filename = "";
@@ -287,9 +287,9 @@ class FEMViewer {
         );
     }
 
-    updateMenuCerrado() {
-        this.gui.show(this.menuCerrado);
-        if (this.menuCerrado) {
+    updateMenuClosed() {
+        this.gui.show(this.MenuClosed);
+        if (this.MenuClosed) {
             document
                 .getElementById("notification-container")
                 .setAttribute("style", "");
@@ -1036,7 +1036,7 @@ class FEMViewer {
             this.zoomExtents();
         }
         this.renderer.render(this.scene, this.camera);
-        if (this.colors && this.menuCerrado) {
+        if (this.colors && this.MenuClosed) {
             this.renderer.render(this.uiScene, this.orthoCamera);
         }
     }

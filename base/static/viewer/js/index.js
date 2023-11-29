@@ -18,8 +18,9 @@ let lines = true;
 let path_str = "3D_";
 // let path_str = "3D_DRAGON_LIGHT_MODEL";
 // let path_str = "3D_DRAGON_HEAVY_MODEL";
+
 let queryString = window.location.search;
-let vis_param = 0;
+let show_menu = true;
 let theme = "默认";
 let theme_param = "默认";
 if (queryString !== "") {
@@ -36,7 +37,7 @@ if (queryString !== "") {
     if (theme_param) {
         theme = theme_param;
     }
-    vis_param = parameters.get("menu");
+    show_menu = parameters.get("menu");
     if (function_param) {
         path_str = function_param;
     }
@@ -79,10 +80,9 @@ O.draw_lines = lines;
 await O.loadJSON(path);
 O.step = mode;
 await O.init();
-// if (vis_param === 1) {
-//     O.menuCerrado = false;
-//     O.updateMenuCerrado();
-// }
-
+if (!show_menu) {
+    O.MenuClosed = false;
+    O.updateMenuClosed();
+}
 console.log(O);
 O.after_load();
