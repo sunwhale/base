@@ -16,6 +16,7 @@ let lines = true;
 // let path_str = "2D_PLATE";
 // let path_str = "3D_DRAGON_LIGHT_MODEL";
 // let path_str = "3D_DRAGON_HEAVY_MODEL";
+// let path_str = "3D_BEAM_BRICKS";
 // let path_str = "2D_";
 let path_str = "3D_";
 

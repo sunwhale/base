@@ -10424,6 +10424,7 @@
 		{ "start_region": 1, "end_region": 2, "r": 0.48, "n": 5 },
 		{ "start_region": 4, "end_region": 5, "r": 0.48, "n": 5 }
 	],
+	"frames": [{}],
 	"solutions": [
 		{
 			"info": { "solver-type": "lineal-sparse" },

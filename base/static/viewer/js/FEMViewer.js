@@ -226,7 +226,7 @@ class FEMViewer {
         this.renderer.autoClear = false;
 
         this.delta = 0;
-        this.interval = 1 / 12;
+        this.interval = 1 / 24;
         this.clock = new THREE.Clock();
         this.bufferGeometries = [];
         this.bufferLines = [];
@@ -699,14 +699,13 @@ class FEMViewer {
             this.disp_gui_disp_folder.destroy();
         }
         if (this.config_dict["displacements"]) {
-            this.disp_gui_disp_folder = this.gui.addFolder("Displacements");
+            this.disp_gui_disp_folder = this.gui.addFolder("位移");
             this.disp_gui_disp_folder
                 .add(this, "animate")
-                .name("Animation")
+                .name("动画")
                 .listen()
                 .onChange(() => {
-                    this.notiBar.setMessage("Animation running!");
-
+                    this.notiBar.setMessage("动画播放中");
                     if (!this.animate) {
                         this.mult = 1.0;
                         this.updateMeshCoords();
@@ -716,7 +715,7 @@ class FEMViewer {
                 });
             this.magnificationSlider = this.disp_gui_disp_folder
                 .add(this, "magnification", 0, 1)
-                .name("Disp multiplier")
+                .name("位移缩放倍数")
                 .listen()
                 .onChange(() => {
                     this.updateMeshCoords();
@@ -879,7 +878,6 @@ class FEMViewer {
         if (this.delta > this.interval) {
             // The draw or time dependent code are here
             this.render(this.delta);
-
             this.delta = this.delta % this.interval;
         }
         this.animationFrameID = requestAnimationFrame(this.update.bind(this));
@@ -1203,8 +1201,6 @@ class FEMViewer {
         this.solutions_info = [];
         this.solutions = [];
         this.frames = jsondata["frames"];
-
-
         this.original_dict = jsondata["dictionary"];
         this.dictionary.push(...this.original_dict);
         this.types = jsondata["types"];
@@ -1278,7 +1274,7 @@ class FEMViewer {
                 d["d" + variables[i] + "/d" + this.dimensions[j]] = [i, j];
             }
         }
-        // console.log(d)
+        console.log(d)
         this.config_dict["dict"] = d;
         if (jsondata["properties"]) {
             if (CONFIG_DICT[jsondata["properties"]["problem"]]) {
@@ -1337,7 +1333,7 @@ class FEMViewer {
             kk++;
         }
     }
-    
+
     updateSolutionInfo() {
         this.infoDetail = this.solutions_info[this.step][this.info];
     }
@@ -1420,7 +1416,6 @@ class FEMViewer {
             for (const node of conns) {
                 coords.push(this.nodes[node]);
             }
-
             this.elements[i] = new types[this.types[i]](
                 coords,
                 econns,

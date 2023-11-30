@@ -39,7 +39,6 @@ function newTet(n = 1) {
 class Element {
     coords;
     conns;
-    outputFields;
     Ue;
     geometry;
     domain;
@@ -85,7 +84,6 @@ class Element {
     setFrame(frame) {
         this.fieldOutputs = frame["fieldOutputs"]
         this.elementFieldOutputs = {}
-
         for (let key in this.fieldOutputs) {
             for (const conn of this.conns) {
                 const v = [];
@@ -95,7 +93,6 @@ class Element {
                 this.elementFieldOutputs[key] = v.flat();
             }
         }
-		console.log(this.elementFieldOutputs)
     }
 
     giveSecondVariableSolution(strain = false) {
@@ -148,7 +145,7 @@ class Element {
             this._ULines.push(_ULines);
             this.ULines.push(ULines);
         }
-
+        console.log(this.X, this.U)
         if (!displacements) {
             this._U = new Array(this._domain.length).fill([0.0, 0.0, 0.0]);
             this._ULines = new Array(this.line_domain.length).fill([
