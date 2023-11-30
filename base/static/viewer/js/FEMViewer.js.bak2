@@ -1285,8 +1285,8 @@ class FEMViewer {
                 this.nodes[i].push(0.0); //Coordinate completion
             }
         }
-        this.regiones = jsondata["regions"];
-        for (const re of this.regiones) {
+        this.regions = jsondata["regions"];
+        for (const re of this.regions) {
             for (const co of re) {
                 for (let j = co.length; j < 3; j++) {
                     co.push(0.0); //Coordinate completion for regions

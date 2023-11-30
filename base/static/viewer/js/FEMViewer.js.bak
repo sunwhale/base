@@ -1750,8 +1750,8 @@ class FEMViewer {
                 this.nodes[i].push(0.0); //Coordinate completition
             }
         }
-        this.regiones = jsondata["regions"];
-        for (const re of this.regiones) {
+        this.regions = jsondata["regions"];
+        for (const re of this.regions) {
             for (const co of re) {
                 for (let j = co.length; j < 3; j++) {
                     co.push(0.0); //Coordinate completition for regions
@@ -1906,8 +1906,8 @@ class FEMViewer {
     //     this.createOctree();
     //     console.log("Octree created");
     //     let id_region = 0;
-    //     console.log(this.regiones.length);
-    //     for (const re of this.regiones) {
+    //     console.log(this.regions.length);
+    //     for (const re of this.regions) {
     //         for (const co of re) {
     //             co[0] -= this.dimens[0];
     //             co[1] -= this.dimens[1];

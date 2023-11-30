@@ -17,6 +17,20 @@ function allowUpdate() {
     });
 }
 
+function flattenJSON(json) {
+    let flattened = [];
+
+    for (let key in json) {
+        if (Array.isArray(json[key])) {
+            flattened = flattened.concat(flattenJSON(json[key]));
+        } else {
+            flattened.push(json[key]);
+        }
+    }
+
+    return flattened;
+}
+
 let style = getComputedStyle(document.body);
 let TEXT_COLOR = style.getPropertyValue("--gui-text-color").trim();
 let BACKGROUND_COLOR = style.getPropertyValue("--gui-background-color").trim();
@@ -1062,11 +1076,15 @@ class FEMViewer {
         this.settingsFolder
             .add(this, "viewFront")
             .name("正视图");
+        let variableSelectDict = {};
+        for (let key in this.frames[this.step]["fieldOutputs"]) {
+            variableSelectDict[key] = key;
+        }
         this.color_select_option = this.guifolder
             .add(this, "colorOptions", {
                 "无": "nocolor",
                 "|U|": "dispmag",
-                "A": "A",
+                ...variableSelectDict,
                 "Scaled Jacobi": "scaled_jac",
                 ...this.config_dict["dict"],
                 ...this.prop_dict_names,
@@ -1128,16 +1146,16 @@ class FEMViewer {
             this.mergedLineGeometry,
             this.line_material
         );
-        // this.model.add(this.contour);
+        this.model.add(this.contour);
+
         this.mesh = new THREE.Mesh(this.mergedGeometry, this.material);
         this.notiBar.setMessage("生成网格..." + "⌛");
         await allowUpdate();
-
         this.updateU();
         this.model.add(this.mesh);
-        // this.regionModel.add(this.regionModelContours);
-        // this.regionModel.add(this.regionModelGeometries);
-        // this.model.add(this.regionModel);
+        this.regionModel.add(this.regionModelContours);
+        this.regionModel.add(this.regionModelGeometries);
+        this.model.add(this.regionModel);
 
         this.scene.add(this.model);
         this.scene.add(this.invisibleModel);
@@ -1156,31 +1174,9 @@ class FEMViewer {
 
         this.notiBar.setMessage("绘制模型..." + "⌛");
         await allowUpdate();
-        // let geo = new THREE.SphereGeometry(this.nodeSearchRadius / 2, 8, 8);
-        // this.meshSelectedNode = new THREE.LineSegments(
-        //     new THREE.EdgesGeometry(geo),
-        //     this.line_material
-        // );
-        // this.meshSelectedNode.visible = false;
-        // this.model.add(this.meshSelectedNode);
+
         this.notiBar.setMessage("加载完成");
         await allowUpdate();
-    }
-
-    giveRegionsAsCoords() {
-        let r = [];
-        for (const reg of this.regions) {
-            let region = [];
-            for (const cord of reg.coordinates) {
-                let coordinate = [];
-                for (let i = 0; i < this.ndim; i++) {
-                    coordinate.push(cord[i] + this.dimens[i]);
-                }
-                region.push(coordinate);
-            }
-            r.push(region);
-        }
-        return r;
     }
 
     setStep(step) {
@@ -1202,19 +1198,13 @@ class FEMViewer {
                 this.nodes[i].push(0.0); //Coordinate completion
             }
         }
-        this.regiones = jsondata["regions"];
-        for (const re of this.regiones) {
-            for (const co of re) {
-                for (let j = co.length; j < 3; j++) {
-                    co.push(0.0); //Coordinate completion for regions
-                }
-            }
-        }
         this.dictionary = [];
         this.types = [];
         this.solutions_info = [];
         this.solutions = [];
-        this.outputFields = [];
+        this.frames = jsondata["frames"];
+
+
         this.original_dict = jsondata["dictionary"];
         this.dictionary.push(...this.original_dict);
         this.types = jsondata["types"];
@@ -1252,7 +1242,6 @@ class FEMViewer {
                 let solution = jsondata["solutions"][i];
                 this.solutions.push(solution["U"]);
                 this.solutions_info.push({...solution["info"], index: i});
-                this.outputFields.push(solution["V"]);
             }
         }
         this.solutions_info_str = [];
@@ -1325,7 +1314,7 @@ class FEMViewer {
             center_y - size_y / 2,
             center_z - size_z / 2,
         ];
-        
+
         this.size = max(this.nodes.flat()) - min(this.nodes.flat());
         this.dimens = [size_x / 2, size_y / 2, size_z / 2];
         this._nodes = [];
@@ -1348,8 +1337,7 @@ class FEMViewer {
             kk++;
         }
     }
-
-
+    
     updateSolutionInfo() {
         this.infoDetail = this.solutions_info[this.step][this.info];
     }
@@ -1367,8 +1355,7 @@ class FEMViewer {
 
     updateU() {
         this.U = this.solutions[this.step].flat();
-        // this.V = this.outputFields[this.step].flat();
-
+        let frame = this.frames[this.step];
         this.updateDispSlider();
 
         for (const e of this.elements) {
@@ -1377,9 +1364,9 @@ class FEMViewer {
                 this.config_dict["calculateStrain"],
                 this.config_dict["displacements"]
             );
-            // e.setOutputField(
-            //     this.V
-            // );
+            e.setFrame(
+                frame
+            );
             if (this.solution_as_displacement) {
                 e.variableAsDisplacement(this.variable_as_displacement);
             }
