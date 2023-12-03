@@ -1274,7 +1274,6 @@ class FEMViewer {
                 d["d" + variables[i] + "/d" + this.dimensions[j]] = [i, j];
             }
         }
-        console.log(d)
         this.config_dict["dict"] = d;
         if (jsondata["properties"]) {
             if (CONFIG_DICT[jsondata["properties"]["problem"]]) {
@@ -1404,13 +1403,13 @@ class FEMViewer {
         let times = 0;
         for (let i = 0; i < this.dictionary.length; i++) {
             const conns = this.dictionary[i];
-            const econns = [];
+            const dofIDs = [];
             for (let i = 0; i < this.nvn; i++) {
                 const a = [];
                 for (const gdl of conns) {
                     a.push(gdl * this.nvn + i);
                 }
-                econns.push(a);
+                dofIDs.push(a);
             }
             const coords = [];
             for (const node of conns) {
@@ -1418,7 +1417,8 @@ class FEMViewer {
             }
             this.elements[i] = new types[this.types[i]](
                 coords,
-                econns,
+                conns,
+                dofIDs,
                 this.size * this.norm
             );
 

@@ -38,17 +38,19 @@ function newTet(n = 1) {
 
 class Element {
     coords;
-    conns;
+    dofIDs;
     Ue;
     geometry;
+    line_geometry;
     domain;
     _domain;
 
-    constructor(coords, conns) {
+    constructor(coords, conns, dofIDs) {
         this.coords = coords;
         this.conns = conns;
+        this.dofIDs = dofIDs;
         this.Ue = [];
-        this.nvn = conns.length;
+        this.nvn = dofIDs.length;
         this.scaledJacobian = undefined;
         this.res = 1;
     }
@@ -70,7 +72,7 @@ class Element {
 
     setUe(U, svs = true, displacements = false) {
         this.Ue = [];
-        for (const conn of this.conns) {
+        for (const conn of this.dofIDs) {
             const u = [];
             for (const id of conn) {
                 u.push(U[id]);
@@ -85,13 +87,11 @@ class Element {
         this.fieldOutputs = frame["fieldOutputs"]
         this.elementFieldOutputs = {}
         for (let key in this.fieldOutputs) {
-            for (const conn of this.conns) {
-                const v = [];
-                for (const id of conn) {
-                    v.push(this.fieldOutputs[key][id]);
-                }
-                this.elementFieldOutputs[key] = v.flat();
+            const output = [];
+            for (const id of this.conns) {
+                output.push(this.fieldOutputs[key][id]);
             }
+            this.elementFieldOutputs[key] = output.flat();
         }
     }
 
@@ -145,7 +145,6 @@ class Element {
             this._ULines.push(_ULines);
             this.ULines.push(ULines);
         }
-        console.log(this.X, this.U)
         if (!displacements) {
             this._U = new Array(this._domain.length).fill([0.0, 0.0, 0.0]);
             this._ULines = new Array(this.line_domain.length).fill([
@@ -183,12 +182,12 @@ class Element {
 
     setGeometryCoords(mult, norm) {
         if (!mult) {
-            if (mult != 0) {
+            if (mult !== 0) {
                 mult = 1.0;
             }
         }
         if (!norm) {
-            if (norm != 0) {
+            if (norm !== 0) {
                 norm = 1.0;
             }
         }
@@ -410,8 +409,8 @@ class Element {
 }
 
 class Element3D extends Element {
-    constructor(coords, conns) {
-        super(coords, conns);
+    constructor(coords, conns, dofIDs) {
+        super(coords, conns, dofIDs);
     }
 
     isInside(x) {
@@ -449,8 +448,8 @@ class Brick extends Element3D {
     order;
     line_order;
 
-    constructor(coords, conns) {
-        super(coords, conns);
+    constructor(coords, conns, dofIDs) {
+        super(coords, conns, dofIDs);
         this.type = "B1V";
         this.nfaces = 6;
         this.coords_o = coords;
@@ -609,8 +608,8 @@ class Tetrahedral extends Element3D {
     order;
     line_order;
 
-    constructor(coords, conns) {
-        super(coords, conns);
+    constructor(coords, conns, dofIDs) {
+        super(coords, conns, dofIDs);
         this.type = "TE1V";
         this.ndim = 3;
         this.nfaces = 4;
@@ -696,8 +695,8 @@ class Lineal extends Element3D {
     order;
     line_order;
 
-    constructor(coords, conns, tama) {
-        super(coords, conns);
+    constructor(coords, dofIDs, tama) {
+        super(coords, conns, dofIDs);
         this.tama = tama;
         this.type = "L1V";
         this.ndim = 1;
@@ -778,8 +777,8 @@ class Triangular extends Element3D {
     order;
     line_order;
 
-    constructor(coords, conns, tama) {
-        super(coords, conns);
+    constructor(coords, dofIDs, tama) {
+        super(coords, conns, dofIDs);
         this.type = "T1V";
         this.ndim = 2;
         this.tama = tama;
@@ -865,8 +864,8 @@ class Quadrilateral extends Element3D {
     order;
     line_order;
 
-    constructor(coords, conns, tama) {
-        super(coords, conns);
+    constructor(coords, dofIDs, tama) {
+        super(coords, conns, dofIDs);
         this.tama = tama;
         this.type = "C1V";
         this.ndim = 2;
@@ -961,8 +960,8 @@ class Quadrilateral extends Element3D {
 }
 
 class LinealO2 extends Lineal {
-    constructor(coords, conns, tama) {
-        super(coords, conns, tama);
+    constructor(coords, dofIDs, tama) {
+        super(coords, dofIDs, tama);
         this.type = "L2V";
     }
 
@@ -981,8 +980,8 @@ class LinealO2 extends Lineal {
 }
 
 class TetrahedralO2 extends Tetrahedral {
-    constructor(coords, conns) {
-        super(coords, conns);
+    constructor(coords, conns, dofIDs) {
+        super(coords, conns, dofIDs);
         this.type = "TE2V";
     }
 
@@ -1033,8 +1032,8 @@ class TetrahedralO2 extends Tetrahedral {
 }
 
 class BrickO2 extends Brick {
-    constructor(coords, conns) {
-        super(coords, conns);
+    constructor(coords, conns, dofIDs) {
+        super(coords, conns, dofIDs);
         this.type = "B2V";
     }
 
@@ -1224,8 +1223,8 @@ class BrickO2 extends Brick {
 }
 
 class TriangularO2 extends Triangular {
-    constructor(coords, conns, tama) {
-        super(coords, conns, tama);
+    constructor(coords, dofIDs, tama) {
+        super(coords, dofIDs, tama);
         this.type = "T2V";
         let c = [coords[0], coords[1], coords[2]];
         let gdl = [-1, -1, -1];
@@ -1260,8 +1259,8 @@ class TriangularO2 extends Triangular {
 }
 
 class Serendipity extends Quadrilateral {
-    constructor(coords, conns, tama) {
-        super(coords, conns, tama);
+    constructor(coords, dofIDs, tama) {
+        super(coords, dofIDs, tama);
         this.type = "C2V";
     }
 
@@ -1320,9 +1319,9 @@ const types = {
 function fromElement(e) {
     let nee = undefined;
     if (e.tama) {
-        nee = new types[e.type](e.coords, e.conns, e.tama);
+        nee = new types[e.type](e.coords, e.dofIDs, e.dofIDs, e.tama);
     } else {
-        nee = new types[e.type](e.coords, e.conns);
+        nee = new types[e.type](e.coords, e.dofIDs, e.dofIDs);
     }
     nee = Object.assign(nee, e);
     console.log(nee, e);
