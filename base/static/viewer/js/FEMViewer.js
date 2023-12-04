@@ -730,7 +730,7 @@ class FEMViewer {
         this.animate = false;
         this.reset();
         this.before_load();
-        this.notiBar.setMessage("Reloading model..." + "⌛");
+        this.notiBar.setMessage("重新加载模型..." + "⌛");
         await this.loadJSON(this.filename);
         this.notiBar.resetMessage();
         await this.init(false);
@@ -1028,33 +1028,31 @@ class FEMViewer {
         let hFoV = this.camera.fov * this.camera.aspect;
 
         let FoV = Math.min(vFoV, hFoV);
-        let FoV2 = FoV / 2;
 
         let dir = new THREE.Vector3();
         this.camera.getWorldDirection(dir);
 
-        let bb = this.mesh.geometry.boundingBox;
         let bs = this.mesh.geometry.boundingSphere;
-        let bsWorld = bs.center.clone();
-        this.mesh.localToWorld(bsWorld);
+        if (bs !== null) {
+            let bsWorld = bs.center.clone();
+            this.mesh.localToWorld(bsWorld);
+            let th = (FoV / 2 * Math.PI) / 180.0;
+            let sina = Math.sin(th);
+            let R = bs.radius;
+            let FL = R / sina;
 
-        let th = (FoV2 * Math.PI) / 180.0;
-        let sina = Math.sin(th);
-        let R = bs.radius;
-        let FL = R / sina;
+            let cameraDir = new THREE.Vector3();
+            this.camera.getWorldDirection(cameraDir);
 
-        let cameraDir = new THREE.Vector3();
-        this.camera.getWorldDirection(cameraDir);
+            let cameraOffs = cameraDir.clone();
+            cameraOffs.multiplyScalar(-FL * this.initial_zoom);
+            let newCameraPos = bsWorld.clone().add(cameraOffs);
 
-        let cameraOffs = cameraDir.clone();
-        cameraOffs.multiplyScalar(-FL * this.initial_zoom);
-        let newCameraPos = bsWorld.clone().add(cameraOffs);
-
-        this.camera.position.copy(newCameraPos);
-        this.camera.lookAt(bsWorld);
-        this.controls.target.copy(bsWorld);
-
-        this.controls.update();
+            this.camera.position.copy(newCameraPos);
+            this.camera.lookAt(bsWorld);
+            this.controls.target.copy(bsWorld);
+            this.controls.update();
+        }
     }
 
     updateLines() {
@@ -1127,7 +1125,6 @@ class FEMViewer {
             this.animate = false;
         }
         await this.createElements();
-        // console.log(this.elements[0])
         this.createLines();
         this.mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
             this.bufferGeometries,

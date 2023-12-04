@@ -6,8 +6,6 @@ import {
     multiplyScalar,
     multiply,
     transpose,
-    min,
-    max,
     abs,
     add,
     matInverse,
