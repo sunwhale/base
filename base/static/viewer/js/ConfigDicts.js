@@ -1,6 +1,6 @@
 const GENERAL = {
 	calculateStrain: false,
-	displacements: false,
+	isDeformed: false,
 	props: [],
 };
 
@@ -17,7 +17,7 @@ function fun_es(props) {
 
 const Elasticity = {
 	calculateStrain: true,
-	displacements: true,
+	isDeformed: true,
 	dict: {
 		εx: 0,
 		εy: 1,
@@ -61,7 +61,7 @@ function fun_pstr(props) {
 }
 const PlaneStressSparse = {
 	calculateStrain: true,
-	displacements: true,
+	isDeformed: true,
 	C: fun_ps,
 	dict: {
 		εx: 0,
@@ -78,7 +78,7 @@ const PlaneStressSparse = {
 };
 const PlaneStrainSparse = {
 	calculateStrain: true,
-	displacements: true,
+	isDeformed: true,
 	C: fun_pstr,
 	dict: {
 		εx: 0,
@@ -96,7 +96,7 @@ const PlaneStrainSparse = {
 
 const Torsion2D = {
 	calculateStrain: false,
-	displacements: false,
+	isDeformed: false,
 	dict: {
 		"dΨ/dx": [0, 0],
 		"dΨ/dy": [0, 1],
@@ -106,7 +106,7 @@ const Torsion2D = {
 
 const Heat1D = {
 	calculateStrain: false,
-	displacements: false,
+	isDeformed: false,
 	dict: {
 		"dT/dx": [0, 0],
 	},
@@ -114,7 +114,7 @@ const Heat1D = {
 };
 const Heat1DTransient = {
 	calculateStrain: false,
-	displacements: false,
+	isDeformed: false,
 	dict: {
 		"dT/dx": [0, 0],
 	},
@@ -123,7 +123,7 @@ const Heat1DTransient = {
 
 const Heat2D = {
 	calculateStrain: false,
-	displacements: false,
+	isDeformed: false,
 	dict: {
 		"dT/dx": [0, 0],
 		"dT/dy": [0, 1],

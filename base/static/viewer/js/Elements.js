@@ -1,16 +1,6 @@
 import * as THREE from "./build/three.module.js";
 import {Prism, Tet} from "./TriangularBasedGeometries.js";
-import {
-    sum,
-    det,
-    multiplyScalar,
-    multiply,
-    transpose,
-    abs,
-    add,
-    matInverse,
-    createVector,
-} from "./math.js";
+import {abs, add, createVector, det, matInverse, multiply, multiplyScalar, sum, transpose,} from "./math.js";
 
 function newPrism(n = 1) {
     const tr = new Prism();
@@ -59,16 +49,15 @@ class Element {
         let z = 0;
         let n = this.coords.length;
         for (let i = 0; i < n; i++) {
-            let c = this.coords[i];
-            x += c[0];
-            y += c[1];
-            z += c[2];
+            let node_coord = this.coords[i];
+            x += node_coord[0];
+            y += node_coord[1];
+            z += node_coord[2];
         }
-        let center = [x / n, y / n, z / n];
-        return center;
+        return [x / n, y / n, z / n];
     }
 
-    setUe(U, svs = true, displacements = false) {
+    setUe(U, isDeformed = false) {
         this.Ue = [];
         for (const conn of this.dofIDs) {
             const u = [];
@@ -77,8 +66,7 @@ class Element {
             }
             this.Ue.push(u);
         }
-        this.updateCoordinates(this.Ue, displacements);
-        this.giveSecondVariableSolution(svs);
+        this.updateCoordinates(this.Ue, isDeformed);
     }
 
     setFrame(frame) {
@@ -93,21 +81,7 @@ class Element {
         }
     }
 
-    giveSecondVariableSolution(strain = false) {
-        this.dus = [];
-        try {
-            for (const z of this._domain) {
-                const [J, dpz] = this.J(z);
-                const _J = matInverse(J);
-                const dpx = multiply(_J, dpz);
-                this.dus.push(multiply(this.Ue, transpose(dpx)));
-            }
-        } catch (error) {
-        }
-        if (strain) this.calculateStrain();
-    }
-
-    updateCoordinates(Ue, displacements) {
+    updateCoordinates(Ue, isDeformed) {
         this.X = [];
         this.XLines = [];
         this.U = [];
@@ -143,7 +117,7 @@ class Element {
             this._ULines.push(_ULines);
             this.ULines.push(ULines);
         }
-        if (!displacements) {
+        if (!isDeformed) {
             this._U = new Array(this._domain.length).fill([0.0, 0.0, 0.0]);
             this._ULines = new Array(this.line_domain.length).fill([
                 0.0, 0.0, 0.0,
@@ -236,20 +210,20 @@ class Element {
 
     J(_z) {
         const dpsis = transpose(this.dpsi(_z));
-        const j = multiply(dpsis, this.coords_o);
+        const j = multiply(dpsis, this.node_coords);
         return [j, dpsis];
     }
 
     T(_z) {
         let p = this.psi(_z);
-        return [multiply([p], this.coords_o), p];
+        return [multiply([p], this.node_coords), p];
     }
 
     async calculateJacobian() {
         return new Promise((resolve) => {
             let max_j = -Infinity;
             let min_j = Infinity;
-            for (const z of this.Z) {
+            for (const z of this.qp_coords) {
                 const [J, dpz] = this.J(z);
                 const j = det(J);
                 max_j = Math.max(max_j, j);
@@ -266,7 +240,7 @@ class Element {
         }
         let max_j = -Infinity;
         let min_j = Infinity;
-        for (const z of this.Z) {
+        for (const z of this.qp_coords) {
             const [J, dpz] = this.J(z);
             const j = det(J);
             max_j = Math.max(max_j, j);
@@ -333,7 +307,7 @@ class Element {
                 result += P[i] * solution[i];
             }
         } else if (colorMode in this.elementFieldOutputs) {
-			let variable = [this.elementFieldOutputs[colorMode]]
+            let variable = [this.elementFieldOutputs[colorMode]]
             for (let i = 0; i < this.elementFieldOutputs[colorMode].length; i++) {
                 let color = 0.0;
                 for (let j = 0; j < 1; j++) {
@@ -410,36 +384,6 @@ class Element3D extends Element {
     constructor(coords, conns, dofIDs) {
         super(coords, conns, dofIDs);
     }
-
-    isInside(x) {
-        return false;
-    }
-
-    calculateStrain() {
-        this.epsilons = [];
-        for (const du of this.dus) {
-            if (du.length === 3) {
-                const exx = du[0][0];
-                const eyy = du[1][1];
-                const ezz = du[2][2];
-
-                const exy = du[0][1] + du[1][0];
-                const exz = du[0][2] + du[2][0];
-                const eyz = du[1][2] + du[2][1];
-                const epsilon = [exx, eyy, ezz, exz, eyz, exy];
-                this.epsilons.push(epsilon);
-            } else if (du.length === 2) {
-                const exx = du[0][0];
-                const eyy = du[1][1];
-
-                const exy = du[0][1] + du[1][0];
-                const epsilon = [exx, eyy, exy];
-                this.epsilons.push(epsilon);
-            } else {
-                this.epsilons = new Array(6).fill(new Array(6).fill(0.0));
-            }
-        }
-    }
 }
 
 class Brick extends Element3D {
@@ -450,10 +394,10 @@ class Brick extends Element3D {
         super(coords, conns, dofIDs);
         this.type = "B1V";
         this.nfaces = 6;
-        this.coords_o = coords;
+        this.node_coords = coords;
         this.ndim = 3;
         this.initGeometry();
-        this.Z = [
+        this.qp_coords = [
             [-0.77459667, -0.77459667, -0.77459667],
             [-0.77459667, -0.77459667, 0],
             [-0.77459667, -0.77459667, 0.77459667],
@@ -482,7 +426,7 @@ class Brick extends Element3D {
             [0.77459667, 0.77459667, 0],
             [0.77459667, 0.77459667, 0.77459667],
         ];
-        this.W = [
+        this.qp_weights = [
             0.17146776, 0.27434842, 0.17146776, 0.27434842, 0.43895748,
             0.27434842, 0.17146776, 0.27434842, 0.17146776, 0.27434842,
             0.43895748, 0.27434842, 0.43895748, 0.70233196, 0.43895748,
@@ -557,7 +501,7 @@ class Brick extends Element3D {
     }
 
     transformation(geo) {
-        const Z = [];
+        const qp_coords = [];
         this.line_domain = [];
         this.line_modifier = [];
         this.modifier = [];
@@ -565,7 +509,7 @@ class Brick extends Element3D {
             const x = geo.attributes.position.getX(i);
             const y = geo.attributes.position.getY(i);
             const z = geo.attributes.position.getZ(i);
-            Z.push([x * 2, y * 2, z * 2]);
+            qp_coords.push([x * 2, y * 2, z * 2]);
             this.modifier.push([0.0, 0.0, 0.0]);
         }
         for (let i = 0; i < this.line_geometry.attributes.position.count; i++) {
@@ -575,7 +519,7 @@ class Brick extends Element3D {
             this.line_domain.push([2 * x, 2 * y, 2 * z]);
             this.line_modifier.push([0.0, 0.0, 0.0]);
         }
-        return Z;
+        return qp_coords;
     }
 
     initGeometry() {
@@ -611,9 +555,9 @@ class Tetrahedral extends Element3D {
         this.type = "TE1V";
         this.ndim = 3;
         this.nfaces = 4;
-        this.coords_o = coords;
+        this.node_coords = coords;
         this.initGeometry();
-        this.Z = [
+        this.qp_coords = [
             [0.01583591, 0.3280547, 0.3280547],
             [0.3280547, 0.01583591, 0.3280547],
             [0.3280547, 0.3280547, 0.01583591],
@@ -623,7 +567,7 @@ class Tetrahedral extends Element3D {
             [0.10695227, 0.10695227, 0.67914318],
             [0.10695227, 0.10695227, 0.10695227],
         ];
-        this.W = [
+        this.qp_weights = [
             0.023088, 0.023088, 0.023088, 0.023088, 0.01857867, 0.01857867,
             0.01857867, 0.01857867,
         ];
@@ -654,13 +598,13 @@ class Tetrahedral extends Element3D {
         this.modifier = [];
         this.line_domain = [];
         this.line_modifier = [];
-        const Z = [];
+        const qp_coords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
             const y = geo.attributes.position.getY(i);
             const z = geo.attributes.position.getZ(i);
             this.modifier.push([0.0, 0.0, 0.0]);
-            Z.push([x, y, z]);
+            qp_coords.push([x, y, z]);
         }
         for (let i = 0; i < this.line_geometry.attributes.position.count; i++) {
             const x = this.line_geometry.attributes.position.getX(i);
@@ -669,7 +613,7 @@ class Tetrahedral extends Element3D {
             this.line_domain.push([x, y, z]);
             this.line_modifier.push([0.0, 0.0, 0.0]);
         }
-        return Z;
+        return qp_coords;
     }
 
     initGeometry() {
@@ -703,10 +647,10 @@ class Lineal extends Element3D {
             const x = coords[i][0];
             c.push([x]);
         }
-        this.coords_o = c;
+        this.node_coords = c;
         this.initGeometry();
-        this.Z = [[-0.77459667], [0], [0.77459667]];
-        this.W = [0.55555556, 0.88888889, 0.55555556];
+        this.qp_coords = [[-0.77459667], [0], [0.77459667]];
+        this.qp_weights = [0.55555556, 0.88888889, 0.55555556];
     }
 
     psi(z) {
@@ -722,12 +666,12 @@ class Lineal extends Element3D {
         this.line_domain = [];
         this.line_modifier = [];
         this._domain = [];
-        const Z = [];
+        const qp_coords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
             const y = geo.attributes.position.getY(i);
             const z = geo.attributes.position.getZ(i);
-            Z.push([x * 2, y * 2, z * 2]);
+            qp_coords.push([x * 2, y * 2, z * 2]);
             this._domain.push([x * 2]);
             this.modifier.push([
                 0.0,
@@ -746,7 +690,7 @@ class Lineal extends Element3D {
                 (this.tama / 20) * (z + 0.5),
             ]);
         }
-        return Z;
+        return qp_coords;
     }
 
     initGeometry() {
@@ -787,7 +731,7 @@ class Triangular extends Element3D {
             const y = coords[i][1];
             c.push([x, y]);
         }
-        this.coords_o = c;
+        this.node_coords = c;
         this.initGeometry();
         const A0 = 1 / 3;
         const A1 = 0.05971587178977;
@@ -799,11 +743,11 @@ class Triangular extends Element3D {
         const W2 = 0.062969590272413;
         const X = [A0, A1, B1, B1, B2, B2, A2];
         const Y = [A0, B1, A1, B1, A2, B2, B2];
-        this.Z = [];
+        this.qp_coords = [];
         for (let i = 0; i < X.length; i++) {
-            this.Z.push([X[i], Y[i]]);
+            this.qp_coords.push([X[i], Y[i]]);
         }
-        this.W = [W0, W1, W1, W1, W2, W2, W2];
+        this.qp_weights = [W0, W1, W1, W1, W2, W2, W2];
     }
 
     psi(_z) {
@@ -824,12 +768,12 @@ class Triangular extends Element3D {
         this.modifier = [];
         this.line_domain = [];
         this.line_modifier = [];
-        const Z = [];
+        const qp_coords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
             const y = geo.attributes.position.getY(i);
             const z = geo.attributes.position.getZ(i);
-            Z.push([x, y, z]);
+            qp_coords.push([x, y, z]);
             this._domain.push([x, y]);
             this.modifier.push([0.0, 0.0, (this.tama / 20) * z]);
         }
@@ -840,7 +784,7 @@ class Triangular extends Element3D {
             this.line_domain.push([x, y]);
             this.line_modifier.push([0.0, 0.0, (this.tama / 20) * z]);
         }
-        return Z;
+        return qp_coords;
     }
 
     initGeometry() {
@@ -874,9 +818,9 @@ class Quadrilateral extends Element3D {
             const y = coords[i][1];
             c.push([x, y]);
         }
-        this.coords_o = c;
+        this.node_coords = c;
         this.initGeometry();
-        this.Z = [
+        this.qp_coords = [
             [-0.77459667, -0.77459667],
             [-0.77459667, 0],
             [-0.77459667, 0.77459667],
@@ -887,7 +831,7 @@ class Quadrilateral extends Element3D {
             [0.77459667, 0],
             [0.77459667, 0.77459667],
         ];
-        this.W = [
+        this.qp_weights = [
             0.30864198, 0.49382716, 0.30864198, 0.49382716, 0.79012346,
             0.49382716, 0.30864198, 0.49382716, 0.30864198,
         ];
@@ -916,12 +860,12 @@ class Quadrilateral extends Element3D {
         this.modifier = [];
         this.line_domain = [];
         this.line_modifier = [];
-        const Z = [];
+        const qp_coords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
             const y = geo.attributes.position.getY(i);
             const z = geo.attributes.position.getZ(i);
-            Z.push([x * 2, y * 2, 2 * z]);
+            qp_coords.push([x * 2, y * 2, 2 * z]);
             this._domain.push([x * 2, y * 2]);
             this.modifier.push([0.0, 0.0, (this.tama / 20) * (z + 0.5)]);
         }
@@ -932,7 +876,7 @@ class Quadrilateral extends Element3D {
             this.line_domain.push([x * 2, y * 2]);
             this.line_modifier.push([0.0, 0.0, (this.tama / 20) * (z + 0.5)]);
         }
-        return Z;
+        return qp_coords;
     }
 
     initGeometry() {

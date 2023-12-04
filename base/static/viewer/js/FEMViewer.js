@@ -17,20 +17,6 @@ function allowUpdate() {
     });
 }
 
-function flattenJSON(json) {
-    let flattened = [];
-
-    for (let key in json) {
-        if (Array.isArray(json[key])) {
-            flattened = flattened.concat(flattenJSON(json[key]));
-        } else {
-            flattened.push(json[key]);
-        }
-    }
-
-    return flattened;
-}
-
 let style = getComputedStyle(document.body);
 let TEXT_COLOR = style.getPropertyValue("--gui-text-color").trim();
 let BACKGROUND_COLOR = style.getPropertyValue("--gui-background-color").trim();
@@ -237,7 +223,7 @@ class FEMViewer {
         this.regionModelGeometries = new THREE.Object3D();
         this.invisibleModel = new THREE.Object3D();
         this.colors = false;
-        this.animate = true;
+        this.animate = false;
         this.magnification = magnification;
         this.mult = 1.0;
         this.side = 1.0;
@@ -615,7 +601,7 @@ class FEMViewer {
             .name("显示区域")
             .listen();
 
-        if (this.config_dict["displacements"]) {
+        if (this.config_dict["isDeformed"]) {
         } else {
             if (this.ndim !== 3) {
                 this.settingsFolder
@@ -655,7 +641,7 @@ class FEMViewer {
     }
 
     toggleSolutionAsDisp() {
-        this.config_dict["displacements"] = this.solution_as_displacement;
+        this.config_dict["isDeformed"] = this.solution_as_displacement;
         this.guiSettings();
         if (!this.solution_as_displacement) {
             this.magnification = 0.0;
@@ -698,21 +684,21 @@ class FEMViewer {
         if (this.disp_gui_disp_folder) {
             this.disp_gui_disp_folder.destroy();
         }
-        if (this.config_dict["displacements"]) {
+        if (this.config_dict["isDeformed"]) {
             this.disp_gui_disp_folder = this.gui.addFolder("位移");
-            this.disp_gui_disp_folder
-                .add(this, "animate")
-                .name("动画")
-                .listen()
-                .onChange(() => {
-                    this.notiBar.setMessage("动画播放中");
-                    if (!this.animate) {
-                        this.mult = 1.0;
-                        this.updateMeshCoords();
-                        this.updateGeometry();
-                        this.notiBar.resetMessage();
-                    }
-                });
+            // this.disp_gui_disp_folder
+            //     .add(this, "animate")
+            //     .name("动画")
+            //     .listen()
+            //     .onChange(() => {
+            //         this.notiBar.setMessage("动画播放中");
+            //         if (!this.animate) {
+            //             this.mult = 1.0;
+            //             this.updateMeshCoords();
+            //             this.updateGeometry();
+            //             this.notiBar.resetMessage();
+            //         }
+            //     });
             this.magnificationSlider = this.disp_gui_disp_folder
                 .add(this, "magnification", 0, 1)
                 .name("位移缩放倍数")
@@ -755,9 +741,9 @@ class FEMViewer {
         if (co !== "nocolor") {
             this.colors = true;
             msg =
-                "显示 " +
+                "显示" +
                 this.color_select_option.$select.value +
-                " 云图：";
+                "云图：";
         } else {
             this.colors = false;
             msg = "";
@@ -1017,7 +1003,7 @@ class FEMViewer {
         }
     }
 
-    changeExample() {
+    changeModel() {
         this.gui.close();
         this.json_path = this.filename;
         this.reload();
@@ -1116,12 +1102,12 @@ class FEMViewer {
             .name("帧");
     }
 
-    async init(animate = true) {
+    async init(animate = false) {
         this.guiSettingsBasic();
         this.guiSettings();
         this.guiSolutions();
         this.animate = animate;
-        if (!this.config_dict["displacements"]) {
+        if (!this.config_dict["isDeformed"]) {
             this.animate = false;
         }
         await this.createElements();
@@ -1246,7 +1232,7 @@ class FEMViewer {
         let variables = [
             "U",
             "V",
-            "W",
+            "qp_weights",
             4,
             5,
             6,
@@ -1339,7 +1325,7 @@ class FEMViewer {
         const min_disp = min(this.U);
         this.max_abs_disp =
             Math.max(Math.abs(max_disp), Math.abs(min_disp)) * this.norm;
-        if (this.config_dict["displacements"]) {
+        if (this.config_dict["isDeformed"]) {
             this.magnificationSlider.min(0.0);
             this.magnificationSlider.max(0.4 / this.max_abs_disp);
         }
@@ -1353,8 +1339,7 @@ class FEMViewer {
         for (const e of this.elements) {
             e.setUe(
                 this.U,
-                this.config_dict["calculateStrain"],
-                this.config_dict["displacements"]
+                this.config_dict["isDeformed"]
             );
             e.setFrame(
                 frame

@@ -998,7 +998,7 @@ class FEMViewer {
             .name("显示区域")
             .listen();
 
-        if (this.config_dict["displacements"]) {
+        if (this.config_dict["isDeformed"]) {
         } else {
             if (this.ndim !== 3) {
                 this.settingsFolder
@@ -1045,7 +1045,7 @@ class FEMViewer {
     }
 
     toggleSolutionAsDisp() {
-        this.config_dict["displacements"] = this.solution_as_displacement;
+        this.config_dict["isDeformed"] = this.solution_as_displacement;
         this.guiSettings();
         if (!this.solution_as_displacement) {
             this.magnification = 0.0;
@@ -1088,7 +1088,7 @@ class FEMViewer {
         if (this.disp_gui_disp_folder) {
             this.disp_gui_disp_folder.destroy();
         }
-        if (this.config_dict["displacements"]) {
+        if (this.config_dict["isDeformed"]) {
             this.disp_gui_disp_folder = this.gui.addFolder("Displacements");
             this.disp_gui_disp_folder
                 .add(this, "animate")
@@ -1568,7 +1568,7 @@ class FEMViewer {
         this.guiSettings();
         this.guiSolutions();
         this.animate = animate;
-        if (!this.config_dict["displacements"]) {
+        if (!this.config_dict["isDeformed"]) {
             this.animate = false;
         }
         await this.createElements();
@@ -1811,7 +1811,7 @@ class FEMViewer {
         let variables = [
             "U",
             "V",
-            "W",
+            "qp_weights",
             4,
             5,
             6,
@@ -1928,7 +1928,7 @@ class FEMViewer {
         const min_disp = min(this.U);
         this.max_abs_disp =
             Math.max(Math.abs(max_disp), Math.abs(min_disp)) * this.norm;
-        if (this.config_dict["displacements"]) {
+        if (this.config_dict["isDeformed"]) {
             this.magnificationSlider.min(0.0);
             this.magnificationSlider.max(0.4 / this.max_abs_disp);
         }
@@ -1942,8 +1942,7 @@ class FEMViewer {
         for (const e of this.elements) {
             e.setUe(
                 this.U,
-                this.config_dict["calculateStrain"],
-                this.config_dict["displacements"]
+                this.config_dict["isDeformed"]
             );
             if (this.solution_as_displacement) {
                 e.variableAsDisplacement(this.variable_as_displacement);
