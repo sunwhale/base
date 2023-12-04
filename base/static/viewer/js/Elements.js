@@ -473,7 +473,7 @@ class Brick extends Element3D {
                 -0.125 * (1 + x) * (1 + y),
             ],
             [
-                - 0.125 * (1 + y) * (1 - z),
+                -0.125 * (1 + y) * (1 - z),
                 0.125 * (1 - x) * (1 - z),
                 -0.125 * (1 - x) * (1 + y),
             ],
@@ -534,7 +534,6 @@ class Brick extends Element3D {
         this.line_geometry = new THREE.EdgesGeometry(this.geometry);
         this.domain = this.transformation(this.geometry);
         this._domain = this.domain;
-        this.modifier_lineas = new Array(this.modifier.length).fill(0);
         this.colors = Array(this.modifier.length).fill(0.0);
         this.geometry.setAttribute(
             "color",
@@ -577,20 +576,15 @@ class Tetrahedral extends Element3D {
         let x = _coord[0];
         let y = _coord[1];
         let z = _coord[2];
-        let L1 = 1 - x - y - z;
-        let L2 = x;
-        let L3 = y;
-        let L4 = z;
-        return [L1, L2, L3, L4];
+        return [1 - x - y - z, x, y, z];
     }
 
     shape_gradients(_coord) {
-        const kernell = 0.0;
         return [
-            [-1.0 + kernell, -1.0 + kernell, -1.0 + kernell],
-            [1.0 + kernell, 0.0 + kernell, 0.0 + kernell],
-            [0.0 + kernell, 1.0 + kernell, 0.0 + kernell],
-            [0.0 + kernell, 0.0 + kernell, 1.0 + kernell],
+            [-1.0, -1.0, -1.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
         ];
     }
 
@@ -621,7 +615,6 @@ class Tetrahedral extends Element3D {
         this.line_geometry = new THREE.EdgesGeometry(this.geometry);
         this.domain = this.transformation(this.geometry);
         this._domain = this.domain;
-        this.modifier_lineas = new Array(this.modifier.length).fill(0);
         this.colors = Array(this.modifier.length).fill(0.0);
         this.geometry.setAttribute(
             "color",
@@ -637,7 +630,7 @@ class Lineal extends Element3D {
     order;
     line_order;
 
-    constructor(coords, dofIDs, tama) {
+    constructor(coords, conns, dofIDs, tama) {
         super(coords, conns, dofIDs);
         this.tama = tama;
         this.type = "L1V";
@@ -653,8 +646,9 @@ class Lineal extends Element3D {
         this.qp_weights = [0.55555556, 0.88888889, 0.55555556];
     }
 
-    shape_values(z) {
-        return [0.5 * (1.0 - z[0]), 0.5 * (1.0 + z[0])];
+    shape_values(_coord) {
+        let x = _coord[0]
+        return [0.5 * (1.0 - x), 0.5 * (1.0 + x)];
     }
 
     shape_gradients(_coord) {
@@ -719,7 +713,7 @@ class Triangular extends Element3D {
     order;
     line_order;
 
-    constructor(coords, dofIDs, tama) {
+    constructor(coords, conns, dofIDs, tama) {
         super(coords, conns, dofIDs);
         this.type = "T1V";
         this.ndim = 2;
@@ -751,15 +745,16 @@ class Triangular extends Element3D {
     }
 
     shape_values(_coord) {
-        return [1.0 - _coord[0] - _coord[1], _coord[0], _coord[1]];
+        let x = _coord[0]
+        let y = _coord[1]
+        return [1 - x - y, x, y];
     }
 
     shape_gradients(_coord) {
-        const kernell = _coord[0] - _coord[0];
         return [
-            [-1.0 * (1 + kernell), -1.0 * (1 + kernell)],
-            [1.0 * (1 + kernell), 0.0 * (1 + kernell)],
-            [0.0 * (1 + kernell), 1.0 * (1 + kernell)],
+            [-1.0, -1.0],
+            [1.0, 0.0],
+            [0.0, 1.0],
         ];
     }
 
