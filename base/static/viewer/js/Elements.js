@@ -208,14 +208,14 @@ class Element {
         }
     }
 
-    J(_z) {
-        const dpsis = transpose(this.dpsi(_z));
+    J(_coord) {
+        const dpsis = transpose(this.shape_gradients(_coord));
         const j = multiply(dpsis, this.node_coords);
         return [j, dpsis];
     }
 
-    T(_z) {
-        let p = this.psi(_z);
+    T(_coord) {
+        let p = this.shape_values(_coord);
         return [multiply([p], this.node_coords), p];
     }
 
@@ -436,66 +436,66 @@ class Brick extends Element3D {
         ];
     }
 
-    psi(_z) {
-        const z = _z[0];
-        const n = _z[1];
-        const g = _z[2];
+    shape_values(_coord) {
+        const x = _coord[0];
+        const y = _coord[1];
+        const z = _coord[2];
         return [
-            (1.0 / 8.0) * (1 - z) * (1 - n) * (1 - g),
-            (1.0 / 8.0) * (1 + z) * (1 - n) * (1 - g),
-            (1.0 / 8.0) * (1 + z) * (1 + n) * (1 - g),
-            (1.0 / 8.0) * (1 - z) * (1 + n) * (1 - g),
-            (1.0 / 8.0) * (1 - z) * (1 - n) * (1 + g),
-            (1.0 / 8.0) * (1 + z) * (1 - n) * (1 + g),
-            (1.0 / 8.0) * (1 + z) * (1 + n) * (1 + g),
-            (1.0 / 8.0) * (1 - z) * (1 + n) * (1 + g),
+            0.125 * (1 - x) * (1 - y) * (1 - z),
+            0.125 * (1 + x) * (1 - y) * (1 - z),
+            0.125 * (1 + x) * (1 + y) * (1 - z),
+            0.125 * (1 - x) * (1 + y) * (1 - z),
+            0.125 * (1 - x) * (1 - y) * (1 + z),
+            0.125 * (1 + x) * (1 - y) * (1 + z),
+            0.125 * (1 + x) * (1 + y) * (1 + z),
+            0.125 * (1 - x) * (1 + y) * (1 + z),
         ];
     }
 
-    dpsi(_z) {
-        const x = _z[0];
-        const y = _z[1];
-        const z = _z[2];
+    shape_gradients(_coord) {
+        const x = _coord[0];
+        const y = _coord[1];
+        const z = _coord[2];
         return [
             [
-                0.125 * (1 - z) * (y - 1),
-                0.125 * (1 - z) * (x - 1),
+                -0.125 * (1 - z) * (1 - y),
+                -0.125 * (1 - z) * (1 - x),
                 -0.125 * (1 - x) * (1 - y),
             ],
             [
                 0.125 * (1 - y) * (1 - z),
-                0.125 * (1 - z) * (-x - 1),
-                -0.125 * (1 - y) * (x + 1),
+                -0.125 * (1 + x) * (1 - z),
+                -0.125 * (1 + x) * (1 - y),
             ],
             [
-                0.125 * (1 - z) * (y + 1),
-                0.125 * (1 - z) * (x + 1),
-                -0.125 * (x + 1) * (y + 1),
+                0.125 * (1 + y) * (1 - z),
+                0.125 * (1 + x) * (1 - z),
+                -0.125 * (1 + x) * (1 + y),
             ],
             [
-                0.125 * (1 - z) * (-y - 1),
+                - 0.125 * (1 + y) * (1 - z),
                 0.125 * (1 - x) * (1 - z),
-                -0.125 * (1 - x) * (y + 1),
+                -0.125 * (1 - x) * (1 + y),
             ],
             [
-                0.125 * (1 - y) * (-z - 1),
-                -0.125 * (1 - x) * (z + 1),
+                -0.125 * (1 - y) * (1 + z),
+                -0.125 * (1 - x) * (1 + z),
                 0.125 * (1 - x) * (1 - y),
             ],
             [
-                0.125 * (1 - y) * (z + 1),
-                -0.125 * (x + 1) * (z + 1),
-                0.125 * (1 - y) * (x + 1),
+                0.125 * (1 - y) * (1 + z),
+                -0.125 * (1 + x) * (1 + z),
+                0.125 * (1 + x) * (1 - y),
             ],
             [
-                0.125 * (y + 1) * (z + 1),
-                0.125 * (x + 1) * (z + 1),
-                0.125 * (x + 1) * (y + 1),
+                0.125 * (1 + y) * (1 + z),
+                0.125 * (1 + x) * (1 + z),
+                0.125 * (1 + x) * (1 + y),
             ],
             [
-                -0.125 * (y + 1) * (z + 1),
-                0.125 * (1 - x) * (z + 1),
-                0.125 * (1 - x) * (y + 1),
+                -0.125 * (1 + y) * (1 + z),
+                0.125 * (1 - x) * (1 + z),
+                0.125 * (1 - x) * (1 + y),
             ],
         ];
     }
@@ -573,10 +573,10 @@ class Tetrahedral extends Element3D {
         ];
     }
 
-    psi(_z) {
-        let x = _z[0];
-        let y = _z[1];
-        let z = _z[2];
+    shape_values(_coord) {
+        let x = _coord[0];
+        let y = _coord[1];
+        let z = _coord[2];
         let L1 = 1 - x - y - z;
         let L2 = x;
         let L3 = y;
@@ -584,7 +584,7 @@ class Tetrahedral extends Element3D {
         return [L1, L2, L3, L4];
     }
 
-    dpsi(_z) {
+    shape_gradients(_coord) {
         const kernell = 0.0;
         return [
             [-1.0 + kernell, -1.0 + kernell, -1.0 + kernell],
@@ -653,11 +653,11 @@ class Lineal extends Element3D {
         this.qp_weights = [0.55555556, 0.88888889, 0.55555556];
     }
 
-    psi(z) {
+    shape_values(z) {
         return [0.5 * (1.0 - z[0]), 0.5 * (1.0 + z[0])];
     }
 
-    dpsi(_z) {
+    shape_gradients(_coord) {
         return [[-0.5], [0.5]];
     }
 
@@ -750,12 +750,12 @@ class Triangular extends Element3D {
         this.qp_weights = [W0, W1, W1, W1, W2, W2, W2];
     }
 
-    psi(_z) {
-        return [1.0 - _z[0] - _z[1], _z[0], _z[1]];
+    shape_values(_coord) {
+        return [1.0 - _coord[0] - _coord[1], _coord[0], _coord[1]];
     }
 
-    dpsi(_z) {
-        const kernell = _z[0] - _z[0];
+    shape_gradients(_coord) {
+        const kernell = _coord[0] - _coord[0];
         return [
             [-1.0 * (1 + kernell), -1.0 * (1 + kernell)],
             [1.0 * (1 + kernell), 0.0 * (1 + kernell)],
@@ -837,7 +837,7 @@ class Quadrilateral extends Element3D {
         ];
     }
 
-    psi(z) {
+    shape_values(z) {
         return [
             0.25 * (1.0 - z[0]) * (1.0 - z[1]),
             0.25 * (1.0 + z[0]) * (1.0 - z[1]),
@@ -846,7 +846,7 @@ class Quadrilateral extends Element3D {
         ];
     }
 
-    dpsi(z) {
+    shape_gradients(z) {
         return [
             [0.25 * (z[1] - 1.0), 0.25 * (z[0] - 1.0)],
             [-0.25 * (z[1] - 1.0), -0.25 * (z[0] + 1.0)],
@@ -907,7 +907,7 @@ class LinealO2 extends Lineal {
         this.type = "L2V";
     }
 
-    psi(z) {
+    shape_values(z) {
         let zm1 = z[0] + 1.0;
         return [
             1.0 - (3.0 / 2.0) * zm1 + (zm1 * zm1) / 2.0,
@@ -916,7 +916,7 @@ class LinealO2 extends Lineal {
         ];
     }
 
-    dpsi(z) {
+    shape_gradients(z) {
         return [[z[0] - 0.5], [-2.0 * z[0]], [0.5 + z[0]]];
     }
 }
@@ -927,10 +927,10 @@ class TetrahedralO2 extends Tetrahedral {
         this.type = "TE2V";
     }
 
-    psi(_z) {
-        let x = _z[0];
-        let y = _z[1];
-        let z = _z[2];
+    shape_values(_coord) {
+        let x = _coord[0];
+        let y = _coord[1];
+        let z = _coord[2];
         let L1 = 1 - x - y - z;
         let L2 = x;
         let L3 = y;
@@ -949,10 +949,10 @@ class TetrahedralO2 extends Tetrahedral {
         ];
     }
 
-    dpsi(_z) {
-        let x = _z[0];
-        let y = _z[1];
-        let z = _z[2];
+    shape_gradients(_coord) {
+        let x = _coord[0];
+        let y = _coord[1];
+        let z = _coord[2];
 
         return [
             [
@@ -979,10 +979,10 @@ class BrickO2 extends Brick {
         this.type = "B2V";
     }
 
-    psi(_z) {
-        let x = _z[0];
-        let y = _z[1];
-        let z = _z[2];
+    shape_values(_coord) {
+        let x = _coord[0];
+        let y = _coord[1];
+        let z = _coord[2];
         return [
             (1 / 8) * ((1 - x) * (1 - y) * (1 - z) * (-x - y - z - 2)),
             (1 / 8) * ((1 + x) * (1 - y) * (1 - z) * (x - y - z - 2)),
@@ -1007,10 +1007,10 @@ class BrickO2 extends Brick {
         ];
     }
 
-    dpsi(_z) {
-        let x = _z[0];
-        let y = _z[1];
-        let z = _z[2];
+    shape_gradients(_coord) {
+        let x = _coord[0];
+        let y = _coord[1];
+        let z = _coord[2];
         return [
             [
                 (1 / 8) *
@@ -1173,7 +1173,7 @@ class TriangularO2 extends Triangular {
         this.auxE = new Triangular(c, gdl, 0.2);
     }
 
-    psi(z) {
+    shape_values(z) {
         return [
             2.0 * (z[0] + z[1] - 1.0) * (z[0] + z[1] - 0.5),
             2.0 * z[0] * (z[0] - 0.5),
@@ -1184,7 +1184,7 @@ class TriangularO2 extends Triangular {
         ];
     }
 
-    dpsi(z) {
+    shape_gradients(z) {
         return [
             [4.0 * z[0] + 4.0 * z[1] - 3.0, 4.0 * z[1] + 4.0 * z[0] - 3.0],
             [4.0 * z[0] - 1.0, 0 * z[0]],
@@ -1206,7 +1206,7 @@ class Serendipity extends Quadrilateral {
         this.type = "C2V";
     }
 
-    psi(z) {
+    shape_values(z) {
         return [
             0.25 * (1.0 - z[0]) * (1.0 - z[1]) * (-1.0 - z[0] - z[1]),
             0.25 * (1.0 + z[0]) * (1.0 - z[1]) * (-1.0 + z[0] - z[1]),
@@ -1219,7 +1219,7 @@ class Serendipity extends Quadrilateral {
         ];
     }
 
-    dpsi(z) {
+    shape_gradients(z) {
         return [
             [
                 -0.25 * (z[1] - 1.0) * (2.0 * z[0] + z[1]),
