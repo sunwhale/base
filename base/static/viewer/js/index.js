@@ -71,6 +71,7 @@ if (path_str.startsWith("https://")) {
 console.log(path);
 
 const container = document.getElementById("models-container");
+container.style.background = "linear-gradient(to bottom, #263750, #8594aa)";
 
 const O = new FEMViewer(container, magnification, rot, axis === 1, zoom);
 O.theme = themes[theme] || {};

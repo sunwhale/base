@@ -12,7 +12,7 @@ class Legend {
     }
 
     set(value) {
-        if (value.isLut === true) {
+        if (value.isLegend === true) {
             this.copy(value);
         }
 
@@ -144,7 +144,7 @@ class Legend {
     }
 }
 
-Legend.prototype.isLut = true;
+Legend.prototype.isLegend = true;
 
 const ColorMapKeywords = {
     "彩虹色": [

@@ -12,10 +12,40 @@
 	"regions": [],
 	"ebc": [],
 	"nbc": [],
-	"nvn": 1,
+	"nvn": 2,
 	"ngdl": 4,
 	"holes": null,
 	"fillets": null,
+	"frames": [{
+		"id": 0,
+		"value": 0.0,
+		"fieldOutputs": {
+			"U1": [
+			[1.0],
+			[1.0],
+			[0.0],
+			[0.0],
+			[1.0],
+			[1.0]
+			],
+			"E11": [
+			[1.0],
+			[1.0],
+			[0.0],
+			[0.0],
+			[1.0],
+			[1.0]
+			],
+			"E12": [
+			[2.0],
+			[2.0],
+			[0.0],
+			[0.0],
+			[2.0],
+			[2.0]
+			]
+		}
+	}],
 	"solutions": [
 		{
 			"info": { "solver-type": "lineal" },
@@ -25,15 +55,21 @@
 				[0.0],
 				[1.0],
 				[0.0],
+				[0.0],
+				[0.0],
+				[0.0],
+				[0.0],
+				[1.0],
+				[0.0],
 				[0.0]
 			]
 		}],
 	"properties": {
-		"verbose": false,
+		"verbose": true,
 		"name": "",
-		"problem": "Torsion2D",
-		"_phi": null,
-		"G": [1],
+		"problem": "Elasticity",
+		"_phi": [2, 5],
+		"G": [1, 10],
 		"duration": 1,
 		"description": ""
 	}

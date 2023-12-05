@@ -58,7 +58,19 @@ const types = {
 };
 
 const themes = {
-    "默认": {},
+    "默认": {
+        "--gui-background-color": "#f6f6f6",
+        "--gui-text-color": "#3d3d3d",
+        "--gui-title-background-color": "#efefef",
+        "--gui-title-text-color": "#3d3d3d",
+        "--gui-widget-color": "#eaeaea",
+        "--gui-hover-color": "#f0f0f0",
+        "--gui-focus-color": "#fafafa",
+        "--gui-number-color": "#07aacf",
+        "--gui-string-color": "#8da300",
+        "--focus-color": "#dddddd",
+        "--background-color": "transparent",
+    },
     "透明": {
         "--gui-background-color": "#f6f6f6",
         "--gui-text-color": "#3d3d3d",
@@ -69,7 +81,7 @@ const themes = {
         "--gui-focus-color": "#fafafa",
         "--gui-number-color": "#07aacf",
         "--gui-string-color": "#8da300",
-        "--focus-color": "#dc2c41",
+        "--focus-color": "#dddddd",
         "--background-color": "transparent",
     },
     "明亮": {
@@ -82,7 +94,7 @@ const themes = {
         "--gui-focus-color": "#fafafa",
         "--gui-number-color": "#07aacf",
         "--gui-string-color": "#8da300",
-        "--focus-color": "#dc2c41",
+        "--focus-color": "#dddddd",
     },
     "黑暗": {
         "--gui-background-color": "#1f1f1f",
@@ -235,7 +247,7 @@ class FEMViewer {
         this.regionModel.visible = false;
 
         this.MenuClosed = true;
-        this.lut = new Legend(this.colormap);
+        this.legend = new Legend(this.colormap);
         this.filename = "";
 
         this.gui = new GUI({title: "根目录", container: this.container});
@@ -533,15 +545,15 @@ class FEMViewer {
         this.scene.add(this.light2);
 
         this.orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 2);
-        this.orthoCamera.position.set(-0.9, 0, 1);
+        this.orthoCamera.position.set(-0.95, 0, 1);
         this.uiScene = new THREE.Scene();
         this.sprite = new THREE.Sprite(
             new THREE.SpriteMaterial({
-                map: new THREE.CanvasTexture(this.lut.createCanvas()),
+                map: new THREE.CanvasTexture(this.legend.createCanvas()),
             })
         );
 
-        this.sprite.scale.x = 0.02;
+        this.sprite.scale.x = 20.0 / this.container.clientWidth;
         this.uiScene.add(this.sprite);
 
         this.gh = new AxisGridHelper(this.scene, 0);
@@ -724,12 +736,12 @@ class FEMViewer {
     }
 
     updateLut() {
-        this.lut.setColorMap(this.colormap);
+        this.legend.setColorMap(this.colormap);
         const map = this.sprite.material.map;
-        this.lut.updateCanvas(map.image);
+        this.legend.updateCanvas(map.image);
         map.needsUpdate = true;
-        this.lut.setMax(this.max_color_value);
-        this.lut.setMin(this.min_color_value);
+        this.legend.setMax(this.max_color_value);
+        this.legend.setMin(this.min_color_value);
         this.updateMaterial();
         this.updateColorValues();
         this.updateGeometry();
@@ -886,6 +898,7 @@ class FEMViewer {
         if (needResize) {
             this.renderer.setSize(width, height, false);
         }
+        this.sprite.scale.x = 20.0 / this.container.clientWidth;
         return needResize;
     }
 
@@ -915,7 +928,7 @@ class FEMViewer {
             const colors = this.bufferGeometries[i].attributes.color;
             for (let j = 0; j < e.domain.length; j++) {
                 let disp = e.colors[j];
-                const color = this.lut.getColor(disp);
+                const color = this.legend.getColor(disp);
                 colors.setXYZ(j, color.r, color.g, color.b);
             }
         }
