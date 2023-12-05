@@ -1075,17 +1075,24 @@ class FEMViewer {
         this.updateGeometry();
     }
 
+    guiViews() {
+        if (this.viewsFolder) {
+            this.viewsFolder.destroy();
+        }
+        this.viewsFolder = this.gui.addFolder("视图");
+        this.viewsFolder
+            .add(this, "viewFront")
+            .name("正视图");
+        this.viewsFolder
+            .add(this, "viewIso")
+            .name("等轴视图");
+    }
+
     guiSolutions() {
         if (this.guifolder) {
             this.guifolder.destroy();
         }
         this.guifolder = this.gui.addFolder("后处理");
-        this.settingsFolder
-            .add(this, "viewFront")
-            .name("正视图");
-        this.settingsFolder
-            .add(this, "viewIso")
-            .name("等轴视图");
         let variableSelectDict = {};
         for (let key in this.frames[this.step]["fieldOutputs"]) {
             variableSelectDict[key] = key;
@@ -1133,6 +1140,7 @@ class FEMViewer {
     async init(animate = false) {
         this.guiSettingsBasic();
         this.guiSettings();
+        this.guiViews();
         this.guiSolutions();
         this.animate = animate;
         if (!this.config_dict["isDeformed"]) {
