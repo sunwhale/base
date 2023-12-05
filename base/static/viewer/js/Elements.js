@@ -630,9 +630,9 @@ class Lineal extends Element3D {
     order;
     line_order;
 
-    constructor(coords, conns, dofIDs, tama) {
+    constructor(coords, conns, dofIDs, thick) {
         super(coords, conns, dofIDs);
-        this.tama = tama;
+        this.thick = thick;
         this.type = "L1V";
         this.ndim = 1;
         const c = [];
@@ -669,8 +669,8 @@ class Lineal extends Element3D {
             this._domain.push([x * 2]);
             this.modifier.push([
                 0.0,
-                (this.tama / 20) * (y + 0.5),
-                (this.tama / 20) * (z + 0.5),
+                (this.thick / 20) * (y + 0.5),
+                (this.thick / 20) * (z + 0.5),
             ]);
         }
         for (let i = 0; i < this.line_geometry.attributes.position.count; i++) {
@@ -680,8 +680,8 @@ class Lineal extends Element3D {
             this.line_domain.push([x * 2]);
             this.line_modifier.push([
                 0.0,
-                (this.tama / 20) * (y + 0.5),
-                (this.tama / 20) * (z + 0.5),
+                (this.thick / 20) * (y + 0.5),
+                (this.thick / 20) * (z + 0.5),
             ]);
         }
         return qp_coords;
@@ -713,11 +713,11 @@ class Triangular extends Element3D {
     order;
     line_order;
 
-    constructor(coords, conns, dofIDs, tama) {
+    constructor(coords, conns, dofIDs, thick) {
         super(coords, conns, dofIDs);
         this.type = "T1V";
         this.ndim = 2;
-        this.tama = tama;
+        this.thick = thick;
 
         const c = [];
         for (let i = 0; i < coords.length; i++) {
@@ -770,14 +770,14 @@ class Triangular extends Element3D {
             const z = geo.attributes.position.getZ(i);
             qp_coords.push([x, y, z]);
             this._domain.push([x, y]);
-            this.modifier.push([0.0, 0.0, (this.tama / 20) * z]);
+            this.modifier.push([0.0, 0.0, (this.thick / 20) * z]);
         }
         for (let i = 0; i < this.line_geometry.attributes.position.count; i++) {
             const x = this.line_geometry.attributes.position.getX(i);
             const y = this.line_geometry.attributes.position.getY(i);
             const z = this.line_geometry.attributes.position.getZ(i);
             this.line_domain.push([x, y]);
-            this.line_modifier.push([0.0, 0.0, (this.tama / 20) * z]);
+            this.line_modifier.push([0.0, 0.0, (this.thick / 20) * z]);
         }
         return qp_coords;
     }
@@ -801,9 +801,9 @@ class Quadrilateral extends Element3D {
     order;
     line_order;
 
-    constructor(coords, dofIDs, tama) {
+    constructor(coords, dofIDs, thick) {
         super(coords, conns, dofIDs);
-        this.tama = tama;
+        this.thick = thick;
         this.type = "C1V";
         this.ndim = 2;
 
@@ -832,21 +832,25 @@ class Quadrilateral extends Element3D {
         ];
     }
 
-    shape_values(z) {
+    shape_values(_coord) {
+        let x = _coord[0]
+        let y = _coord[1]
         return [
-            0.25 * (1.0 - z[0]) * (1.0 - z[1]),
-            0.25 * (1.0 + z[0]) * (1.0 - z[1]),
-            0.25 * (1.0 + z[0]) * (1.0 + z[1]),
-            0.25 * (1.0 - z[0]) * (1.0 + z[1]),
+            0.25 * (1.0 - x) * (1.0 - y),
+            0.25 * (1.0 + x) * (1.0 - y),
+            0.25 * (1.0 + x) * (1.0 + y),
+            0.25 * (1.0 - x) * (1.0 + y),
         ];
     }
 
-    shape_gradients(z) {
+    shape_gradients(_coord) {
+        let x = _coord[0]
+        let y = _coord[1]
         return [
-            [0.25 * (z[1] - 1.0), 0.25 * (z[0] - 1.0)],
-            [-0.25 * (z[1] - 1.0), -0.25 * (z[0] + 1.0)],
-            [0.25 * (z[1] + 1.0), 0.25 * (1.0 + z[0])],
-            [-0.25 * (1.0 + z[1]), 0.25 * (1.0 - z[0])],
+            [-0.25 * (1.0 - y), -0.25 * (1.0 - x)],
+            [0.25 * (1.0 - y), -0.25 * (1.0 + x)],
+            [0.25 * (1.0 + y), 0.25 * (1.0 + x)],
+            [-0.25 * (1.0 + y), 0.25 * (1.0 - x)],
         ];
     }
 
@@ -862,14 +866,14 @@ class Quadrilateral extends Element3D {
             const z = geo.attributes.position.getZ(i);
             qp_coords.push([x * 2, y * 2, 2 * z]);
             this._domain.push([x * 2, y * 2]);
-            this.modifier.push([0.0, 0.0, (this.tama / 20) * (z + 0.5)]);
+            this.modifier.push([0.0, 0.0, (this.thick / 20) * (z + 0.5)]);
         }
         for (let i = 0; i < this.line_geometry.attributes.position.count; i++) {
             const x = this.line_geometry.attributes.position.getX(i);
             const y = this.line_geometry.attributes.position.getY(i);
             const z = this.line_geometry.attributes.position.getZ(i);
             this.line_domain.push([x * 2, y * 2]);
-            this.line_modifier.push([0.0, 0.0, (this.tama / 20) * (z + 0.5)]);
+            this.line_modifier.push([0.0, 0.0, (this.thick / 20) * (z + 0.5)]);
         }
         return qp_coords;
     }
@@ -897,22 +901,23 @@ class Quadrilateral extends Element3D {
 }
 
 class LinealO2 extends Lineal {
-    constructor(coords, dofIDs, tama) {
-        super(coords, dofIDs, tama);
+    constructor(coords, conns, dofIDs, thick) {
+        super(coords, conns, dofIDs, thick);
         this.type = "L2V";
     }
 
-    shape_values(z) {
-        let zm1 = z[0] + 1.0;
+    shape_values(_coord) {
+        let x = _coord[0]
         return [
-            1.0 - (3.0 / 2.0) * zm1 + (zm1 * zm1) / 2.0,
-            2.0 * zm1 * (1.0 - zm1 / 2.0),
-            (z / 2.0) * zm1,
+            0.5 * (1.0 - x) - 0.5 * (1.0 - x * x),
+            1.0 - x * x,
+            0.5 * (1.0 + x) - 0.5 * (1.0 - x * x),
         ];
     }
 
-    shape_gradients(z) {
-        return [[z[0] - 0.5], [-2.0 * z[0]], [0.5 + z[0]]];
+    shape_gradients(_coord) {
+        let x = _coord[0]
+        return [[-0.5 + x], [-2.0 * x], [0.5 + x]];
     }
 }
 
@@ -948,13 +953,8 @@ class TetrahedralO2 extends Tetrahedral {
         let x = _coord[0];
         let y = _coord[1];
         let z = _coord[2];
-
         return [
-            [
-                4 * x + 4 * y + 4 * z - 3,
-                4 * x + 4 * y + 4 * z - 3,
-                4 * x + 4 * y + 4 * z - 3,
-            ],
+            [4 * x + 4 * y + 4 * z - 3, 4 * x + 4 * y + 4 * z - 3, 4 * x + 4 * y + 4 * z - 3,],
             [4 * x - 1, 0, 0],
             [0, 4 * y - 1, 0],
             [0, 0, 4 * z - 1],
@@ -979,26 +979,26 @@ class BrickO2 extends Brick {
         let y = _coord[1];
         let z = _coord[2];
         return [
-            (1 / 8) * ((1 - x) * (1 - y) * (1 - z) * (-x - y - z - 2)),
-            (1 / 8) * ((1 + x) * (1 - y) * (1 - z) * (x - y - z - 2)),
-            (1 / 8) * ((1 + x) * (1 + y) * (1 - z) * (x + y - z - 2)),
-            (1 / 8) * ((1 - x) * (1 + y) * (1 - z) * (-x + y - z - 2)),
-            (1 / 8) * ((1 - x) * (1 - y) * (1 + z) * (-x - y + z - 2)),
-            (1 / 8) * ((1 + x) * (1 - y) * (1 + z) * (x - y + z - 2)),
-            (1 / 8) * ((1 + x) * (1 + y) * (1 + z) * (x + y + z - 2)),
-            (1 / 8) * ((1 - x) * (1 + y) * (1 + z) * (-x + y + z - 2)),
-            (1 / 8) * (2 * (1 - x ** 2) * (1 - y) * (1 - z)),
-            (1 / 8) * (2 * (1 + x) * (1 - y ** 2) * (1 - z)),
-            (1 / 8) * (2 * (1 - x ** 2) * (1 + y) * (1 - z)),
-            (1 / 8) * (2 * (1 - x) * (1 - y ** 2) * (1 - z)),
-            (1 / 8) * (2 * (1 - x) * (1 - y) * (1 - z ** 2)),
-            (1 / 8) * (2 * (1 + x) * (1 - y) * (1 - z ** 2)),
-            (1 / 8) * (2 * (1 + x) * (1 + y) * (1 - z ** 2)),
-            (1 / 8) * (2 * (1 - x) * (1 + y) * (1 - z ** 2)),
-            (1 / 8) * (2 * (1 - x ** 2) * (1 - y) * (1 + z)),
-            (1 / 8) * (2 * (1 + x) * (1 - y ** 2) * (1 + z)),
-            (1 / 8) * (2 * (1 - x ** 2) * (1 + y) * (1 + z)),
-            (1 / 8) * (2 * (1 - x) * (1 - y ** 2) * (1 + z)),
+            0.125 * ((1 - x) * (1 - y) * (1 - z) * (-x - y - z - 2)),
+            0.125 * ((1 + x) * (1 - y) * (1 - z) * (x - y - z - 2)),
+            0.125 * ((1 + x) * (1 + y) * (1 - z) * (x + y - z - 2)),
+            0.125 * ((1 - x) * (1 + y) * (1 - z) * (-x + y - z - 2)),
+            0.125 * ((1 - x) * (1 - y) * (1 + z) * (-x - y + z - 2)),
+            0.125 * ((1 + x) * (1 - y) * (1 + z) * (x - y + z - 2)),
+            0.125 * ((1 + x) * (1 + y) * (1 + z) * (x + y + z - 2)),
+            0.125 * ((1 - x) * (1 + y) * (1 + z) * (-x + y + z - 2)),
+            0.125 * (2 * (1 - x ** 2) * (1 - y) * (1 - z)),
+            0.125 * (2 * (1 + x) * (1 - y ** 2) * (1 - z)),
+            0.125 * (2 * (1 - x ** 2) * (1 + y) * (1 - z)),
+            0.125 * (2 * (1 - x) * (1 - y ** 2) * (1 - z)),
+            0.125 * (2 * (1 - x) * (1 - y) * (1 - z ** 2)),
+            0.125 * (2 * (1 + x) * (1 - y) * (1 - z ** 2)),
+            0.125 * (2 * (1 + x) * (1 + y) * (1 - z ** 2)),
+            0.125 * (2 * (1 - x) * (1 + y) * (1 - z ** 2)),
+            0.125 * (2 * (1 - x ** 2) * (1 - y) * (1 + z)),
+            0.125 * (2 * (1 + x) * (1 - y ** 2) * (1 + z)),
+            0.125 * (2 * (1 - x ** 2) * (1 + y) * (1 + z)),
+            0.125 * (2 * (1 - x) * (1 - y ** 2) * (1 + z)),
         ];
     }
 
@@ -1160,33 +1160,37 @@ class BrickO2 extends Brick {
 }
 
 class TriangularO2 extends Triangular {
-    constructor(coords, dofIDs, tama) {
-        super(coords, dofIDs, tama);
+    constructor(coords, conns, dofIDs, thick) {
+        super(coords, conns, dofIDs, thick);
         this.type = "T2V";
         let c = [coords[0], coords[1], coords[2]];
         let gdl = [-1, -1, -1];
         this.auxE = new Triangular(c, gdl, 0.2);
     }
 
-    shape_values(z) {
+    shape_values(_coord) {
+        let x = _coord[0]
+        let y = _coord[1]
         return [
-            2.0 * (z[0] + z[1] - 1.0) * (z[0] + z[1] - 0.5),
-            2.0 * z[0] * (z[0] - 0.5),
-            2.0 * z[1] * (z[1] - 0.5),
-            -4.0 * (z[0] + z[1] - 1.0) * z[0],
-            4.0 * z[0] * z[1],
-            -4.0 * z[1] * (z[0] + z[1] - 1.0),
+            2.0 * (x + y - 1.0) * (x + y - 0.5),
+            2.0 * x * (x - 0.5),
+            2.0 * y * (y - 0.5),
+            -4.0 * (x + y - 1.0) * x,
+            4.0 * x * y,
+            -4.0 * y * (x + y - 1.0),
         ];
     }
 
-    shape_gradients(z) {
+    shape_gradients(_coord) {
+        let x = _coord[0]
+        let y = _coord[1]
         return [
-            [4.0 * z[0] + 4.0 * z[1] - 3.0, 4.0 * z[1] + 4.0 * z[0] - 3.0],
-            [4.0 * z[0] - 1.0, 0 * z[0]],
-            [0 * z[0], 4.0 * z[1] - 1.0],
-            [-8.0 * z[0] - 4.0 * (z[1] - 1.0), -4.0 * z[0]],
-            [4.0 * z[1], 4.0 * z[0]],
-            [-4.0 * z[1], -8.0 * z[1] - 4.0 * z[0] + 4.0],
+            [4.0 * x + 4.0 * y - 3.0, 4.0 * y + 4.0 * x - 3.0],
+            [4.0 * x - 1.0, 0.0],
+            [0.0, 4.0 * y - 1.0],
+            [-8.0 * x - 4.0 * (y - 1.0), -4.0 * x],
+            [4.0 * y, 4.0 * x],
+            [-4.0 * y, -8.0 * y - 4.0 * x + 4.0],
         ];
     }
 
@@ -1196,46 +1200,50 @@ class TriangularO2 extends Triangular {
 }
 
 class Serendipity extends Quadrilateral {
-    constructor(coords, dofIDs, tama) {
-        super(coords, dofIDs, tama);
+    constructor(coords, conns, dofIDs, thick) {
+        super(coords, conns, dofIDs, thick);
         this.type = "C2V";
     }
 
-    shape_values(z) {
+    shape_values(_coord) {
+        let x = _coord[0]
+        let y = _coord[1]
         return [
-            0.25 * (1.0 - z[0]) * (1.0 - z[1]) * (-1.0 - z[0] - z[1]),
-            0.25 * (1.0 + z[0]) * (1.0 - z[1]) * (-1.0 + z[0] - z[1]),
-            0.25 * (1.0 + z[0]) * (1.0 + z[1]) * (-1.0 + z[0] + z[1]),
-            0.25 * (1.0 - z[0]) * (1.0 + z[1]) * (-1.0 - z[0] + z[1]),
-            0.5 * (1.0 - z[0] ** 2.0) * (1.0 - z[1]),
-            0.5 * (1.0 + z[0]) * (1.0 - z[1] ** 2.0),
-            0.5 * (1.0 - z[0] ** 2.0) * (1.0 + z[1]),
-            0.5 * (1.0 - z[0]) * (1.0 - z[1] ** 2.0),
+            0.25 * (1.0 - x) * (1.0 - y) * (-1.0 - x - y),
+            0.25 * (1.0 + x) * (1.0 - y) * (-1.0 + x - y),
+            0.25 * (1.0 + x) * (1.0 + y) * (-1.0 + x + y),
+            0.25 * (1.0 - x) * (1.0 + y) * (-1.0 - x + y),
+            0.5 * (1.0 - x ** 2.0) * (1.0 - y),
+            0.5 * (1.0 + x) * (1.0 - y ** 2.0),
+            0.5 * (1.0 - x ** 2.0) * (1.0 + y),
+            0.5 * (1.0 - x) * (1.0 - y ** 2.0),
         ];
     }
 
-    shape_gradients(z) {
+    shape_gradients(_coord) {
+        let x = _coord[0]
+        let y = _coord[1]
         return [
             [
-                -0.25 * (z[1] - 1.0) * (2.0 * z[0] + z[1]),
-                -0.25 * (z[0] - 1.0) * (2.0 * z[1] + z[0]),
+                -0.25 * (y - 1.0) * (2.0 * x + y),
+                -0.25 * (x - 1.0) * (2.0 * y + x),
             ],
             [
-                -0.25 * (z[1] - 1.0) * (2.0 * z[0] - z[1]),
-                0.25 * (z[0] + 1.0) * (2.0 * z[1] - z[0]),
+                -0.25 * (y - 1.0) * (2.0 * x - y),
+                0.25 * (x + 1.0) * (2.0 * y - x),
             ],
             [
-                0.25 * (z[1] + 1.0) * (2.0 * z[0] + z[1]),
-                0.25 * (z[0] + 1.0) * (2.0 * z[1] + z[0]),
+                0.25 * (y + 1.0) * (2.0 * x + y),
+                0.25 * (x + 1.0) * (2.0 * y + x),
             ],
             [
-                0.25 * (z[1] + 1.0) * (2.0 * z[0] - z[1]),
-                -0.25 * (z[0] - 1.0) * (2.0 * z[1] - z[0]),
+                0.25 * (y + 1.0) * (2.0 * x - y),
+                -0.25 * (x - 1.0) * (2.0 * y - x),
             ],
-            [(z[1] - 1.0) * z[0], 0.5 * (z[0] ** 2.0 - 1.0)],
-            [-0.5 * (z[1] ** 2.0 - 1.0), -z[1] * (z[0] + 1.0)],
-            [-(z[1] + 1.0) * z[0], -0.5 * (z[0] ** 2.0 - 1.0)],
-            [0.5 * (z[1] ** 2.0 - 1.0), z[1] * (z[0] - 1.0)],
+            [(y - 1.0) * x, 0.5 * (x ** 2.0 - 1.0)],
+            [-0.5 * (y ** 2.0 - 1.0), -y * (x + 1.0)],
+            [-(y + 1.0) * x, -0.5 * (x ** 2.0 - 1.0)],
+            [0.5 * (y ** 2.0 - 1.0), y * (x - 1.0)],
         ];
     }
 }
@@ -1255,8 +1263,8 @@ const types = {
 
 function fromElement(e) {
     let nee = undefined;
-    if (e.tama) {
-        nee = new types[e.type](e.coords, e.dofIDs, e.dofIDs, e.tama);
+    if (e.thick) {
+        nee = new types[e.type](e.coords, e.dofIDs, e.dofIDs, e.thick);
     } else {
         nee = new types[e.type](e.coords, e.dofIDs, e.dofIDs);
     }
