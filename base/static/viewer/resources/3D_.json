@@ -126,6 +126,7 @@
 	"properties": {
 		"verbose": true,
 		"name": "",
-		"problem": "Elasticity"
+		"problem": "Elasticity",
+		"G": [1, 10]
 	}
 }

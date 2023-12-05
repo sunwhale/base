@@ -5,7 +5,7 @@ import GUI from "https://cdn.jsdelivr.net/npm/lil-gui@0.17/+esm";
 import {OrbitControls} from "./build/OrbitControls.js";
 import * as BufferGeometryUtils from "./build/BufferGeometryUtils.js";
 import {AxisGridHelper} from "./build/minigui.js";
-import {Lut} from "./build/Lut.js";
+import {Legend} from "./build/Legend.js";
 import {CONFIG_DICT} from "./ConfigDicts.js";
 import {Geometree, Quadrant3D} from "./Octree.js";
 // import {
@@ -274,7 +274,7 @@ class FEMViewer {
 
         this.MenuClosed = true;
 
-        this.lut = new Lut(this.colormap);
+        this.lut = new Legend(this.colormap);
         this.filename = "";
 
         this.gui = new GUI({title: "根目录", container: this.container});

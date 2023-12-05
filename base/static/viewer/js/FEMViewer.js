@@ -4,7 +4,7 @@ import GUI from "./build/lil-gui.esm.js";
 import {OrbitControls} from "./build/OrbitControls.js";
 import * as BufferGeometryUtils from "./build/BufferGeometryUtils.js";
 import {AxisGridHelper} from "./build/minigui.js";
-import {Lut} from "./build/Lut.js";
+import {Legend} from "./build/Legend.js";
 import {CONFIG_DICT} from "./ConfigDicts.js";
 import {Geometree, Quadrant3D} from "./Octree.js";
 import {Brick, BrickO2, Lineal, LinealO2, Quadrilateral, Serendipity, Tetrahedral, TetrahedralO2, Triangular, TriangularO2,} from "./Elements.js";
@@ -235,7 +235,7 @@ class FEMViewer {
         this.regionModel.visible = false;
 
         this.MenuClosed = true;
-        this.lut = new Lut(this.colormap);
+        this.lut = new Legend(this.colormap);
         this.filename = "";
 
         this.gui = new GUI({title: "根目录", container: this.container});
@@ -803,6 +803,12 @@ class FEMViewer {
         this.zoomExtents();
     }
 
+    viewIso() {
+        this.camera.position.set(1, 1, 1);
+        this.camera.lookAt(0, 0, 0);
+        this.zoomExtents();
+    }
+
     updateCamera() {
         this.camera.updateProjectionMatrix();
     }
@@ -959,7 +965,13 @@ class FEMViewer {
     }
 
     rotateModel() {
-        this.model.rotation.z += 0.005;
+        // this.model.rotation.z += 0.005;
+        // 旋转相机的位置和目标点
+        let r = (this.camera.position.x ** 2 + this.camera.position.y ** 2) ** 0.5
+        this.camera.position.x = Math.sin(Date.now() * 0.0002) * r;
+        this.camera.position.y = Math.cos(Date.now() * 0.0002) * r;
+        this.camera.lookAt(0, 0, 0);
+        this.renderer.render(this.scene, this.camera);
     }
 
     async render(time) {
@@ -1058,6 +1070,9 @@ class FEMViewer {
         this.settingsFolder
             .add(this, "viewFront")
             .name("正视图");
+        this.settingsFolder
+            .add(this, "viewIso")
+            .name("等轴视图");
         let variableSelectDict = {};
         for (let key in this.frames[this.step]["fieldOutputs"]) {
             variableSelectDict[key] = key;
@@ -1067,8 +1082,8 @@ class FEMViewer {
                 "无": "nocolor",
                 "|U|": "dispmag",
                 ...variableSelectDict,
-                "Scaled Jacobi": "scaled_jac",
-                ...this.config_dict["dict"],
+                // "Scaled Jacobi": "scaled_jac",
+                // ...this.config_dict["dict"],
                 ...this.prop_dict_names,
             })
             .name("云图")

@@ -1,8 +1,8 @@
 import { Color } from "../build/three.module.js";
 
-class Lut {
+class Legend {
 	constructor(colormap, count = 32) {
-		this.lut = [];
+		this.legend = [];
 		this.map = [];
 		this.n = 0;
 		this.minV = 0;
@@ -37,7 +37,7 @@ class Lut {
 
 		const step = 1.0 / this.n;
 
-		this.lut.length = 0;
+		this.legend.length = 0;
 
 		for (let i = 0; i <= 1; i += step) {
 			for (let j = 0; j < this.map.length - 1; j++) {
@@ -53,7 +53,7 @@ class Lut {
 						(i - min) / (max - min)
 					);
 
-					this.lut.push(color);
+					this.legend.push(color);
 				}
 			}
 		}
@@ -61,12 +61,12 @@ class Lut {
 		return this;
 	}
 
-	copy(lut) {
-		this.lut = lut.lut;
-		this.map = lut.map;
-		this.n = lut.n;
-		this.minV = lut.minV;
-		this.maxV = lut.maxV;
+	copy(legend) {
+		this.legend = legend.legend;
+		this.map = legend.map;
+		this.n = legend.n;
+		this.minV = legend.minV;
+		this.maxV = legend.maxV;
 
 		return this;
 	}
@@ -84,7 +84,7 @@ class Lut {
 
 		if (colorPosition === this.n) colorPosition -= 1;
 
-		return this.lut[colorPosition];
+		return this.legend[colorPosition];
 	}
 
 	addColorMap(name, arrayOfColors) {
@@ -144,7 +144,7 @@ class Lut {
 	}
 }
 
-Lut.prototype.isLut = true;
+Legend.prototype.isLut = true;
 
 const ColorMapKeywords = {
 	"彩虹色": [
@@ -177,4 +177,4 @@ const ColorMapKeywords = {
 	],
 };
 
-export { Lut, ColorMapKeywords };
+export { Legend, ColorMapKeywords };

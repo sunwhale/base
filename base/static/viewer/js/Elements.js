@@ -274,39 +274,17 @@ class Element {
         this.properties = p;
     }
 
-    giveSolutionPoint(z, colorMode, strain, elasticFunction) {
-        let solution = Array(this.Ue[0].length).fill(0.0);
-        let [x, P] = this.T(z);
-        let [J, dpz] = this.J(z);
-        const _J = matInverse(J);
-        const dpx = multiply(_J, dpz);
-        let du = multiply(this.Ue, transpose(dpx));
-        let variable = this.Ue;
+    giveSolutionPoint(coord, colorMode, strain, elasticFunction) {
         let result = 0;
-        if (colorMode === "dispmag") {
-            for (let i = 0; i < this.Ue[0].length; i++) {
-                let color = 0.0;
-                for (let j = 0; j < this.nvn; j++) {
-                    let v = variable[j][i];
-                    color += v ** 2;
-                }
-                solution[i] = color ** 0.5;
-            }
-            for (let i = 0; i < P.length; i++) {
-                result += P[i] * solution[i];
-            }
-        } else if (colorMode in this.elementFieldOutputs) {
+        let solution = Array(this.Ue[0].length).fill(0.0);
+        let N = this.shape_values(coord)
+        if (colorMode in this.elementFieldOutputs) {
             let variable = [this.elementFieldOutputs[colorMode]]
             for (let i = 0; i < this.elementFieldOutputs[colorMode].length; i++) {
-                let color = 0.0;
-                for (let j = 0; j < 1; j++) {
-                    let v = variable[j][i];
-                    color += v ** 2;
-                }
-                solution[i] = color ** 0.5;
+                solution[i] = variable[0][i];
             }
-            for (let i = 0; i < P.length; i++) {
-                result += P[i] * solution[i];
+            for (let i = 0; i < N.length; i++) {
+                result += N[i] * solution[i];
             }
         } else if (colorMode === "scaled_jac") {
             result = this.sJ;
