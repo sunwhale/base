@@ -748,15 +748,15 @@ class FEMViewer {
             this.colors = false;
             msg = "";
         }
-        let Cfuntion = undefined;
+        let elasticFunction = undefined;
         if (this.config_dict["C"]) {
-            Cfuntion = this.config_dict["C"];
+            elasticFunction = this.config_dict["C"];
         }
         for (const e of this.elements) {
             e.setMaxDispNode(
                 this.colorOptions,
                 this.config_dict["calculateStrain"],
-                Cfuntion
+                elasticFunction
             );
         }
 
@@ -1401,7 +1401,7 @@ class FEMViewer {
                 coords,
                 conns,
                 dofIDs,
-                this.size * this.norm
+                this.size * this.norm / 100.0
             );
 
             let d = 0;

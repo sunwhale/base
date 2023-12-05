@@ -32,6 +32,12 @@ class Element {
     line_geometry;
     domain;
     _domain;
+    line_domain;
+    ndim;
+    modifier;
+    line_modifier;
+    node_coords;
+    qp_coords;
 
     constructor(coords, conns, dofIDs) {
         this.coords = coords;
@@ -119,9 +125,7 @@ class Element {
         }
         if (!isDeformed) {
             this._U = new Array(this._domain.length).fill([0.0, 0.0, 0.0]);
-            this._ULines = new Array(this.line_domain.length).fill([
-                0.0, 0.0, 0.0,
-            ]);
+            this._ULines = new Array(this.line_domain.length).fill([0.0, 0.0, 0.0]);
         }
     }
 
@@ -152,10 +156,10 @@ class Element {
         }
     }
 
-    setGeometryCoords(mult, norm) {
-        if (!mult) {
-            if (mult !== 0) {
-                mult = 1.0;
+    setGeometryCoords(disp_amp_factor, norm) {
+        if (!disp_amp_factor) {
+            if (disp_amp_factor !== 0) {
+                disp_amp_factor = 1.0;
             }
         }
         if (!norm) {
@@ -172,15 +176,15 @@ class Element {
             let U = this._U[i];
             parent_geometry.attributes.position.setX(
                 i,
-                X[0] * norm + this.modifier[i][0] + U[0] * mult * norm
+                X[0] * norm + this.modifier[i][0] + U[0] * disp_amp_factor * norm
             );
             parent_geometry.attributes.position.setY(
                 i,
-                X[1] * norm + this.modifier[i][1] + U[1] * mult * norm
+                X[1] * norm + this.modifier[i][1] + U[1] * disp_amp_factor * norm
             );
             parent_geometry.attributes.position.setZ(
                 i,
-                X[2] * norm + this.modifier[i][2] + U[2] * mult * norm
+                X[2] * norm + this.modifier[i][2] + U[2] * disp_amp_factor * norm
             );
         }
         parent_geometry.attributes.position.needsUpdate = true;
@@ -192,15 +196,15 @@ class Element {
                 let U = this._ULines[i];
                 line_geometry.attributes.position.setX(
                     i,
-                    X[0] * norm + this.line_modifier[i][0] + U[0] * mult * norm
+                    X[0] * norm + this.line_modifier[i][0] + U[0] * disp_amp_factor * norm
                 );
                 line_geometry.attributes.position.setY(
                     i,
-                    X[1] * norm + this.line_modifier[i][1] + U[1] * mult * norm
+                    X[1] * norm + this.line_modifier[i][1] + U[1] * disp_amp_factor * norm
                 );
                 line_geometry.attributes.position.setZ(
                     i,
-                    X[2] * norm + this.line_modifier[i][2] + U[2] * mult * norm
+                    X[2] * norm + this.line_modifier[i][2] + U[2] * disp_amp_factor * norm
                 );
             }
             line_geometry.attributes.position.needsUpdate = true;
@@ -209,48 +213,33 @@ class Element {
     }
 
     J(_coord) {
-        const dpsis = transpose(this.shape_gradients(_coord));
-        const j = multiply(dpsis, this.node_coords);
-        return [j, dpsis];
+        const dN = transpose(this.shape_gradients(_coord));
+        return [multiply(dN, this.node_coords), dN];
     }
 
     T(_coord) {
-        let p = this.shape_values(_coord);
-        return [multiply([p], this.node_coords), p];
-    }
-
-    async calculateJacobian() {
-        return new Promise((resolve) => {
-            let max_j = -Infinity;
-            let min_j = Infinity;
-            for (const z of this.qp_coords) {
-                const [J, dpz] = this.J(z);
-                const j = det(J);
-                max_j = Math.max(max_j, j);
-                min_j = Math.min(min_j, j);
-            }
-            this.scaledJacobian = min_j / Math.abs(max_j);
-            resolve("resolved!");
-        });
+        let N = this.shape_values(_coord);
+        return [multiply([N], this.node_coords), N];
     }
 
     get sJ() {
         if (this.scaledJacobian) {
             return this.scaledJacobian;
         }
-        let max_j = -Infinity;
-        let min_j = Infinity;
-        for (const z of this.qp_coords) {
-            const [J, dpz] = this.J(z);
-            const j = det(J);
-            max_j = Math.max(max_j, j);
-            min_j = Math.min(min_j, j);
+        let max_qp_jacobi_det = -Infinity;
+        let min_qp_jacobi_det = Infinity;
+        for (const qp_coord of this.qp_coords) {
+            const [qp_jacobi, dN] = this.J(qp_coord);
+            const qp_jacobi_det = det(qp_jacobi);
+            max_qp_jacobi_det = Math.max(max_qp_jacobi_det, qp_jacobi_det);
+            min_qp_jacobi_det = Math.min(min_qp_jacobi_det, qp_jacobi_det);
         }
-        this.scaledJacobian = min_j / Math.abs(max_j);
-        return min_j / Math.abs(max_j);
+        this.scaledJacobian = min_qp_jacobi_det / Math.abs(max_qp_jacobi_det);
+        return min_qp_jacobi_det / Math.abs(max_qp_jacobi_det);
     }
 
     inverseMapping(xo) {
+        console.log(xo)
         const x0 = [];
         for (let i = 0; i < this.ndim; i++) {
             x0.push(xo[i]);
@@ -285,7 +274,7 @@ class Element {
         this.properties = p;
     }
 
-    giveSolutionPoint(z, colorMode, strain, Cfuntion) {
+    giveSolutionPoint(z, colorMode, strain, elasticFunction) {
         let solution = Array(this.Ue[0].length).fill(0.0);
         let [x, P] = this.T(z);
         let [J, dpz] = this.J(z);
@@ -324,49 +313,11 @@ class Element {
         } else if (colorMode[0] === "PROP") {
             let prop_name = colorMode[1];
             result = this.properties[prop_name];
-        } else if (strain && colorMode !== "nocolor") {
-            let C = Cfuntion(this.properties);
-            let epsilon = [0, 0, 0, 0, 0, 0];
-            if (du.length === 3) {
-                const exx = du[0][0];
-                const eyy = du[1][1];
-                const ezz = du[2][2];
-
-                const exy = du[0][1] + du[1][0];
-                const exz = du[0][2] + du[2][0];
-                const eyz = du[1][2] + du[2][1];
-                epsilon = [exx, eyy, ezz, exz, eyz, exy];
-            } else if (du.length === 2) {
-                const exx = du[0][0];
-                const eyy = du[1][1];
-                const exy = du[0][1] + du[1][0];
-                epsilon = [exx, eyy, exy];
-            }
-            let eps = createVector(epsilon);
-            let sigmas = multiply(C, eps);
-            sigmas = transpose(sigmas)[0];
-            epsilon.push(...sigmas);
-            if (du.length === 2) {
-                let sx = sigmas[0];
-                let sy = sigmas[1];
-                let txy = sigmas[2];
-                let s1 =
-                    (sx + sy) / 2 + (((sx - sy) / 2) ** 2 + txy ** 2) ** 0.5;
-                let s2 =
-                    (sx + sy) / 2 - (((sx - sy) / 2) ** 2 + txy ** 2) ** 0.5;
-                let s3 = (s1 - s2) / 2;
-                epsilon.push(s1);
-                epsilon.push(s2);
-                epsilon.push(s3);
-            }
-            result = epsilon[colorMode];
-        } else if (colorMode !== "nocolor") {
-            result = du[colorMode[0]][colorMode[1]];
         }
         return result;
     }
 
-    setMaxDispNode(colorMode, strain, Cfuntion) {
+    setMaxDispNode(colorMode, strain, elasticFunction) {
         this.colors = Array(this.domain.length).fill(0.0);
         for (let i = 0; i < this._domain.length; i++) {
             const z = this._domain[i];
@@ -374,9 +325,17 @@ class Element {
                 z,
                 colorMode,
                 strain,
-                Cfuntion
+                elasticFunction
             );
         }
+    }
+
+    shape_values(_coord) {
+        return undefined;
+    }
+
+    shape_gradients(_coord) {
+        return undefined;
     }
 }
 
@@ -801,7 +760,7 @@ class Quadrilateral extends Element3D {
     order;
     line_order;
 
-    constructor(coords, dofIDs, thick) {
+    constructor(coords, conns, dofIDs, thick) {
         super(coords, conns, dofIDs);
         this.thick = thick;
         this.type = "C1V";
@@ -1248,31 +1207,6 @@ class Serendipity extends Quadrilateral {
     }
 }
 
-const types = {
-    B1V: Brick,
-    B2V: BrickO2,
-    TE1V: Tetrahedral,
-    TE2V: TetrahedralO2,
-    L1V: Lineal,
-    T1V: Triangular,
-    T2V: TriangularO2,
-    C1V: Quadrilateral,
-    C2V: Serendipity,
-    L2V: LinealO2,
-};
-
-function fromElement(e) {
-    let nee = undefined;
-    if (e.thick) {
-        nee = new types[e.type](e.coords, e.dofIDs, e.dofIDs, e.thick);
-    } else {
-        nee = new types[e.type](e.coords, e.dofIDs, e.dofIDs);
-    }
-    nee = Object.assign(nee, e);
-    console.log(nee, e);
-    return nee;
-}
-
 export {
     Brick,
     BrickO2,
@@ -1286,5 +1220,4 @@ export {
     LinealO2,
     Element,
     Element3D,
-    fromElement,
 };
