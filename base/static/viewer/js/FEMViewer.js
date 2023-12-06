@@ -267,6 +267,7 @@ class FEMViewer {
             this.handleVisibilityChange(e)
         );
 
+        this.notiBar.addButton("");
         this.notiBar.addButton("fa fa-refresh", this.reload.bind(this));
         this.playButton = this.notiBar.addButton(
             "fa fa-pause",
