@@ -17,8 +17,8 @@ let lines = true;
 // let path_str = "3D_DRAGON_LIGHT_MODEL";
 // let path_str = "3D_DRAGON_HEAVY_MODEL";
 // let path_str = "3D_BEAM_BRICKS";
-// let path_str = "2D_";
-let path_str = "3D_";
+let path_str = "2D_";
+// let path_str = "3D_";
 
 let queryString = window.location.search;
 let show_menu = true;
@@ -63,6 +63,73 @@ if (queryString !== "") {
         lines = false;
     }
 }
+
+fetch("./resources/job-1-0.vtu")
+    .then(response => response.text())
+    .then(xmlData => {
+        var parser = new DOMParser();
+        var xmlDoc = parser.parseFromString(xmlData, "text/xml");
+
+        const points = xmlDoc.getElementsByTagName("Points")[0]
+        const points_info = points.getElementsByTagName("DataArray")[0]
+        const dimension = parseInt(points_info.getAttribute("NumberOfComponents"))
+        const pointsStr = points.textContent;
+        const pointsStrArray = pointsStr.trim().split(/\s+/);
+        const pointsFloatArray = pointsStrArray.map(function (item) {
+            return parseFloat(item);
+        });
+        let nodes = []
+        for (let i = 0; i < pointsFloatArray.length; i += dimension) {
+            nodes.push(pointsFloatArray.slice(i, i + dimension));
+        }
+
+        const cells = xmlDoc.getElementsByTagName("Cells")[0]
+        const cells_info = cells.getElementsByTagName("DataArray")
+        let offsetsIntArray;
+        if (cells_info[1].getAttribute("Name") === "offsets") {
+            const offsetsStr = cells_info[1].textContent;
+            const offsetsStrArray = offsetsStr.trim().split(/\s+/);
+            offsetsIntArray = offsetsStrArray.map(function (item) {
+                return parseInt(item);
+            });
+        }
+        let typesIntArray;
+        if (cells_info[2].getAttribute("Name") === "types") {
+            const typesStr = cells_info[2].textContent;
+            const typesStrArray = typesStr.trim().split(/\s+/);
+            typesIntArray = typesStrArray.map(function (item) {
+                return parseInt(item);
+            });
+        }
+        let connectivityIntArray;
+        let connectivities = [];
+        if (cells_info[0].getAttribute("Name") === "connectivity") {
+            const connectivityStr = cells_info[0].textContent;
+            const connectivityStrArray = connectivityStr.trim().split(/\s+/);
+            connectivityIntArray = connectivityStrArray.map(function (item) {
+                return parseInt(item);
+            });
+            for (let i = 0; i < offsetsIntArray.length; i++) {
+                if (i === 0) {
+                    connectivities.push(connectivityIntArray.slice(0, offsetsIntArray[i]));
+                } else {
+                    connectivities.push(connectivityIntArray.slice(offsetsIntArray[i - 1], offsetsIntArray[i]));
+                }
+            }
+        }
+
+        const point_data = xmlDoc.getElementsByTagName("PointData")[0]
+        const point_data_info = point_data.getElementsByTagName("DataArray")
+
+        for (let output of point_data_info){
+            console.log(output.getAttribute("Name"))
+        }
+
+        console.log(point_data_info)
+
+        console.log(nodes)
+        console.log(connectivities)
+    });
 
 let path = `./resources/${path_str}.json`;
 if (path_str.startsWith("https://")) {
