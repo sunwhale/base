@@ -1,359 +1,378 @@
 /*LILGUI*/
 
 :root {
-	--gui-background-color: #f6f6f6;
-	--gui-text-color: #3d3d3d;
-	--gui-title-background-color: #efefef;
-	--gui-title-text-color: #3d3d3d;
-	--gui-widget-color: #eaeaea;
-	--gui-hover-color: #f0f0f0;
-	--gui-focus-color: #fafafa;
-	--gui-number-color: #07aacf;
-	--gui-string-color: #8da300;
+    --gui-background-color: #f6f6f6;
+    --gui-text-color: #3d3d3d;
+    --gui-title-background-color: #efefef;
+    --gui-title-text-color: #3d3d3d;
+    --gui-widget-color: #eaeaea;
+    --gui-hover-color: #f0f0f0;
+    --gui-focus-color: #fafafa;
+    --gui-number-color: #07aacf;
+    --gui-string-color: #8da300;
 
-	--background-color: var(--gui-background-color);
-	--over-background-color: var(--gui-background-color);
-	--focus-color: #dc2c41;
-	--lines-color: var(--gui-text-color);
-	--font-family: "Roboto", sans-serif;
-	--plot-grid-color: var(--gui-title-background-color);
+    --background-color: var(--gui-background-color);
+    --over-background-color: var(--gui-background-color);
+    --focus-color: #dc2c41;
+    --lines-color: var(--gui-text-color);
+    --font-family: "Roboto", sans-serif;
+    --plot-grid-color: var(--gui-title-background-color);
 }
-@media (prefers-color-scheme: dark) {
-	:root {
-		--gui-background-color: #1f1f1f;
-		--gui-text-color: #ebebeb;
-		--gui-title-background-color: #111111;
-		--gui-title-text-color: #ebebeb;
-		--gui-widget-color: #424242;
-		--gui-hover-color: #4f4f4f;
-		--gui-focus-color: #595959;
-		--gui-number-color: #2cc9ff;
-		--gui-string-color: #a2db3c;
 
-		--focus-color: var(--gui-focus-color);
-		--background-color: var(--gui-background-color);
-		--over-background-color: var(--gui-background-color);
-		--plot-grid-color: #616161;
-	}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --gui-background-color: #1f1f1f;
+        --gui-text-color: #ebebeb;
+        --gui-title-background-color: #111111;
+        --gui-title-text-color: #ebebeb;
+        --gui-widget-color: #424242;
+        --gui-hover-color: #4f4f4f;
+        --gui-focus-color: #595959;
+        --gui-number-color: #2cc9ff;
+        --gui-string-color: #a2db3c;
+
+        --focus-color: var(--gui-focus-color);
+        --background-color: var(--gui-background-color);
+        --over-background-color: var(--gui-background-color);
+        --plot-grid-color: #616161;
+    }
 }
 
 .lil-gui {
-	--background-color: var(--gui-background-color);
-	--text-color: var(--gui-text-color);
-	--title-background-color: var(--gui-title-background-color);
-	--title-text-color: var(--title-gui-text-color);
-	--widget-color: var(--gui-widget-color);
-	--hover-color: var(--gui-hover-color);
-	--focus-color: var(--gui-focus-color);
-	--number-color: var(--gui-number-color);
-	--string-color: var(--gui-string-color);
-	--widget-padding: var(--gui-widget-padding);
+    --background-color: var(--gui-background-color);
+    --text-color: var(--gui-text-color);
+    --title-background-color: var(--gui-title-background-color);
+    --title-text-color: var(--title-gui-text-color);
+    --widget-color: var(--gui-widget-color);
+    --hover-color: var(--gui-hover-color);
+    --focus-color: var(--gui-focus-color);
+    --number-color: var(--gui-number-color);
+    --string-color: var(--gui-string-color);
+    --widget-padding: var(--gui-widget-padding);
 }
 
 html,
 body {
-	margin: 0px;
-	height: 100%;
+    margin: 0px;
+    height: 100%;
 
-	font-family: var(--font-family);
-	background-color: var(--background-color);
-	color: var(--gui-text-color);
+    font-family: var(--font-family);
+    background-color: var(--background-color);
+    color: var(--gui-text-color);
 }
 
 .noselect {
-	-webkit-touch-callout: none; /* iOS Safari */
-	-webkit-user-select: none; /* Safari */
-	-khtml-user-select: none; /* Konqueror HTML */
-	-moz-user-select: none; /* Old versions of Firefox */
-	-ms-user-select: none; /* Internet Explorer/Edge */
-	user-select: none; /* Non-prefixed version, currently
-									supported by Chrome, Edge, Opera and Firefox */
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Old versions of Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome, Edge, Opera and Firefox */
 }
+
 .box {
-	height: 100%;
-	overflow: hidden;
+    height: 100%;
+    overflow: hidden;
 }
+
 .side-pane {
-	width: 100%;
-	float: left;
+    width: 100%;
+    float: left;
 }
 
 .mini-box {
-	position: absolute;
-	background-color: var(--over-background-color);
-	top: 20px;
-	left: 20px;
-	height: 320px;
-	width: 370px;
-	overflow: hidden;
-	border: solid 2px var(--gui-title-background-color);
-	border-radius: 6px;
+    position: absolute;
+    background-color: var(--over-background-color);
+    top: 20px;
+    left: 20px;
+    height: 320px;
+    width: 370px;
+    overflow: hidden;
+    border: solid 2px var(--gui-title-background-color);
+    border-radius: 6px;
 }
+
 .mini-box-center {
-	position: absolute;
-	background-color: var(--over-background-color);
-	height: 400px;
-	width: 700px;
-	left: calc(50% - 700px / 2);
-	top: calc(50% - 400px / 2);
-	overflow: hidden;
-	border: solid 2px var(--gui-title-background-color);
-	border-radius: 6px;
+    position: absolute;
+    background-color: var(--over-background-color);
+    height: 400px;
+    width: 700px;
+    left: calc(50% - 700px / 2);
+    top: calc(50% - 400px / 2);
+    overflow: hidden;
+    border: solid 2px var(--gui-title-background-color);
+    border-radius: 6px;
 }
+
 .modal-content-container {
-	width: 100%;
-	height: 100%;
+    width: 100%;
+    height: 100%;
 }
 
 /* The Modal (background) */
 .modal {
-	display: none; /* Hidden by default */
-	position: fixed; /* Stay in place */
-	z-index: 1; /* Sit on top */
-	left: 0;
-	top: 0;
-	width: 100%; /* Full width */
-	height: 100%; /* Full height */
-	overflow: hidden; /* Enable scroll if needed */
-	background-color: rgb(0, 0, 0); /* Fallback color */
-	background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: hidden; /* Enable scroll if needed */
+    background-color: rgb(0, 0, 0); /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.4); /* Black w/ opacity */
 }
 
 .middle {
-	display: table-cell;
-	vertical-align: middle;
+    display: table-cell;
+    vertical-align: middle;
 }
 
 /* Modal Content/Box */
 .modal-content {
-	padding: 30px;
-	margin-left: auto;
-	margin-right: auto;
-	width: 75%; /* Could be more or less, depending on screen size */
+    padding: 30px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 75%; /* Could be more or less, depending on screen size */
 
-	background-color: var(--gui-background-color);
-	border: 1px solid var(--gui-title-background-color);
-	border-radius: 10px;
+    background-color: var(--gui-background-color);
+    border: 1px solid var(--gui-title-background-color);
+    border-radius: 10px;
 }
 
 /* The Close Button */
 .close {
-	color: #aaa;
-	float: right;
-	font-size: 28px;
-	font-weight: bold;
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
 }
+
 .closeButton {
-	font-size: 20px;
-	font-weight: bold;
+    font-size: 20px;
+    font-weight: bold;
 }
 
 .close:hover,
 .close:focus {
-	color: black;
-	text-decoration: none;
-	cursor: pointer;
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
 }
 
 .loaderIcon {
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	z-index: 1;
-	width: 120px;
-	height: 120px;
-	margin: -76px 0 0 -76px;
-	border: 16px solid var(--gui-widget-color);
-	border-radius: 50%;
-	border-top: 16px solid var(--focus-color);
-	-webkit-animation: spin 2s linear infinite;
-	animation: spin 2s linear infinite;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    width: 120px;
+    height: 120px;
+    margin: -76px 0 0 -76px;
+    border: 16px solid var(--gui-widget-color);
+    border-radius: 50%;
+    border-top: 16px solid var(--focus-color);
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
 }
 
 @-webkit-keyframes spin {
-	0% {
-		-webkit-transform: rotate(0deg);
-	}
-	100% {
-		-webkit-transform: rotate(360deg);
-	}
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
 }
 
 @keyframes spin {
-	0% {
-		transform: rotate(0deg);
-	}
-	100% {
-		transform: rotate(360deg);
-	}
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Add animation to "page content" */
 .animate-bottom {
-	position: relative;
-	-webkit-animation-name: animatebottom;
-	-webkit-animation-duration: 1s;
-	animation-name: animatebottom;
-	animation-duration: 1s;
+    position: relative;
+    -webkit-animation-name: animatebottom;
+    -webkit-animation-duration: 1s;
+    animation-name: animatebottom;
+    animation-duration: 1s;
 }
 
 @-webkit-keyframes animatebottom {
-	from {
-		bottom: -100px;
-		opacity: 0;
-	}
-	to {
-		bottom: 0px;
-		opacity: 1;
-	}
+    from {
+        bottom: -100px;
+        opacity: 0;
+    }
+    to {
+        bottom: 0px;
+        opacity: 1;
+    }
 }
 
 @keyframes animatebottom {
-	from {
-		bottom: -100px;
-		opacity: 0;
-	}
-	to {
-		bottom: 0;
-		opacity: 1;
-	}
+    from {
+        bottom: -100px;
+        opacity: 0;
+    }
+    to {
+        bottom: 0;
+        opacity: 1;
+    }
 }
+
 .draggable {
-	touch-action: none;
+    touch-action: none;
 }
+
 .draggableModalManager {
-	touch-action: none;
+    touch-action: none;
 }
+
 .resizable {
-	touch-action: none;
+    touch-action: none;
 }
 
 /*NOTIFICATION BAR*/
 
 .notification-bottom {
-	text-align: right;
-	font-size: 11px;
-	margin-right: 10px;
-	margin-left: 10px;
-	min-width: 100px;
+    text-align: right;
+    font-size: 11px;
+    margin-right: 10px;
+    margin-left: 10px;
+    min-width: 100px;
 }
 
 .fa {
-	color: var(--text-color);
+    color: var(--text-color);
 }
+
 .lil-gui.root {
-	position: absolute;
-	top: 0px;
-	left: 0px;
+    position: absolute;
+    top: 0px;
+    left: 0px;
 }
 
 .notification-container {
-	position: absolute;
-	bottom: -5px;
-	left: -5px;
-	border-radius: 10px;
-	background-color: var(--gui-background-color);
+    position: absolute;
+    bottom: -5px;
+    left: -5px;
+    border-radius: 10px;
+    background-color: var(--gui-background-color);
 }
+
 .notification-container-ev {
-	position: absolute;
-	bottom: -5px;
-	background-color: var(--gui-title-background-color);
-	width: 100%;
+    position: absolute;
+    bottom: -5px;
+    background-color: var(--gui-title-background-color);
+    width: 100%;
 }
 
 .modal-content-view {
-	margin-top: 20px;
-	width: 100%;
-	height: 85%;
+    margin-top: 20px;
+    width: 100%;
+    height: 85%;
 }
 
 .header-element-viewer {
-	font-size: 14px;
-	width: 100%;
-	padding-left: 5px;
-	padding-top: 5px;
-	padding-bottom: 5px;
-	background-color: var(--gui-title-background-color);
+    font-size: 14px;
+    width: 100%;
+    padding-left: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    background-color: var(--gui-title-background-color);
 }
 
 progress {
-	accent-color: var(--focus-color);
+    accent-color: var(--focus-color);
 }
+
 .notification-button {
-	float: left;
-	margin-right: 5px;
-	padding-right: 5px;
-	border-right: solid 1px var(--gui-widget-color);
+    float: left;
+    margin-right: 5px;
+    padding-right: 5px;
+    border-right: solid 1px var(--gui-widget-color);
 }
+
 .notification-button-ev {
-	float: left;
-	margin-right: 5px;
-	padding-right: 5px;
+    float: left;
+    margin-right: 5px;
+    padding-right: 5px;
 }
+
 .notification-bottom-ev {
-	text-align: left;
-	font-size: 11px;
-	margin-right: 10px;
-	margin-left: 10px;
-	width: 100%;
+    text-align: left;
+    font-size: 11px;
+    margin-right: 10px;
+    margin-left: 10px;
+    width: 100%;
 }
+
 .notification-action {
-	border: none;
-	background-color: transparent;
+    border: none;
+    background-color: transparent;
 }
+
 .notification-action:hover {
-	background-color: #d4d4d4;
+    background-color: #d4d4d4;
 }
+
 /* The slider itself */
 .slider {
-	-webkit-appearance: none; /* Override default CSS styles */
-	appearance: none;
-	width: 100%; /* Full-width */
-	height: 15px; /* Specified height */
-	background: var(--gui-widget-color); /* Grey background */
-	outline: none; /* Remove outline */
-	opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
-	-webkit-transition: 0.2s; /* 0.2 seconds transition on hover */
-	transition: opacity 0.2s;
+    -webkit-appearance: none; /* Override default CSS styles */
+    appearance: none;
+    width: 100%; /* Full-width */
+    height: 15px; /* Specified height */
+    background: var(--gui-widget-color); /* Grey background */
+    outline: none; /* Remove outline */
+    opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+    -webkit-transition: 0.2s; /* 0.2 seconds transition on hover */
+    transition: opacity 0.2s;
 }
 
 /* Mouse-over effects */
 .slider:hover {
-	opacity: 1; /* Fully shown on mouse-over */
+    opacity: 1; /* Fully shown on mouse-over */
 }
 
 /* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
 .slider::-webkit-slider-thumb {
-	-webkit-appearance: none; /* Override default look */
-	appearance: none;
-	width: 25px; /* Set a specific slider handle width */
-	height: 15px; /* Slider handle height */
-	background: var(--focus-color); /* Green background */
-	cursor: pointer; /* Cursor on hover */
+    -webkit-appearance: none; /* Override default look */
+    appearance: none;
+    width: 25px; /* Set a specific slider handle width */
+    height: 15px; /* Slider handle height */
+    background: var(--focus-color); /* Green background */
+    cursor: pointer; /* Cursor on hover */
 }
 
 .slider::-moz-range-thumb {
-	width: 25px; /* Set a specific slider handle width */
-	height: 15px; /* Slider handle height */
-	background: var(--focus-color); /* Green background */
-	cursor: pointer; /* Cursor on hover */
+    width: 25px; /* Set a specific slider handle width */
+    height: 15px; /* Slider handle height */
+    background: var(--focus-color); /* Green background */
+    cursor: pointer; /* Cursor on hover */
 }
 
 .dropzone {
-	width: 30%;
-	min-width: 300px;
-	border-radius: 6px;
-	border: solid var(--gui-title-background-color) !important;
-	background: var(--gui-background-color) !important;
+    width: 30%;
+    min-width: 300px;
+    border-radius: 6px;
+    border: solid var(--gui-title-background-color) !important;
+    background: var(--gui-background-color) !important;
 }
+
 .dropzone:hover {
-	border: solid var(--gui-text-color) !important;
-	background: var(--gui-title-background-color) !important;
+    border: solid var(--gui-text-color) !important;
+    background: var(--gui-title-background-color) !important;
 }
+
 .dropzone-container {
-	text-align: center;
-	align-items: center;
+    text-align: center;
+    align-items: center;
 }
+
 form {
-	display: inline-block;
+    display: inline-block;
 }
