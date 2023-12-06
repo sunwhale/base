@@ -95,24 +95,27 @@ class Legend {
 
     createCanvas() {
         const canvas = document.createElement("canvas");
-        canvas.width = 1;
-        canvas.height = this.n;
-
+        canvas.width = 256;
+        canvas.height = 512;
         this.updateCanvas(canvas);
 
         return canvas;
     }
 
     updateCanvas(canvas) {
-        const ctx = canvas.getContext("2d", {alpha: false});
+        const ctx = canvas.getContext("2d", {alpha: true});
 
-        const imageData = ctx.getImageData(0, 0, 1, this.n);
+        ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+        const up_margin = 20
+
+        const imageData = ctx.getImageData(0, 0, up_margin, canvas.height - up_margin * 2);
 
         const data = imageData.data;
 
         let k = 0;
 
-        const step = 1.0 / this.n;
+        const step = 1.0 / canvas.height / up_margin;
 
         for (let i = 1; i >= 0; i -= step) {
             for (let j = this.map.length - 1; j >= 0; j--) {
@@ -138,7 +141,21 @@ class Legend {
             }
         }
 
-        ctx.putImageData(imageData, 0, 0);
+        let font_size = 32
+        let segment = 8
+
+        ctx.font = '32px Arial';
+        ctx.fillStyle = 'white';
+
+        let y = font_size
+        let value = this.maxV
+        for (let i = 0; i < segment + 1; i++) {
+            ctx.fillText(value.toPrecision(4), font_size, y);
+            y += (canvas.height - 2 * up_margin) / segment
+            value -= (this.maxV - this.minV) / segment
+        }
+
+        ctx.putImageData(imageData, 0, up_margin);
 
         return canvas;
     }

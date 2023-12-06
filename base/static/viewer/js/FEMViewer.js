@@ -691,18 +691,16 @@ class FEMViewer {
         this.camera.add(this.light1);
         this.scene.add(this.light2);
 
+        // Legend
         this.orthoCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 2);
-        this.orthoCamera.position.set(-0.95, 0, 1);
+        this.orthoCamera.position.set(-0.9, 0, 1);
         this.uiScene = new THREE.Scene();
         this.sprite = new THREE.Sprite(
             new THREE.SpriteMaterial({
                 map: new THREE.CanvasTexture(this.legend.createCanvas()),
             })
         );
-
-        this.sprite.scale.x = 20.0 / this.container.clientWidth;
         this.uiScene.add(this.sprite);
-
         this.gh = new AxisGridHelper(this.scene, 0);
         this.gh.visible = this.axis;
 
@@ -886,10 +884,10 @@ class FEMViewer {
     updateLegend() {
         this.legend.setColorMap(this.colormap);
         const map = this.sprite.material.map;
-        this.legend.updateCanvas(map.image);
-        map.needsUpdate = true;
         this.legend.setMax(this.max_color_value);
         this.legend.setMin(this.min_color_value);
+        this.legend.updateCanvas(map.image);
+        map.needsUpdate = true;
         this.updateMaterial();
         this.updateColorValues();
         this.updateGeometry();
@@ -1046,7 +1044,8 @@ class FEMViewer {
         if (needResize) {
             this.renderer.setSize(width, height, false);
         }
-        this.sprite.scale.x = 20.0 / this.container.clientWidth;
+        this.sprite.scale.x = 256.0 / this.container.clientWidth;
+        this.sprite.scale.y = 512.0 / this.container.clientHeight;
         return needResize;
     }
 
