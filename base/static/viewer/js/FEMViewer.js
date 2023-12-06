@@ -212,7 +212,7 @@ class FEMViewer {
         this.info = "";
         this.ndim = -1;
         this.border_elements = [];
-        this.config_dict = CONFIG_DICT["GENERAL"];
+        this.config_dict = CONFIG_DICT["Elasticity"];
         this.dimensions = ["x", "y", "z"];
 
         // THREE JS
@@ -416,9 +416,154 @@ class FEMViewer {
         if (border_elements !== undefined) {
             jsondata["border_elements"] = border_elements;
         }
+        console.log(jsondata)
         this.parseJSON(jsondata);
         this.notiBar.resetMessage();
     }
+
+    async loadXML(xml_path) {
+        this.notiBar.setMessage("加载模型..." + "⌛", true);
+        this.filename = xml_path
+        await fetch(xml_path)
+            .then(response => response.text())
+            .then(xmlData => {
+                var parser = new DOMParser();
+                var xmlDoc = parser.parseFromString(xmlData, "text/xml");
+
+                const points = xmlDoc.getElementsByTagName("Points")[0]
+                const points_info = points.getElementsByTagName("DataArray")[0]
+                const dimension = parseInt(points_info.getAttribute("NumberOfComponents"))
+                const pointsStr = points.textContent;
+                const pointsStrArray = pointsStr.trim().split(/\s+/);
+                const pointsFloatArray = pointsStrArray.map(function (item) {
+                    return parseFloat(item);
+                });
+                let nodes = []
+                for (let i = 0; i < pointsFloatArray.length; i += dimension) {
+                    nodes.push(pointsFloatArray.slice(i, i + dimension));
+                }
+
+                const cells = xmlDoc.getElementsByTagName("Cells")[0]
+                const cells_info = cells.getElementsByTagName("DataArray")
+                let offsetsIntArray;
+                if (cells_info[1].getAttribute("Name") === "offsets") {
+                    const offsetsStr = cells_info[1].textContent;
+                    const offsetsStrArray = offsetsStr.trim().split(/\s+/);
+                    offsetsIntArray = offsetsStrArray.map(function (item) {
+                        return parseInt(item);
+                    });
+                }
+                let typesIntArray;
+                if (cells_info[2].getAttribute("Name") === "types") {
+                    const typesStr = cells_info[2].textContent;
+                    const typesStrArray = typesStr.trim().split(/\s+/);
+                    typesIntArray = typesStrArray.map(function (item) {
+                        return parseInt(item);
+                    });
+                }
+                let connectivityIntArray;
+                let connectivities = [];
+                if (cells_info[0].getAttribute("Name") === "connectivity") {
+                    const connectivityStr = cells_info[0].textContent;
+                    const connectivityStrArray = connectivityStr.trim().split(/\s+/);
+                    connectivityIntArray = connectivityStrArray.map(function (item) {
+                        return parseInt(item);
+                    });
+                    for (let i = 0; i < offsetsIntArray.length; i++) {
+                        if (i === 0) {
+                            connectivities.push(connectivityIntArray.slice(0, offsetsIntArray[i]));
+                        } else {
+                            connectivities.push(connectivityIntArray.slice(offsetsIntArray[i - 1], offsetsIntArray[i]));
+                        }
+                    }
+                }
+                let disp_dimension;
+                let U;
+                let fieldOutputs = {};
+                const point_data = xmlDoc.getElementsByTagName("PointData")[0]
+                const point_data_info = point_data.getElementsByTagName("DataArray")
+                for (let output of point_data_info) {
+                    if (output.getAttribute("Name") === "Displacement") {
+                        disp_dimension = parseInt(output.getAttribute("NumberOfComponents"))
+                        const dispStr = output.textContent;
+                        const dispStrArray = dispStr.trim().split(/\s+/);
+                        U = dispStrArray.map(function (item) {
+                            return parseFloat(item);
+                        });
+                    } else {
+                        const outputName = output.getAttribute("Name")
+                        const outputStr = output.textContent;
+                        const outputStrArray = outputStr.trim().split(/\s+/);
+                        fieldOutputs[outputName] = outputStrArray.map(function (item) {
+                            return parseFloat(item);
+                        })
+                    }
+                }
+                this.norm = 1.0 / max(nodes.flat());
+                this.nodes = nodes;
+                this.nvn = disp_dimension;
+                this.ndim = dimension;
+                this.dictionary = connectivities;
+                this.types = [];
+                this.solutions_info = [];
+                this.solutions = [U];
+                this.frames = [{"fieldOutputs": fieldOutputs}];
+
+                for (let typeInt of typesIntArray) {
+                    if (typeInt === 12) {
+                        this.types.push('B1V')
+                    } else if (typeInt === 9) {
+                        this.types.push('C1V')
+                    }
+
+                }
+
+                this.config_dict = CONFIG_DICT["Elasticity"];
+                this.prop_dict = {};
+                this.prop_dict_names = {};
+                this.loaded = true;
+
+                const secon_coords = this.nodes[0].map((_, colIndex) =>
+                    this.nodes.map((row) => row[colIndex])
+                );
+
+                let size_x = max(secon_coords[0].flat()) - min(secon_coords[0].flat());
+                let size_y = max(secon_coords[1].flat()) - min(secon_coords[1].flat());
+                let size_z = max(secon_coords[2].flat()) - min(secon_coords[2].flat());
+
+                let center_x = (max(secon_coords[0]) + min(secon_coords[0])) / 2;
+                let center_y = (max(secon_coords[1]) + min(secon_coords[1])) / 2;
+                let center_z = (max(secon_coords[2]) + min(secon_coords[2])) / 2;
+                this.center = [
+                    center_x - size_x / 2,
+                    center_y - size_y / 2,
+                    center_z - size_z / 2,
+                ];
+
+                this.size = max(this.nodes.flat()) - min(this.nodes.flat());
+                this._nodes = [];
+                for (let kk = 0; kk < this.nodes.length; kk++) {
+                    this._nodes.push({_xcenter: this.nodes[kk], id: kk});
+                }
+                let h = this.size / 20;
+                let kk = 0;
+                for (const n of this.nodes) {
+                    if (this.ndim === 1 || this.ndim === 2) {
+                        let node = [n[0], n[1], n[2] + h];
+                        this._nodes.push({_xcenter: node, id: kk});
+                        if (this.ndim === 1) {
+                            node = [n[0], n[1] + h, n[2] + h];
+                            this._nodes.push({_xcenter: node, id: kk});
+                            node = [n[0], n[1] + h, n[2]];
+                            this._nodes.push({_xcenter: node, id: kk});
+                        }
+                    }
+                    kk++;
+                }
+            });
+        this.notiBar.resetMessage();
+    }
+
 
     async updateShowOctree() {
         if (this.showOctree) {
@@ -486,7 +631,7 @@ class FEMViewer {
         this.animationFrameID = undefined;
         this.animate = false;
         this.colorOptions = "nocolor";
-        this.config_dict = CONFIG_DICT["GENERAL"];
+        this.config_dict = CONFIG_DICT["Elasticity"];
         this.min_search_radius = -Infinity;
         this.bufferGeometries = [];
         this.bufferLines = [];
@@ -698,19 +843,19 @@ class FEMViewer {
         }
         if (this.config_dict["isDeformed"]) {
             this.disp_gui_disp_folder = this.gui.addFolder("位移");
-            // this.disp_gui_disp_folder
-            //     .add(this, "animate")
-            //     .name("动画")
-            //     .listen()
-            //     .onChange(() => {
-            //         this.notiBar.setMessage("动画播放中");
-            //         if (!this.animate) {
-            //             this.mult = 1.0;
-            //             this.updateMeshCoords();
-            //             this.updateGeometry();
-            //             this.notiBar.resetMessage();
-            //         }
-            //     });
+            this.disp_gui_disp_folder
+                .add(this, "animate")
+                .name("动画")
+                .listen()
+                .onChange(() => {
+                    this.notiBar.setMessage("动画播放中");
+                    if (!this.animate) {
+                        this.mult = 1.0;
+                        this.updateMeshCoords();
+                        this.updateGeometry();
+                        this.notiBar.resetMessage();
+                    }
+                });
             this.magnificationSlider = this.disp_gui_disp_folder
                 .add(this, "magnification", 0, 1)
                 .name("位移缩放倍数")
@@ -729,13 +874,13 @@ class FEMViewer {
         this.reset();
         this.before_load();
         this.notiBar.setMessage("重新加载模型..." + "⌛");
-        await this.loadJSON(this.filename);
+        await this.loadXML(this.filename);
         this.notiBar.resetMessage();
         await this.init(false);
         this.after_load();
     }
 
-    updateLut() {
+    updateLegend() {
         this.legend.setColorMap(this.colormap);
         const map = this.sprite.material.map;
         this.legend.updateCanvas(map.image);
@@ -806,7 +951,7 @@ class FEMViewer {
 
         msg += " 最大值=" + max_str + " 最小值=" + min_str;
         this.notiBar.setMessage(msg);
-        this.updateLut();
+        this.updateLegend();
     }
 
     viewFront() {
@@ -1102,7 +1247,7 @@ class FEMViewer {
                 "无": "nocolor",
                 "|U|": "dispmag",
                 ...variableSelectDict,
-                // "Scaled Jacobi": "scaled_jac",
+                "单元雅克比": "scaled_jac",
                 // ...this.config_dict["dict"],
                 ...this.prop_dict_names,
             })
@@ -1119,17 +1264,17 @@ class FEMViewer {
             ])
             .listen()
             .name("颜色")
-            .onChange(this.updateLut.bind(this));
+            .onChange(this.updateLegend.bind(this));
         this.max_color_value_slider = this.guifolder
             .add(this, "max_color_value", 0.0, 1.0)
             .name("最大值")
             .listen()
-            .onChange(this.updateLut.bind(this));
+            .onChange(this.updateLegend.bind(this));
         this.min_color_value_slider = this.guifolder
             .add(this, "min_color_value", 0.0, 1.0)
             .name("最小值")
             .listen()
-            .onChange(this.updateLut.bind(this));
+            .onChange(this.updateLegend.bind(this));
         this.guifolder
             .add(this, "step", this.solutions_info_str)
             .onChange(this.updateSolution.bind(this))
@@ -1352,10 +1497,6 @@ class FEMViewer {
         }
     }
 
-    updateSolutionInfo() {
-        this.infoDetail = this.solutions_info[this.step][this.info];
-    }
-
     updateDispSlider() {
         const max_disp = max(this.U);
         const min_disp = min(this.U);
@@ -1396,7 +1537,6 @@ class FEMViewer {
     updateSolution() {
         this.updateU();
         this.updateGeometry();
-        this.updateSolutionInfo();
     }
 
     updateSolutionAsDisplacement() {
@@ -1407,7 +1547,6 @@ class FEMViewer {
         }
         this.updateMeshCoords();
         this.updateGeometry();
-        this.updateSolutionInfo();
     }
 
     prevSolution() {
