@@ -416,7 +416,6 @@ class FEMViewer {
         if (border_elements !== undefined) {
             jsondata["border_elements"] = border_elements;
         }
-        console.log(jsondata)
         this.parseJSON(jsondata);
         this.notiBar.resetMessage();
     }
@@ -427,8 +426,10 @@ class FEMViewer {
         await fetch(xml_path)
             .then(response => response.text())
             .then(xmlData => {
-                var parser = new DOMParser();
-                var xmlDoc = parser.parseFromString(xmlData, "text/xml");
+                let parser = new DOMParser();
+                let xmlDoc = parser.parseFromString(xmlData, "text/xml");
+
+                this.config_dict = CONFIG_DICT["GENERAL"];
 
                 const points = xmlDoc.getElementsByTagName("Points")[0]
                 const points_info = points.getElementsByTagName("DataArray")[0]
@@ -484,6 +485,9 @@ class FEMViewer {
                 const point_data_info = point_data.getElementsByTagName("DataArray")
                 for (let output of point_data_info) {
                     if (output.getAttribute("Name") === "Displacement") {
+                        this.config_dict = {
+                            ...CONFIG_DICT["Displacement"],
+                        };
                         disp_dimension = parseInt(output.getAttribute("NumberOfComponents"))
                         const dispStr = output.textContent;
                         const dispStrArray = dispStr.trim().split(/\s+/);
@@ -518,7 +522,6 @@ class FEMViewer {
 
                 }
 
-                this.config_dict = CONFIG_DICT["Elasticity"];
                 this.prop_dict = {};
                 this.prop_dict_names = {};
                 this.loaded = true;
@@ -563,7 +566,6 @@ class FEMViewer {
             });
         this.notiBar.resetMessage();
     }
-
 
     async updateShowOctree() {
         if (this.showOctree) {
@@ -631,7 +633,7 @@ class FEMViewer {
         this.animationFrameID = undefined;
         this.animate = false;
         this.colorOptions = "nocolor";
-        this.config_dict = CONFIG_DICT["Elasticity"];
+        this.config_dict = CONFIG_DICT["GENERAL"];
         this.min_search_radius = -Infinity;
         this.bufferGeometries = [];
         this.bufferLines = [];
@@ -833,7 +835,7 @@ class FEMViewer {
                 })
                 .listen()
 
-                .name("Variable")
+                .name("坐标方向")
                 .onChange(this.updateVariableAsSolution.bind(this));
             this.variable_as_displacement = 2;
         }
@@ -869,15 +871,16 @@ class FEMViewer {
 
     async reload() {
         cancelAnimationFrame(this.animationFrameID);
-
         this.animate = false;
         this.reset();
         this.before_load();
         this.notiBar.setMessage("重新加载模型..." + "⌛");
         await this.loadXML(this.filename);
+        // await this.loadJSON(this.filename);
         this.notiBar.resetMessage();
         await this.init(false);
         this.after_load();
+        console.log(this.clock)
     }
 
     updateLegend() {
@@ -1126,8 +1129,8 @@ class FEMViewer {
         // this.model.rotation.z += 0.005;
         // 旋转相机的位置和目标点
         let r = (this.camera.position.x ** 2 + this.camera.position.y ** 2) ** 0.5
-        this.camera.position.x = Math.sin(Date.now() * 0.0002) * r;
-        this.camera.position.y = Math.cos(Date.now() * 0.0002) * r;
+        this.camera.position.x = Math.sin(this.clock.elapsedTime * 0.1) * r;
+        this.camera.position.y = Math.cos(this.clock.elapsedTime * 0.1) * r;
         this.camera.lookAt(0, 0, 0);
         this.renderer.render(this.scene, this.camera);
     }
@@ -1245,9 +1248,12 @@ class FEMViewer {
         this.color_select_option = this.guifolder
             .add(this, "colorOptions", {
                 "无": "nocolor",
-                "|U|": "dispmag",
+                "|U|": "|U|",
+                "U1": "U1",
+                "U2": "U2",
+                "U3": "U3",
                 ...variableSelectDict,
-                "单元雅克比": "scaled_jac",
+                "单元雅克比": "scaled_jacobi",
                 // ...this.config_dict["dict"],
                 ...this.prop_dict_names,
             })

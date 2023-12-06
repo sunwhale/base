@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='utf-8'?>
+<VTKFile type="UnstructuredGrid" version="0.1" byte_order="LittleEndian"><UnstructuredGrid><Piece NumberOfPoints="9" NumberOfCells="4"><PointData><DataArray type="Float64" Name="Displacement" NumberOfComponents="3" format="ascii">1.2500000000082722e-14 1.1240123458943286e-26 0.0 
+0.004687500000019123 1.5276668818772134e-27 0.0 
+0.004687500000018293 -0.0015624999999992088 0.0 
+1.2499999999970044e-14 -0.0015625000000033765 0.0 
+0.002343750000012555 -1.2767031876001298e-26 0.0 
+0.004687500000018791 -0.0007812499999972244 0.0 
+0.0023437500000274697 -0.0015624999999987066 0.0 
+2.4999999999947232e-14 -0.0007812500000041144 0.0 
+0.002343750000021358 -0.0007812500000005737 0.0 
+</DataArray><DataArray type="Float64" Name="S11" NumberOfComponents="1" format="ascii">0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+</DataArray><DataArray type="Float64" Name="S22" NumberOfComponents="1" format="ascii">0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+</DataArray><DataArray type="Float64" Name="S12" NumberOfComponents="1" format="ascii">0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+0.0
+</DataArray><DataArray type="Float64" Name="E11" NumberOfComponents="1" format="ascii">0.004687500000000782
+0.004687499999999633
+0.004687499999999673
+0.004687499999999912
+0.004687500000000207
+0.004687499999999653
+0.0046874999999997925
+0.004687500000000348
+0.0046875
+</DataArray><DataArray type="Float64" Name="E22" NumberOfComponents="1" format="ascii">-0.0015625000000008826
+-0.0015624999999992546
+-0.001562499999998661
+-0.0015625000000012
+-0.0015625000000000686
+-0.001562499999998958
+-0.0015624999999999307
+-0.0015625000000010414
+-0.0015624999999999997
+</DataArray><DataArray type="Float64" Name="E12" NumberOfComponents="1" format="ascii">1.43204946598946e-14
+1.29761381761212e-15
+-2.0623964775562387e-15
+-8.700505593761676e-15
+7.80905423875336e-15
+-3.823913299720594e-16
+-5.381451035658957e-15
+2.809994533066462e-15
+1.2138016015472014e-15
+</DataArray></PointData><Points><DataArray type="Float64" NumberOfComponents="3" format="ascii">0.000000 0.000000 0.0
+1.000000 -0.000000 0.0
+1.000000 1.000000 0.0
+0.000000 1.000000 0.0
+0.500000 0.000000 0.0
+1.000000 0.500000 0.0
+0.500000 1.000000 0.0
+0.000000 0.500000 0.0
+0.500000 0.500000 0.0
+</DataArray></Points><Cells><DataArray type="Int32" Name="connectivity" format="ascii">2 6 8 5
+5 8 4 1
+6 3 7 8
+8 7 0 4
+</DataArray><DataArray type="Int32" Name="offsets" format="ascii">4
+8
+12
+16
+</DataArray><DataArray type="UInt8" Name="types" format="ascii">9
+9
+9
+9
+</DataArray></Cells></Piece></UnstructuredGrid></VTKFile>

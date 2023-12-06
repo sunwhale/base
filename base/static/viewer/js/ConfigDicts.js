@@ -15,6 +15,10 @@ function fun_es(props) {
 	];
 }
 
+const Displacement = {
+	isDeformed: true,
+};
+
 const Elasticity = {
 	calculateStrain: true,
 	isDeformed: true,
@@ -150,5 +154,6 @@ const CONFIG_DICT = {
 	PlaneStressNonLocalSparse: PlaneStressSparse,
 	PlaneStressSparse: PlaneStressSparse,
 	NonLocalElasticityFromTensor: Elasticity,
+	Displacement: Displacement,
 };
 export { CONFIG_DICT };

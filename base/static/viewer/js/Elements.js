@@ -286,7 +286,44 @@ class Element {
             for (let i = 0; i < N.length; i++) {
                 result += N[i] * solution[i];
             }
-        } else if (colorMode === "scaled_jac") {
+        } else if (colorMode === "|U|") {
+            let variable = this.Ue
+            for (let i = 0; i < this.Ue[0].length; i++) {
+                let disp_magnitude = 0.0;
+                for (let j = 0; j < this.nvn; j++) {
+                    let ui = variable[j][i];
+                    disp_magnitude += ui ** 2;
+                }
+                solution[i] = disp_magnitude ** 0.5;
+            }
+            for (let i = 0; i < N.length; i++) {
+                result += N[i] * solution[i];
+            }
+        } else if (colorMode === "U1") {
+            let variable = this.Ue
+            for (let i = 0; i < this.Ue[0].length; i++) {
+                solution[i] = variable[0][i];
+            }
+            for (let i = 0; i < N.length; i++) {
+                result += N[i] * solution[i];
+            }
+        } else if (colorMode === "U2") {
+            let variable = this.Ue
+            for (let i = 0; i < this.Ue[0].length; i++) {
+                solution[i] = variable[1][i];
+            }
+            for (let i = 0; i < N.length; i++) {
+                result += N[i] * solution[i];
+            }
+        } else if (colorMode === "U3") {
+            let variable = this.Ue
+            for (let i = 0; i < this.Ue[0].length; i++) {
+                solution[i] = variable[2][i];
+            }
+            for (let i = 0; i < N.length; i++) {
+                result += N[i] * solution[i];
+            }
+        } else if (colorMode === "scaled_jacobi") {
             result = this.sJ;
         } else if (colorMode[0] === "PROP") {
             let prop_name = colorMode[1];
