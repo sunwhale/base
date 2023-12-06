@@ -29,6 +29,12 @@ def return_to_main():
         active_window.load_url('/')
 
 
+def open_viewer():
+    active_window = webview.active_window()
+    if active_window:
+        active_window.load_url('/viewer')
+
+
 def show_help():
     active_window = webview.active_window()
     if active_window:
@@ -53,6 +59,7 @@ if __name__ == "__main__":
     # 需要 python >= 3.10 否则添加菜单时会报错
     menu_items = [
         wm.MenuAction('主界面', return_to_main),
+        wm.MenuAction('JSViewer', open_viewer),
         wm.Menu(
             '帮助',
             [
