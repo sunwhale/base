@@ -878,7 +878,6 @@ class FEMViewer {
         this.notiBar.resetMessage();
         await this.init(false);
         this.after_load();
-        console.log(this.clock)
     }
 
     updateLegend() {

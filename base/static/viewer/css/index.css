@@ -252,15 +252,15 @@ body {
 
 .lil-gui.root {
     position: absolute;
-    top: 0px;
+    top: 1px;
     left: 0px;
 }
 
 .notification-container {
     position: absolute;
-    bottom: -5px;
-    left: -5px;
-    border-radius: 10px;
+    bottom: 1px;
+    left: 0px;
+    border-radius: 2px;
     background-color: var(--gui-background-color);
 }
 
