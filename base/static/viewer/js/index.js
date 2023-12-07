@@ -6,6 +6,7 @@ let mode = 0;
 let axis = 1;
 let zoom = 1;
 let lines = true;
+let url = "";
 
 // let path_str = "2D_SINGLE_TRIANGLE";
 // let path_str = "2D_SINGLE_SQUARE";
@@ -34,11 +35,13 @@ if (queryString !== "") {
     let axis_param = parameters.get("axis");
     let zoom_param = parameters.get("zoom");
     let lines_param = parameters.get("lines");
-    theme_param = parameters.get("theme");
+    let url_param = parameters.get("url");
+    if (url_param) {
+        url = url_param;
+    }
     if (theme_param) {
         theme = theme_param;
     }
-    show_menu = parameters.get("menu");
     if (function_param) {
         path_str = function_param;
     }
@@ -64,11 +67,11 @@ if (queryString !== "") {
     }
 }
 
-let path = `./resources/${path_str}.json`;
-if (path_str.startsWith("https://")) {
-    path = path_str;
-}
-console.log(path);
+// let path = `./resources/${path_str}.json`;
+// if (path_str.startsWith("https://")) {
+//     path = path_str;
+// }
+// console.log(filename);
 
 const container = document.getElementById("models-container");
 container.style.background = "linear-gradient(to bottom, #263750, #8594aa)";
@@ -80,8 +83,7 @@ O.updateColors();
 O.updateMaterial();
 O.draw_lines = lines;
 // await O.loadJSON(path);
-await O.loadXML("./resources/job-1-1.vtu");
-// await O.loadXML("./resources/plane_4quad4.vtu");
+await O.loadXML(url);
 
 O.step = mode;
 await O.init();

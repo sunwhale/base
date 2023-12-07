@@ -8,8 +8,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, rend
                    send_from_directory, url_for)
 from flask_login import login_required
 
-
-viewer_bp = Blueprint('viewer_bp', __name__)
+viewer_bp = Blueprint('viewer', __name__)
 
 
 @viewer_bp.route('/', methods=['GET', 'POST'])
