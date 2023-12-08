@@ -237,7 +237,7 @@ class FEMViewer {
         this.colors = false;
         this.animate = false;
         this.magnification = magnification;
-        this.mult = 1.0;
+        this.animate_mult = 1.0;
         this.side = 1.0;
         this.draw_lines = true;
         this.colormap = "冷热图";
@@ -820,7 +820,7 @@ class FEMViewer {
 
     updateVariableAsSolution() {
         this.animate = false;
-        this.mult = 1;
+        this.animate_mult = 1;
         this.magnification = 0.4 / this.max_abs_disp;
         this.updateDispSlider();
         this.updateSolutionAsDisplacement();
@@ -860,7 +860,7 @@ class FEMViewer {
                 .onChange(() => {
                     this.notiBar.setMessage("动画播放中");
                     if (!this.animate) {
-                        this.mult = 1.0;
+                        this.animate_mult = 1.0;
                         this.updateMeshCoords();
                         this.updateGeometry();
                         this.notiBar.resetMessage();
@@ -1074,9 +1074,9 @@ class FEMViewer {
         for (let i = 0; i < this.elements.length; i++) {
             const e = this.elements[i];
             if (this.draw_lines) {
-                e.setGeometryCoords(this.magnification * this.mult, this.norm);
+                e.setGeometryCoords(this.magnification * this.animate_mult, this.norm);
             } else {
-                e.setGeometryCoords(this.magnification * this.mult, this.norm);
+                e.setGeometryCoords(this.magnification * this.animate_mult, this.norm);
             }
         }
         if (this.colors) {
@@ -1161,16 +1161,25 @@ class FEMViewer {
         } else {
             time = 0.0;
         }
-        this.mult += time * this.side;
-        if (this.mult > 1) {
+        this.animate_mult += time * this.side;
+        // +-1 振动
+        // if (this.animate_mult > 1) {
+        //     this.side = -1.0;
+        //     this.animate_mult = 1.0;
+        // } else if (this.animate_mult < -1) {
+        //     this.side = 1.0;
+        //     this.animate_mult = -1.0;
+        // }
+        // 0-1 振动
+        if (this.animate_mult > 1) {
             this.side = -1.0;
-            this.mult = 1.0;
-        } else if (this.mult < -1) {
+            this.animate_mult = 1.0;
+        } else if (this.animate_mult < 0) {
             this.side = 1.0;
-            this.mult = -1.0;
+            this.animate_mult = 0.0;
         }
         if (!this.animate) {
-            this.mult = 1.0;
+            this.animate_mult = 1.0;
         }
         if (this.rot) {
             this.rotateModel();
