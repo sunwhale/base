@@ -908,9 +908,9 @@ class FEMViewer {
         if (co !== "nocolor") {
             this.colors = true;
             msg =
-                "显示" +
+                "" +
                 this.color_select_option.$select.value +
-                "云图：";
+                "";
         } else {
             this.colors = false;
             msg = "";
