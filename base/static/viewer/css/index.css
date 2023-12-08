@@ -49,6 +49,8 @@
     --number-color: var(--gui-number-color);
     --string-color: var(--gui-string-color);
     --widget-padding: var(--gui-widget-padding);
+    --name-width: 35%;
+    --slider-input-min-width: 64px;
 }
 
 html,

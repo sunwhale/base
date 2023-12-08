@@ -934,6 +934,11 @@ class FEMViewer {
             max_disp = Math.max(max_disp, ...variable);
             min_disp = Math.min(min_disp, ...variable);
         }
+
+        // 保留8位有效数字
+        max_disp = parseFloat(max_disp.toFixed(8))
+        min_disp = parseFloat(min_disp.toFixed(8))
+
         let delta = max_disp - min_disp;
         if (delta === 0) {
             delta = 1;
@@ -943,8 +948,8 @@ class FEMViewer {
         this.max_color_value = max_disp;
         this.min_color_value = min_disp;
 
-        this.max_color_value_slider.step(delta / 1000);
-        this.min_color_value_slider.step(delta / 1000);
+        this.max_color_value_slider.step(delta / 1000.0);
+        this.min_color_value_slider.step(delta / 1000.0);
 
         this.min_color_value_slider.min(min_disp);
         this.max_color_value_slider.max(max_disp);
