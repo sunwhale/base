@@ -2,24 +2,11 @@ import {FEMViewer, themes} from "./FEMViewer.js";
 
 let magnification = 0;
 let rot = false;
-let mode = 0;
+let step = 0;
 let axis = 0;
 let zoom = 1;
 let lines = true;
 let url = "";
-
-// let path_str = "2D_SINGLE_TRIANGLE";
-// let path_str = "2D_SINGLE_SQUARE";
-// let path_str = "2D_BEAM_PLANE_STRESS";
-// let path_str = "3D_SPHERE_LIGHT_MODEL";
-// let path_str = "3D_SPHERE_HEAVY_MODEL";
-// let path_str = "2D_PLANE_STRESS";
-// let path_str = "2D_PLATE";
-// let path_str = "3D_DRAGON_LIGHT_MODEL";
-// let path_str = "3D_DRAGON_HEAVY_MODEL";
-// let path_str = "3D_BEAM_BRICKS";
-let path_str = "2D_";
-// let path_str = "3D_";
 
 let queryString = window.location.search;
 let show_menu = true;
@@ -28,10 +15,9 @@ let theme_param = "默认";
 if (queryString !== "") {
     queryString = queryString.split("?")[1];
     let parameters = new URLSearchParams(queryString);
-    let function_param = parameters.get("mesh");
     let magnification_param = parameters.get("magnification");
     let rot_param = parameters.get("rot");
-    let mode_param = parameters.get("mode");
+    let step_param = parameters.get("step");
     let axis_param = parameters.get("axis");
     let zoom_param = parameters.get("zoom");
     let lines_param = parameters.get("lines");
@@ -42,17 +28,14 @@ if (queryString !== "") {
     if (theme_param) {
         theme = theme_param;
     }
-    if (function_param) {
-        path_str = function_param;
-    }
     if (magnification_param) {
         magnification = parseFloat(magnification_param);
     }
     if (rot_param) {
         rot = true;
     }
-    if (mode_param) {
-        mode = parseFloat(mode_param);
+    if (step_param) {
+        step = parseInt(step_param);
     }
     if (axis_param) {
         axis = parseInt(axis_param);
@@ -67,29 +50,21 @@ if (queryString !== "") {
     }
 }
 
-// let path = `./resources/${path_str}.json`;
-// if (path_str.startsWith("https://")) {
-//     path = path_str;
-// }
-// console.log(filename);
-
 const container = document.getElementById("models-container");
 container.style.background = "linear-gradient(to bottom, #263750, #8594aa)";
 
 const O = new FEMViewer(container, magnification, rot, axis === 1, zoom);
 O.theme = themes[theme] || {};
-O.updateStylesheet();
+O.updateStyleSheet();
 O.updateColors();
 O.updateMaterial();
 O.draw_lines = lines;
-// await O.loadJSON(path);
+O.step = step;
 await O.loadXML(url);
-
-O.step = mode;
 await O.init();
 if (!show_menu) {
     O.MenuClosed = false;
     O.updateMenuClosed();
 }
-console.log(O);
+// console.log(O);
 O.after_load();

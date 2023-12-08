@@ -291,11 +291,11 @@ class FEMViewer {
         }
     }
 
-    updateStylesheet() {
+    updateStyleSheet() {
         let style = "";
-        const stylesheet = this.theme;
-        for (let prop in stylesheet) {
-            const value = stylesheet[prop];
+        const styleSheet = this.theme;
+        for (let prop in styleSheet) {
+            const value = styleSheet[prop];
             style += `\t${prop}: ${value};\n`;
         }
         if (style) {
@@ -338,7 +338,7 @@ class FEMViewer {
     }
 
     updateTheme() {
-        this.updateStylesheet();
+        this.updateStyleSheet();
         this.updateColors();
         this.updateMaterial();
         this.updateGeometry();

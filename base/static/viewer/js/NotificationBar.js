@@ -2,7 +2,7 @@ class NotificationBar {
     static defaultConfig = {defaultMessage: "准备", defaultTimeout: 1500};
 
     constructor(parent, config) {
-        console.log("初始化");
+        // console.log("初始化");
         this.buttons = [];
         this.parent = parent;
         this.config = {...NotificationBar.defaultConfig, ...config};
