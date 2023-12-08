@@ -240,7 +240,7 @@ class FEMViewer {
         this.animate_mult = 1.0;
         this.side = 1.0;
         this.draw_lines = true;
-        this.colormap = "冷热图";
+        this.colormap = "彩虹图";
         this.show_model = true;
         this.octreeMesh = undefined;
         this.showOctree = false;
@@ -942,9 +942,8 @@ class FEMViewer {
         let delta = max_disp - min_disp;
         if (delta === 0) {
             delta = 1;
-            max_disp += 0.5;
-            min_disp -= 0.5;
         }
+
         this.max_color_value = max_disp;
         this.min_color_value = min_disp;
 
@@ -952,16 +951,19 @@ class FEMViewer {
         this.min_color_value_slider.step(delta / 1000.0);
 
         this.min_color_value_slider.min(min_disp);
+        this.min_color_value_slider.max(max_disp);
+
+        this.max_color_value_slider.min(min_disp);
         this.max_color_value_slider.max(max_disp);
 
         let max_str = this.max_color_value.toPrecision(4);
         let min_str = this.min_color_value.toPrecision(4);
 
         // 防止接近于零的数值无法显示
-        if (Math.abs(max_str) === 0.0000) {
+        if (max_str === "0.0000") {
             max_str = this.max_color_value.toExponential(4);
         }
-        if (Math.abs(min_str) === 0.0000) {
+        if (min_str === "0.0000") {
             min_str = this.min_color_value.toExponential(4);
         }
 
@@ -1095,8 +1097,8 @@ class FEMViewer {
             const e = this.elements[i];
             const colors = this.bufferGeometries[i].attributes.color;
             for (let j = 0; j < e.domain.length; j++) {
-                let disp = e.colors[j];
-                const color = this.legend.getColor(disp);
+                let value = e.colors[j];
+                const color = this.legend.getColor(value);
                 colors.setXYZ(j, color.r, color.g, color.b);
             }
         }
@@ -1296,7 +1298,7 @@ class FEMViewer {
             .onFinishChange(this.renderMath.bind(this));
         this.guiFolder
             .add(this, "colormap", [
-                "彩虹色",
+                "彩虹图",
                 "冷热图",
                 "热力图",
                 "灰度图",

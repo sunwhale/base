@@ -71,16 +71,21 @@ class Legend {
         return this;
     }
 
-    getColor(alpha) {
-        if (alpha <= this.minV) {
-            alpha = this.minV;
-        } else if (alpha >= this.maxV) {
-            alpha = this.maxV;
+    getColor(value) {
+        if (value <= this.minV) {
+            value = this.minV;
+        } else if (value >= this.maxV) {
+            value = this.maxV;
         }
 
-        alpha = (alpha - this.minV) / (this.maxV - this.minV);
+        // 如果变量的最大和最小值相同，则取标尺的中间颜色
+        if (this.maxV - this.minV === 0) {
+            value = 0.5;
+        } else{
+            value = (value - this.minV) / (this.maxV - this.minV);
+        }
 
-        let colorPosition = Math.round(alpha * this.n);
+        let colorPosition = Math.round(value * this.n);
 
         if (colorPosition === this.n) colorPosition -= 1;
 
