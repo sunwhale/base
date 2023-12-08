@@ -250,8 +250,11 @@ class FEMViewer {
         this.legend = new Legend(this.colormap);
         this.filename = "";
 
-        this.gui = new GUI({title: "根目录", container: this.container});
-        this.gui.close();
+        this.gui = new GUI({title: "JSViewer 查看器", container: this.container});
+        this.gui
+            .add(this, "goBack")
+            .name("返回");
+        // this.gui.close();
         this.loaded = false;
         this.colorOptions = "nocolor";
         this.clickMode = "无";
@@ -727,7 +730,10 @@ class FEMViewer {
             this.settingsFolder.destroy();
         }
         this.settingsFolder = this.gui.addFolder("设置");
+        this.settingsFolder.close();
+
         this.settingsFolder.add(this.gh, "visible").listen().name("坐标轴");
+
         this.settingsFolder.add(this, "rot").name("自动旋转").listen();
 
         this.settingsFolder
@@ -737,27 +743,29 @@ class FEMViewer {
                 this.updateMaterial();
                 this.updateGeometry();
             })
-            .name("线框");
+            .name("线框模式");
         this.settingsFolder
             .add(this, "draw_lines")
             .onChange(this.updateLines.bind(this))
             .name("显示线条")
             .listen();
 
-        this.settingsFolder
-            .add(this, "showOctree")
-            .onChange(this.updateShowOctree.bind(this))
-            .listen()
-            .name("显示八叉树");
+        // this.settingsFolder
+        //     .add(this, "showOctree")
+        //     .onChange(this.updateShowOctree.bind(this))
+        //     .listen()
+        //     .name("显示八叉树");
+
         this.settingsFolder
             .add(this, "show_model")
             .name("显示模型")
             .onChange(this.updateShowModel.bind(this))
             .listen();
-        this.settingsFolder
-            .add(this.regionModel, "visible")
-            .name("显示区域")
-            .listen();
+
+        // this.settingsFolder
+        //     .add(this.regionModel, "visible")
+        //     .name("显示区域")
+        //     .listen();
 
         if (this.config_dict["isDeformed"]) {
         } else {
@@ -770,15 +778,16 @@ class FEMViewer {
             }
         }
 
-        this.settingsFolder
-            .add(this, "clickMode", [
-                "查看单元",
-                "删除单元",
-                "发现节点",
-                "发现区域",
-            ])
-            .listen()
-            .name("左键点击");
+        // this.settingsFolder
+        //     .add(this, "clickMode", [
+        //         "查看单元",
+        //         "删除单元",
+        //         "发现节点",
+        //         "发现区域",
+        //     ])
+        //     .listen()
+        //     .name("左键点击");
+
         this.settingsFolder
             .add(this, "resolution", {
                 "低 (1)": 1,
@@ -933,20 +942,21 @@ class FEMViewer {
         }
         this.max_color_value = max_disp;
         this.min_color_value = min_disp;
+
         this.max_color_value_slider.step(delta / 1000);
         this.min_color_value_slider.step(delta / 1000);
 
-        this.min_color_value_slider.max(max_disp);
         this.min_color_value_slider.min(min_disp);
-
         this.max_color_value_slider.max(max_disp);
-        this.max_color_value_slider.min(min_disp);
-        let max_str = this.max_color_value.toFixed(4);
-        let min_str = this.min_color_value.toFixed(4);
-        if (Math.abs(max_str) === "0.0000") {
+
+        let max_str = this.max_color_value.toPrecision(4);
+        let min_str = this.min_color_value.toPrecision(4);
+
+        // 防止接近于零的数值无法显示
+        if (Math.abs(max_str) === 0.0000) {
             max_str = this.max_color_value.toExponential(4);
         }
-        if (Math.abs(min_str) === "0.0000") {
+        if (Math.abs(min_str) === 0.0000) {
             min_str = this.min_color_value.toExponential(4);
         }
 
@@ -957,6 +967,12 @@ class FEMViewer {
 
     viewFront() {
         this.camera.position.set(1, 0, 0);
+        this.camera.lookAt(0, 0, 0);
+        this.zoomExtents();
+    }
+
+    viewTop() {
+        this.camera.position.set(0, 0, 1);
         this.camera.lookAt(0, 0, 0);
         this.zoomExtents();
     }
@@ -1151,10 +1167,6 @@ class FEMViewer {
         if (!this.animate) {
             this.mult = 1.0;
         }
-
-        // console.log(this.mult);
-
-        // Specific part of shit
         if (this.rot) {
             this.rotateModel();
         } else {
@@ -1227,24 +1239,32 @@ class FEMViewer {
             this.viewsFolder.destroy();
         }
         this.viewsFolder = this.gui.addFolder("视图");
+        this.viewsFolder.close();
         this.viewsFolder
             .add(this, "viewFront")
             .name("正视图");
+        this.viewsFolder
+            .add(this, "viewTop")
+            .name("俯视图");
         this.viewsFolder
             .add(this, "viewIso")
             .name("等轴视图");
     }
 
+    goBack() {
+        history.go(-1);
+    }
+
     guiSolutions() {
-        if (this.guifolder) {
-            this.guifolder.destroy();
+        if (this.guiFolder) {
+            this.guiFolder.destroy();
         }
-        this.guifolder = this.gui.addFolder("后处理");
+        this.guiFolder = this.gui.addFolder("云图");
         let variableSelectDict = {};
         for (let key in this.frames[this.step]["fieldOutputs"]) {
             variableSelectDict[key] = key;
         }
-        this.color_select_option = this.guifolder
+        this.color_select_option = this.guiFolder
             .add(this, "colorOptions", {
                 "无": "nocolor",
                 "|U|": "|U|",
@@ -1256,11 +1276,11 @@ class FEMViewer {
                 // ...this.config_dict["dict"],
                 ...this.prop_dict_names,
             })
-            .name("云图")
+            .name("变量")
             .listen()
             .onChange(this.updateColorVariable.bind(this))
             .onFinishChange(this.renderMath.bind(this));
-        this.guifolder
+        this.guiFolder
             .add(this, "colormap", [
                 "彩虹色",
                 "冷热图",
@@ -1270,28 +1290,29 @@ class FEMViewer {
             .listen()
             .name("颜色")
             .onChange(this.updateLegend.bind(this));
-        this.max_color_value_slider = this.guifolder
+        this.max_color_value_slider = this.guiFolder
             .add(this, "max_color_value", 0.0, 1.0)
             .name("最大值")
             .listen()
             .onChange(this.updateLegend.bind(this));
-        this.min_color_value_slider = this.guifolder
+        this.min_color_value_slider = this.guiFolder
             .add(this, "min_color_value", 0.0, 1.0)
             .name("最小值")
             .listen()
             .onChange(this.updateLegend.bind(this));
-        this.guifolder
-            .add(this, "step", this.solutions_info_str)
-            .onChange(this.updateSolution.bind(this))
-            .listen()
-            .name("帧");
+        // this.guiFolder
+        //     .add(this, "step", this.solutions_info_str)
+        //     .onChange(this.updateSolution.bind(this))
+        //     .listen()
+        //     .name("帧");
     }
 
     async init(animate = false) {
-        this.guiSettingsBasic();
+        this.guiSolutions();
         this.guiSettings();
         this.guiViews();
-        this.guiSolutions();
+        this.guiSettingsBasic();
+
         this.animate = animate;
         if (!this.config_dict["isDeformed"]) {
             this.animate = false;

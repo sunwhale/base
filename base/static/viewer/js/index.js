@@ -3,7 +3,7 @@ import {FEMViewer, themes} from "./FEMViewer.js";
 let magnification = 0;
 let rot = false;
 let mode = 0;
-let axis = 1;
+let axis = 0;
 let zoom = 1;
 let lines = true;
 let url = "";

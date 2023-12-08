@@ -59,7 +59,6 @@ if __name__ == "__main__":
     # 需要 python >= 3.10 否则添加菜单时会报错
     menu_items = [
         wm.MenuAction('主界面', return_to_main),
-        wm.MenuAction('JSViewer', open_viewer),
         wm.Menu(
             '帮助',
             [
