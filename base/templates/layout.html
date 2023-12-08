@@ -18,8 +18,14 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/dist/css/adminlte.min.css') }}">
 {% endif %}
 <style>
-  .content-wrapper {
-    min-width: 1280px; /* 设置最小宽度为300像素 */
+  /*.content-wrapper {*/
+  /*  min-width: 1280px; !* 设置最小宽度为300像素 *!*/
+  /*}*/
+  @media (max-width: 768px) {
+    .col-6 {
+      flex: 0 0 100%;
+      max-width: 100%;
+    }
   }
 </style>
 {% block css %}{% endblock css %}
