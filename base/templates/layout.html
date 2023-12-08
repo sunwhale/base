@@ -16,12 +16,12 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
 <!-- Theme style -->
 <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/dist/css/adminlte.min.css') }}">
+{% endif %}
 <style>
   .content-wrapper {
     min-width: 1280px; /* 设置最小宽度为300像素 */
   }
 </style>
-{% endif %}
 {% block css %}{% endblock css %}
 {% endblock head %}
 </head>
