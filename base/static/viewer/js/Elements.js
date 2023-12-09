@@ -1173,7 +1173,7 @@ class TriangularO2 extends Triangular {
     }
 }
 
-class Serendipity extends Quadrilateral {
+class QuadrilateralO2 extends Quadrilateral {
     constructor(coords, conns, dofIDs, thick) {
         super(coords, conns, dofIDs, thick);
         this.type = "C2V";
@@ -1231,7 +1231,7 @@ export {
     Triangular,
     TriangularO2,
     Quadrilateral,
-    Serendipity,
+    QuadrilateralO2,
     LinealO2,
     Element,
     Element3D,

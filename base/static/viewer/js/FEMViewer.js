@@ -7,9 +7,9 @@ import {AxisGridHelper} from "./build/minigui.js";
 import {Legend} from "./build/Legend.js";
 import {CONFIG_DICT} from "./ConfigDicts.js";
 import {Geometree, Quadrant3D} from "./Octree.js";
-import {Brick, BrickO2, Lineal, LinealO2, Quadrilateral, Serendipity, Tetrahedral, TetrahedralO2, Triangular, TriangularO2,} from "./Elements.js";
 import {max, min, transpose} from "./math.js";
 import {NotificationBar} from "./NotificationBar.js";
+import {themes, types} from "./Constants.js"
 
 function allowUpdate() {
     return new Promise((f) => {
@@ -20,9 +20,7 @@ function allowUpdate() {
 let style = getComputedStyle(document.body);
 let TEXT_COLOR = style.getPropertyValue("--gui-text-color").trim();
 let BACKGROUND_COLOR = style.getPropertyValue("--gui-background-color").trim();
-let TITLE_BACKGROUND_COLOR = style
-    .getPropertyValue("--gui-title-background-color")
-    .trim();
+let TITLE_BACKGROUND_COLOR = style.getPropertyValue("--gui-title-background-color").trim();
 let PLOT_GRID_COLOR = style.getPropertyValue("--plot-grid-color").trim();
 let FONT_FAMILY = style.getPropertyValue("--font-family").trim();
 let FOCUS_COLOR = style.getPropertyValue("--focus-color").trim();
@@ -41,111 +39,6 @@ let PLOT_STYLE = {
     },
     y_axis: {
         grid_color: PLOT_GRID_COLOR,
-    },
-};
-
-const types = {
-    B1V: Brick,
-    B2V: BrickO2,
-    TE1V: Tetrahedral,
-    TE2V: TetrahedralO2,
-    L1V: Lineal,
-    L2V: LinealO2,
-    T1V: Triangular,
-    T2V: TriangularO2,
-    C1V: Quadrilateral,
-    C2V: Serendipity,
-};
-
-const themes = {
-    "默认": {
-        "--gui-background-color": "#f6f6f6",
-        "--gui-text-color": "#3d3d3d",
-        "--gui-title-background-color": "#efefef",
-        "--gui-title-text-color": "#3d3d3d",
-        "--gui-widget-color": "#eaeaea",
-        "--gui-hover-color": "#f0f0f0",
-        "--gui-focus-color": "#fafafa",
-        "--gui-number-color": "#07aacf",
-        "--gui-string-color": "#8da300",
-        "--focus-color": "#dddddd",
-        "--background-color": "transparent",
-    },
-    "透明": {
-        "--gui-background-color": "#f6f6f6",
-        "--gui-text-color": "#3d3d3d",
-        "--gui-title-background-color": "#efefef",
-        "--gui-title-text-color": "#3d3d3d",
-        "--gui-widget-color": "#eaeaea",
-        "--gui-hover-color": "#f0f0f0",
-        "--gui-focus-color": "#fafafa",
-        "--gui-number-color": "#07aacf",
-        "--gui-string-color": "#8da300",
-        "--focus-color": "#dddddd",
-        "--background-color": "transparent",
-    },
-    "明亮": {
-        "--gui-background-color": "#f6f6f6",
-        "--gui-text-color": "#3d3d3d",
-        "--gui-title-background-color": "#efefef",
-        "--gui-title-text-color": "#3d3d3d",
-        "--gui-widget-color": "#eaeaea",
-        "--gui-hover-color": "#f0f0f0",
-        "--gui-focus-color": "#fafafa",
-        "--gui-number-color": "#07aacf",
-        "--gui-string-color": "#8da300",
-        "--focus-color": "#dddddd",
-    },
-    "黑暗": {
-        "--gui-background-color": "#1f1f1f",
-        "--gui-text-color": "#ebebeb",
-        "--gui-title-background-color": "#111111",
-        "--gui-title-text-color": "#ebebeb",
-        "--gui-widget-color": "#424242",
-        "--gui-hover-color": "#4f4f4f",
-        "--gui-focus-color": "#595959",
-        "--gui-number-color": "#2cc9ff",
-        "--gui-string-color": "#a2db3c",
-        "--focus-color": "var(--gui-focus-color)",
-        "--plot-grid-color": "#616161",
-    },
-    "半明亮": {
-        "--gui-background-color": "#fdf6e3",
-        "--gui-text-color": "#657b83",
-        "--gui-title-background-color": "#f5efdc",
-        "--gui-title-text-color": "#657b83",
-        "--gui-widget-color": "#eee8d5",
-        "--gui-hover-color": "#e7e1cf",
-        "--gui-focus-color": "#e6ddc7",
-        "--gui-number-color": "#2aa0f3",
-        "--gui-string-color": "#97ad00",
-        "--focus-color": "var(--gui-focus-color)",
-    },
-    "半黑暗": {
-        "--gui-background-color": "#002b36",
-        "--gui-text-color": "#b2c2c2",
-        "--gui-title-background-color": "#001f27",
-        "--gui-title-text-color": "#b2c2c2",
-        "--gui-widget-color": "#094e5f",
-        "--gui-hover-color": "#0a6277",
-        "--gui-focus-color": "#0b6c84",
-        "--gui-number-color": "#2aa0f2",
-        "--gui-string-color": "#97ad00",
-        "--focus-color": "var(--gui-focus-color)",
-        "--plot-grid-color": "#616161",
-    },
-    "黄绿": {
-        "--gui-background-color": "#32405e",
-        "--gui-text-color": "#ebe193",
-        "--gui-title-background-color": "#713154",
-        "--gui-title-text-color": "#ffffff",
-        "--gui-widget-color": "#057170",
-        "--gui-hover-color": "#057170",
-        "--gui-focus-color": "#b74f88",
-        "--gui-number-color": "#ddfcff",
-        "--gui-string-color": "#ffbf00",
-        "--focus-color": "var(--gui-focus-color)",
-        "--plot-grid-color": "#616161",
     },
 };
 
@@ -199,6 +92,7 @@ class FEMViewer {
         this.resolution = 1;
         this.nodes = [];
         this.selectedNodesMesh = {};
+        this.element_sets = {"Bottom": [1, 2, 3]}
         this.nvn = -1;
         this.dictionary = [];
         this.types = [];
@@ -248,7 +142,7 @@ class FEMViewer {
         this.gui
             .add(this, "goBack")
             .name("返回");
-        // this.gui.close();
+
         this.loaded = false;
         this.colorOptions = "nocolor";
         // this.clickMode = "无";
