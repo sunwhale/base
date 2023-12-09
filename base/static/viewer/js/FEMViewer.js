@@ -159,7 +159,6 @@ class FEMViewer {
         }
         // FEM
         this.selectedNodes = [];
-        this.regions = [];
 
         this.container = container;
         let canvas = document.createElement("canvas");
@@ -204,7 +203,6 @@ class FEMViewer {
         this.dictionary = [];
         this.types = [];
         this.solutions = [];
-        this.solutions_info = [];
         this.U = [];
         this.step = 0;
         this.size = 0.0;
@@ -230,9 +228,6 @@ class FEMViewer {
         this.bufferLines = [];
         this.model = new THREE.Object3D();
 
-        this.regionModel = new THREE.Object3D();
-        this.regionModelContours = new THREE.Object3D();
-        this.regionModelGeometries = new THREE.Object3D();
         this.invisibleModel = new THREE.Object3D();
         this.colors = false;
         this.animate = false;
@@ -244,7 +239,6 @@ class FEMViewer {
         this.show_model = true;
         this.octreeMesh = undefined;
         this.showOctree = false;
-        this.regionModel.visible = false;
 
         this.MenuClosed = true;
         this.legend = new Legend(this.colormap);
@@ -382,7 +376,7 @@ class FEMViewer {
     }
 
     createOctree() {
-        this.notiBar.setMessage("创建八叉树... ⌛");
+        this.notiBar.setMessage("创建八叉树...");
         let nnodes = this._nodes.map((x) => {
             return x["_xcenter"];
         });
@@ -409,19 +403,6 @@ class FEMViewer {
         const geo_list = this.OctTree.giveContours(this.norm);
         const geo = BufferGeometryUtils.mergeBufferGeometries(geo_list, true);
         this.octreeMesh = new THREE.LineSegments(geo, this.line_material);
-    }
-
-    async loadJSON(json_path, border_elements) {
-        this.notiBar.setMessage("加载模型..." + "⌛", true);
-        this.json_path = json_path;
-        this.filename = json_path;
-        const response = await fetch(this.json_path);
-        const jsondata = await response.json();
-        if (border_elements !== undefined) {
-            jsondata["border_elements"] = border_elements;
-        }
-        this.parseJSON(jsondata);
-        this.notiBar.resetMessage();
     }
 
     async loadXML(xml_path) {
@@ -541,7 +522,6 @@ class FEMViewer {
                 this.ndim = dimension;
                 this.dictionary = connectivities;
                 this.types = [];
-                this.solutions_info = [];
                 this.solutions = [U];
                 this.frames = [{"fieldOutputs": fieldOutputs}];
 
@@ -597,10 +577,16 @@ class FEMViewer {
                 }
             };
             await processData();
+            this.notiBar.resetMessage();
         } else {
-            console.error('Failed to fetch XML data');
+            let errorMsg = "错误："
+            if (response.status === 404) {
+                errorMsg += "数据文件不存在！\n";
+            }
+            errorMsg += response.url + "\n" + response.status + " " + response.statusText
+            window.alert(errorMsg);
+            this.notiBar.setMessage("数据文件传输失败!");
         }
-        this.notiBar.resetMessage();
     }
 
     async updateShowOctree() {
@@ -618,7 +604,7 @@ class FEMViewer {
     reset() {
         this.solution_as_displacement = false;
         this.variable_as_displacement = 2;
-        this.toggleSolutionAsDisp(); // THIS TOGGLE DISPLACEMENTS!!!
+        this.toggleSolutionAsDisp();
         const track = this.resource_tracker.track.bind(this.resource_tracker);
 
         track(this.model);
@@ -647,16 +633,7 @@ class FEMViewer {
                 smm.geometry.dispose();
             }
         }
-        for (let i = 0; i < this.regions.length; i++) {
-            let reg = this.regions[i];
-            this.regionModelGeometries.remove(reg.mesh);
-            this.regionModelContours.remove(reg.edges);
-            reg.mesh.material.dispose();
-            reg.mesh.geometry.dispose();
-            reg.edges.material.dispose();
-            reg.edges.geometry.dispose();
-        }
-        this.regions = [];
+
         this.selectedNodes = [];
         this.selectedNodesMesh = {};
 
@@ -677,7 +654,6 @@ class FEMViewer {
         this.nodes = [];
         this.dictionary = [];
         this.solutions = [];
-        this.solutions_info = [];
         this.U = [];
         this.step = 0;
         this.elements = [];
@@ -686,9 +662,6 @@ class FEMViewer {
         this.max_abs_disp = undefined;
         this.border_elements = [];
         this.scene.remove(this.model);
-        this.regionModel.remove(this.regionModelContours);
-        this.regionModel.remove(this.regionModelGeometries);
-        this.scene.remove(this.regionModel);
         this.scene.remove(this.invisibleModel);
         delete this.mergedGeometry;
         delete this.mergedLineGeometry;
@@ -746,7 +719,6 @@ class FEMViewer {
     async updateShowModel() {
         this.mesh.visible = this.show_model;
         this.contour.visible = this.show_model;
-        this.regionModel.visible = this.show_model;
         this.draw_lines = this.show_model;
         this.gh.visible = true;
         for (const ch of this.model.children) {
@@ -793,11 +765,6 @@ class FEMViewer {
             .name("显示模型")
             .onChange(this.updateShowModel.bind(this))
             .listen();
-
-        // this.settingsFolder
-        //     .add(this.regionModel, "visible")
-        //     .name("显示区域")
-        //     .listen();
 
         if (this.config_dict["isDeformed"]) {
         } else {
@@ -914,7 +881,7 @@ class FEMViewer {
         this.animate = false;
         this.reset();
         this.before_load();
-        this.notiBar.setMessage("重新加载模型..." + "⌛");
+        this.notiBar.setMessage("重新加载模型...");
         await this.loadXML(this.filename);
         // await this.loadJSON(this.filename);
         this.notiBar.resetMessage();
@@ -1148,13 +1115,6 @@ class FEMViewer {
             }
         }
 
-        for (const reg of this.regions) {
-            reg.mesh.material = this.material;
-            reg.mesh.material.needsUpdate = true;
-            reg.edges.material = this.line_material;
-            reg.edges.material.needsUpdate = true;
-        }
-
         this.mergedGeometry.dispose();
         this.mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
             this.bufferGeometries,
@@ -1233,12 +1193,6 @@ class FEMViewer {
         if (this.colors && this.MenuClosed) {
             this.renderer.render(this.uiScene, this.orthoCamera);
         }
-    }
-
-    changeModel() {
-        this.gui.close();
-        this.json_path = this.filename;
-        this.reload();
     }
 
     zoomExtents() {
@@ -1371,7 +1325,7 @@ class FEMViewer {
             this.bufferGeometries,
             true
         );
-        this.notiBar.setMessage("创建材料..." + "⌛");
+        this.notiBar.setMessage("创建材料...");
         await allowUpdate();
         this.updateMaterial();
         this.mergedLineGeometry = BufferGeometryUtils.mergeBufferGeometries(
@@ -1385,13 +1339,10 @@ class FEMViewer {
         this.model.add(this.contour);
 
         this.mesh = new THREE.Mesh(this.mergedGeometry, this.material);
-        this.notiBar.setMessage("生成网格..." + "⌛");
+        this.notiBar.setMessage("生成网格...");
         await allowUpdate();
         this.updateU();
         this.model.add(this.mesh);
-        this.regionModel.add(this.regionModelContours);
-        this.regionModel.add(this.regionModelGeometries);
-        this.model.add(this.regionModel);
 
         this.scene.add(this.model);
         this.scene.add(this.invisibleModel);
@@ -1408,7 +1359,7 @@ class FEMViewer {
         this.renderer.render(this.scene, this.camera);
         this.zoomExtents();
 
-        this.notiBar.setMessage("绘制模型..." + "⌛");
+        this.notiBar.setMessage("绘制模型...");
         await allowUpdate();
 
         this.notiBar.setMessage("加载完成");
@@ -1420,155 +1371,6 @@ class FEMViewer {
         this.updateU();
         this.updateMeshCoords();
         this.updateGeometry();
-    }
-
-    parseJSON(jsondata) {
-        this.norm = 1.0 / max(jsondata["nodes"].flat());
-        this.nodes = [];
-        this.nodes = jsondata["nodes"];
-
-        this.nvn = jsondata["nvn"];
-        this.ndim = this.nodes[0].length;
-        for (let i = 0; i < this.nodes.length; i++) {
-            for (let j = this.nodes[i].length; j < 3; j++) {
-                this.nodes[i].push(0.0); //Coordinate completion
-            }
-        }
-        this.dictionary = [];
-        this.types = [];
-        this.solutions_info = [];
-        this.solutions = [];
-        this.frames = jsondata["frames"];
-        this.original_dict = jsondata["dictionary"];
-        this.dictionary.push(...this.original_dict);
-        this.types = jsondata["types"];
-        if (jsondata["border_elements"]) {
-            this.border_elements.push(...jsondata["border_elements"]);
-            this.dictionary = [];
-            for (const be of this.border_elements) {
-                this.dictionary.push(this.original_dict[be]);
-            }
-        }
-        if (!jsondata["solutions"]) {
-            if (!jsondata["disp_field"] || jsondata["disp_field"].length === 0) {
-                this.solutions = [
-                    Array(this.nodes.length * this.nvn).fill(0.0),
-                ];
-                this.solutions_info = [{info: "Not solved"}];
-            } else {
-                this.solutions.push(...jsondata["disp_field"]);
-                this.solutions_info = [];
-                for (let i = 0; i < this.solutions.length; i++) {
-                    this.solutions_info.push({
-                        info: "Not info",
-                        index: i,
-                    });
-                }
-            }
-        } else {
-            if (jsondata["solutions"].length === 0) {
-                this.solutions = [
-                    Array(this.nodes.length * this.nvn).fill(0.0),
-                ];
-                this.solutions_info = [{info: "Not solved"}];
-            }
-            for (let i = 0; i < jsondata["solutions"].length; i++) {
-                let solution = jsondata["solutions"][i];
-                this.solutions.push(solution["U"]);
-                this.solutions_info.push({...solution["info"], index: i});
-            }
-        }
-        this.solutions_info_str = [];
-        for (let i = 0; i < this.solutions_info.length; i++) {
-            this.solutions_info_str.push(i);
-        }
-        this.config_dict = CONFIG_DICT["GENERAL"];
-        let d = {};
-        let variables = [
-            "U",
-            "V",
-            "qp_weights",
-            4,
-            5,
-            6,
-            7,
-            8,
-            9,
-            10,
-            11,
-            12,
-            13,
-            14,
-            15,
-            16,
-            17,
-            18,
-            19,
-            20,
-        ];
-
-        for (let i = 0; i < this.nvn; i++) {
-            for (let j = 0; j < this.ndim; j++) {
-                d["d" + variables[i] + "/d" + this.dimensions[j]] = [i, j];
-            }
-        }
-        this.config_dict["dict"] = d;
-        if (jsondata["properties"]) {
-            if (CONFIG_DICT[jsondata["properties"]["problem"]]) {
-                this.config_dict = {
-                    ...CONFIG_DICT[jsondata["properties"]["problem"]],
-                };
-            }
-        }
-        this.prop_dict = {};
-        this.prop_dict_names = {};
-        for (const p of this.config_dict["props"]) {
-            this.prop_dict[p] = ["PROP", jsondata["properties"][p], p];
-            this.prop_dict_names[p] = ["PROP", p];
-        }
-
-        this.loaded = true;
-        this.info = Object.keys(this.solutions_info[this.step])[0];
-        this.infoDetail = this.solutions_info[this.step][this.info];
-
-        const secon_coords = this.nodes[0].map((_, colIndex) =>
-            this.nodes.map((row) => row[colIndex])
-        );
-
-        let size_x = max(secon_coords[0].flat()) - min(secon_coords[0].flat());
-        let size_y = max(secon_coords[1].flat()) - min(secon_coords[1].flat());
-        let size_z = max(secon_coords[2].flat()) - min(secon_coords[2].flat());
-
-        let center_x = (max(secon_coords[0]) + min(secon_coords[0])) / 2;
-        let center_y = (max(secon_coords[1]) + min(secon_coords[1])) / 2;
-        let center_z = (max(secon_coords[2]) + min(secon_coords[2])) / 2;
-        this.center = [
-            center_x - size_x / 2,
-            center_y - size_y / 2,
-            center_z - size_z / 2,
-        ];
-
-        this.size = max(this.nodes.flat()) - min(this.nodes.flat());
-        this.dimens = [size_x / 2, size_y / 2, size_z / 2];
-        this._nodes = [];
-        for (let kk = 0; kk < this.nodes.length; kk++) {
-            this._nodes.push({_xcenter: this.nodes[kk], id: kk});
-        }
-        let h = this.size / 20;
-        let kk = 0;
-        for (const n of this.nodes) {
-            if (this.ndim === 1 || this.ndim === 2) {
-                let node = [n[0], n[1], n[2] + h];
-                this._nodes.push({_xcenter: node, id: kk});
-                if (this.ndim === 1) {
-                    node = [n[0], n[1] + h, n[2] + h];
-                    this._nodes.push({_xcenter: node, id: kk});
-                    node = [n[0], n[1] + h, n[2]];
-                    this._nodes.push({_xcenter: node, id: kk});
-                }
-            }
-            kk++;
-        }
     }
 
     updateDispSlider() {
