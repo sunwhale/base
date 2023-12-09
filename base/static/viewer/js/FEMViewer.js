@@ -425,11 +425,39 @@ class FEMViewer {
     }
 
     async loadXML(xml_path) {
-        this.notiBar.setMessage("加载模型..." + "⌛", true);
         this.filename = xml_path
-        await fetch(xml_path)
-            .then(response => response.text())
-            .then(xmlData => {
+        const response = await fetch(xml_path)
+        if (response.ok) {
+            const totalSize = response.headers.get('Content-Length');
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder('utf-8');
+
+            const processData = async () => {
+                const chunks = [];
+                let receivedSize = 0;
+
+                while (true) {
+                    const {done, value} = await reader.read();
+                    if (done) break;
+
+                    chunks.push(value);
+                    receivedSize += value.length;
+
+                    const progress = (receivedSize / totalSize) * 100;
+                    this.notiBar.setProgressBar("传输数据...", progress);
+                }
+
+                const buffer = new Uint8Array(receivedSize);
+                let offset = 0;
+
+                for (const chunk of chunks) {
+                    buffer.set(chunk, offset);
+                    offset += chunk.length;
+                }
+
+                const xmlData = decoder.decode(buffer);
+
                 let parser = new DOMParser();
                 let xmlDoc = parser.parseFromString(xmlData, "text/xml");
 
@@ -567,7 +595,11 @@ class FEMViewer {
                     }
                     kk++;
                 }
-            });
+            };
+            await processData();
+        } else {
+            console.error('Failed to fetch XML data');
+        }
         this.notiBar.resetMessage();
     }
 

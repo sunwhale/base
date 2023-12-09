@@ -11,6 +11,7 @@ from flask_login import login_required
 viewer_bp = Blueprint('viewer', __name__)
 
 
+@login_required
 @viewer_bp.route('/', methods=['GET', 'POST'])
 def index():
     return render_template('viewer/index.html')
