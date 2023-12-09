@@ -62,6 +62,10 @@ O.draw_lines = lines;
 O.step = step;
 try {
     await O.loadXML(url);
+} catch (error) {
+    console.log(error)
+}
+try {
     await O.init();
 } catch (error) {
     O.guiFolder.destroy();

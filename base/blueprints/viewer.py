@@ -4,15 +4,15 @@
 """
 
 import os
-from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request,
-                   send_from_directory, url_for)
+
+from flask import (Blueprint, current_app, render_template, send_from_directory)
 from flask_login import login_required
 
 viewer_bp = Blueprint('viewer', __name__)
 
 
-@login_required
 @viewer_bp.route('/', methods=['GET', 'POST'])
+@login_required
 def index():
     return render_template('viewer/index.html')
 
