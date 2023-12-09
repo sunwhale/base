@@ -60,11 +60,16 @@ O.updateColors();
 O.updateMaterial();
 O.draw_lines = lines;
 O.step = step;
-await O.loadXML(url);
-await O.init();
+try {
+    await O.loadXML(url);
+    await O.init();
+} catch (error) {
+    O.guiFolder.destroy();
+    O.settingsFolder.destroy();
+    console.log(error)
+}
 if (!show_menu) {
     O.MenuClosed = false;
     O.updateMenuClosed();
 }
-// console.log(O);
 O.after_load();

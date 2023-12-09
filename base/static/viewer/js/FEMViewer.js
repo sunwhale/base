@@ -50,11 +50,11 @@ const types = {
     TE1V: Tetrahedral,
     TE2V: TetrahedralO2,
     L1V: Lineal,
+    L2V: LinealO2,
     T1V: Triangular,
     T2V: TriangularO2,
     C1V: Quadrilateral,
     C2V: Serendipity,
-    L2V: LinealO2,
 };
 
 const themes = {
@@ -251,7 +251,7 @@ class FEMViewer {
         // this.gui.close();
         this.loaded = false;
         this.colorOptions = "nocolor";
-        this.clickMode = "无";
+        // this.clickMode = "无";
 
         this.settings();
         this.createListeners();
