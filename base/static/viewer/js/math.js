@@ -97,7 +97,6 @@ function matDecompose(m, lum, perm) {
 } // matDecompose
 
 function reduce(lum, b) {
-    // helper
     let n = lum.length;
     let x = vecMake(n, 0.0);
     for (let i = 0; i < n; ++i) {
@@ -122,7 +121,7 @@ function reduce(lum, b) {
     }
 
     return x;
-} // reduce
+}
 
 function add(a, b) {
     if (a instanceof Array && b instanceof Array) {
