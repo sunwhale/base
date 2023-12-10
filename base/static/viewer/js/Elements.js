@@ -8,6 +8,7 @@ function newPrism(n = 1) {
     const coordinates = tr.giveCoords().flat();
     const vertices = new Float32Array(coordinates);
     const geometry = new THREE.BufferGeometry();
+    // const geometry = new THREE.BoxGeometry();
     geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
     geometry.computeVertexNormals();
     return geometry;
@@ -36,8 +37,8 @@ class Element {
     ndim;
     modifier;
     lineModifier;
-    node_coords;
-    qp_coords;
+    nodeCoords;
+    qpCoords;
 
     constructor(coords, conns, dofIDs) {
         this.coords = coords;
@@ -200,12 +201,12 @@ class Element {
 
     J(_coord) {
         const dN = transpose(this.shape_gradients(_coord));
-        return [multiply(dN, this.node_coords), dN];
+        return [multiply(dN, this.nodeCoords), dN];
     }
 
     T(_coord) {
         let N = this.shape_values(_coord);
-        return [multiply([N], this.node_coords), N];
+        return [multiply([N], this.nodeCoords), N];
     }
 
     get sJ() {
@@ -214,8 +215,8 @@ class Element {
         }
         let max_qp_jacobi_det = -Infinity;
         let min_qp_jacobi_det = Infinity;
-        for (const qp_coord of this.qp_coords) {
-            const [qp_jacobi, dN] = this.J(qp_coord);
+        for (const qp_coord of this.qpCoords) {
+            const [qp_jacobi, _] = this.J(qp_coord);
             const qp_jacobi_det = det(qp_jacobi);
             max_qp_jacobi_det = Math.max(max_qp_jacobi_det, qp_jacobi_det);
             min_qp_jacobi_det = Math.min(min_qp_jacobi_det, qp_jacobi_det);
@@ -241,7 +242,7 @@ class Element {
             p = pp;
             let punot = puntos[0];
             let xi = add(x0, multiplyScalar(punot, -1));
-            let [J, dpz] = this.J(zi);
+            let [J, _] = this.J(zi);
             let _J = matInverse(J);
             let dz = multiply(_J, transpose([xi])).flat();
             zi = add(zi, dz);
@@ -260,7 +261,7 @@ class Element {
         this.properties = p;
     }
 
-    giveSolutionPoint(coord, colorMode, strain, elasticFunction) {
+    giveSolutionPoint(coord, colorMode) {
         let result = 0;
         let solution = Array(this.Ue[0].length).fill(0.0);
         let N = this.shape_values(coord)
@@ -318,15 +319,13 @@ class Element {
         return result;
     }
 
-    setMaxDispNode(colorMode, strain, elasticFunction) {
+    setMaxDispNode(colorMode) {
         this.colors = Array(this.domain.length).fill(0.0);
         for (let i = 0; i < this._domain.length; i++) {
             const z = this._domain[i];
             this.colors[i] = this.giveSolutionPoint(
                 z,
-                colorMode,
-                strain,
-                elasticFunction
+                colorMode
             );
         }
     }
@@ -348,16 +347,14 @@ class Element3D extends Element {
 
 class Brick extends Element3D {
     order;
-    line_order;
 
     constructor(coords, conns, dofIDs) {
         super(coords, conns, dofIDs);
         this.type = "B1V";
-        this.nfaces = 6;
-        this.node_coords = coords;
+        this.nodeCoords = coords;
         this.ndim = 3;
         this.initGeometry();
-        this.qp_coords = [
+        this.qpCoords = [
             [-0.77459667, -0.77459667, -0.77459667],
             [-0.77459667, -0.77459667, 0],
             [-0.77459667, -0.77459667, 0.77459667],
@@ -386,7 +383,7 @@ class Brick extends Element3D {
             [0.77459667, 0.77459667, 0],
             [0.77459667, 0.77459667, 0.77459667],
         ];
-        this.qp_weights = [
+        this.qpWeights = [
             0.17146776, 0.27434842, 0.17146776, 0.27434842, 0.43895748,
             0.27434842, 0.17146776, 0.27434842, 0.17146776, 0.27434842,
             0.43895748, 0.27434842, 0.43895748, 0.70233196, 0.43895748,
@@ -461,7 +458,7 @@ class Brick extends Element3D {
     }
 
     transformation(geo) {
-        const qp_coords = [];
+        const qpCoords = [];
         this.lineDomain = [];
         this.lineModifier = [];
         this.modifier = [];
@@ -469,7 +466,7 @@ class Brick extends Element3D {
             const x = geo.attributes.position.getX(i);
             const y = geo.attributes.position.getY(i);
             const z = geo.attributes.position.getZ(i);
-            qp_coords.push([x * 2, y * 2, z * 2]);
+            qpCoords.push([x * 2, y * 2, z * 2]);
             this.modifier.push([0.0, 0.0, 0.0]);
         }
         for (let i = 0; i < this.lineGeometry.attributes.position.count; i++) {
@@ -479,7 +476,7 @@ class Brick extends Element3D {
             this.lineDomain.push([2 * x, 2 * y, 2 * z]);
             this.lineModifier.push([0.0, 0.0, 0.0]);
         }
-        return qp_coords;
+        return qpCoords;
     }
 
     initGeometry() {
@@ -507,16 +504,14 @@ class Brick extends Element3D {
 
 class Tetrahedral extends Element3D {
     order;
-    line_order;
 
     constructor(coords, conns, dofIDs) {
         super(coords, conns, dofIDs);
         this.type = "TE1V";
         this.ndim = 3;
-        this.nfaces = 4;
-        this.node_coords = coords;
+        this.nodeCoords = coords;
         this.initGeometry();
-        this.qp_coords = [
+        this.qpCoords = [
             [0.01583591, 0.3280547, 0.3280547],
             [0.3280547, 0.01583591, 0.3280547],
             [0.3280547, 0.3280547, 0.01583591],
@@ -526,7 +521,7 @@ class Tetrahedral extends Element3D {
             [0.10695227, 0.10695227, 0.67914318],
             [0.10695227, 0.10695227, 0.10695227],
         ];
-        this.qp_weights = [
+        this.qpWeights = [
             0.023088, 0.023088, 0.023088, 0.023088, 0.01857867, 0.01857867,
             0.01857867, 0.01857867,
         ];
@@ -552,13 +547,13 @@ class Tetrahedral extends Element3D {
         this.modifier = [];
         this.lineDomain = [];
         this.lineModifier = [];
-        const qp_coords = [];
+        const qpCoords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
             const y = geo.attributes.position.getY(i);
             const z = geo.attributes.position.getZ(i);
             this.modifier.push([0.0, 0.0, 0.0]);
-            qp_coords.push([x, y, z]);
+            qpCoords.push([x, y, z]);
         }
         for (let i = 0; i < this.lineGeometry.attributes.position.count; i++) {
             const x = this.lineGeometry.attributes.position.getX(i);
@@ -567,7 +562,7 @@ class Tetrahedral extends Element3D {
             this.lineDomain.push([x, y, z]);
             this.lineModifier.push([0.0, 0.0, 0.0]);
         }
-        return qp_coords;
+        return qpCoords;
     }
 
     initGeometry() {
@@ -588,7 +583,6 @@ class Tetrahedral extends Element3D {
 
 class Lineal extends Element3D {
     order;
-    line_order;
 
     constructor(coords, conns, dofIDs, thick) {
         super(coords, conns, dofIDs);
@@ -600,10 +594,10 @@ class Lineal extends Element3D {
             const x = coords[i][0];
             c.push([x]);
         }
-        this.node_coords = c;
+        this.nodeCoords = c;
         this.initGeometry();
-        this.qp_coords = [[-0.77459667], [0], [0.77459667]];
-        this.qp_weights = [0.55555556, 0.88888889, 0.55555556];
+        this.qpCoords = [[-0.77459667], [0], [0.77459667]];
+        this.qpWeights = [0.55555556, 0.88888889, 0.55555556];
     }
 
     shape_values(_coord) {
@@ -620,12 +614,12 @@ class Lineal extends Element3D {
         this.lineDomain = [];
         this.lineModifier = [];
         this._domain = [];
-        const qp_coords = [];
+        const qpCoords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
             const y = geo.attributes.position.getY(i);
             const z = geo.attributes.position.getZ(i);
-            qp_coords.push([x * 2, y * 2, z * 2]);
+            qpCoords.push([x * 2, y * 2, z * 2]);
             this._domain.push([x * 2]);
             this.modifier.push([
                 0.0,
@@ -644,7 +638,7 @@ class Lineal extends Element3D {
                 (this.thick / 20) * (z + 0.5),
             ]);
         }
-        return qp_coords;
+        return qpCoords;
     }
 
     initGeometry() {
@@ -671,7 +665,6 @@ class Lineal extends Element3D {
 
 class Triangular extends Element3D {
     order;
-    line_order;
 
     constructor(coords, conns, dofIDs, thick) {
         super(coords, conns, dofIDs);
@@ -685,7 +678,7 @@ class Triangular extends Element3D {
             const y = coords[i][1];
             c.push([x, y]);
         }
-        this.node_coords = c;
+        this.nodeCoords = c;
         this.initGeometry();
         const A0 = 1 / 3;
         const A1 = 0.05971587178977;
@@ -697,11 +690,11 @@ class Triangular extends Element3D {
         const W2 = 0.062969590272413;
         const X = [A0, A1, B1, B1, B2, B2, A2];
         const Y = [A0, B1, A1, B1, A2, B2, B2];
-        this.qp_coords = [];
+        this.qpCoords = [];
         for (let i = 0; i < X.length; i++) {
-            this.qp_coords.push([X[i], Y[i]]);
+            this.qpCoords.push([X[i], Y[i]]);
         }
-        this.qp_weights = [W0, W1, W1, W1, W2, W2, W2];
+        this.qpWeights = [W0, W1, W1, W1, W2, W2, W2];
     }
 
     shape_values(_coord) {
@@ -723,12 +716,12 @@ class Triangular extends Element3D {
         this.modifier = [];
         this.lineDomain = [];
         this.lineModifier = [];
-        const qp_coords = [];
+        const qpCoords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
             const y = geo.attributes.position.getY(i);
             const z = geo.attributes.position.getZ(i);
-            qp_coords.push([x, y, z]);
+            qpCoords.push([x, y, z]);
             this._domain.push([x, y]);
             this.modifier.push([0.0, 0.0, (this.thick / 20) * z]);
         }
@@ -739,7 +732,7 @@ class Triangular extends Element3D {
             this.lineDomain.push([x, y]);
             this.lineModifier.push([0.0, 0.0, (this.thick / 20) * z]);
         }
-        return qp_coords;
+        return qpCoords;
     }
 
     initGeometry() {
@@ -759,7 +752,6 @@ class Triangular extends Element3D {
 
 class Quadrilateral extends Element3D {
     order;
-    line_order;
 
     constructor(coords, conns, dofIDs, thick) {
         super(coords, conns, dofIDs);
@@ -773,9 +765,9 @@ class Quadrilateral extends Element3D {
             const y = coords[i][1];
             c.push([x, y]);
         }
-        this.node_coords = c;
+        this.nodeCoords = c;
         this.initGeometry();
-        this.qp_coords = [
+        this.qpCoords = [
             [-0.77459667, -0.77459667],
             [-0.77459667, 0],
             [-0.77459667, 0.77459667],
@@ -786,7 +778,7 @@ class Quadrilateral extends Element3D {
             [0.77459667, 0],
             [0.77459667, 0.77459667],
         ];
-        this.qp_weights = [
+        this.qpWeights = [
             0.30864198, 0.49382716, 0.30864198, 0.49382716, 0.79012346,
             0.49382716, 0.30864198, 0.49382716, 0.30864198,
         ];
@@ -819,12 +811,12 @@ class Quadrilateral extends Element3D {
         this.modifier = [];
         this.lineDomain = [];
         this.lineModifier = [];
-        const qp_coords = [];
+        const qpCoords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
             const y = geo.attributes.position.getY(i);
             const z = geo.attributes.position.getZ(i);
-            qp_coords.push([x * 2, y * 2, 2 * z]);
+            qpCoords.push([x * 2, y * 2, 2 * z]);
             this._domain.push([x * 2, y * 2]);
             this.modifier.push([0.0, 0.0, (this.thick / 20) * (z + 0.5)]);
         }
@@ -835,7 +827,7 @@ class Quadrilateral extends Element3D {
             this.lineDomain.push([x * 2, y * 2]);
             this.lineModifier.push([0.0, 0.0, (this.thick / 20) * (z + 0.5)]);
         }
-        return qp_coords;
+        return qpCoords;
     }
 
     initGeometry() {
