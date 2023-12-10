@@ -26,7 +26,7 @@ function matInverse(m) {
             else b[j] = 0.0;
         }
 
-        let x = reduce(lum, b); //
+        let x = solve(lum, b); //
         for (let j = 0; j < n; ++j) result[j][i] = x[j];
     }
     return result;
