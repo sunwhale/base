@@ -1,20 +1,9 @@
 function vecMake(n, val) {
-    let result = [];
-    for (let i = 0; i < n; ++i) {
-        result[i] = val;
-    }
-    return result;
+    return Array(n).fill(val);
 }
 
 function matMake(rows, cols, val) {
-    let result = [];
-    for (let i = 0; i < rows; ++i) {
-        result[i] = [];
-        for (let j = 0; j < cols; ++j) {
-            result[i][j] = val;
-        }
-    }
-    return result;
+    return Array(rows).fill([]).map(() => Array(cols).fill(val));
 }
 
 function matInverse(m) {
@@ -96,7 +85,7 @@ function matDecompose(m, lum, perm) {
     return toggle; // for determinant
 } // matDecompose
 
-function reduce(lum, b) {
+function solve(lum, b) {
     let n = lum.length;
     let x = vecMake(n, 0.0);
     for (let i = 0; i < n; ++i) {
@@ -124,8 +113,8 @@ function reduce(lum, b) {
 }
 
 function add(a, b) {
-    if (a instanceof Array && b instanceof Array) {
-        let m = new Array(a.length);
+    if (Array.isArray(a) && Array.isArray(b)) {
+        const m = new Array(a.length);
         for (let i = 0; i < a.length; i++) {
             m[i] = a[i] + b[i];
         }
@@ -133,9 +122,9 @@ function add(a, b) {
     }
 }
 
-function subst(a, b) {
-    if (a instanceof Array && b instanceof Array) {
-        let m = new Array(a.length);
+function subtraction(a, b) {
+    if (Array.isArray(a) && Array.isArray(b)) {
+        const m = new Array(a.length);
         for (let i = 0; i < a.length; i++) {
             m[i] = a[i] - b[i];
         }
@@ -144,9 +133,7 @@ function subst(a, b) {
 }
 
 function abs(arr) {
-    return arr.map((x) => {
-        return Math.abs(x);
-    });
+    return arr.map(x => Math.abs(x));
 }
 
 function max(arr) {
@@ -169,43 +156,41 @@ function min(arr) {
     return minimum;
 }
 
-function transpose(arr) {
-    return arr[0].map((_, colIndex) => arr.map((row) => row[colIndex]));
-}
-
 function createVector(arr) {
     return transpose([[...arr]]);
 }
 
 function multiply(a, b) {
-    let aNumRows = a.length,
-        aNumCols = a[0].length,
-        bNumRows = b.length,
-        bNumCols = b[0].length,
-        m = new Array(aNumRows); // initialize array of rows
+    const aNumRows = a.length;
+    const aNumCols = a[0].length;
+    const bNumRows = b.length;
+    const bNumCols = b[0].length;
+    const m = new Array(aNumRows);
+
     for (let r = 0; r < aNumRows; ++r) {
-        m[r] = new Array(bNumCols); // initialize the current row
+        m[r] = new Array(bNumCols).fill(0);
+
         for (let c = 0; c < bNumCols; ++c) {
-            m[r][c] = 0; // initialize the current cell
             for (let i = 0; i < aNumCols; ++i) {
                 m[r][c] += a[r][i] * b[i][c];
             }
         }
     }
+
     return m;
 }
 
 function multiplyScalar(a, scalar) {
-    let aNumRows = a.length;
-    let m = new Array(aNumRows);
+    const aNumRows = a.length;
+    const m = new Array(aNumRows);
     let ndim = 2;
     if (a[0].length === undefined) {
         ndim = 1;
     }
     if (ndim === 2) {
-        let aNumCols = a[0].length;
+        const aNumCols = a[0].length;
         for (let r = 0; r < aNumRows; ++r) {
-            m[r] = new Array(aNumCols);
+            m[r] = new Array(aNumCols).fill(0);
             for (let c = 0; c < aNumCols; ++c) {
                 m[r][c] = a[r][c] * scalar;
             }
@@ -218,19 +203,19 @@ function multiplyScalar(a, scalar) {
     return m;
 }
 
-const det = (m) =>
-    m.length === 1
-        ? m[0][0]
-        : m.length === 2
-            ? m[0][0] * m[1][1] - m[0][1] * m[1][0]
-            : m[0].reduce(
-                (r, e, i) =>
-                    r +
-                    (-1) ** (i + 2) *
-                    e *
-                    det(m.slice(1).map((c) => c.filter((_, j) => i !== j))),
-                0
-            );
+const transpose = arr => arr[0].map((_, i) => arr.map(row => row[i]));
+
+const det = (m) => {
+    if (m.length === 1) {
+        return m[0][0];
+    }
+    if (m.length === 2) {
+        return m[0][0] * m[1][1] - m[0][1] * m[1][0];
+    }
+    return m[0].reduce((r, e, i) => {
+        return r + (-1) ** (i + 2) * e * det(m.slice(1).map((c) => c.filter((_, j) => i !== j)));
+    }, 0);
+};
 
 function sum(arr) {
     return arr.reduce((partialSum, a) => partialSum + a, 0);
@@ -285,14 +270,14 @@ export {
     max,
     abs,
     add,
-    reduce,
+    solve,
     matDecompose,
     matInverse,
     matMake,
     vecMake,
     dot,
     pointToRayDistance,
-    subst,
+    subtraction,
     cross,
     normVector,
     createVector,

@@ -1,4 +1,4 @@
-import { subst, add, multiplyScalar, dot, cross } from "./math.js";
+import { subtraction, add, multiplyScalar, dot, cross } from "./math.js";
 class Triangle {
 	constructor(coords) {
 		this.coords = coords || [
@@ -6,8 +6,8 @@ class Triangle {
 			[1.0, 0.0, 0.5],
 			[0.0, 1.0, 0.5],
 		];
-		let delta1 = subst(coords[1], coords[0]);
-		let delta2 = subst(coords[2], coords[0]);
+		let delta1 = subtraction(coords[1], coords[0]);
+		let delta2 = subtraction(coords[2], coords[0]);
 		let casi_normal = cross(delta1, delta2);
 		let mag_norm = dot(casi_normal, casi_normal) ** 0.5;
 		this.normal = multiplyScalar(casi_normal, 1 / mag_norm);
