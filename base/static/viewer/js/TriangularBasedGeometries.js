@@ -1,4 +1,4 @@
-import {subtraction, add, multiplyScalar, dot, cross} from "./math.js";
+import {add, cross, dot, multiplyScalar, subtraction} from "./math.js";
 
 class Triangle {
     constructor(coords) {
@@ -7,65 +7,65 @@ class Triangle {
             [1.0, 0.0, 0.5],
             [0.0, 1.0, 0.5],
         ];
-        let delta1 = subtraction(coords[1], coords[0]);
-        let delta2 = subtraction(coords[2], coords[0]);
-        let casi_normal = cross(delta1, delta2);
-        let mag_norm = dot(casi_normal, casi_normal) ** 0.5;
-        this.normal = multiplyScalar(casi_normal, 1 / mag_norm);
+        let l1 = subtraction(coords[1], coords[0]); // 1号边向量
+        let l2 = subtraction(coords[2], coords[0]); // 2号边向量
+        let crossNormal = cross(l1, l2);
+        let crossNormalMag = dot(crossNormal, crossNormal) ** 0.5;
+        this.normal = multiplyScalar(crossNormal, 1 / crossNormalMag); // 三角形法向量
         this.divided = false;
         this.children = [];
     }
 
     extrude(h, a) {
-        let newCoordsArriba = [];
+        // 法向拉伸
+        let newCoordsUp = [];
         for (const c of this.coords) {
-            let abajo = add(multiplyScalar(this.normal, -h / 2), c);
-            newCoordsArriba.push(abajo);
+            let up = add(multiplyScalar(this.normal, h / 2), c);
+            newCoordsUp.push(up);
         }
-        let newCoordsAbajo = [];
+        let newCoordsDown = [];
         for (const c of this.coords) {
-            let arriba = add(multiplyScalar(this.normal, +h / 2), c);
-            newCoordsAbajo.push(arriba);
+            let down = add(multiplyScalar(this.normal, -h / 2), c);
+            newCoordsDown.push(down);
         }
         let newCoordsInter = [];
         newCoordsInter.push(
-            newCoordsArriba[0],
-            newCoordsAbajo[0],
-            newCoordsArriba[1]
+            newCoordsUp[0],
+            newCoordsDown[0],
+            newCoordsUp[1]
         );
         newCoordsInter.push(
-            newCoordsAbajo[0],
-            newCoordsAbajo[1],
-            newCoordsArriba[1]
-        );
-
-        newCoordsInter.push(
-            newCoordsArriba[1],
-            newCoordsAbajo[1],
-            newCoordsArriba[2]
+            newCoordsDown[0],
+            newCoordsDown[1],
+            newCoordsUp[1]
         );
         newCoordsInter.push(
-            newCoordsAbajo[1],
-            newCoordsAbajo[2],
-            newCoordsArriba[2]
+            newCoordsUp[1],
+            newCoordsDown[1],
+            newCoordsUp[2]
+        );
+        newCoordsInter.push(
+            newCoordsDown[1],
+            newCoordsDown[2],
+            newCoordsUp[2]
         );
 
         if (!a) {
             newCoordsInter.push(
-                newCoordsArriba[2],
-                newCoordsAbajo[2],
-                newCoordsArriba[0]
+                newCoordsUp[2],
+                newCoordsDown[2],
+                newCoordsUp[0]
             );
             newCoordsInter.push(
-                newCoordsAbajo[2],
-                newCoordsAbajo[0],
-                newCoordsArriba[0]
+                newCoordsDown[2],
+                newCoordsDown[0],
+                newCoordsUp[0]
             );
         }
 
         return [
-            ...[...newCoordsArriba].reverse(),
-            ...newCoordsAbajo,
+            ...[...newCoordsUp].reverse(),
+            ...newCoordsDown,
             ...newCoordsInter,
         ];
     }
@@ -73,38 +73,44 @@ class Triangle {
     divide(n = 1) {
         if (n === 0) {
             return;
-        } else {
-            this.subdivide();
-            for (const ch of this.children) {
-                ch.divide(n - 1);
+        }
+
+        let trianglesToDivide = [this];
+
+        while (n > 0) {
+            const newTriangles = [];
+
+            for (const triangle of trianglesToDivide) {
+                triangle.subdivide();
+                newTriangles.push(...triangle.children);
             }
+
+            trianglesToDivide = newTriangles;
+            n--;
         }
     }
 
     subdivide() {
+        // 将1个三角形从各边中点拆分为4个
         this.divided = true;
         const c = this.coords;
-        let mid1 = [
-            c[1][0] / 2 + c[0][0] / 2,
-            c[1][1] / 2 + c[0][1] / 2,
-            c[1][2] / 2 + c[0][2] / 2,
-        ];
-        let mid2 = [
-            c[2][0] / 2 + c[0][0] / 2,
-            c[2][1] / 2 + c[0][1] / 2,
-            c[2][2] / 2 + c[0][2] / 2,
-        ];
-        let mid3 = [
-            c[2][0] / 2 + c[1][0] / 2,
-            c[2][1] / 2 + c[1][1] / 2,
-            c[2][2] / 2 + c[1][2] / 2,
-        ];
+        let mid1 = this.calculateMidPoint(c[0], c[1]);
+        let mid2 = this.calculateMidPoint(c[0], c[2]);
+        let mid3 = this.calculateMidPoint(c[1], c[2]);
 
         let Ta = new Triangle([c[0], mid1, mid2]);
         let Tb = new Triangle([mid3, mid2, mid1]);
         let Tc = new Triangle([mid1, c[1], mid3]);
         let Td = new Triangle([mid2, mid3, c[2]]);
         this.children = [Ta, Tb, Tc, Td];
+    }
+
+    calculateMidPoint(p1, p2) {
+        return [
+            p2[0] / 2 + p1[0] / 2,
+            p2[1] / 2 + p1[1] / 2,
+            p2[2] / 2 + p1[2] / 2,
+        ];
     }
 
     giveCoords(reverse = false) {
