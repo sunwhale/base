@@ -114,35 +114,27 @@ class Triangle {
     }
 
     giveCoords(reverse = false) {
-        let result = [];
         if (!this.divided) {
-            if (reverse) {
-                return [...this.coords].reverse();
-            } else {
-                return this.coords;
-            }
+            return reverse ? [...this.coords].reverse() : this.coords;
         }
-        for (const ch of this.children) {
-            result = result.concat(ch.giveCoords(reverse));
-        }
-        return result;
+        return this.children.flatMap(child => child.giveCoords(reverse));
     }
 }
 
 class Prism {
     constructor() {
-        this.topTriang = new Triangle([
+        this.topTriangle = new Triangle([
             [0.0, 0.0, 1.0],
             [1.0, 0.0, 1.0],
             [0.0, 1.0, 1.0],
         ]);
-        let ct = this.topTriang.coords;
-        this.bottomTriang = new Triangle([
+        let ct = this.topTriangle.coords;
+        this.bottomTriangle = new Triangle([
             [0.0, 0.0, 0.0],
             [1.0, 0.0, 0.0],
             [0.0, 1.0, 0.0],
         ]);
-        let cb = this.bottomTriang.coords;
+        let cb = this.bottomTriangle.coords;
         this.sideTriangles = [
             cb[2],
             cb[0],
@@ -166,15 +158,15 @@ class Prism {
     }
 
     giveCoords() {
-        let coords = this.topTriang.giveCoords();
-        coords = coords.concat(this.bottomTriang.giveCoords(true));
+        let coords = this.topTriangle.giveCoords();
+        coords = coords.concat(this.bottomTriangle.giveCoords(true));
         coords = coords.concat(this.sideTriangles);
         return coords.flat();
     }
 
     divide(n) {
-        this.topTriang.divide(n);
-        this.bottomTriang.divide(n);
+        this.topTriangle.divide(n);
+        this.bottomTriangle.divide(n);
         this.sideTriangles = [];
         let h = 1 / 2 ** n;
         for (let i = 0; i < 2 ** n; i++) {
@@ -190,7 +182,6 @@ class Prism {
                 [right, 0.0, 0.0],
                 [right, 0.0, 1.0],
             ];
-
             const t3 = [
                 [0.0, left, 1.0],
                 [0.0, right, 1.0],
@@ -201,7 +192,6 @@ class Prism {
                 [0.0, right, 1.0],
                 [0.0, right, 0.0],
             ];
-
             const t5 = [
                 [left, 1 - left, 1.0],
                 [right, 1 - right, 0.0],
@@ -224,23 +214,22 @@ class Prism {
 
 class Tet {
     constructor() {
-        this.topTriang = new Triangle([
+        this.topTriangle = new Triangle([
             [0.0, 0.0, 1.0],
             [1.0, 0.0, 0.0],
             [0.0, 1.0, 0.0],
         ]);
-        this.bottomTriang = new Triangle([
+        this.bottomTriangle = new Triangle([
             [0.0, 0.0, 0.0],
             [1.0, 0.0, 0.0],
             [0.0, 1.0, 0.0],
         ]);
-
-        this.leftTriang = new Triangle([
+        this.leftTriangle = new Triangle([
             [0.0, 0.0, 0.0],
             [0.0, 0.0, 1.0],
             [0.0, 1.0, 0.0],
         ]);
-        this.rightTriang = new Triangle([
+        this.rightTriangle = new Triangle([
             [0.0, 0.0, 0.0],
             [1.0, 0.0, 0.0],
             [0.0, 0.0, 1],
@@ -248,18 +237,18 @@ class Tet {
     }
 
     giveCoords() {
-        let coords = this.topTriang.giveCoords();
-        coords = coords.concat(this.bottomTriang.giveCoords(true));
-        coords = coords.concat(this.leftTriang.giveCoords());
-        coords = coords.concat(this.rightTriang.giveCoords());
+        let coords = this.topTriangle.giveCoords();
+        coords = coords.concat(this.bottomTriangle.giveCoords(true));
+        coords = coords.concat(this.leftTriangle.giveCoords());
+        coords = coords.concat(this.rightTriangle.giveCoords());
         return coords.flat();
     }
 
     divide(n) {
-        this.topTriang.divide(n);
-        this.bottomTriang.divide(n);
-        this.leftTriang.divide(n);
-        this.rightTriang.divide(n);
+        this.topTriangle.divide(n);
+        this.bottomTriangle.divide(n);
+        this.leftTriangle.divide(n);
+        this.rightTriangle.divide(n);
     }
 }
 
