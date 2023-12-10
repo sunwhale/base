@@ -4,7 +4,7 @@ import {
 	Float32BufferAttribute,
 } from "./build/three.module.js";
 
-import { dot, add, multiplyScalar, point_to_ray_distance } from "./math.js";
+import { dot, add, multiplyScalar, pointToRayDistance } from "./math.js";
 
 class Quadrant3D {
 	constructor(p, dim) {
