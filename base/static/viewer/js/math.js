@@ -44,7 +44,7 @@ function matInverse(m) {
 }
 
 function matDecompose(m, lum, perm) {
-    let toggle = +1; // even (+1) or odd (-1) row permutatuions
+    let toggle = +1; // even (+1) or odd (-1) row permutations
     let n = m.length;
     for (let i = 0; i < n; ++i) {
         for (let j = 0; j < n; ++j) {
@@ -126,7 +126,7 @@ function reduce(lum, b) {
 
 function add(a, b) {
     if (a instanceof Array && b instanceof Array) {
-        var m = new Array(a.length);
+        let m = new Array(a.length);
         for (let i = 0; i < a.length; i++) {
             m[i] = a[i] + b[i];
         }
@@ -136,7 +136,7 @@ function add(a, b) {
 
 function subst(a, b) {
     if (a instanceof Array && b instanceof Array) {
-        var m = new Array(a.length);
+        let m = new Array(a.length);
         for (let i = 0; i < a.length; i++) {
             m[i] = a[i] - b[i];
         }
@@ -151,23 +151,23 @@ function abs(arr) {
 }
 
 function max(arr) {
-    let maximo = arr[0];
+    let maximum = arr[0];
     for (let i = 1; i < arr.length; i++) {
-        if (arr[i] > maximo) {
-            maximo = arr[i];
+        if (arr[i] > maximum) {
+            maximum = arr[i];
         }
     }
-    return maximo;
+    return maximum;
 }
 
 function min(arr) {
-    let maximo = arr[0];
+    let minimum = arr[0];
     for (let i = 1; i < arr.length; i++) {
-        if (arr[i] < maximo) {
-            maximo = arr[i];
+        if (arr[i] < minimum) {
+            minimum = arr[i];
         }
     }
-    return maximo;
+    return minimum;
 }
 
 function transpose(arr) {
@@ -179,16 +179,16 @@ function createVector(arr) {
 }
 
 function multiply(a, b) {
-    var aNumRows = a.length,
+    let aNumRows = a.length,
         aNumCols = a[0].length,
         bNumRows = b.length,
         bNumCols = b[0].length,
         m = new Array(aNumRows); // initialize array of rows
-    for (var r = 0; r < aNumRows; ++r) {
+    for (let r = 0; r < aNumRows; ++r) {
         m[r] = new Array(bNumCols); // initialize the current row
-        for (var c = 0; c < bNumCols; ++c) {
+        for (let c = 0; c < bNumCols; ++c) {
             m[r][c] = 0; // initialize the current cell
-            for (var i = 0; i < aNumCols; ++i) {
+            for (let i = 0; i < aNumCols; ++i) {
                 m[r][c] += a[r][i] * b[i][c];
             }
         }
@@ -196,24 +196,24 @@ function multiply(a, b) {
     return m;
 }
 
-function multiplyScalar(a, escalar) {
-    var aNumRows = a.length;
-    var m = new Array(aNumRows);
+function multiplyScalar(a, scalar) {
+    let aNumRows = a.length;
+    let m = new Array(aNumRows);
     let ndim = 2;
     if (a[0].length === undefined) {
         ndim = 1;
     }
     if (ndim === 2) {
-        var aNumCols = a[0].length;
-        for (var r = 0; r < aNumRows; ++r) {
+        let aNumCols = a[0].length;
+        for (let r = 0; r < aNumRows; ++r) {
             m[r] = new Array(aNumCols);
-            for (var c = 0; c < aNumCols; ++c) {
-                m[r][c] = a[r][c] * escalar;
+            for (let c = 0; c < aNumCols; ++c) {
+                m[r][c] = a[r][c] * scalar;
             }
         }
     } else if (ndim === 1) {
-        for (var r = 0; r < aNumRows; ++r) {
-            m[r] = a[r] * escalar;
+        for (let r = 0; r < aNumRows; ++r) {
+            m[r] = a[r] * scalar;
         }
     }
     return m;
@@ -245,12 +245,12 @@ function dot(a, b) {
     return r;
 }
 
-function point_to_ray_distance(s, v, p) {
+function pointToRayDistance(s, v, p) {
     let pms = add(p, multiplyScalar(s, -1));
     return dot(pms, pms) + (dot(p, v) - dot(s, v)) ** 2;
 }
 
-function squared_distance(p1, p2) {
+function squaredDistance(p1, p2) {
     let s = 0;
     for (let i = 0; i < p1.length; i++) {
         s += (p2[i] - p1[i]) ** 2;
@@ -276,7 +276,7 @@ function normVector(v) {
 }
 
 export {
-    squared_distance,
+    squaredDistance,
     sum,
     det,
     multiplyScalar,
@@ -292,7 +292,7 @@ export {
     matMake,
     vecMake,
     dot,
-    point_to_ray_distance,
+    pointToRayDistance,
     subst,
     cross,
     normVector,
