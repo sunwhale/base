@@ -1,6 +1,6 @@
 import * as THREE from "./build/three.module.js";
 import {Prism, Tet} from "./TriangularBasedGeometries.js";
-import {abs, add, createVector, det, matInverse, multiply, multiplyScalar, sum, transpose,} from "./math.js";
+import {abs, add, det, matInverse, multiply, multiplyScalar, sum, transpose,} from "./math.js";
 
 function newPrism(n = 1) {
     const tr = new Prism();
@@ -29,13 +29,13 @@ class Element {
     dofIDs;
     Ue;
     geometry;
-    line_geometry;
+    lineGeometry;
     domain;
     _domain;
-    line_domain;
+    lineDomain;
     ndim;
     modifier;
-    line_modifier;
+    lineModifier;
     node_coords;
     qp_coords;
 
@@ -94,38 +94,35 @@ class Element {
         this.ULines = [];
         this._U = [];
         this._ULines = [];
-        let count = this._domain.length;
-        for (let i = 0; i < count; i++) {
+
+        const domainLength = this._domain.length;
+        const lineDomainLength = this.lineDomain.length;
+
+        for (let i = 0; i < domainLength; i++) {
             const z = this._domain[i];
-            let [XX, P] = this.T(z);
-            const X = XX[0];
+            const [XX, P] = this.T(z);
+            const X = [...XX[0], ...(new Array(3 - this.ndim).fill(0.0))];
             const U = multiply(Ue, transpose([P]));
-            const _U = [...U];
-            for (let j = this.ndim; j < 3; j++) {
-                X.push(0.0);
-                _U.push(0.0);
-            }
+            const _U = [...U, ...(new Array(3 - this.ndim).fill(0.0))];
             this.X.push(X);
             this.U.push(U);
             this._U.push(_U);
         }
-        for (let i = 0; i < this.line_domain.length; i++) {
-            const z = this.line_domain[i];
-            let [XX, P] = this.T(z);
-            const XLines = XX[0];
+
+        for (let i = 0; i < lineDomainLength; i++) {
+            const z = this.lineDomain[i];
+            const [XX, P] = this.T(z);
+            const XLines = [...XX[0], ...(new Array(3 - this.ndim).fill(0.0))];
             const ULines = multiply(Ue, transpose([P]));
-            const _ULines = [...ULines];
-            for (let j = this.ndim; j < 3; j++) {
-                XLines.push(0.0);
-                _ULines.push(0.0);
-            }
+            const _ULines = [...ULines, ...(new Array(3 - this.ndim).fill(0.0))];
             this.XLines.push(XLines);
-            this._ULines.push(_ULines);
             this.ULines.push(ULines);
+            this._ULines.push(_ULines);
         }
+
         if (!isDeformed) {
-            this._U = new Array(this._domain.length).fill([0.0, 0.0, 0.0]);
-            this._ULines = new Array(this.line_domain.length).fill([0.0, 0.0, 0.0]);
+            this._U = new Array(domainLength).fill([0.0, 0.0, 0.0]);
+            this._ULines = new Array(lineDomainLength).fill([0.0, 0.0, 0.0]);
         }
     }
 
@@ -156,61 +153,50 @@ class Element {
         }
     }
 
-    setGeometryCoords(disp_amp_factor, norm) {
-        if (!disp_amp_factor) {
-            if (disp_amp_factor !== 0) {
-                disp_amp_factor = 1.0;
-            }
-        }
-        if (!norm) {
-            if (norm !== 0) {
-                norm = 1.0;
-            }
-        }
+    setGeometryCoords(dispAmpFactor, norm) {
+        dispAmpFactor = dispAmpFactor || 1.0;
+        norm = norm || 1.0;
 
-        const parent_geometry = this.geometry;
-        const line_geometry = this.line_geometry;
-        let count = this._domain.length;
-        for (let i = 0; i < count; i++) {
+        const parentGeometry = this.geometry;
+        const lineGeometry = this.lineGeometry;
+        const {position: parentPosition} = parentGeometry.attributes;
+        const {position: linePosition} = lineGeometry?.attributes || {};
+
+        this._domain.forEach((_, i) => {
             const X = this.X[i];
-            let U = this._U[i];
-            parent_geometry.attributes.position.setX(
+            const U = this._U[i];
+            const modifier = this.modifier[i];
+
+            parentPosition.setXYZ(
                 i,
-                X[0] * norm + this.modifier[i][0] + U[0] * disp_amp_factor * norm
+                X[0] * norm + modifier[0] + U[0] * dispAmpFactor * norm,
+                X[1] * norm + modifier[1] + U[1] * dispAmpFactor * norm,
+                X[2] * norm + modifier[2] + U[2] * dispAmpFactor * norm
             );
-            parent_geometry.attributes.position.setY(
-                i,
-                X[1] * norm + this.modifier[i][1] + U[1] * disp_amp_factor * norm
-            );
-            parent_geometry.attributes.position.setZ(
-                i,
-                X[2] * norm + this.modifier[i][2] + U[2] * disp_amp_factor * norm
-            );
-        }
-        parent_geometry.attributes.position.needsUpdate = true;
-        parent_geometry.computeVertexNormals();
-        if (line_geometry) {
-            count = this.line_domain.length;
-            for (let i = 0; i < count; i++) {
+        });
+
+        parentPosition.needsUpdate = true;
+        parentGeometry.computeVertexNormals();
+
+        if (lineGeometry) {
+            this.lineDomain.forEach((_, i) => {
                 const X = this.XLines[i];
-                let U = this._ULines[i];
-                line_geometry.attributes.position.setX(
+                const U = this._ULines[i];
+                const modifier = this.lineModifier[i];
+
+                linePosition.setXYZ(
                     i,
-                    X[0] * norm + this.line_modifier[i][0] + U[0] * disp_amp_factor * norm
+                    X[0] * norm + modifier[0] + U[0] * dispAmpFactor * norm,
+                    X[1] * norm + modifier[1] + U[1] * dispAmpFactor * norm,
+                    X[2] * norm + modifier[2] + U[2] * dispAmpFactor * norm
                 );
-                line_geometry.attributes.position.setY(
-                    i,
-                    X[1] * norm + this.line_modifier[i][1] + U[1] * disp_amp_factor * norm
-                );
-                line_geometry.attributes.position.setZ(
-                    i,
-                    X[2] * norm + this.line_modifier[i][2] + U[2] * disp_amp_factor * norm
-                );
-            }
-            line_geometry.attributes.position.needsUpdate = true;
-            line_geometry.computeVertexNormals();
+            });
+
+            linePosition.needsUpdate = true;
+            lineGeometry.computeVertexNormals();
         }
     }
+
 
     J(_coord) {
         const dN = transpose(this.shape_gradients(_coord));
@@ -476,8 +462,8 @@ class Brick extends Element3D {
 
     transformation(geo) {
         const qp_coords = [];
-        this.line_domain = [];
-        this.line_modifier = [];
+        this.lineDomain = [];
+        this.lineModifier = [];
         this.modifier = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
@@ -486,12 +472,12 @@ class Brick extends Element3D {
             qp_coords.push([x * 2, y * 2, z * 2]);
             this.modifier.push([0.0, 0.0, 0.0]);
         }
-        for (let i = 0; i < this.line_geometry.attributes.position.count; i++) {
-            const x = this.line_geometry.attributes.position.getX(i);
-            const y = this.line_geometry.attributes.position.getY(i);
-            const z = this.line_geometry.attributes.position.getZ(i);
-            this.line_domain.push([2 * x, 2 * y, 2 * z]);
-            this.line_modifier.push([0.0, 0.0, 0.0]);
+        for (let i = 0; i < this.lineGeometry.attributes.position.count; i++) {
+            const x = this.lineGeometry.attributes.position.getX(i);
+            const y = this.lineGeometry.attributes.position.getY(i);
+            const z = this.lineGeometry.attributes.position.getZ(i);
+            this.lineDomain.push([2 * x, 2 * y, 2 * z]);
+            this.lineModifier.push([0.0, 0.0, 0.0]);
         }
         return qp_coords;
     }
@@ -505,7 +491,7 @@ class Brick extends Element3D {
             2 ** (this.res - 1),
             2 ** (this.res - 1)
         );
-        this.line_geometry = new THREE.EdgesGeometry(this.geometry);
+        this.lineGeometry = new THREE.EdgesGeometry(this.geometry);
         this.domain = this.transformation(this.geometry);
         this._domain = this.domain;
         this.colors = Array(this.modifier.length).fill(0.0);
@@ -564,8 +550,8 @@ class Tetrahedral extends Element3D {
 
     transformation(geo) {
         this.modifier = [];
-        this.line_domain = [];
-        this.line_modifier = [];
+        this.lineDomain = [];
+        this.lineModifier = [];
         const qp_coords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
@@ -574,19 +560,19 @@ class Tetrahedral extends Element3D {
             this.modifier.push([0.0, 0.0, 0.0]);
             qp_coords.push([x, y, z]);
         }
-        for (let i = 0; i < this.line_geometry.attributes.position.count; i++) {
-            const x = this.line_geometry.attributes.position.getX(i);
-            const y = this.line_geometry.attributes.position.getY(i);
-            const z = this.line_geometry.attributes.position.getZ(i);
-            this.line_domain.push([x, y, z]);
-            this.line_modifier.push([0.0, 0.0, 0.0]);
+        for (let i = 0; i < this.lineGeometry.attributes.position.count; i++) {
+            const x = this.lineGeometry.attributes.position.getX(i);
+            const y = this.lineGeometry.attributes.position.getY(i);
+            const z = this.lineGeometry.attributes.position.getZ(i);
+            this.lineDomain.push([x, y, z]);
+            this.lineModifier.push([0.0, 0.0, 0.0]);
         }
         return qp_coords;
     }
 
     initGeometry() {
         this.geometry = newTet(this.res);
-        this.line_geometry = new THREE.EdgesGeometry(this.geometry);
+        this.lineGeometry = new THREE.EdgesGeometry(this.geometry);
         this.domain = this.transformation(this.geometry);
         this._domain = this.domain;
         this.colors = Array(this.modifier.length).fill(0.0);
@@ -631,8 +617,8 @@ class Lineal extends Element3D {
 
     transformation(geo) {
         this.modifier = [];
-        this.line_domain = [];
-        this.line_modifier = [];
+        this.lineDomain = [];
+        this.lineModifier = [];
         this._domain = [];
         const qp_coords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
@@ -647,12 +633,12 @@ class Lineal extends Element3D {
                 (this.thick / 20) * (z + 0.5),
             ]);
         }
-        for (let i = 0; i < this.line_geometry.attributes.position.count; i++) {
-            const x = this.line_geometry.attributes.position.getX(i);
-            const y = this.line_geometry.attributes.position.getY(i);
-            const z = this.line_geometry.attributes.position.getZ(i);
-            this.line_domain.push([x * 2]);
-            this.line_modifier.push([
+        for (let i = 0; i < this.lineGeometry.attributes.position.count; i++) {
+            const x = this.lineGeometry.attributes.position.getX(i);
+            const y = this.lineGeometry.attributes.position.getY(i);
+            const z = this.lineGeometry.attributes.position.getZ(i);
+            this.lineDomain.push([x * 2]);
+            this.lineModifier.push([
                 0.0,
                 (this.thick / 20) * (y + 0.5),
                 (this.thick / 20) * (z + 0.5),
@@ -670,7 +656,7 @@ class Lineal extends Element3D {
             1,
             1
         );
-        this.line_geometry = new THREE.EdgesGeometry(this.geometry);
+        this.lineGeometry = new THREE.EdgesGeometry(this.geometry);
         this.domain = this.transformation(this.geometry);
         this.colors = Array(this.modifier.length).fill(0.0);
         this.geometry.setAttribute(
@@ -735,8 +721,8 @@ class Triangular extends Element3D {
     transformation(geo) {
         this._domain = [];
         this.modifier = [];
-        this.line_domain = [];
-        this.line_modifier = [];
+        this.lineDomain = [];
+        this.lineModifier = [];
         const qp_coords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
@@ -746,19 +732,19 @@ class Triangular extends Element3D {
             this._domain.push([x, y]);
             this.modifier.push([0.0, 0.0, (this.thick / 20) * z]);
         }
-        for (let i = 0; i < this.line_geometry.attributes.position.count; i++) {
-            const x = this.line_geometry.attributes.position.getX(i);
-            const y = this.line_geometry.attributes.position.getY(i);
-            const z = this.line_geometry.attributes.position.getZ(i);
-            this.line_domain.push([x, y]);
-            this.line_modifier.push([0.0, 0.0, (this.thick / 20) * z]);
+        for (let i = 0; i < this.lineGeometry.attributes.position.count; i++) {
+            const x = this.lineGeometry.attributes.position.getX(i);
+            const y = this.lineGeometry.attributes.position.getY(i);
+            const z = this.lineGeometry.attributes.position.getZ(i);
+            this.lineDomain.push([x, y]);
+            this.lineModifier.push([0.0, 0.0, (this.thick / 20) * z]);
         }
         return qp_coords;
     }
 
     initGeometry() {
         this.geometry = newPrism(this.res);
-        this.line_geometry = new THREE.EdgesGeometry(this.geometry);
+        this.lineGeometry = new THREE.EdgesGeometry(this.geometry);
         this.domain = this.transformation(this.geometry);
         this.colors = Array(this.modifier.length).fill(0.0);
         this.geometry.setAttribute(
@@ -831,8 +817,8 @@ class Quadrilateral extends Element3D {
     transformation(geo) {
         this._domain = [];
         this.modifier = [];
-        this.line_domain = [];
-        this.line_modifier = [];
+        this.lineDomain = [];
+        this.lineModifier = [];
         const qp_coords = [];
         for (let i = 0; i < geo.attributes.position.count; i++) {
             const x = geo.attributes.position.getX(i);
@@ -842,12 +828,12 @@ class Quadrilateral extends Element3D {
             this._domain.push([x * 2, y * 2]);
             this.modifier.push([0.0, 0.0, (this.thick / 20) * (z + 0.5)]);
         }
-        for (let i = 0; i < this.line_geometry.attributes.position.count; i++) {
-            const x = this.line_geometry.attributes.position.getX(i);
-            const y = this.line_geometry.attributes.position.getY(i);
-            const z = this.line_geometry.attributes.position.getZ(i);
-            this.line_domain.push([x * 2, y * 2]);
-            this.line_modifier.push([0.0, 0.0, (this.thick / 20) * (z + 0.5)]);
+        for (let i = 0; i < this.lineGeometry.attributes.position.count; i++) {
+            const x = this.lineGeometry.attributes.position.getX(i);
+            const y = this.lineGeometry.attributes.position.getY(i);
+            const z = this.lineGeometry.attributes.position.getZ(i);
+            this.lineDomain.push([x * 2, y * 2]);
+            this.lineModifier.push([0.0, 0.0, (this.thick / 20) * (z + 0.5)]);
         }
         return qp_coords;
     }
@@ -861,7 +847,7 @@ class Quadrilateral extends Element3D {
             2 ** (this.res - 1),
             1
         );
-        this.line_geometry = new THREE.EdgesGeometry(this.geometry);
+        this.lineGeometry = new THREE.EdgesGeometry(this.geometry);
         this.domain = this.transformation(this.geometry);
         this.colors = Array(this.modifier.length).fill(0.0);
         this.geometry.setAttribute(
