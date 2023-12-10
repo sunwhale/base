@@ -981,7 +981,7 @@ class FEMViewer {
 
     updateSpecificBufferGeometry(i) {
         this.bufferGeometries[i] = this.elements[i].geometry;
-        this.bufferLines[i] = this.elements[i].line_geometry;
+        this.bufferLines[i] = this.elements[i].lineGeometry;
         this.invisibleModel.children[i].geometry = this.elements[i].geometry;
     }
 
@@ -1394,7 +1394,7 @@ class FEMViewer {
     createLines() {
         this.bufferLines = [];
         for (const e of this.elements) {
-            this.bufferLines.push(e.line_geometry);
+            this.bufferLines.push(e.lineGeometry);
         }
     }
 }
