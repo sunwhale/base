@@ -419,11 +419,15 @@ class FEMViewer {
                 this.solutions = [U];
                 this.frames = [{"fieldOutputs": fieldOutputs}];
 
-                for (let typeInt of typesIntArray) {
-                    if (typeInt === 12) {
+                for (let i = 0; i < typesIntArray.length; i++) {
+                    if (typesIntArray[i] === 12) {
                         this.types.push('B1V')
-                    } else if (typeInt === 9) {
+                    } else if (typesIntArray[i] === 9 && connectivities[i].length === 3) {
+                        this.types.push('T1V')
+                    } else if (typesIntArray[i] === 9 && connectivities[i].length === 4) {
                         this.types.push('C1V')
+                    } else if (typesIntArray[i] === 9 && connectivities[i].length === 8) {
+                        this.types.push('C2V')
                     }
 
                 }
@@ -808,15 +812,9 @@ class FEMViewer {
             this.colors = false;
             msg = "";
         }
-        let elasticFunction = undefined;
-        if (this.config_dict["C"]) {
-            elasticFunction = this.config_dict["C"];
-        }
         for (const e of this.elements) {
             e.setMaxDispNode(
-                this.colorOptions,
-                this.config_dict["calculateStrain"],
-                elasticFunction
+                this.colorOptions
             );
         }
 
@@ -1215,6 +1213,7 @@ class FEMViewer {
         }
         await this.createElements();
         this.createLines();
+        console.log(this.bufferGeometries)
         this.mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
             this.bufferGeometries,
             true
@@ -1373,6 +1372,7 @@ class FEMViewer {
                 p[key] = result;
             }
             this.elements[i].set_properties(p);
+            // console.log(this.elements[i].geometry)
             this.bufferGeometries.push(this.elements[i].geometry);
             const messh = new THREE.Mesh(
                 this.elements[i].geometry,
