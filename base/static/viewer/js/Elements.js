@@ -155,7 +155,7 @@ class Element {
     }
 
     setGeometryCoords(dispAmpFactor, norm) {
-        dispAmpFactor = dispAmpFactor || 1.0;
+        dispAmpFactor = dispAmpFactor || 0.0;
         norm = norm || 1.0;
 
         const parentGeometry = this.geometry;
