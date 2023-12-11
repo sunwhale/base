@@ -58,7 +58,7 @@ O.theme = themes[theme] || {};
 O.updateStyleSheet();
 O.updateColors();
 O.updateMaterial();
-O.draw_lines = lines;
+O.drawLines = lines;
 O.step = step;
 try {
     await O.loadXML(url);

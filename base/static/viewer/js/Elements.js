@@ -257,7 +257,7 @@ class Element {
         return zi;
     }
 
-    set_properties(p) {
+    setProperties(p) {
         this.properties = p;
     }
 

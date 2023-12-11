@@ -126,9 +126,9 @@ class FEMViewer {
         this.colors = false;
         this.animate = false;
         this.magnification = magnification;
-        this.animate_mult = 1.0;
+        this.animateMult = 1.0;
         this.side = 1.0;
-        this.draw_lines = true;
+        this.drawLines = true;
         this.colormap = "彩虹图";
         this.show_model = true;
         this.octreeMesh = undefined;
@@ -557,7 +557,7 @@ class FEMViewer {
         this.elements = [];
         this.types = [];
         this.magnification = 0.0;
-        this.max_abs_disp = undefined;
+        this.maxAbsDisp = undefined;
         this.border_elements = [];
         this.scene.remove(this.model);
         this.scene.remove(this.invisibleModel);
@@ -617,7 +617,7 @@ class FEMViewer {
     async updateShowModel() {
         this.mesh.visible = this.show_model;
         this.contour.visible = this.show_model;
-        this.draw_lines = this.show_model;
+        this.drawLines = this.show_model;
         this.gh.visible = true;
         for (const ch of this.model.children) {
             if (ch.visible) {
@@ -647,7 +647,7 @@ class FEMViewer {
             })
             .name("线框模式");
         this.settingsFolder
-            .add(this, "draw_lines")
+            .add(this, "drawLines")
             .onChange(this.updateLines.bind(this))
             .name("显示线条")
             .listen();
@@ -717,8 +717,8 @@ class FEMViewer {
 
     updateVariableAsSolution() {
         this.animate = false;
-        this.animate_mult = 1;
-        this.magnification = 0.4 / this.max_abs_disp;
+        this.animateMult = 1;
+        this.magnification = 0.4 / this.maxAbsDisp;
         this.updateDispSlider();
         this.updateSolutionAsDisplacement();
     }
@@ -757,7 +757,7 @@ class FEMViewer {
                 .onChange(() => {
                     this.notiBar.setMessage("动画播放中");
                     if (!this.animate) {
-                        this.animate_mult = 1.0;
+                        this.animateMult = 1.0;
                         this.updateMeshCoords();
                         this.updateGeometry();
                         this.notiBar.resetMessage();
@@ -966,10 +966,10 @@ class FEMViewer {
     updateMeshCoords() {
         for (let i = 0; i < this.elements.length; i++) {
             const e = this.elements[i];
-            if (this.draw_lines) {
-                e.setGeometryCoords(this.magnification * this.animate_mult, this.norm);
+            if (this.drawLines) {
+                e.setGeometryCoords(this.magnification * this.animateMult, this.norm);
             } else {
-                e.setGeometryCoords(this.magnification * this.animate_mult, this.norm);
+                e.setGeometryCoords(this.magnification * this.animateMult, this.norm);
             }
         }
         if (this.colors) {
@@ -1016,7 +1016,7 @@ class FEMViewer {
         this.mesh.material = this.material;
         this.mesh.material.needsUpdate = true;
 
-        if (this.draw_lines) {
+        if (this.drawLines) {
             this.mergedLineGeometry.dispose();
             this.mergedLineGeometry = BufferGeometryUtils.mergeBufferGeometries(
                 this.bufferLines,
@@ -1047,25 +1047,25 @@ class FEMViewer {
         } else {
             time = 0.0;
         }
-        this.animate_mult += time * this.side;
+        this.animateMult += time * this.side;
         // +-1 振动
-        // if (this.animate_mult > 1) {
+        // if (this.animateMult > 1) {
         //     this.side = -1.0;
-        //     this.animate_mult = 1.0;
-        // } else if (this.animate_mult < -1) {
+        //     this.animateMult = 1.0;
+        // } else if (this.animateMult < -1) {
         //     this.side = 1.0;
-        //     this.animate_mult = -1.0;
+        //     this.animateMult = -1.0;
         // }
         // 0-1 振动
-        if (this.animate_mult > 1) {
+        if (this.animateMult > 1) {
             this.side = -1.0;
-            this.animate_mult = 1.0;
-        } else if (this.animate_mult < 0) {
+            this.animateMult = 1.0;
+        } else if (this.animateMult < 0) {
             this.side = 1.0;
-            this.animate_mult = 0.0;
+            this.animateMult = 0.0;
         }
         if (!this.animate) {
-            this.animate_mult = 1.0;
+            this.animateMult = 1.0;
         }
         if (this.rot) {
             this.rotateModel();
@@ -1120,7 +1120,7 @@ class FEMViewer {
     }
 
     updateLines() {
-        if (this.draw_lines) {
+        if (this.drawLines) {
             this.model.add(this.contour);
         } else {
             this.model.remove(this.contour);
@@ -1213,7 +1213,6 @@ class FEMViewer {
         }
         await this.createElements();
         this.createLines();
-        console.log(this.bufferGeometries)
         this.mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(
             this.bufferGeometries,
             true
@@ -1269,11 +1268,11 @@ class FEMViewer {
     updateDispSlider() {
         const max_disp = max(this.U);
         const min_disp = min(this.U);
-        this.max_abs_disp =
+        this.maxAbsDisp =
             Math.max(Math.abs(max_disp), Math.abs(min_disp)) * this.norm;
         if (this.config_dict["isDeformed"]) {
             this.magnificationSlider.min(0.0);
-            this.magnificationSlider.max(0.4 / this.max_abs_disp);
+            this.magnificationSlider.max(0.4 / this.maxAbsDisp);
         }
     }
 
@@ -1371,8 +1370,7 @@ class FEMViewer {
                 }
                 p[key] = result;
             }
-            this.elements[i].set_properties(p);
-            // console.log(this.elements[i].geometry)
+            this.elements[i].setProperties(p);
             this.bufferGeometries.push(this.elements[i].geometry);
             const messh = new THREE.Mesh(
                 this.elements[i].geometry,
