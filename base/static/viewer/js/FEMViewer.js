@@ -718,7 +718,7 @@ class FEMViewer {
     updateVariableAsSolution() {
         this.animate = false;
         this.animateMult = 1;
-        this.magnification = 0.4 / this.maxAbsDisp;
+        this.magnification = 1.2 / this.maxAbsDisp;
         this.updateDispSlider();
         this.updateSolutionAsDisplacement();
     }
@@ -1268,11 +1268,11 @@ class FEMViewer {
     updateDispSlider() {
         const max_disp = max(this.U);
         const min_disp = min(this.U);
-        this.maxAbsDisp =
-            Math.max(Math.abs(max_disp), Math.abs(min_disp)) * this.norm;
+        this.maxAbsDisp = Math.max(Math.abs(max_disp), Math.abs(min_disp)) * this.norm;
+        const maxDispSlider = this.maxAbsDisp === 0 ? 0.0 : Math.max(1.0, 1.2 / this.maxAbsDisp);
         if (this.config_dict["isDeformed"]) {
             this.magnificationSlider.min(0.0);
-            this.magnificationSlider.max(0.4 / this.maxAbsDisp);
+            this.magnificationSlider.max(maxDispSlider);
         }
     }
 
