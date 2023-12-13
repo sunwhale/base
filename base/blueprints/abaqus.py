@@ -7,6 +7,7 @@ import os
 import shutil
 import subprocess
 import time
+import uuid
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request,
                    send_from_directory, url_for)
@@ -45,6 +46,9 @@ def create_project():
         project_id = create_id(abaqus_path)
         project_path = os.path.join(abaqus_path, str(project_id))
         make_dir(project_path)
+        uuid_file = os.path.join(project_path, '.uuid')
+        with open(uuid_file, 'w', encoding='utf-8') as f:
+            f.write(str(uuid.uuid4()))
         message = {
             'name': form.name.data,
             'descript': form.descript.data,

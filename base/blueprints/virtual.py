@@ -4,12 +4,14 @@
 """
 import os
 import shutil
+import uuid
 
 from flask import (abort, Blueprint, current_app, flash, jsonify, redirect, render_template, url_for, send_from_directory, request)
 from flask_login import current_user, login_required
+
+from base.forms.virtual import (VirtualForm, ParameterForm)
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Solver import Solver
-from base.forms.virtual import (VirtualForm, ParameterForm)
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, virtuals_detail, get_virtual_status, files_in_dir)
 
@@ -32,6 +34,9 @@ def create_virtual():
         virtual_id = create_id(virtuals_path)
         virtual_path = os.path.join(virtuals_path, str(virtual_id))
         make_dir(virtual_path)
+        uuid_file = os.path.join(virtual_path, '.uuid')
+        with open(uuid_file, 'w', encoding='utf-8') as f:
+            f.write(str(uuid.uuid4()))
         message = {
             'name': form.name.data,
             'template': form.template.data,

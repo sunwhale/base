@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import threading
+import uuid
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, send_from_directory,
                    url_for)
@@ -45,6 +46,9 @@ def create_model():
         model_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(model_id))
 
         make_dir(model_path)
+        uuid_file = os.path.join(model_path, '.uuid')
+        with open(uuid_file, 'w', encoding='utf-8') as f:
+            f.write(str(uuid.uuid4()))
 
         thread_id = create_thread_id()
         exporting_threads[thread_id] = {}

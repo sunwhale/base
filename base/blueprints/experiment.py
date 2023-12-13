@@ -45,6 +45,9 @@ def create_experiment():
         experiment_id = create_id(experiments_path)
         experiment_path = os.path.join(experiments_path, str(experiment_id))
         make_dir(experiment_path)
+        uuid_file = os.path.join(experiment_path, '.uuid')
+        with open(uuid_file, 'w', encoding='utf-8') as f:
+            f.write(str(uuid.uuid4()))
         message = {
             'name': form.name.data,
             'material': form.material.data,

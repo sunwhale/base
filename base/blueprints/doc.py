@@ -5,6 +5,7 @@
 import json
 import os
 import shutil
+import uuid
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request,
                    send_from_directory, url_for)
@@ -22,6 +23,9 @@ def createmd():
     doc_id = create_id(current_app.config['DOC_PATH'])
     doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
     os.makedirs(doc_path, exist_ok=True)  # create directory if it does not exist
+    uuid_file = os.path.join(doc_path, '.uuid')
+    with open(uuid_file, 'w', encoding='utf-8') as f:
+        f.write(str(uuid.uuid4()))
     with open(os.path.join(doc_path, 'article.md'), 'w', encoding='utf-8'):
         pass  # create empty file
     return redirect(url_for('.editmd', doc_id=doc_id))
