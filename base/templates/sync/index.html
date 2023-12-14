@@ -4,14 +4,13 @@
 {% block title %}服务器数据同步{% endblock title %}
 
 {% block css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 {% endblock css %}
 
 {% block pageheader %}服务器数据同步{% endblock pageheader %}
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主界面</a></li>
-<li class="breadcrumb-item active">虚拟实验管理</li>
+<li class="breadcrumb-item active">服务器数据同步</li>
 {% endblock level %}
 
 {% block content %}
@@ -21,9 +20,21 @@
           <div class="col-12">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">虚拟实验列表</h3>
+                <h3 class="card-title">数据同步列表</h3>
               </div>
               <div class="card-body">
+                <table class="table table-sm table-hover">
+                  <thead>
+                    <tr>
+                      <th width=20px><input type="checkbox" id="customCheck" class="checkAll"></th>
+                      <th width=30%>修改日期</th>
+                      <th width=30%>大小</th>
+                      <th width=40%>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="table_sync">
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -33,11 +44,58 @@
 {% endblock content %}
 
 {% block script %}
-
-<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables/jquery.dataTables.min.js') }}"></script>
-<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-
 <script type="text/javascript">
+
+  const uuid_url = "{{ url_for('sync.uuid') }}";
+  $.get(uuid_url, function (server_uuid) {
+    update_table(server_uuid)
+  })
+
+  // https://blog.csdn.net/weixin_43235307/article/details/121795990
+  $(document).on('click', '.checkAll', function () {
+    $('.checkOne').prop('checked', $(this).prop('checked'));
+  });
+
+  $(document).on('click', '.checkOne', function () {
+    var flag = $('.checkOne:checked').length == $('.checkOne').length;
+    $('.checkAll').prop('checked', flag);
+  });
+
+  function update_table(server_uuid) {
+    $("#table_sync").empty();
+    const tbody = document.getElementById('table_sync');
+    for (const s of server_uuid) {
+      let id = 0
+
+      console.log(s)
+
+      const tr = document.createElement('tr');
+      tbody.appendChild(tr)
+
+      let td = document.createElement('td');
+      td.innerHTML = '<input type="checkbox" class="checkOne" id="'+ id++ +'">'
+      tr.appendChild(td)
+
+      td = document.createElement('td');
+      td.innerHTML = s[0]
+      tr.appendChild(td)
+
+      td = document.createElement('td');
+      td.innerHTML = s[1]
+      tr.appendChild(td)
+
+      td = document.createElement('td');
+      td.innerHTML = s[2]
+      tr.appendChild(td)
+    }
+  }
+
+  function clear_query(btn) {
+    const prog_url = "{{ url_for('packing.thread_clear') }}";
+    $.get(prog_url, function (threads) {
+      update_table(threads)
+    })
+  }
 
   document.getElementById("virtual").className = "nav-item menu-open"
   document.getElementById("manage_virtuals").className = "nav-link active"
