@@ -18,7 +18,6 @@ def index():
 
 
 @sync_bp.route('/uuid', methods=['GET', 'POST'])
-@login_required
 def uuid():
     server_uuid = get_server_uuid(current_app.config['FILE_PATH'])
     return jsonify(server_uuid)
