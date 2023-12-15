@@ -2,9 +2,37 @@
 """
 
 """
+import hashlib
 import json
 import os
 import time
+import uuid
+
+
+def calculate_checksum(file_path):
+    # 创建一个hash对象
+    hash_object = hashlib.md5()
+
+    # 打开文件并逐块读取内容进行更新
+    with open(file_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_object.update(chunk)
+
+    # 计算并返回文件的校验和值
+    return hash_object.hexdigest()
+
+
+def get_server_uuid(path):
+    server_uuid = []
+    for d0 in sub_dirs(path):
+        for d1 in sub_dirs(os.path.join(path, d0)):
+            for file in files_in_dir(os.path.join(path, d0, d1)):
+                if file['name'] == '.uuid':
+                    uuid_file = os.path.join(path, d0, d1, '.uuid')
+                    with open(uuid_file, "r") as f:
+                        uuid_str = f.read()
+                        server_uuid.append([d0, d1, uuid_str])
+    return server_uuid
 
 
 def get_files(path):
@@ -666,5 +694,43 @@ def templates_detail(path):
 
 
 if __name__ == '__main__':
-    path = '/files/abaqus/7/1'
-    print(subpaths_in_dir(path))
+    # path = r'F:/Github/base/files/'
+    path = r'/www/base/files'
+
+    server_uuid = []
+
+    for d0 in sub_dirs(path):
+        for d1 in sub_dirs(os.path.join(path, d0)):
+            for file in files_in_dir(os.path.join(path, d0, d1)):
+                uuid_file = os.path.join(path, d0, d1, '.uuid')
+                if not os.path.exists(uuid_file):
+                    with open(uuid_file, 'w', encoding='utf-8') as f:
+                        f.write(str(uuid.uuid4()))
+                # if file['name'] == '.uuid':
+                #     uuid_file = os.path.join(path, d0, d1, '.uuid')
+                #     with open(uuid_file, "r") as f:
+                #         uuid_str = f.read()
+                #         uuid_obj = uuid.UUID(uuid_str)
+                #         server_uuid.append([d0, d1, uuid_str])
+
+    # print(server_uuid)
+
+    # # 本地文件路径
+    # local_file_path = 'F:/Github/base/files/abaqus/1/umat_visco_maxwell.for'
+    # 服务器文件路径
+    # server_file_path = 'F:/Github/base/files/abaqus/1/umat_visco_maxwell.for'
+    # server_file_path = 'F:/Github/base/files/abaqus/1/.project_msg'
+    #
+    # # 计算本地文件的校验和值
+    # local_checksum = calculate_checksum(local_file_path)
+    # print(local_checksum)
+    #
+    # # 计算服务器文件的校验和值
+    # server_checksum = calculate_checksum(server_file_path)
+    # print(server_checksum)
+    #
+    # # 比较两个校验和值是否相同
+    # if local_checksum == server_checksum:
+    #     print("文件内容一致")
+    # else:
+    #     print("文件内容不一致")
