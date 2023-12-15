@@ -8,8 +8,7 @@ import shutil
 import threading
 import uuid
 
-from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, send_from_directory,
-                   url_for)
+from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, send_from_directory, url_for)
 from flask_login import current_user, login_required
 from psic.create_mesh import create_mesh as psic_create_mesh
 from psic.create_submodel import create_submodel as psic_create_submodel
@@ -18,9 +17,8 @@ from psic.packing_spheres_in_cube import create_model as psic_create_model
 from base.forms.packing import (MeshForm, PackingForm, SubmodelForm, UploadForm, ABAQUSForm, ImportTemplateForm)
 from base.global_var import create_thread_id, exporting_threads
 from base.utils.common import make_dir, dump_json, load_json
-from base.utils.dir_status import (create_id, get_mesh_status, get_model_status, get_submodel_status,
-                                   packing_models_detail, packing_submodels_detail, sub_dirs_int, files_in_dir,
-                                   templates_detail)
+from base.utils.dir_status import (create_id, get_mesh_status, get_model_status, get_submodel_status, packing_models_detail, packing_submodels_detail,
+                                   sub_dirs_int, files_in_dir, templates_detail)
 
 packing_bp = Blueprint('packing', __name__)
 
@@ -50,7 +48,7 @@ def create_model():
         with open(uuid_file, 'w', encoding='utf-8') as f:
             f.write(str(uuid.uuid4()))
 
-        thread_id = create_thread_id()
+        thread_id = create_thread_id(exporting_threads)
         exporting_threads[thread_id] = {}
         status = exporting_threads[thread_id]
         status['class'] = '球体填充'
@@ -94,7 +92,7 @@ def create_submodel(model_id):
             if os.path.exists(meshes_path):
                 shutil.rmtree(meshes_path)
 
-            thread_id = create_thread_id()
+            thread_id = create_thread_id(exporting_threads)
             exporting_threads[thread_id] = {}
             status = exporting_threads[thread_id]
             status['class'] = '生成子模型'
@@ -136,7 +134,7 @@ def create_mesh(model_id):
 
             make_dir(meshes_path)
 
-            thread_id = create_thread_id()
+            thread_id = create_thread_id(exporting_threads)
             exporting_threads[thread_id] = {}
             status = exporting_threads[thread_id]
             status['class'] = '划分网格'
