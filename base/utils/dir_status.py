@@ -22,7 +22,7 @@ def calculate_checksum(file_path):
     return hash_object.hexdigest()
 
 
-def get_server_uuid(path):
+def get_path_uuid(path):
     server_uuid = []
     for d0 in sub_dirs(path):
         for d1 in sub_dirs(os.path.join(path, d0)):

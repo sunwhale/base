@@ -27,9 +27,10 @@
                   <thead>
                     <tr>
                       <th width=20px><input type="checkbox" id="customCheck" class="checkAll"></th>
-                      <th width=30%>修改日期</th>
-                      <th width=30%>大小</th>
-                      <th width=40%>操作</th>
+                      <th>本地项目</th>
+                      <th>项目ID</th>
+                      <th>服务器项目</th>
+                      <th>项目ID</th>
                     </tr>
                   </thead>
                   <tbody id="table_sync">
@@ -46,28 +47,39 @@
 {% block script %}
 <script type="text/javascript">
 
-  const uuid_url = "{{ url_for('sync.uuid') }}";
-  $.get(uuid_url, function (server_uuid) {
-    update_table(server_uuid)
-  })
+  const local_uuid_url = "{{ url_for('sync.uuid') }}";
+  // $.get(local_uuid_url, function (local_uuid) {
+  //   update_table(local_uuid)
+  // })
+  //
+  const server_uuid_url = "{{ url_for('sync.get_server_uuid') }}";
+  // $.get(server_uuid_url, function (server_uuid) {
+  //   update_table(server_uuid)
+  // })
 
-  // https://blog.csdn.net/weixin_43235307/article/details/121795990
-  $(document).on('click', '.checkAll', function () {
-    $('.checkOne').prop('checked', $(this).prop('checked'));
-  });
+  var request1 = $.get(local_uuid_url);
+  var request2 = $.get(server_uuid_url);
 
-  $(document).on('click', '.checkOne', function () {
-    var flag = $('.checkOne:checked').length == $('.checkOne').length;
-    $('.checkAll').prop('checked', flag);
-  });
+  // 使用Promise.all()处理请求
+  Promise.all([request1, request2])
+    .then(function (results) {
+      // 获取请求的结果
+      var local_uuid = results[0];
+      var server_uuid = results[1];
 
-  function update_table(server_uuid) {
+      // 处理请求的结果
+      update_table(local_uuid, server_uuid)
+    })
+    .catch(function (error) {
+      // 处理错误
+      console.log("发生错误:", error);
+    });
+
+  function update_table(local_uuid, server_uuid) {
     $("#table_sync").empty();
     const tbody = document.getElementById('table_sync');
-    for (const s of server_uuid) {
+    for (const s of local_uuid) {
       let id = 0
-
-      console.log(s)
 
       const tr = document.createElement('tr');
       tbody.appendChild(tr)
@@ -83,19 +95,18 @@
       td = document.createElement('td');
       td.innerHTML = s[1]
       tr.appendChild(td)
-
-      td = document.createElement('td');
-      td.innerHTML = s[2]
-      tr.appendChild(td)
     }
   }
 
-  function clear_query(btn) {
-    const prog_url = "{{ url_for('packing.thread_clear') }}";
-    $.get(prog_url, function (threads) {
-      update_table(threads)
-    })
-  }
+  // https://blog.csdn.net/weixin_43235307/article/details/121795990
+  $(document).on('click', '.checkAll', function () {
+    $('.checkOne').prop('checked', $(this).prop('checked'));
+  });
+
+  $(document).on('click', '.checkOne', function () {
+    var flag = $('.checkOne:checked').length == $('.checkOne').length;
+    $('.checkAll').prop('checked', flag);
+  });
 
   document.getElementById("virtual").className = "nav-item menu-open"
   document.getElementById("manage_virtuals").className = "nav-link active"
