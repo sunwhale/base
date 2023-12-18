@@ -153,7 +153,18 @@ def download(module, server_module_id, local_module_id):
             thread = threading.Thread(target=save_files, args=args)
             thread.start()
 
-    return str(local_module_id)
+    return render_template('sync/download.html', module=module, server_module_id=server_module_id, local_module_id=local_module_id)
+
+
+@sync_bp.route('/create/<module>/<server_module_id>', methods=['GET', 'POST'])
+def create(module, server_module_id):
+    module_path_dict = get_module_path_dict()
+    if module in module_path_dict:
+        module_path = module_path_dict[module]
+    else:
+        abort(404)
+    local_module_id = create_id(module_path)
+    return redirect(url_for('.download', module=module, server_module_id=server_module_id, local_module_id=local_module_id))
 
 
 @sync_bp.route('/download_status/<module>/<server_module_id>/to/<local_module_id>', methods=['GET', 'POST'])

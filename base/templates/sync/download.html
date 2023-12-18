@@ -49,24 +49,32 @@
 <script type="text/javascript">
 
   const local_uuid_url = "{{ url_for('sync.uuid') }}";
-  // $.get(local_uuid_url, function (local_uuid) {
-  //   update_table(local_uuid)
-  // })
-  //
   const server_uuid_url = "{{ url_for('sync.get_server_uuid') }}";
-  // $.get(server_uuid_url, function (server_uuid) {
-  //   update_table(server_uuid)
-  // })
+  const download_status_url = "{{ url_for('sync.download_status', module=module, server_module_id=server_module_id, local_module_id=local_module_id) }}";
 
-  const request1 = $.get(local_uuid_url);
-  const request2 = $.get(server_uuid_url);
+  const request0 = $.get(local_uuid_url);
+  const request1 = $.get(server_uuid_url);
+  const request2 = $.get(download_status_url);
 
   // 使用Promise.all()处理请求
-  Promise.all([request1, request2])
+  Promise.all([request0, request1, request2])
     .then(function (results) {
       // 获取请求的结果
       const local_uuid = results[0];
       const server_uuid = results[1];
+      const download_status = results[2];
+
+      for (let urlStr in download_status) {
+        if (urlStr !== "status"){
+          let url = new URL(urlStr)
+          let params = new URLSearchParams(url.search);
+          let module = params.get('module');
+          let module_id = params.get('module_id');
+          let sub_module_id = params.get('sub_module_id');
+          let filename = params.get('filename');
+          console.log(urlStr, filename);
+        }
+      }
 
       // 处理请求的结果
       update_table(local_uuid, server_uuid)
