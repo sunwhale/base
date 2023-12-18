@@ -209,3 +209,11 @@ def get_server_uuid():
     response = requests.get(server_uuid_url)
     server_uuid = json.loads(response.text)
     return jsonify(server_uuid)
+
+
+@sync_bp.route('/get_server_resource/<module>/<module_id>', methods=['GET', 'POST'])
+def get_server_resource(module, module_id):
+    server_resource_url = server_url + f'/sync/resource/{module}/{module_id}'
+    response = requests.get(server_resource_url)
+    server_resource = json.loads(response.text)
+    return jsonify(server_resource)
