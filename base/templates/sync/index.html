@@ -9,124 +9,115 @@
 {% block pageheader %}服务器数据同步{% endblock pageheader %}
 
 {% block level %}
-<li class="breadcrumb-item"><a href="/">主界面</a></li>
-<li class="breadcrumb-item active">服务器数据同步</li>
+    <li class="breadcrumb-item"><a href="/">主界面</a></li>
+    <li class="breadcrumb-item active">服务器数据同步</li>
 {% endblock level %}
 
 {% block content %}
     <section class="content">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-12">
-            <div class="card card-primary">
-              <div class="card-header">
-                <h3 class="card-title">数据同步列表</h3>
-              </div>
-              <div class="card-body">
-                <table class="table table-sm table-hover">
-                  <thead>
-                    <tr>
-                      <th width=32px><input type="checkbox" id="customCheck" class="checkAll"></th>
-                      <th>本地模块</th>
-                      <th>项目ID</th>
-                      <th></th>
-                      <th>服务器模块</th>
-                      <th>项目ID</th>
-                    </tr>
-                  </thead>
-                  <tbody id="table_sync">
-                  </tbody>
-                </table>
-              </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card card-primary">
+                        <div class="card-header">
+                            <h3 class="card-title">数据同步列表</h3>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="customCheck" class="checkAll"></th>
+                                    <th>本地模块</th>
+                                    <th></th>
+                                    <th>服务器模块</th>
+                                </tr>
+                                </thead>
+                                <tbody id="table_sync">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
         </div>
-      </div>
     </section>
 {% endblock content %}
 
 {% block script %}
-<script type="text/javascript">
+    <script type="text/javascript">
 
-  const local_uuid_url = "{{ url_for('sync.uuid') }}";
-  // $.get(local_uuid_url, function (local_uuid) {
-  //   update_table(local_uuid)
-  // })
-  //
-  const server_uuid_url = "{{ url_for('sync.get_server_uuid') }}";
-  // $.get(server_uuid_url, function (server_uuid) {
-  //   update_table(server_uuid)
-  // })
+        const local_uuid_url = "{{ url_for('sync.uuid') }}";
+        // $.get(local_uuid_url, function (local_uuid) {
+        //   update_table(local_uuid)
+        // })
+        //
+        const server_uuid_url = "{{ url_for('sync.get_server_uuid') }}";
+        // $.get(server_uuid_url, function (server_uuid) {
+        //   update_table(server_uuid)
+        // })
 
-  const request1 = $.get(local_uuid_url);
-  const request2 = $.get(server_uuid_url);
+        const request1 = $.get(local_uuid_url);
+        const request2 = $.get(server_uuid_url);
 
-  // 使用Promise.all()处理请求
-  Promise.all([request1, request2])
-    .then(function (results) {
-      // 获取请求的结果
-      const local_uuid = results[0];
-      const server_uuid = results[1];
+        // 使用Promise.all()处理请求
+        Promise.all([request1, request2])
+            .then(function (results) {
+                // 获取请求的结果
+                const local_uuid = results[0];
+                const server_uuid = results[1];
 
-      // 处理请求的结果
-      update_table(local_uuid, server_uuid)
-    })
-    .catch(function (error) {
-      // 处理错误
-      console.log("发生错误:", error);
-    });
+                // 处理请求的结果
+                update_table(local_uuid, server_uuid)
+            })
+            .catch(function (error) {
+                // 处理错误
+                console.log("发生错误:", error);
+            });
 
-  function update_table(local_uuid, server_uuid) {
-    $("#table_sync").empty();
-    const tbody = document.getElementById('table_sync');
-    for (const lu of local_uuid) {
-      for (const su of server_uuid) {
-        if (lu[2] === su[2]) {
-          let id = 0
+        function update_table(local_uuid, server_uuid) {
+            $("#table_sync").empty();
+            const tbody = document.getElementById('table_sync');
+            for (const lu of local_uuid) {
+                for (const su of server_uuid) {
+                    if (lu[2] === su[2]) {
+                        let id = 0;
 
-          const tr = document.createElement('tr');
-          tbody.appendChild(tr)
+                        const tr = document.createElement('tr');
+                        tbody.appendChild(tr);
 
-          let td = document.createElement('td');
-          td.innerHTML = '<input type="checkbox" class="checkOne" id="' + id++ + '">'
-          tr.appendChild(td)
+                        let td = document.createElement('td');
+                        td.innerHTML = '<input type="checkbox" class="checkOne" id="' + id++ + '">';
+                        tr.appendChild(td);
 
-          td = document.createElement('td');
-          td.innerHTML = lu[0]
-          tr.appendChild(td)
+                        td = document.createElement('td');
+                        td.innerHTML = lu[0] + '/' + lu[1];
+                        tr.appendChild(td);
 
-          td = document.createElement('td');
-          td.innerHTML = lu[1]
-          tr.appendChild(td)
+                        td = document.createElement('td');
+                        {#td.innerHTML = "<i class='fas fa-link'></i>";#}
+                        td.innerHTML = "<i class='fas fa-sync'></i>";
+                        tr.appendChild(td);
 
-          td = document.createElement('td');
-          td.innerHTML = "<i class='fas fa-link'></i>"
-          tr.appendChild(td)
-
-          td = document.createElement('td');
-          td.innerHTML = su[0]
-          tr.appendChild(td)
-
-          td = document.createElement('td');
-          td.innerHTML = su[1]
-          tr.appendChild(td)
+                        td = document.createElement('td');
+                        td.innerHTML = su[0] + '/' + su[1];
+                        tr.appendChild(td);
+                    }
+                }
+            }
         }
-      }
-    }
-  }
 
-  // https://blog.csdn.net/weixin_43235307/article/details/121795990
-  $(document).on('click', '.checkAll', function () {
-    $('.checkOne').prop('checked', $(this).prop('checked'));
-  });
+        // https://blog.csdn.net/weixin_43235307/article/details/121795990
+        $(document).on('click', '.checkAll', function () {
+            $('.checkOne').prop('checked', $(this).prop('checked'));
+        });
 
-  $(document).on('click', '.checkOne', function () {
-    var flag = $('.checkOne:checked').length == $('.checkOne').length;
-    $('.checkAll').prop('checked', flag);
-  });
+        $(document).on('click', '.checkOne', function () {
+            var flag = $('.checkOne:checked').length == $('.checkOne').length;
+            $('.checkAll').prop('checked', flag);
+        });
 
-  document.getElementById("virtual").className = "nav-item menu-open"
-  document.getElementById("manage_virtuals").className = "nav-link active"
+        document.getElementById("virtual").className = "nav-item menu-open"
+        document.getElementById("manage_virtuals").className = "nav-link active"
 
-</script>
+    </script>
 {% endblock script %}
