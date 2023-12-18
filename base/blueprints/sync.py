@@ -8,7 +8,7 @@ import os
 import threading
 import time
 
-from flask import (Blueprint, jsonify, redirect, render_template, url_for, current_app, send_from_directory, send_file)
+from flask import (Blueprint, jsonify, redirect, render_template, url_for, current_app, send_from_directory, send_file, request)
 from flask_login import login_required
 
 from base.utils.dir_status import (create_id, get_path_uuid, files_in_dir, get_job_status, get_project_status, project_jobs_detail, projects_detail, templates_detail,
@@ -27,7 +27,7 @@ def get_files(module, index, path, status):
         for file_dict in files_in_dir(os.path.join(path, sub_dir)):
             url = server_url + f"/sync/get_file_level4/{module}/{index}/{sub_dir}/{file_dict['name']}"
             response = requests.get(url)
-            status[url] = response
+            status[url] = response.status_code
             print(response)
     status['status'] = 'done'
 
@@ -41,7 +41,7 @@ def index():
 @sync_bp.route('/download/<module>/<index>', methods=['GET', 'POST'])
 def download(module, index):
     path = os.path.join(current_app.config['FILE_PATH'], module, index)
-    thread_name = f'{module}{index}'
+    thread_name = f'{module}/{index}'
     if thread_name not in sync_threads:
         sync_threads[thread_name] = {}
         status = sync_threads[thread_name]
@@ -50,30 +50,48 @@ def download(module, index):
         thread = threading.Thread(target=get_files, args=args)
         thread.start()
     else:
-        status = sync_threads[thread_name]
-        if sync_threads[thread_name]['status'] != 'loading':
-            status = {'status': 'submitted'}
+        if sync_threads[thread_name]['status'] == 'done':
+            sync_threads.pop(thread_name)
+            sync_threads[thread_name] = {}
+            status = sync_threads[thread_name]
+            status['status'] = 'submitted'
             args = (module, index, path, status)
             thread = threading.Thread(target=get_files, args=args)
             thread.start()
-    print(sync_threads)
-    # for sub_dir in sub_dirs(path):
-    #     for file_dict in files_in_dir(os.path.join(path, sub_dir)):
-    #         response = requests.get(server_url + f"/sync/get_file_level4/{module}/{index}/{sub_dir}/{file_dict['name']}")
-    #         print(response)
-    return str(sync_threads)
+    return ''
 
 
-@sync_bp.route('/get_file/<module>/<index>/<filename>', methods=['GET', 'POST'])
-def get_file(module, index, filename):
-    file_path = os.path.join(current_app.config['FILE_PATH'], module, index, filename)
-    return send_file(file_path)
+@sync_bp.route('/download_status/<module>/<index>/', methods=['GET', 'POST'])
+def download_status(module, index):
+    thread_name = f'{module}/{index}'
+    if thread_name in sync_threads:
+        return jsonify(sync_threads[thread_name])
+    else:
+        return jsonify(None)
+
+
+# @sync_bp.route('/get_file/<module>/<index>/<filename>', methods=['GET', 'POST'])
+# def get_file(module, index, filename):
+#     file_path = os.path.join(current_app.config['FILE_PATH'], module, index, filename)
+#     return send_file(file_path)
+
+
+@sync_bp.route('/get_file', methods=['GET', 'POST'])
+def get_file():
+    module = request.args.get('module')
+    index = request.args.get('index')
+    filename = request.args.get('filename')
+    print(request.args.get('module'))
+    print(request.args.get('index'))
+    print(request.args.get('filename'))
+    path = os.path.join(current_app.config['FILE_PATH'], module, index)
+    return send_from_directory(path, filename)
 
 
 @sync_bp.route('/get_file_level4/<module>/<index>/<sub_dir>/<filename>', methods=['GET', 'POST'])
 def get_file_level4(module, index, sub_dir, filename):
     file_path = os.path.join(current_app.config['FILE_PATH'], module, index, sub_dir, filename)
-    time.sleep(5)
+    time.sleep(1)
     return send_file(file_path)
 
 
