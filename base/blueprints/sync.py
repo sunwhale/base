@@ -19,17 +19,9 @@ from base.global_var import create_thread_id, sync_threads
 sync_bp = Blueprint('sync', __name__)
 
 server_url = 'https://sunjingyu.com'
-server_url = 'http://127.0.0.1:5000'
 
 
-# def get_files(module, module_id, module_path, status):
-#     status['status'] = 'loading'
-#     for sub_dir in sub_dirs(os.path.join(module_path, module_id)):
-#         for file_dict in files_in_dir(os.path.join(module_path, sub_dir)):
-#             url = server_url + f"/sync/get_file?module={module}&module_id={module_id}&sub_module_id={sub_dir}&filename={file_dict['name']}"
-#             response = requests.get(url)
-#             status[url] = response.status_code
-#     status['status'] = 'done'
+# server_url = 'http://127.0.0.1:5000'
 
 
 def get_module_path_dict():
@@ -78,7 +70,6 @@ def index():
 def resource(module, module_id):
     module_path_dict = get_module_path_dict()
     module_resource = {'module': module, 'module_id': module_id, 'data': {}}
-    # time.sleep(2)
 
     if module in module_path_dict:
         module_path = module_path_dict[module]
@@ -95,7 +86,8 @@ def resource(module, module_id):
             module_resource['data'][sub_dir] = {}
             for file_dict in files_in_dir(os.path.join(module_path, module_id, sub_dir)):
                 url = server_url + f"/sync/get_file?module={module}&module_id={module_id}&sub_module_id={sub_dir}&filename={file_dict['name']}"
-                module_resource['data'][sub_dir][url] = [file_dict['name'], calculate_checksum(os.path.join(module_path, module_id, sub_dir, file_dict['name']))]
+                module_resource['data'][sub_dir][url] = [file_dict['name'],
+                                                         calculate_checksum(os.path.join(module_path, module_id, sub_dir, file_dict['name']))]
         return jsonify(module_resource)
     else:
         return jsonify({})
