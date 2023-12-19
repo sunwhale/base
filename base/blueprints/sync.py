@@ -7,7 +7,8 @@ import os
 import threading
 
 import requests
-from flask import (Blueprint, jsonify, abort, redirect, render_template, url_for, current_app, send_from_directory, request)
+from flask import (Blueprint, jsonify, abort, redirect, render_template, url_for, current_app, send_from_directory,
+                   request)
 from flask_login import login_required
 
 from base.global_var import sync_threads
@@ -98,6 +99,8 @@ def resource(module, module_id):
         module_resource['data']['.'] = {}
         for file_dict in files_in_dir(sub_module_path):
             suffix = os.path.splitext(file_dict['name'])[1]
+            if suffix == '':  # 如果文件名为空，例如 .uuid 的情况
+                suffix = os.path.splitext(file_dict['name'])[0]
             if suffix in allowed_suffix_dict[module] or '.*' in allowed_suffix_dict[module]:
                 url = server_url + f"/sync/get_file?module={module}&module_id={module_id}&filename={file_dict['name']}"
                 file_path = os.path.join(sub_module_path, file_dict['name'])
@@ -156,7 +159,8 @@ def download(module, server_module_id, local_module_id):
             thread = threading.Thread(target=save_files, args=args)
             thread.start()
 
-    return render_template('sync/download.html', module=module, server_module_id=server_module_id, local_module_id=local_module_id)
+    return render_template('sync/download.html', module=module, server_module_id=server_module_id,
+                           local_module_id=local_module_id)
 
 
 @sync_bp.route('/create/<module>/<server_module_id>', methods=['GET', 'POST'])
@@ -167,7 +171,8 @@ def create(module, server_module_id):
     else:
         abort(404)
     local_module_id = create_id(module_path)
-    return redirect(url_for('.download', module=module, server_module_id=server_module_id, local_module_id=local_module_id))
+    return redirect(
+        url_for('.download', module=module, server_module_id=server_module_id, local_module_id=local_module_id))
 
 
 @sync_bp.route('/download_status/<module>/<server_module_id>/to/<local_module_id>', methods=['GET', 'POST'])
