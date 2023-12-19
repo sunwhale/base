@@ -6,16 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}固体力学与数值模拟{% endblock title %}</title>
   <link type="image-icon" href="{{ url_for('static', filename='imgs/logo_delta.svg') }}" rel="icon"/>
-  {% if env['service'] == 'server' %}
-  <!-- Font Awesome -->
-  <!--<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">-->
   <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
-  <!-- Theme style -->
+  {% if env['service'] == 'server' %}
+  <!--<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">-->
   <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
   {% else %}
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
-  <!-- Theme style -->
   <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/dist/css/adminlte.min.css') }}">
   {% endif %}
   <style>
