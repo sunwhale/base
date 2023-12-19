@@ -2,19 +2,16 @@
 """
 
 """
-import requests
 import json
 import os
 import threading
-import time
 
-from flask import (Blueprint, jsonify, abort, redirect, render_template, url_for, current_app, send_from_directory, send_file, request)
+import requests
+from flask import (Blueprint, jsonify, abort, redirect, render_template, url_for, current_app, send_from_directory, request)
 from flask_login import login_required
 
-from base.utils.dir_status import (create_id, get_path_uuid, files_in_dir, get_job_status, get_project_status, project_jobs_detail, projects_detail,
-                                   templates_detail, calculate_checksum,
-                                   sub_dirs)
-from base.global_var import create_thread_id, sync_threads
+from base.global_var import sync_threads
+from base.utils.dir_status import (create_id, get_path_uuid, files_in_dir, calculate_checksum, sub_dirs)
 
 sync_bp = Blueprint('sync', __name__)
 
