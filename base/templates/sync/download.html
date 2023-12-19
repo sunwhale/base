@@ -10,7 +10,7 @@
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主界面</a></li>
-<li class="breadcrumb-item active">服务器数据同步</li>
+<li class="breadcrumb-item active"><a href="{{ url_for('sync.index') }}">服务器数据同步</a></li>
 <li class="breadcrumb-item active">子模块同步</li>
 {% endblock level %}
 
@@ -69,6 +69,7 @@
     })
     .catch(function (error) {
       // 处理错误
+      alert("发生错误:", error)
       console.log("发生错误:", error);
     });
 
@@ -87,6 +88,7 @@
         tr.appendChild(td);
 
         td = document.createElement('td');
+        td.setAttribute('id', urlStr);
         if (download_status[urlStr] === 'existed' || download_status[urlStr] === 'downloaded') {
           td.innerHTML = "<i class='fas fa-check-circle' style='color: limegreen;'></i>";
         } else {
@@ -96,6 +98,31 @@
       }
     }
   }
+
+  const refreshID = setInterval(function () {
+    $.get(download_status_url, function (download_status) {
+      const tdList = document.getElementsByTagName('td');
+      const tdIds = [];
+
+      for (let i = 0; i < tdList.length; i++) {
+        const td = tdList[i];
+        const id = td.getAttribute('id');
+
+        if (id !== null) {
+          tdIds.push(id);
+        }
+      }
+
+      for (urlStr of tdIds) {
+        const td = document.getElementById(urlStr);
+        if (download_status[urlStr] === 'existed' || download_status[urlStr] === 'downloaded') {
+          td.innerHTML = "<i class='fas fa-check-circle' style='color: limegreen;'></i>";
+        } else {
+          td.innerHTML = "<i class='fas fa-spinner fa-spin' style='color: limegreen;'></i>";
+        }
+      }
+    })
+  }, 2000);
 
   // https://blog.csdn.net/weixin_43235307/article/details/121795990
   $(document).on('click', '.checkAll', function () {

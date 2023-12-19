@@ -27,9 +27,9 @@
               <thead>
               <tr>
                 <th><input type="checkbox" id="customCheck" class="checkAll"></th>
-                <th>本地模块</th>
-                <th></th>
                 <th>服务器模块</th>
+                <th></th>
+                <th>本地模块</th>
               </tr>
               </thead>
               <tbody id="table_sync">
@@ -47,15 +47,7 @@
 <script type="text/javascript">
 
   const local_uuid_url = "{{ url_for('sync.uuid') }}";
-  // $.get(local_uuid_url, function (local_uuid) {
-  //   update_table(local_uuid)
-  // })
-  //
   const server_uuid_url = "{{ url_for('sync.get_server_uuid') }}";
-  // $.get(server_uuid_url, function (server_uuid) {
-  //   update_table(server_uuid)
-  // })
-
   const request1 = $.get(local_uuid_url);
   const request2 = $.get(server_uuid_url);
 
@@ -65,13 +57,13 @@
       // 获取请求的结果
       const local_uuid = results[0];
       const server_uuid = results[1];
-
       // 处理请求的结果
       update_table(local_uuid, server_uuid)
     })
     .catch(function (error) {
       // 处理错误
       console.log("发生错误:", error);
+      alert("发生错误: 远程服务器无响应" + error['status'] + " " + error['statusText'])
     });
 
   function update_table(local_uuid, server_uuid) {
@@ -90,19 +82,17 @@
           tr.appendChild(td);
 
           td = document.createElement('td');
-          td.innerHTML = lu[0] + '/' + lu[1];
-          tr.appendChild(td);
-
-          td = document.createElement('td');
-          {
-            #td.innerHTML = "<i class='fas fa-link'></i>";
-          #
-          }
-          td.innerHTML = "<i class='fas fa-sync'></i>";
-          tr.appendChild(td);
-
-          td = document.createElement('td');
           td.innerHTML = su[0] + '/' + su[1];
+          tr.appendChild(td);
+
+          td = document.createElement('td');
+          // td.innerHTML = "<i class='fas fa-link'></i>";
+          let downloadHref = "<a href='download/" + lu[0] + "/" + su[1] + "/to/" + lu[1] + "'>"
+          td.innerHTML = downloadHref + "<i class='fas fa-sync'></i></a>";
+          tr.appendChild(td);
+
+          td = document.createElement('td');
+          td.innerHTML = lu[0] + '/' + lu[1];
           tr.appendChild(td);
         }
       }
