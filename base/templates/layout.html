@@ -1,35 +1,36 @@
 <!DOCTYPE html>
 <html lang="cn">
 <head>
-{% block head %}
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}固体力学与数值模拟{% endblock title %}</title>
-<link type="image-icon" href="{{ url_for('static', filename='imgs/logo_delta.svg') }}" rel="icon"/>
-{% if env['service'] == 'server' %}
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-<!-- Theme style -->
-<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
-{% else %}
-<!-- Font Awesome -->
-<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
-<!-- Theme style -->
-<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/dist/css/adminlte.min.css') }}">
-{% endif %}
-<style>
-  /*.content-wrapper {*/
-  /*  min-width: 1280px; !* 设置最小宽度为300像素 *!*/
-  /*}*/
-  @media (max-width: 768px) {
-    .col-6 {
-      flex: 0 0 100%;
-      max-width: 100%;
-    }
-  }
-</style>
-{% block css %}{% endblock css %}
-{% endblock head %}
+  {% block head %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}固体力学与数值模拟{% endblock title %}</title>
+  <link type="image-icon" href="{{ url_for('static', filename='imgs/logo_delta.svg') }}" rel="icon"/>
+  {% if env['service'] == 'server' %}
+  <!-- Font Awesome -->
+  <!--<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">-->
+  <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
+  {% else %}
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/dist/css/adminlte.min.css') }}">
+  {% endif %}
+  <style>
+      /*.content-wrapper {*/
+      /*  min-width: 1280px; !* 设置最小宽度为300像素 *!*/
+      /*}*/
+      @media (max-width: 768px) {
+          .col-6 {
+              flex: 0 0 100%;
+              max-width: 100%;
+          }
+      }
+  </style>
+  {% block css %}{% endblock css %}
+  {% endblock head %}
 </head>
 <body class="hold-transition sidebar-mini sidebar-collapse">
 <div class="wrapper">
@@ -74,7 +75,8 @@
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
         <div class="image">
-          <img src="{{ url_for('static', filename='imgs/logo_delta.svg') }}" class="img-circle elevation-2" alt="User Image">
+          <img src="{{ url_for('static', filename='imgs/logo_delta.svg') }}" class="img-circle elevation-2"
+               alt="User Image">
         </div>
         <div class="info">
           {% if current_user.is_authenticated %}
@@ -472,7 +474,8 @@
   <footer class="main-footer">
     <strong>Jingyu Sun &copy; 2020-2023</strong>
     <div class="float-right d-none d-sm-inline-block">
-      <b>固体力学与数值模拟 V1.0</b>{% if env['service'] == 'server' %} | <a href="https://beian.miit.gov.cn">京ICP备17030790号-1</a>{% endif %}
+      <b>固体力学与数值模拟 V1.0</b>{% if env['service'] == 'server' %} | <a href="https://beian.miit.gov.cn">京ICP备17030790号-1</a>{%
+      endif %}
     </div>
   </footer>
 
