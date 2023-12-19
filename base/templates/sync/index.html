@@ -44,6 +44,15 @@
             <h3 class="card-title">从服务器创建</h3>
           </div>
           <div class="card-body">
+            <form method="POST" id="form_create" name="form_create">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-success" type="submit" id="submit_create">
+                <i class="fa fa-download"></i>
+                <strong>批量创建</strong>
+              </button>
+              <textarea class="form-control" id="create_value" name="create_value"></textarea>
+            </form>
+            <hr>
             <table class="table table-sm table-hover">
               <thead>
               <tr>
@@ -120,14 +129,13 @@
 
     $("#tableSync2").empty();
     const tbody2 = document.getElementById('tableSync2');
+    let id = 0;
     for (const su of server_uuid) {
-      let id = 0;
-
       const tr = document.createElement('tr');
       tbody2.appendChild(tr);
 
       let td = document.createElement('td');
-      td.innerHTML = '<input type="checkbox" class="checkOne2" id="' + id++ + '">';
+      td.innerHTML = '<input type="checkbox" class="checkOne2" id="' + su[0] + "/" + su[1] + '">';
       tr.appendChild(td);
 
       td = document.createElement('td');
@@ -139,8 +147,32 @@
       td.innerHTML = downloadHref + "<i class='fas fa-download'></i></a>";
       tr.appendChild(td);
     }
-
   }
+
+  $(document).ready(function () {
+    $('#submit_create').on('click', function () {
+      const checked_item = $('.checkOne2:checked');
+      const checked_items = [];
+      for (let i = 0; i < checked_item.length; i++) {
+        checked_items.push(checked_item[i].id);
+      }
+      document.getElementById('create_value').value = checked_items;
+      $.get("create/experiment/1")
+    });
+  });
+
+  const refreshID = setInterval(function () {
+    $.get(download_status_url, function (download_status) {
+      let is_fresh = true
+      if (download_status['status'] === 'done') {
+        is_fresh = false
+      }
+
+      if (is_fresh === false) {
+        clearInterval(refreshID)
+      }
+    })
+  }, 2000);
 
   // https://blog.csdn.net/weixin_43235307/article/details/121795990
   $(document).on('click', '.checkAll1', function () {
@@ -148,7 +180,7 @@
   });
 
   $(document).on('click', '.checkOne1', function () {
-    var flag = $('.checkOne1:checked').length == $('.checkOne1').length;
+    const flag = $('.checkOne1:checked').length === $('.checkOne1').length;
     $('.checkAll1').prop('checked', flag);
   });
 
@@ -157,7 +189,7 @@
   });
 
   $(document).on('click', '.checkOne2', function () {
-    var flag = $('.checkOne2:checked').length == $('.checkOne2').length;
+    const flag = $('.checkOne2:checked').length === $('.checkOne2').length;
     $('.checkAll2').prop('checked', flag);
   });
 

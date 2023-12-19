@@ -73,6 +73,12 @@ def save_files(module, module_id, module_path_dict, resource_dict, status):
 @sync_bp.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
+    if request.method == 'POST':
+        data = request.form.to_dict()
+        if 'create_value' in data.keys():
+            create_list = [sub_module for sub_module in data['create_value'].split(',') if sub_module != '']
+            print(create_list)
+        return redirect(url_for('sync.index'))
     return render_template('sync/index.html')
 
 
