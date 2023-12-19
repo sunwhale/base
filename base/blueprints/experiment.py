@@ -110,9 +110,9 @@ def delete_experiment(experiment_id):
         return redirect(url_for('.manage_experiments'))
     if os.path.exists(experiment_path):
         shutil.rmtree(experiment_path)
-        flash('ABAQUS项目%s删除成功。' % experiment_id, 'success')
+        flash('实验项目%s删除成功。' % experiment_id, 'success')
     else:
-        flash('ABAQUS项目%s不存在。' % experiment_id, 'warning')
+        flash('实验项目%s不存在。' % experiment_id, 'warning')
     return redirect(url_for('.manage_experiments'))
 
 
