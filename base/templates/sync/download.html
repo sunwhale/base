@@ -63,14 +63,13 @@
       const server_uuid = results[1];
       const download_status = results[2];
       const resource = results[3];
-
       // 处理请求的结果
       update_table(local_uuid, server_uuid, download_status, resource)
     })
     .catch(function (error) {
       // 处理错误
-      alert("发生错误:", error)
       console.log("发生错误:", error);
+      alert("发生错误: 远程服务器无响应" + error['status'] + " " + error['statusText'])
     });
 
   function update_table(local_uuid, server_uuid, download_status, resource) {
@@ -101,6 +100,10 @@
 
   const refreshID = setInterval(function () {
     $.get(download_status_url, function (download_status) {
+      let is_fresh = true
+      if (download_status['status'] === 'done') {
+        is_fresh = false
+      }
       const tdList = document.getElementsByTagName('td');
       const tdIds = [];
 
@@ -112,7 +115,6 @@
           tdIds.push(id);
         }
       }
-
       for (urlStr of tdIds) {
         const td = document.getElementById(urlStr);
         if (download_status[urlStr] === 'existed' || download_status[urlStr] === 'downloaded') {
@@ -120,6 +122,9 @@
         } else {
           td.innerHTML = "<i class='fas fa-spinner fa-spin' style='color: limegreen;'></i>";
         }
+      }
+      if (is_fresh === false) {
+        clearInterval(refreshID)
       }
     })
   }, 2000);
@@ -134,8 +139,8 @@
     $('.checkAll').prop('checked', flag);
   });
 
-  document.getElementById("virtual").className = "nav-item menu-open"
-  document.getElementById("manage_virtuals").className = "nav-link active"
+  document.getElementById("monitor").className = "nav-item menu-open"
+  document.getElementById("sync").className = "nav-link active"
 
 </script>
 {% endblock script %}

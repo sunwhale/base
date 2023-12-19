@@ -321,6 +321,14 @@
                   <p>计算队列管理</p>
                 </a>
               </li>
+              {% if env['service'] != 'server' %}
+              <li class="nav-item">
+                <a href="{{ url_for('sync.index') }}" class="nav-link" id="sync">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>服务器数据同步</p>
+                </a>
+              </li>
+              {% endif %}
               {% if env['service'] == 'server' %}
               <li class="nav-item">
                 <a href="/glances/" target="_blank" class="nav-link" id="glances">
