@@ -44,14 +44,10 @@
             <h3 class="card-title">从服务器创建</h3>
           </div>
           <div class="card-body">
-            <form method="POST" id="form_create" name="form_create">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button class="btn btn-success" type="submit" id="submit_create">
-                <i class="fa fa-download"></i>
-                <strong>批量创建</strong>
-              </button>
-              <textarea class="form-control" id="create_value" name="create_value"></textarea>
-            </form>
+            <button class="btn btn-success" type="submit" id="submit_create">
+              <i class="fa fa-download"></i>
+              <strong>批量创建</strong>
+            </button>
             <hr>
             <table class="table table-sm table-hover">
               <thead>
@@ -156,23 +152,24 @@
       for (let i = 0; i < checked_item.length; i++) {
         checked_items.push(checked_item[i].id);
       }
-      document.getElementById('create_value').value = checked_items;
       $.get("create/experiment/1")
+      $.get(local_uuid_url, function (local_uuid) {
+        $.get(server_uuid_url, function (server_uuid) {
+          console.log(local_uuid, server_uuid)
+          update_table(local_uuid, server_uuid)
+        })
+      })
     });
   });
 
-  const refreshID = setInterval(function () {
-    $.get(download_status_url, function (download_status) {
-      let is_fresh = true
-      if (download_status['status'] === 'done') {
-        is_fresh = false
-      }
-
-      if (is_fresh === false) {
-        clearInterval(refreshID)
-      }
-    })
-  }, 2000);
+  // const refreshID = setInterval(function () {
+  //   $.get(local_uuid_url, function (local_uuid) {
+  //     $.get(server_uuid_url, function (server_uuid) {
+  //       console.log(local_uuid, server_uuid)
+  //       update_table(local_uuid, server_uuid)
+  //     })
+  //   })
+  // }, 2000);
 
   // https://blog.csdn.net/weixin_43235307/article/details/121795990
   $(document).on('click', '.checkAll1', function () {
