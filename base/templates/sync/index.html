@@ -17,7 +17,7 @@
 <section class="content">
   <div class="container-fluid">
     <div class="row">
-      <div class="col-12">
+      <div class="col-6">
         <div class="card card-primary">
           <div class="card-header">
             <h3 class="card-title">数据同步列表</h3>
@@ -26,13 +26,33 @@
             <table class="table table-sm table-hover">
               <thead>
               <tr>
-                <th><input type="checkbox" id="customCheck" class="checkAll"></th>
+                <th><input type="checkbox" id="customCheck1" class="checkAll1"></th>
                 <th>服务器模块</th>
                 <th></th>
                 <th>本地模块</th>
               </tr>
               </thead>
-              <tbody id="table_sync">
+              <tbody id="tableSync1">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="card card-primary">
+          <div class="card-header">
+            <h3 class="card-title">从服务器创建</h3>
+          </div>
+          <div class="card-body">
+            <table class="table table-sm table-hover">
+              <thead>
+              <tr>
+                <th><input type="checkbox" id="customCheck2" class="checkAll2"></th>
+                <th>服务器模块</th>
+                <th>下载</th>
+              </tr>
+              </thead>
+              <tbody id="tableSync2">
               </tbody>
             </table>
           </div>
@@ -67,18 +87,18 @@
     });
 
   function update_table(local_uuid, server_uuid) {
-    $("#table_sync").empty();
-    const tbody = document.getElementById('table_sync');
+    $("#tableSync1").empty();
+    const tbody1 = document.getElementById('tableSync1');
     for (const lu of local_uuid) {
       for (const su of server_uuid) {
         if (lu[2] === su[2]) {
           let id = 0;
 
           const tr = document.createElement('tr');
-          tbody.appendChild(tr);
+          tbody1.appendChild(tr);
 
           let td = document.createElement('td');
-          td.innerHTML = '<input type="checkbox" class="checkOne" id="' + id++ + '">';
+          td.innerHTML = '<input type="checkbox" class="checkOne1" id="' + id++ + '">';
           tr.appendChild(td);
 
           td = document.createElement('td');
@@ -97,16 +117,48 @@
         }
       }
     }
+
+    $("#tableSync2").empty();
+    const tbody2 = document.getElementById('tableSync2');
+    for (const su of server_uuid) {
+      let id = 0;
+
+      const tr = document.createElement('tr');
+      tbody2.appendChild(tr);
+
+      let td = document.createElement('td');
+      td.innerHTML = '<input type="checkbox" class="checkOne2" id="' + id++ + '">';
+      tr.appendChild(td);
+
+      td = document.createElement('td');
+      td.innerHTML = su[0] + '/' + su[1];
+      tr.appendChild(td);
+
+      td = document.createElement('td');
+      let downloadHref = "<a href='create/" + su[0] + "/" + su[1] + "'>"
+      td.innerHTML = downloadHref + "<i class='fas fa-download'></i></a>";
+      tr.appendChild(td);
+    }
+
   }
 
   // https://blog.csdn.net/weixin_43235307/article/details/121795990
-  $(document).on('click', '.checkAll', function () {
-    $('.checkOne').prop('checked', $(this).prop('checked'));
+  $(document).on('click', '.checkAll1', function () {
+    $('.checkOne1').prop('checked', $(this).prop('checked'));
   });
 
-  $(document).on('click', '.checkOne', function () {
-    var flag = $('.checkOne:checked').length == $('.checkOne').length;
-    $('.checkAll').prop('checked', flag);
+  $(document).on('click', '.checkOne1', function () {
+    var flag = $('.checkOne1:checked').length == $('.checkOne1').length;
+    $('.checkAll1').prop('checked', flag);
+  });
+
+  $(document).on('click', '.checkAll2', function () {
+    $('.checkOne2').prop('checked', $(this).prop('checked'));
+  });
+
+  $(document).on('click', '.checkOne2', function () {
+    var flag = $('.checkOne2:checked').length == $('.checkOne2').length;
+    $('.checkAll2').prop('checked', flag);
   });
 
   document.getElementById("monitor").className = "nav-item menu-open"
