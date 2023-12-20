@@ -110,6 +110,8 @@ def resource(module, module_id):
             module_resource['data'][sub_dir] = {}
             for file_dict in files_in_dir(os.path.join(sub_module_path, sub_dir)):
                 suffix = os.path.splitext(file_dict['name'])[1]
+                if suffix == '':  # 如果文件名为空，例如 .uuid 的情况
+                    suffix = os.path.splitext(file_dict['name'])[0]
                 if suffix in allowed_suffix_dict[module] or '.*' in allowed_suffix_dict[module]:
                     url = server_url + f"/sync/get_file?module={module}&module_id={module_id}&sub_module_id={sub_dir}&filename={file_dict['name']}"
                     file_path = os.path.join(sub_module_path, sub_dir, file_dict['name'])
