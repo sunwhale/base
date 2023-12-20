@@ -71,9 +71,10 @@
       });
     });
   });
+  const absolutePath = window.location.href;
   editormd.katexURL = {
-      js  : "//cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min",
-      css : "//cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min"
+      js  : absolutePath.toString() + "{{ url_for('static', filename='katex/katex.min') }}",
+      css : absolutePath.toString() + "{{ url_for('static', filename='katex/katex.min') }}"
   };
   document.getElementById("docs").className = "nav-item menu-open"
 
