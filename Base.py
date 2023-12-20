@@ -6,6 +6,7 @@ import ctypes
 import os
 import sys
 
+import pyautogui
 import webview
 import webview.menu as wm
 from dotenv import load_dotenv
@@ -20,7 +21,8 @@ app = create_app('client')
 
 
 def resize(window):
-    window.resize(1600, 1200)
+    w, h = pyautogui.size()
+    window.resize(w, h)
 
 
 def return_to_main():
