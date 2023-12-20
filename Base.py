@@ -22,7 +22,8 @@ app = create_app('client')
 
 def resize(window):
     w, h = pyautogui.size()
-    window.resize(w, h)
+    window.resize(w, int(h * 0.96))
+    window.move(0, 0)
 
 
 def return_to_main():
