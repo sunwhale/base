@@ -39,6 +39,8 @@
       <li class="nav-item d-none d-sm-inline-block">
         <a href="/" class="nav-link">主界面</a>
       </li>
+      {% if env['service'] != 'client' %}
+      {{env['CLIENT']}}
       {% if current_user.is_authenticated %}
       <li class="nav-item">
         <a href="{{ url_for('auth.logout') }}" class="nav-link">登出</a>
@@ -47,6 +49,7 @@
       <li class="nav-item">
         <a href="{{ url_for('auth.login') }}" class="nav-link">登录</a>
       </li>
+      {% endif %}
       {% endif %}
     </ul>
 
@@ -382,6 +385,7 @@
           {% endblock nav_others %}
 
           {% block nav_admin %}
+          {% if env['service'] != 'client' %}
           {% if current_user.is_admin %}
           <li class="nav-item" id="user">
             <a href="#" class="nav-link">
@@ -406,6 +410,7 @@
               </li>
             </ul>
           </li>
+          {% endif %}
           {% endif %}
           {% endblock nav_admin %}
 
