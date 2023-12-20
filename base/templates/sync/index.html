@@ -26,7 +26,7 @@
             <table class="table table-sm table-hover">
               <thead>
               <tr>
-                <th><input type="checkbox" id="customCheck1" class="checkAll1"></th>
+<!--                <th><input type="checkbox" id="customCheck1" class="checkAll1"></th>-->
                 <th>服务器模块</th>
                 <th></th>
                 <th>本地模块</th>
@@ -44,15 +44,15 @@
             <h3 class="card-title">从服务器创建</h3>
           </div>
           <div class="card-body">
-            <button class="btn btn-success" type="submit" id="submit_create">
-              <i class="fa fa-download"></i>
-              <strong>批量创建</strong>
-            </button>
-            <hr>
+<!--            <button class="btn btn-success" type="submit" id="submit_create">-->
+<!--              <i class="fa fa-download"></i>-->
+<!--              <strong>批量创建</strong>-->
+<!--            </button>-->
+<!--            <hr>-->
             <table class="table table-sm table-hover">
               <thead>
               <tr>
-                <th><input type="checkbox" id="customCheck2" class="checkAll2"></th>
+<!--                <th><input type="checkbox" id="customCheck2" class="checkAll2"></th>-->
                 <th>服务器模块</th>
                 <th>下载</th>
               </tr>
@@ -103,10 +103,10 @@
           tbody1.appendChild(tr);
 
           let td = document.createElement('td');
-          td.innerHTML = '<input type="checkbox" class="checkOne1" id="' + id++ + '">';
-          tr.appendChild(td);
-
-          td = document.createElement('td');
+          // td.innerHTML = '<input type="checkbox" class="checkOne1" id="' + id++ + '">';
+          // tr.appendChild(td);
+          //
+          // td = document.createElement('td');
           td.innerHTML = su[0] + '/' + su[1];
           tr.appendChild(td);
 
@@ -131,10 +131,10 @@
       tbody2.appendChild(tr);
 
       let td = document.createElement('td');
-      td.innerHTML = '<input type="checkbox" class="checkOne2" id="' + su[0] + "/" + su[1] + '">';
-      tr.appendChild(td);
-
-      td = document.createElement('td');
+      // td.innerHTML = '<input type="checkbox" class="checkOne2" id="' + su[0] + "/" + su[1] + '">';
+      // tr.appendChild(td);
+      //
+      // td = document.createElement('td');
       td.innerHTML = su[0] + '/' + su[1];
       tr.appendChild(td);
 
