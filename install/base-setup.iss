@@ -3,17 +3,14 @@
 
 #define MyAppName "Base"
 #define MyAppVersion "0.1.4"
-#define MyAppPublisher "SunJingyu"
+#define MyAppPublisher "Sun Jingyu"
 #define MyAppURL "https://www.sunjingyu.com/"
 #define MyAppExeName "Base.exe"
-#define MyAppAssocName MyAppName + " File"
-#define MyAppAssocExt ".myp"
-#define MyAppAssocKey StringChange(MyAppAssocName, " ", "") + MyAppAssocExt
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{F55879F5-2E58-4AA5-BAD0-E34BBFFD9D63}
+AppId={{4351857A-2AE0-443F-8A78-7C8F30898DEF}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -21,37 +18,31 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName=C:\{#MyAppName}
-;DefaultDirName={autopf}\{#MyAppName}
-ChangesAssociations=yes
-DefaultGroupName={#MyAppName}
+DefaultDirName={autopf}\{#MyAppName}
+DisableProgramGroupPage=yes
+LicenseFile=F:\GitHub\base\LICENSE
+InfoAfterFile=F:\GitHub\base\install\information.txt
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
-OutputDir=F:\Github\base\install
-OutputBaseFilename=Base-setup-0.1.4
-SetupIconFile=F:\Github\base\base\static\imgs\logo_delta.ico
+PrivilegesRequiredOverridesAllowed=dialog
+OutputDir=F:\GitHub\base\install
+OutputBaseFilename=Base-setup
+SetupIconFile=F:\GitHub\base\install\logo_delta.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
-Name: "chinese"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
+Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "F:\Github\base\output\Base\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
-Source: "F:\Github\base\output\Base\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "F:\GitHub\base\output\Base\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "F:\GitHub\base\output\Base\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
-
-[Registry]
-Root: HKA; Subkey: "Software\Classes\{#MyAppAssocExt}\OpenWithProgids"; ValueType: string; ValueName: "{#MyAppAssocKey}"; ValueData: ""; Flags: uninsdeletevalue
-Root: HKA; Subkey: "Software\Classes\{#MyAppAssocKey}"; ValueType: string; ValueName: ""; ValueData: "{#MyAppAssocName}"; Flags: uninsdeletekey
-Root: HKA; Subkey: "Software\Classes\{#MyAppAssocKey}\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\{#MyAppExeName},0"
-Root: HKA; Subkey: "Software\Classes\{#MyAppAssocKey}\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
-Root: HKA; Subkey: "Software\Classes\Applications\{#MyAppExeName}\SupportedTypes"; ValueType: string; ValueName: ".myp"; ValueData: ""
 
 [Icons]
 Name: "{autoprograms}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

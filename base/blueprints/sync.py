@@ -28,7 +28,7 @@ allowed_suffix_dict = {
     'doc': ['.*'],
     'sheet': ['.*'],
     'packing_models': ['.*'],
-    'pyfem': ['.toml', '.inp', '.msh', '.project_msg', '.job_msg', '.uuid']
+    'pyfem': ['.toml', '.inp', '.msh', '.json', '.project_msg', '.job_msg', '.uuid']
 }
 
 

@@ -113,9 +113,9 @@ class Solver:
         os.chdir(self.path)
         self.preproc()
         if self.user == '':
-            cmd = f'C:\\Users\\SunJingyu\\.conda\\envs\\pyfem311\\python.exe F:\\GitHub\\pyfem\\app.py -i {self.job}.toml'
-        else:
             cmd = f'pyfem -i {self.job}.toml'
+        else:
+            cmd = f'C:\\Users\\SunJingyu\\.conda\\envs\\pyfem311\\python.exe F:\\GitHub\\pyfem\\app.py -i {self.job}.toml'
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path)
         logfile = 'run.log'
         thread = threading.Thread(target=write_log, args=(proc, logfile))
