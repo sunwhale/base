@@ -41,7 +41,7 @@ def open_viewer():
 def show_help():
     active_window = webview.active_window()
     if active_window:
-        active_window.create_confirmation_dialog('关于 Base', '程序版本：0.1.4\nJingyu Sun © 2020-2023')
+        active_window.create_confirmation_dialog('关于 Base', '程序版本：0.1.5\nJingyu Sun © 2020-2023')
 
 
 def is_admin():
@@ -72,4 +72,4 @@ if __name__ == "__main__":
     ]
 
     window = webview.create_window('固体力学与数值模拟', app, min_size=(800, 600), text_select=True)
-    webview.start(resize, window, debug=False, menu=menu_items)
+    webview.start(resize, window, debug=bool(os.environ.get('WEBVIEW_DEBUG')), menu=menu_items)
