@@ -165,14 +165,14 @@ source /etc/profile
 conda init
 exit
 
-conda create -n flask -y python==3.9
+conda create -n flask -y python==3.11
 conda activate flask
 git clone https://gitee.com/sunwhale/base.git
 cd base
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ # -i https://pypi.org/simple #官方源
 pip install gunicorn
 
-conda create -n jupyter -y python==3.9
+conda create -n jupyter -y python==3.11
 conda activate jupyter
 pip install jupyterlab jupyterlab-language-pack-zh-CN
 jupyter lab --generate-config # 生成jupyterlab配置文件
