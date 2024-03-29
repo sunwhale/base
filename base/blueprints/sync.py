@@ -227,3 +227,8 @@ def get_server_resource(module, module_id):
     response = requests.get(server_resource_url)
     server_resource = json.loads(response.text)
     return jsonify(server_resource)
+
+
+@sync_bp.route('/url', methods=['GET', 'POST'])
+def url():
+    return render_template('sync/url.html')

@@ -1,0 +1,43 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}本地服务器URL{% endblock title %}
+
+{% block css %}
+{% endblock css %}
+
+{% block pageheader %}本地服务器URL{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主界面</a></li>
+<li class="breadcrumb-item active">本地服务器URL</li>
+{% endblock level %}
+
+{% block content %}
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card card-primary">
+          <div class="card-header">
+            <h3 class="card-title">本地服务器URL</h3>
+          </div>
+          <div class="card-body">
+            <p id="current-url"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock content %}
+
+{% block script %}
+<script type="text/javascript">
+
+  document.getElementById("current-url").innerText = window.location.href;
+  document.getElementById("monitor").className = "nav-item menu-open"
+  document.getElementById("url").className = "nav-link active"
+
+</script>
+{% endblock script %}

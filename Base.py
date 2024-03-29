@@ -53,6 +53,13 @@ def is_admin():
 
 if __name__ == "__main__":
 
+    if os.environ.get('WEBVIEW_DEBUG') == 'True':
+        is_debug = True
+    elif os.environ.get('WEBVIEW_DEBUG') == 'False':
+        is_debug = False
+    else:
+        pass
+
     if not is_admin():
         # 这段代码会检查当前用户是否为管理员，如果不是管理员，则使用 ShellExecuteW 函数以管理员权限重新启动脚本，并退出当前进程。
         # 请注意，这种方法只适用于 Windows 系统。
@@ -72,4 +79,4 @@ if __name__ == "__main__":
     ]
 
     window = webview.create_window('固体力学与数值模拟', app, min_size=(800, 600), text_select=True)
-    webview.start(resize, window, debug=bool(os.environ.get('WEBVIEW_DEBUG')), menu=menu_items)
+    webview.start(resize, window, debug=is_debug, menu=menu_items)

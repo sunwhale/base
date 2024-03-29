@@ -329,6 +329,14 @@
                 </a>
               </li>
               {% endif %}
+              {% if env['service'] != 'server' %}
+              <li class="nav-item">
+                <a href="{{ url_for('sync.url') }}" class="nav-link" id="url">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>本地服务器URL</p>
+                </a>
+              </li>
+              {% endif %}
               {% if env['service'] == 'server' %}
               <li class="nav-item">
                 <a href="/glances/" target="_blank" class="nav-link" id="glances">
