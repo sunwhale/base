@@ -94,7 +94,8 @@ class Postproc:
         json_file = os.path.join(self.path, 'prescan_odb.json')
         if os.path.exists(json_file):
             os.remove(json_file)
-        cmd = '%s viewer noGui=%s -- %s.odb %s' % (ABAQUS, py_file, self.job, 'prescan_odb.json')
+        cmd = '%s viewer noGui=\"%s\" -- %s.odb %s' % (ABAQUS, py_file, self.job, 'prescan_odb.json')
+        print(cmd)
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
@@ -104,14 +105,16 @@ class Postproc:
         npz_file = os.path.join(self.path, '{}.npz'.format(self.job))
         if os.path.exists(npz_file):
             os.remove(npz_file)
-        cmd = '%s viewer noGui=%s -- %s' % (ABAQUS, py_file, 'odb_to_npz.json')
+        cmd = '%s viewer noGui=\"%s\" -- %s' % (ABAQUS, py_file, 'odb_to_npz.json')
+        print(cmd)
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
     def print_figure(self):
         os.chdir(self.path)
         py_file = os.path.join(os.path.dirname(__file__), 'print_figure.py')
-        cmd = '%s viewer noGui=%s -- %s %s' % (ABAQUS, py_file, 'print_figure.json', '{}.odb'.format(self.job))
+        cmd = '%s viewer noGui=\"%s\" -- %s %s' % (ABAQUS, py_file, 'print_figure.json', '{}.odb'.format(self.job))
+        print(cmd)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
         logfile = 'print_figure.log'
         thread = threading.Thread(target=write_log, args=(proc, logfile))
