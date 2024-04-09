@@ -23,15 +23,12 @@ def calculate_checksum(file_path):
 
 
 def check_project_job_files(project_path, job_path):
-    for fp in files_in_dir(project_path):
-        is_same = False
-        project_file_path = os.path.join(project_path, fp['name'])
-        for fj in files_in_dir(job_path):
-            job_file_path = os.path.join(job_path, fj['name'])
-            if calculate_checksum(project_file_path) == calculate_checksum(job_file_path):
-                is_same = True
-        if not is_same:
-            return False
+    for f in files_in_dir(project_path):
+        if 'parameters' not in f['name'] and 'amplitude' not in f['name']:
+            project_file_path = os.path.join(project_path, f['name'])
+            job_file_path = os.path.join(job_path, f['name'])
+            if not (os.path.exists(job_file_path) and calculate_checksum(project_file_path) == calculate_checksum(job_file_path)):
+                return False
     return True
 
 
