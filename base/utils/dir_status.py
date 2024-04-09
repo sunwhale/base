@@ -22,13 +22,16 @@ def calculate_checksum(file_path):
     return hash_object.hexdigest()
 
 
-def check_project_job_files(project_path, job_path):
+def check_project_job_files(project_path, job_path, ignore_files):
     for f in files_in_dir(project_path):
-        if 'parameters' not in f['name'] and 'amplitude' not in f['name']:
-            project_file_path = os.path.join(project_path, f['name'])
-            job_file_path = os.path.join(job_path, f['name'])
-            if not (os.path.exists(job_file_path) and calculate_checksum(project_file_path) == calculate_checksum(job_file_path)):
-                return False
+        for ignore_file in ignore_files:
+            if ignore_file in f['name']:
+                break
+            else:
+                project_file_path = os.path.join(project_path, f['name'])
+                job_file_path = os.path.join(job_path, f['name'])
+                if not (os.path.exists(job_file_path) and calculate_checksum(project_file_path) == calculate_checksum(job_file_path)):
+                    return False
     return True
 
 
@@ -517,7 +520,7 @@ def get_job_status(path, project_id, job_id):
         status['odb_to_npz_proc'] = odb_to_npz_proc
         status['parameters'] = str(parameters)
         status['path'] = os.path.join(path, str(project_id), str(job_id))
-        if check_project_job_files(os.path.join(path, str(project_id)), os.path.join(path, str(project_id), str(job_id))):
+        if check_project_job_files(os.path.join(path, str(project_id)), os.path.join(path, str(project_id), str(job_id)), ['parameter', 'amplitude']):
             status['sync'] = "<i class='fas fa-check-circle' style='color: limegreen;'></i>"
         else:
             status['sync'] = "<i class='fas fa-times-circle' style='color: red;'></i>"
