@@ -23,15 +23,16 @@ def calculate_checksum(file_path):
 
 
 def check_project_job_files(project_path, job_path):
-    is_all_same = False
     for fp in files_in_dir(project_path):
-        is_all_same = False
+        is_same = False
         project_file_path = os.path.join(project_path, fp['name'])
         for fj in files_in_dir(job_path):
             job_file_path = os.path.join(job_path, fj['name'])
             if calculate_checksum(project_file_path) == calculate_checksum(job_file_path):
-                is_all_same = True
-    return is_all_same
+                is_same = True
+        if not is_same:
+            return False
+    return True
 
 
 def get_path_uuid(path):
@@ -519,7 +520,10 @@ def get_job_status(path, project_id, job_id):
         status['odb_to_npz_proc'] = odb_to_npz_proc
         status['parameters'] = str(parameters)
         status['path'] = os.path.join(path, str(project_id), str(job_id))
-        status['sync'] = check_project_job_files(os.path.join(path, str(project_id)), os.path.join(path, str(project_id), str(job_id)))
+        if check_project_job_files(os.path.join(path, str(project_id)), os.path.join(path, str(project_id), str(job_id))):
+            status['sync'] = "<i class='fas fa-check-circle' style='color: limegreen;'></i>"
+        else:
+            status['sync'] = "<i class='fas fa-times-circle' style='color: red;'></i>"
         button = ""
         button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % (
                 '../view_job/' + str(project_id) + '/' + str(job_id))
