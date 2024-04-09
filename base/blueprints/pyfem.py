@@ -319,6 +319,33 @@ def view_job(project_id, job_id):
         abort(404)
 
 
+@pyfem_bp.route('/job_status/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
+@login_required
+def job_status(project_id, job_id):
+    pyfem_path = current_app.config['PYFEM_PATH']
+    job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
+    if os.path.exists(job_path):
+        s = Solver(job_path)
+        s.read_msg()
+        sta = s.get_sta()
+        logs = s.get_log()
+        run_logs = s.get_run_log()
+        para = s.get_parameters()
+        files = files_in_dir(job_path)
+        solver_status = s.solver_status()
+        status = {
+            'sta': sta[-100:],
+            'logs': logs[-5000:],
+            'run_logs': run_logs,
+            'para': para,
+            'files': files,
+            'solver_status': solver_status
+        }
+        return jsonify(status)
+    else:
+        abort(404)
+
+
 @pyfem_bp.route('/project_jobs_status/<int:project_id>')
 def project_jobs_status(project_id):
     pyfem_path = current_app.config['PYFEM_PATH']

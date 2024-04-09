@@ -17,229 +17,168 @@
 {% endblock level %}
 
 {% block content %}
-    <section class="content">
-      <div class="container-fluid">
-        <div class="row">
-          <div class="col-6">
-            <div class="column">
-              <div class="col-12">
-                <div class="card card-primary">
-                  <div class="card-header">
-                    <h3 class="card-title">{{ project_id }}号PYFEM项目：{{ job_id }}号算例</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                        <i class="fas fa-minus"></i>
-                      </button>
-                    </div>
-                  </div>
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col-12">
-                        <h5 class="text-primary">算例信息</h5>
-                        <ul class="list-unstyled">
-                          <li> 算例编号：{{ job_id }} </li>
-                          <li> 创建时间：{{ status['inp_time'] }}</li>
-                          <li> 算例toml文件：{{ status['job'] }}.toml</li>
-                          <li> 算例user文件：{{ status['user'] }}</li>
-                          <li> 算例使用CPU核心数量：{{ status['cpus'] }}</li>
-                          <a class='btn btn-primary' href="{{ url_for('pyfem.edit_job', project_id=project_id, job_id=job_id) }}"><strong>编辑信息</strong></a>
-                          {% if env['service'] == 'client' %}
-                          <a href="{{ url_for('pyfem.open_job', project_id=project_id, job_id=job_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
-                          {% endif %}
-                        </ul>
-                        <h5 class="text-primary">求解控制</h5>
-                        当前状态：{{ solver_status }}
-                        <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止PYFEM的计算，并通过<a href="javascript:location.reload();">刷新</a>页面获取算例状态。</p>
-
-                        {% if solver_status=='Submitting' or solver_status=='Running' or solver_status=='Pause' or solver_status=='Stopping' %}
-                        <button class="btn btn-secondary" disabled="disabled"><strong>计 算</strong></button>
-                        {% else %}
-                        <a href="{{ url_for('pyfem.run_job', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>计 算</strong></a>
-                        {% endif %}
-
-                        {% if solver_status=='Running' %}
-                        <a href="#" class="btn btn-warning"><strong>暂 停</strong></a>
-                        {% else %}
-                        <button class="btn btn-secondary" disabled="disabled"><strong>暂 停</strong></button>
-                        {% endif %}
-
-                        {% if solver_status=='Pause' %}
-                        <a href="#" class="btn btn-info"><strong>继 续</strong></a>
-                        {% else %}
-                        <button class="btn btn-secondary" disabled="disabled"><strong>继 续</strong></button>
-                        {% endif %}
-
-                        {% if solver_status=='Running' %}
-                        <a href="{{ url_for('pyfem.terminate_job', project_id=project_id, job_id=job_id) }}" class="btn btn-danger"><strong>终 止</strong></a>
-                        {% else %}
-                        <button class="btn btn-secondary" disabled="disabled"><strong>终 止</strong></button>
-                        {% endif %}
-                        {{ button }}
-                      </div>
-                    </div>
-                  </div>
+<section class="content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-6">
+        <div class="column">
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ project_id }}号PYFEM项目：{{ job_id }}号算例</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
                 </div>
               </div>
-              <div class="col-12">
-                <div class="card card-primary">
-                  <div class="card-header">
-                    <h3 class="card-title">参数文件</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
-                    </div>
-                  </div>
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col-12">
-                        <form action="" method="post" class="form" role="form">
-                          {{ form.csrf_token() }}
-                          {{ render_field(form.para, style="height: 200px;") }}
-                          {{ render_field(form.submit, button_style='btn btn-primary') }}
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12">
-                <div class="card card-primary">
-                  <div class="card-header">
-                    <h3 class="card-title">文件列表</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
-                    </div>
-                  </div>
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col-12">
-                        <table class="table table-sm table-hover">
-                          <thead>
-                            <tr>
-                              <th width=40%>文件名</th>
-                              <th width=30%>修改日期</th>
-                              <th width=10%>大小</th>
-                              <th width=20%>操作</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for file in files %}
-                            <tr>
-                              <td> {{ file['name'] }} </td>
-                              <td> {{ file['time'] }} </td>
-                              <td> {{ file['size'] }} </td>
-                              <td> <a href="{{ url_for('viewer.index') }}?url={{ url_for('pyfem.get_job_file', project_id=project_id, job_id=job_id, filename=file['name'], _external=True) }}">查看</a> | <a href="{{ url_for('pyfem.get_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}" target="_blank">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('pyfem.delete_job_file', project_id=project_id, job_id=job_id, filename=file['name']) }}">删除</a> </td>
-                            </tr>
-                            {% endfor %}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12">
+                    <h5 class="text-primary">算例信息</h5>
+                    <ul class="list-unstyled">
+                      <li> 算例编号：{{ job_id }}</li>
+                      <li> 创建时间：{{ status['inp_time'] }}</li>
+                      <li> 算例toml文件：{{ status['job'] }}.toml</li>
+                      <li> 算例user文件：{{ status['user'] }}</li>
+                      <li> 算例使用CPU核心数量：{{ status['cpus'] }}</li>
+                      <a class='btn btn-primary' href="{{ url_for('pyfem.edit_job', project_id=project_id, job_id=job_id) }}"><strong>编辑信息</strong></a>
+                      {% if env['service'] == 'client' %}
+                      <a href="{{ url_for('pyfem.open_job', project_id=project_id, job_id=job_id) }}"
+                         class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
+                      {% endif %}
+                    </ul>
+                    <h5 class="text-primary">求解控制</h5>
+                    <p class="mb-1" id="text_solver_status">{{ solver_status }}</p>
+                    <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止PYFEM的计算，并通过<a href="javascript:location.reload();">刷新</a>页面获取算例状态。
+                    </p>
+
+                    <button id="calculateBtn" class="btn btn-secondary" disabled><strong>计 算</strong></button>
+                    <a id="calculateLink" href="{{ url_for('pyfem.run_job', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>计
+                      算</strong></a>
+
+                    <button id="pauseBtn" class="btn btn-secondary" disabled><strong>暂 停</strong></button>
+                    <a id="pauseLink" href="#" class="btn btn-warning"><strong>暂 停</strong></a>
+
+                    <button id="continueBtn" class="btn btn-secondary" disabled><strong>继 续</strong></button>
+                    <a id="continueLink" href="#" class="btn btn-info"><strong>继 续</strong></a>
+
+                    <button id="terminateBtn" class="btn btn-secondary" disabled><strong>终 止</strong></button>
+                    <a id="terminateLink" href="{{ url_for('pyfem.terminate_job', project_id=project_id, job_id=job_id) }}" class="btn btn-danger"><strong>终
+                      止</strong></a>
+
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <div class="col-6">
-            <div class="column">
-              <div class="col-12">
-                <!-- Custom Tabs -->
-                <div class="card">
-                  <div class="card-header d-flex p-0">
-                    <h3 class="card-title p-3">求解状态</h3>
-                    <ul class="nav nav-pills ml-auto p-2">
-                      <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">状态文件 {{ status['job'] }}.sta</a></li>
-                      <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
-                      <li class="nav-item"><a class="nav-link" href="#tab_3" data-toggle="tab">求解日志 {{ status['job'] }}.log</a></li>
-                    </ul>
-                  </div><!-- /.card-header -->
-                  <div class="card-body">
-                    <div class="tab-content">
-                      <div class="tab-pane active" id="tab_1">
-                        <div class="card-body table-responsive p-0" style="height: 319.5px;">
-                          <table class="table table-sm table-hover table-head-fixed text-nowrap" id="table_sta">
-                            <thead>
-                              <tr>
-                                <th width=10% style="vertical-align: middle;text-align: center;">Step</th>
-                                <th width=10% style="vertical-align: middle;text-align: center;">Increment</th>
-                                <th width=10% style="vertical-align: middle;text-align: center;">Att</th>
-                                <th width=10% style="vertical-align: middle;text-align: center;">Severe<br>Discon<br>Iter</th>
-                                <th width=10% style="vertical-align: middle;text-align: center;">Equil<br>Iter</th>
-                                <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Iter</th>
-                                <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Time/Freq</th>
-                                <th width=10% style="vertical-align: middle;text-align: center;">Step<br>Time/LPF</th>
-                                <th width=10% style="vertical-align: middle;text-align: center;">Time/LPF<br>Inc</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {% for row in sta %}
-                              <tr style="vertical-align: middle;text-align: center;">
-                                {% for item in row %}
-                                  <td> {{ item }} </td>
-                                {% endfor %}
-                              </tr>
-                              {% endfor %}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                      <!-- /.tab-pane -->
-                      <div class="tab-pane" id="tab_2">
-                        <textarea id="textarea_run_log" class="form-control" style="height: 319.5px;">{{ run_logs }}</textarea>
-                      </div>
-                      <!-- /.tab-pane -->
-                      <div class="tab-pane" id="tab_3">
-                        <textarea id="textarea_log" class="form-control" style="height: 319.5px;">{{ logs }}</textarea>
-                      </div>
-                      <!-- /.tab-pane -->
-                    </div>
-                    <!-- /.tab-content -->
-                  </div><!-- /.card-body -->
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">参数文件</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
                 </div>
-                <!-- ./card -->
               </div>
-<!--              <div class="col-12">-->
-<!--                <div class="card card-primary">-->
-<!--                  <div class="card-header">-->
-<!--                    <h3 class="card-title">后处理</h3>-->
-<!--                    <div class="card-tools">-->
-<!--                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>-->
-<!--                    </div>-->
-<!--                  </div>-->
-<!--                  <div class="card-body">-->
-<!--                    <div class="row">-->
-<!--                      <div class="col-12">-->
-<!--                        <p class="mb-1">您可以通过点击下面的按钮进行PYFEM计算结果的后处理，并通过<a href="javascript:location.reload();">刷新</a>页面更新状态。</p>-->
-
-<!--                        {% if status['prescan_status']!='Scanning' and status['prescan_status']!='Submitting' %}-->
-<!--                        <a href="{{ url_for('abaqus.prescan_odb', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>odb 预扫描</strong></a>-->
-<!--                        {% else %}-->
-<!--                        <button class="btn btn-secondary" disabled="disabled"><strong>odb 预扫描</strong></button>-->
-<!--                        {% endif %}-->
-
-<!--                        {% if status['odb_to_npz_status']!='Running' and status['odb_to_npz_status']!='Submitting' %}-->
-<!--                        <a href="{{ url_for('abaqus.odb_to_npz', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>odb_to_npz</strong></a>-->
-<!--                        {% else %}-->
-<!--                        <button class="btn btn-secondary" disabled="disabled"><strong>odb_to_npz</strong></button>-->
-<!--                        {% endif %}-->
-
-<!--                        <a href="{{ url_for('abaqus.print_figure', project_id=project_id, job_id=job_id) }}" class="btn btn-info"><strong>odb图片输出</strong></a>-->
-
-<!--                        <p></p>-->
-<!--                        <p class="mb-1">预扫描树状图（{{ status['prescan_status'] }}）：</p>-->
-<!--                        <ul id="ztree-odb" class="ztree"></ul>-->
-<!--                        <p></p>-->
-<!--                        <p class="mb-1">npz文件结构（{{ status['odb_to_npz_status'] }} {{ status['odb_to_npz_proc'] }}%）：</p>-->
-<!--                        <ul id="ztree-npz" class="ztree"></ul>-->
-<!--                      </div>-->
-<!--                    </div>-->
-<!--                  </div>-->
-<!--                </div>-->
-<!--              </div>-->
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12">
+                    <form action="" method="post" class="form" role="form">
+                      {{ form.csrf_token() }}
+                      {{ render_field(form.para, style="height: 200px;") }}
+                      {{ render_field(form.submit, button_style='btn btn-primary') }}
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">文件列表</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-12">
+                    <table class="table table-sm table-hover">
+                      <thead>
+                      <tr>
+                        <th width=40%>文件名</th>
+                        <th width=30%>修改日期</th>
+                        <th width=10%>大小</th>
+                        <th width=20%>操作</th>
+                      </tr>
+                      </thead>
+                      <tbody id="table_files_body">
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </section>
+      <div class="col-6">
+        <div class="column">
+          <div class="col-12">
+            <!-- Custom Tabs -->
+            <div class="card">
+              <div class="card-header d-flex p-0">
+                <h3 class="card-title p-3">求解状态</h3>
+                <ul class="nav nav-pills ml-auto p-2">
+                  <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">状态文件 {{ status['job'] }}.sta</a></li>
+                  <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
+                  <li class="nav-item"><a class="nav-link" href="#tab_3" data-toggle="tab">求解日志 {{ status['job'] }}.log</a></li>
+                </ul>
+              </div><!-- /.card-header -->
+              <div class="card-body">
+                <div class="tab-content">
+                  <div class="tab-pane active" id="tab_1">
+                    <div class="card-body table-responsive p-0" style="height: 711.5px;">
+                      <table class="table table-sm table-hover table-head-fixed text-nowrap" id="table_sta">
+                        <thead>
+                        <tr>
+                          <th width=10% style="vertical-align: middle;text-align: center;">Step</th>
+                          <th width=10% style="vertical-align: middle;text-align: center;">Increment</th>
+                          <th width=10% style="vertical-align: middle;text-align: center;">Att</th>
+                          <th width=10% style="vertical-align: middle;text-align: center;">Severe<br>Discon<br>Iter</th>
+                          <th width=10% style="vertical-align: middle;text-align: center;">Equil<br>Iter</th>
+                          <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Iter</th>
+                          <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Time/Freq</th>
+                          <th width=10% style="vertical-align: middle;text-align: center;">Step<br>Time/LPF</th>
+                          <th width=10% style="vertical-align: middle;text-align: center;">Time/LPF<br>Inc</th>
+                        </tr>
+                        </thead>
+                        <tbody id="table_sta_body">
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  <!-- /.tab-pane -->
+                  <div class="tab-pane" id="tab_2">
+                    <textarea id="textarea_run_log" class="form-control" style="height: 711.5px;">{{ run_logs }}</textarea>
+                  </div>
+                  <!-- /.tab-pane -->
+                  <div class="tab-pane" id="tab_3">
+                    <textarea id="textarea_log" class="form-control" style="height: 711.5px;">{{ logs }}</textarea>
+                  </div>
+                  <!-- /.tab-pane -->
+                </div>
+                <!-- /.tab-content -->
+              </div><!-- /.card-body -->
+            </div>
+            <!-- ./card -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock content %}
 
 {% block script %}
@@ -249,51 +188,140 @@
 <script src="{{ url_for('static', filename='zTree/js/jquery.ztree.core.min.js') }}"></script>
 {% endif %}
 <script type="text/javascript">
+  let lastData = [];
+  let lastStaData = [];
+  const solverStatus = "{{ solver_status }}";
+  updateButtons(solverStatus);
+  updateTextSolverStatus(solverStatus);
 
-  var textarea_log = document.getElementById('textarea_log');
-  textarea_log.scrollTop = textarea_log.scrollHeight;
+  function updateTextSolverStatus(solverStatus) {
+    const textSolverStatus = document.getElementById('text_solver_status');
+    textSolverStatus.innerText = '当前状态：' + solverStatus;
+  }
 
-  var textarea_log = document.getElementById('textarea_run_log');
-  textarea_log.scrollTop = textarea_log.scrollHeight;
+  function updateButtons(solverStatus) {
+    const calculateBtn = document.getElementById('calculateBtn');
+    const calculateLink = document.getElementById('calculateLink');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const pauseLink = document.getElementById('pauseLink');
+    const continueBtn = document.getElementById('continueBtn');
+    const continueLink = document.getElementById('continueLink');
+    const terminateBtn = document.getElementById('terminateBtn');
+    const terminateLink = document.getElementById('terminateLink');
 
-  // var table_sta = document.getElementById('table_sta');
-  // table_sta.scrollTop = table_sta.scrollHeight;
-
-  var setting_odb = {
-    data: {
-      simpleData: {
-        enable: true
-      }
-    },
-    async: {
-      enable: true,
-      url:"{{ url_for('abaqus.prescan_odb_data', project_id=project_id, job_id=job_id) }}",
-      type: "get",
+    if (solverStatus === 'Submitting' || solverStatus === 'Running' || solverStatus === 'Pause' || solverStatus === 'Stopping') {
+      calculateBtn.style.display = 'inline';
+      calculateLink.style.display = 'none';
+    } else {
+      calculateBtn.style.display = 'none';
+      calculateLink.style.display = 'inline';
     }
-  };
 
-  $(document).ready(function(){
-    $.fn.zTree.init($("#ztree-odb"), setting_odb);
-  });
-
-  var setting_npz = {
-    data: {
-      simpleData: {
-        enable: true
-      }
-    },
-    async: {
-      enable: true,
-      url:"{{ url_for('abaqus.odb_to_npz_data', project_id=project_id, job_id=job_id) }}",
-      type: "get",
+    if (solverStatus === 'Running') {
+      pauseBtn.style.display = 'none';
+      pauseLink.style.display = 'inline';
+    } else {
+      pauseBtn.style.display = 'inline';
+      pauseLink.style.display = 'none';
     }
-  };
 
-  $(document).ready(function(){
-    $.fn.zTree.init($("#ztree-npz"), setting_npz);
-  });
+    if (solverStatus === 'Pause') {
+      continueBtn.style.display = 'none';
+      continueLink.style.display = 'inline';
+    } else {
+      continueBtn.style.display = 'inline';
+      continueLink.style.display = 'none';
+    }
+
+    if (solverStatus === 'Running') {
+      terminateBtn.style.display = 'none';
+      terminateLink.style.display = 'inline';
+    } else {
+      terminateBtn.style.display = 'inline';
+      terminateLink.style.display = 'none';
+    }
+  }
+
+  function updateLog(logs) {
+    const textarea = document.getElementById('textarea_log');
+    textarea.value = logs;
+    textarea.scrollTop = textarea.scrollHeight; // 滚动到最底部
+  }
+
+  function updateSta(sta) {
+    const tableBody = document.getElementById('table_sta_body');
+    const newData = sta.filter(row => !lastStaData.some(lastRow => JSON.stringify(lastRow) === JSON.stringify(row))); // 只保留新数据
+
+    newData.forEach(row => {
+      const tr = document.createElement('tr');
+      tr.style.verticalAlign = 'middle';
+      tr.style.textAlign = 'center';
+
+      row.forEach(item => {
+        const td = document.createElement('td');
+        td.textContent = item;
+        tr.appendChild(td);
+      });
+
+      tableBody.appendChild(tr);
+    });
+    lastStaData = sta; // 更新上次获取的数据为当前数据
+  }
+
+  function updateFiles(files) {
+    const tableBody = document.getElementById('table_files_body');
+    tableBody.innerHTML = "";
+    files.forEach(row => {
+      const tr = document.createElement('tr');
+      tr.style.verticalAlign = 'middle';
+      tr.style.textAlign = 'left';
+
+      const td1 = document.createElement('td');
+      td1.textContent = row['name'];
+      tr.appendChild(td1);
+
+      const td2 = document.createElement('td');
+      td2.textContent = row['time'];
+      tr.appendChild(td2);
+
+      const td3 = document.createElement('td');
+      td3.textContent = row['size'];
+      tr.appendChild(td3);
+
+      const td4 = document.createElement('td');
+      const html1 = "<a href=\"{{ url_for('viewer.index') }}?url={{ url_for('pyfem.get_job_file', project_id=project_id, job_id=job_id, filename='0000', _external=True) }}\">查看</a>"
+      const html2 = "<a href=\"{{ url_for('pyfem.get_job_file', project_id=project_id, job_id=job_id, filename='0000') }}\" target=\"_blank\">下载</a>"
+      const html3 = "<a onclick=\"return confirm('确定删除文件？')\" href=\"{{ url_for('pyfem.delete_job_file', project_id=project_id, job_id=job_id, filename='0000') }}\">删除</a>"
+      const html = html1 + " | " + html2 + " | " + html3
+      td4.innerHTML = html.replace('0000', row['name']);
+      tr.appendChild(td4);
+
+      tableBody.appendChild(tr);
+    });
+  }
+
+  function updateStatus() {
+    fetch("{{ url_for('pyfem.job_status', project_id=project_id, job_id=job_id) }}")
+      .then(response => response.json())
+      .then(data => {
+        if (data['logs'] !== lastData['logs']) {
+          updateButtons(data["solver_status"])
+          updateLog(data['logs'])
+          updateSta(data["sta"])
+          updateFiles(data["files"])
+          updateTextSolverStatus(data["solver_status"])
+        }
+        lastData = data;
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+
+  // updateStatus()
+  setInterval(updateStatus, 5000);
 
   document.getElementById('pyfem').className = 'nav-item menu-open'
-  
+
 </script>
 {% endblock script %}
