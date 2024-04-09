@@ -146,6 +146,19 @@ class EventManager:
             self.thread_count += 1
             self.count += 1
 
+    def clear(self):
+        """清除队列"""
+        if not self.__active:
+            self.count = 0
+            self.thread_count = 0
+            self.__used_cpus = 0
+            self.__event_queue = Queue()
+            self.__events_running = []
+            self.__events_done = []
+            self.__events_reload = []
+        else:
+            print('队列正在运行，重置失败！')
+
     def stop(self):
         """停止"""
         print('{}_stop'.format(self.count))
@@ -380,7 +393,7 @@ def monitor(path, f_new, f_in_queue, f_running):
 
     try:
         while True:
-            time.sleep(1)
+            time.sleep(2)
 
     except KeyboardInterrupt:
         observer.stop()

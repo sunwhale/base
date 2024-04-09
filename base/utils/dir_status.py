@@ -22,6 +22,18 @@ def calculate_checksum(file_path):
     return hash_object.hexdigest()
 
 
+def check_project_job_files(project_path, job_path):
+    is_all_same = False
+    for fp in files_in_dir(project_path):
+        is_all_same = False
+        project_file_path = os.path.join(project_path, fp['name'])
+        for fj in files_in_dir(job_path):
+            job_file_path = os.path.join(job_path, fj['name'])
+            if calculate_checksum(project_file_path) == calculate_checksum(job_file_path):
+                is_all_same = True
+    return is_all_same
+
+
 def get_path_uuid(path):
     server_uuid = []
     for d0 in sub_dirs(path):
@@ -451,32 +463,28 @@ def get_job_status(path, project_id, job_id):
         for p in parameters.keys():
             status[p] = parameters[p]
 
-        solver_status_file = os.path.join(
-            path, str(project_id), str(job_id), '.solver_status')
+        solver_status_file = os.path.join(path, str(project_id), str(job_id), '.solver_status')
         if os.path.exists(solver_status_file):
             with open(solver_status_file, 'r', encoding='utf-8') as f:
                 solver_status = f.read()
         else:
             solver_status = 'None'
 
-        prescan_status_file = os.path.join(
-            path, str(project_id), str(job_id), '.prescan_status')
+        prescan_status_file = os.path.join(path, str(project_id), str(job_id), '.prescan_status')
         if os.path.exists(prescan_status_file):
             with open(prescan_status_file, 'r', encoding='utf-8') as f:
                 prescan_status = f.read()
         else:
             prescan_status = 'None'
 
-        odb_to_npz_status_file = os.path.join(
-            path, str(project_id), str(job_id), '.odb_to_npz_status')
+        odb_to_npz_status_file = os.path.join(path, str(project_id), str(job_id), '.odb_to_npz_status')
         if os.path.exists(odb_to_npz_status_file):
             with open(odb_to_npz_status_file, 'r', encoding='utf-8') as f:
                 odb_to_npz_status = f.read()
         else:
             odb_to_npz_status = 'None'
 
-        odb_to_npz_proc_file = os.path.join(
-            path, str(project_id), str(job_id), '.odb_to_npz_proc')
+        odb_to_npz_proc_file = os.path.join(path, str(project_id), str(job_id), '.odb_to_npz_proc')
         if os.path.exists(odb_to_npz_proc_file):
             with open(odb_to_npz_proc_file, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
@@ -511,6 +519,7 @@ def get_job_status(path, project_id, job_id):
         status['odb_to_npz_proc'] = odb_to_npz_proc
         status['parameters'] = str(parameters)
         status['path'] = os.path.join(path, str(project_id), str(job_id))
+        status['sync'] = check_project_job_files(os.path.join(path, str(project_id)), os.path.join(path, str(project_id), str(job_id)))
         button = ""
         button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % (
                 '../view_job/' + str(project_id) + '/' + str(job_id))
@@ -695,23 +704,23 @@ def templates_detail(path):
 
 if __name__ == '__main__':
     # path = r'F:/Github/base/files/'
-    path = r'/www/base/files'
-
-    server_uuid = []
-
-    for d0 in sub_dirs(path):
-        for d1 in sub_dirs(os.path.join(path, d0)):
-            for file in files_in_dir(os.path.join(path, d0, d1)):
-                uuid_file = os.path.join(path, d0, d1, '.uuid')
-                if not os.path.exists(uuid_file):
-                    with open(uuid_file, 'w', encoding='utf-8') as f:
-                        f.write(str(uuid.uuid4()))
-                # if file['name'] == '.uuid':
-                #     uuid_file = os.path.join(path, d0, d1, '.uuid')
-                #     with open(uuid_file, "r") as f:
-                #         uuid_str = f.read()
-                #         uuid_obj = uuid.UUID(uuid_str)
-                #         server_uuid.append([d0, d1, uuid_str])
+    # path = r'/www/base/files'
+    #
+    # server_uuid = []
+    #
+    # for d0 in sub_dirs(path):
+    #     for d1 in sub_dirs(os.path.join(path, d0)):
+    #         for file in files_in_dir(os.path.join(path, d0, d1)):
+    #             uuid_file = os.path.join(path, d0, d1, '.uuid')
+    #             if not os.path.exists(uuid_file):
+    #                 with open(uuid_file, 'w', encoding='utf-8') as f:
+    #                     f.write(str(uuid.uuid4()))
+    #             if file['name'] == '.uuid':
+    #                 uuid_file = os.path.join(path, d0, d1, '.uuid')
+    #                 with open(uuid_file, "r") as f:
+    #                     uuid_str = f.read()
+    #                     uuid_obj = uuid.UUID(uuid_str)
+    #                     server_uuid.append([d0, d1, uuid_str])
 
     # print(server_uuid)
 
@@ -734,3 +743,7 @@ if __name__ == '__main__':
     #     print("文件内容一致")
     # else:
     #     print("文件内容不一致")
+
+    project_path = 'F:\\Github\\base\\files\\abaqus\\1'
+    job_path = 'F:\\Github\\base\\files\\abaqus\\1\\4'
+    print(check_project_job_files(project_path, job_path))

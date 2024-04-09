@@ -9,19 +9,16 @@ import subprocess
 import time
 import uuid
 
-from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request,
-                   send_from_directory, url_for)
+from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.abaqus import (JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm,
-                               FigureSettingFrom, OdbForm)
+from base.forms.abaqus import (JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm, FigureSettingFrom, OdbForm)
 from base.global_var import event_source
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Solver import Solver
 from base.utils.common import make_dir, dump_json, load_json
-from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status,
-                                   get_template_status, project_jobs_detail, projects_detail, templates_detail,
-                                   sub_dirs_int)
+from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status, get_template_status, project_jobs_detail,
+                                   projects_detail, templates_detail, sub_dirs_int, sub_dirs)
 from base.utils.events_new import update_events_new
 from base.utils.make_gif import make_gif
 from base.utils.read_prescan import read_prescan
@@ -84,8 +81,7 @@ def create_job(project_id):
         dump_json(msg_file, message)
         files = files_in_dir(project_path)
         for file in files:
-            shutil.copy(os.path.join(project_path, file['name']),
-                        os.path.join(job_path, file['name']))
+            shutil.copy(os.path.join(project_path, file['name']), os.path.join(job_path, file['name']))
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
 
     msg_file = os.path.join(project_path, '.project_msg')
@@ -295,6 +291,21 @@ def delete_project(project_id):
     else:
         flash('ABAQUS项目%s不存在。' % project_id, 'warning')
     return redirect(url_for('.manage_projects'))
+
+
+@abaqus_bp.route('/synchronize_project_file/<int:project_id>/<path:filename>')
+@login_required
+def synchronize_project_file(project_id, filename):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    project_path = os.path.join(abaqus_path, str(project_id))
+    file = os.path.join(abaqus_path, str(project_id), str(filename))
+    if os.path.exists(file):
+        for job_path in sub_dirs(project_path):
+            shutil.copy(os.path.join(project_path, filename), os.path.join(project_path, job_path, filename))
+        flash('文件%s已经同步至所有算例。' % filename, 'success')
+    else:
+        flash('文件%s不存在。' % filename, 'warning')
+    return redirect(request.referrer or url_for('.view_project', project_id=project_id))
 
 
 @abaqus_bp.route('/delete_job/<int:project_id>/<int:job_id>')

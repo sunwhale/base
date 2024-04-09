@@ -2,7 +2,7 @@
 """
 
 """
-from flask import (Blueprint, jsonify, redirect, render_template, url_for)
+from flask import (Blueprint, jsonify, redirect, render_template, url_for, flash)
 from flask_login import login_required
 
 from base.global_var import event_manager
@@ -40,4 +40,15 @@ def start():
 @login_required
 def stop():
     event_manager.stop()
+    return redirect(url_for('.view_queue'))
+
+
+@queue_bp.route('/clear', methods=['GET', 'POST'])
+@login_required
+def clear():
+    if not event_manager.get_active():
+        event_manager.clear()
+        flash('队列重置成功！', 'success')
+    else:
+        flash('队列正在运行中，请先暂停队列！', 'warning')
     return redirect(url_for('.view_queue'))

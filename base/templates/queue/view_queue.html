@@ -36,6 +36,7 @@
                     {% else %}
                     <a href="{{ url_for('queue.start') }}" class="btn btn-success"><i class="fa fa-play"></i> <strong>开始</strong></a>
                     {% endif %}
+                    <a onclick="return confirm('确定重置队列？未完成的进程可能会失去监督！')" href="{{ url_for('queue.clear') }}" class="btn btn-primary"><i class="fa fa-sync"></i> <strong>重置队列</strong></a>
                     <p></p>
                     <table class="table table-sm">
                       <thead>
