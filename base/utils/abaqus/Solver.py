@@ -295,6 +295,10 @@ class Solver:
         elif 'Run standard' in logs and solver_status != 'Stopping':
             solver_status = 'Running'
 
+        run_logs = self.get_run_log()
+        if '不是' in run_logs:
+            solver_status = 'Stopped'
+
         # 如果发生异常，则赋予默认值'Setting'
         if solver_status not in ['Setting', 'Submitting', 'Running', 'Stopping', 'Stopped', 'Completed']:
             solver_status = 'Setting'

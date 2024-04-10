@@ -447,14 +447,20 @@ def terminate_job(project_id, job_id):
         with open(os.path.join(job_path, '.pid'), 'r', encoding='utf-8') as f:
             pid = int(f.read())
 
-        print(current_app.config['PYFEM_PROC_DICT'])
         proc = current_app.config['PYFEM_PROC_DICT'][f'{project_id}{job_id}']
-        print(proc)
-        # proc.terminate()
-        import signal
-        os.kill(pid, signal.SIGTERM)
-        # with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
-        #     f.write('Stopping')
+
+        if current_app.config['IS_WIN']:
+            cmd = 'taskkill /t /f /pid {}'.format(pid)
+            print(cmd)
+            os.system(cmd)
+            with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
+                f.write('Stopped')
+            with open(os.path.join(job_path, '{}.log'.format(s.job)), 'a', encoding='utf-8') as f:
+                f.write('EXITED')
+        else:
+            import signal
+            os.kill(pid, signal.SIGTERM)
+
         return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
     else:
         abort(404)

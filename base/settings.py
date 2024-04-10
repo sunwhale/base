@@ -58,6 +58,7 @@ class BaseConfig:
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = ('Base Admin', MAIL_USERNAME)
 
+    IS_WIN = WIN
     WTF_I18N_ENABLED = False
 
 
