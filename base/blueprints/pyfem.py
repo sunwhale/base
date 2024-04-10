@@ -15,7 +15,7 @@ from base.forms.pyfem import (JobForm, ParameterForm, ProjectForm, ImportTemplat
 from base.global_var import event_source
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, get_job_status, get_project_status, project_jobs_detail, projects_detail, templates_detail,
-                                   sub_dirs_int)
+                                   sub_dirs_int, sub_dirs)
 from base.utils.events_new import update_events_new
 from base.utils.pyfem.Solver import Solver
 
@@ -255,6 +255,21 @@ def delete_project_file(project_id, filename):
     else:
         flash('文件%s不存在。' % filename, 'warning')
     return redirect(url_for('.view_project', project_id=project_id))
+
+
+@pyfem_bp.route('/synchronize_project_file/<int:project_id>/<path:filename>')
+@login_required
+def synchronize_project_file(project_id, filename):
+    pyfem_path = current_app.config['PYFEM_PATH']
+    project_path = os.path.join(pyfem_path, str(project_id))
+    file = os.path.join(pyfem_path, str(project_id), str(filename))
+    if os.path.exists(file):
+        for job_path in sub_dirs(project_path):
+            shutil.copy(os.path.join(project_path, filename), os.path.join(project_path, job_path, filename))
+        flash('文件%s已经同步至所有算例。' % filename, 'success')
+    else:
+        flash('文件%s不存在。' % filename, 'warning')
+    return redirect(request.referrer or url_for('.view_project', project_id=project_id))
 
 
 @pyfem_bp.route('/create_job/<int:project_id>', methods=['GET', 'POST'])

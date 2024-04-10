@@ -41,7 +41,7 @@ def open_viewer():
 def show_help():
     active_window = webview.active_window()
     if active_window:
-        active_window.create_confirmation_dialog('关于 Base', '程序版本：0.1.5\nJingyu Sun © 2020-2023')
+        active_window.create_confirmation_dialog('关于 Base', '程序版本：0.1.5\nJingyu Sun © 2020-2024')
 
 
 def is_admin():

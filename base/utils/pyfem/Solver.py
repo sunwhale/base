@@ -8,6 +8,7 @@ import os
 import subprocess
 import threading
 import chardet
+import signal
 
 from base.settings import ABAQUS, ABAQUS_FORTRAN
 
@@ -116,6 +117,7 @@ class Solver:
             cmd = f'pyfem -i {self.job}.toml'
         else:
             cmd = f'C:\\Users\\SunJingyu\\.conda\\envs\\pyfem311\\python.exe F:\\GitHub\\pyfem\\app.py -i {self.job}.toml'
+        print(cmd)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path)
         logfile = 'run.log'
         thread = threading.Thread(target=write_log, args=(proc, logfile))
@@ -128,6 +130,7 @@ class Solver:
             '*.pvd',
             '*.log',
             '*.vtu',
+            '*.sta',
         ]
         for ext in exts:
             remove_files(self.path, ext)
@@ -135,10 +138,11 @@ class Solver:
         remove_files(self.path, '{}.odb'.format(self.job))
         remove_files(self.path, '{}.npz'.format(self.job))
 
-    def terminate(self):
+    def terminate(self, proc):
         os.chdir(self.path)
-        cmd = '%s terminate job=%s' % (ABAQUS, self.job)
-        proc = subprocess.Popen(cmd, shell=True)
+        proc.terminate()
+        proc.wait()
+        os.killpg(proc.pid, signal.SIGTERM)
         return proc
 
     def suspend(self):
@@ -275,6 +279,10 @@ class Solver:
             solver_status = 'Stopped'
         elif 'RUNNING' in logs and solver_status != 'Stopping':
             solver_status = 'Running'
+
+        run_logs = self.get_run_log()
+        if 'Error' in run_logs:
+            solver_status = 'Stopped'
 
         # 如果发生异常，则赋予默认值'Setting'
         if solver_status not in ['Setting', 'Submitting', 'Running', 'Stopping', 'Stopped', 'Completed']:
