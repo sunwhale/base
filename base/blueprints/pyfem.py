@@ -474,7 +474,11 @@ def terminate_job(project_id, job_id):
                 f.write('EXITED')
         else:
             import signal
-            os.kill(pid, signal.SIGTERM)
+            os.killpg(pid, signal.SIGTERM)
+            with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
+                f.write('Stopped')
+            with open(os.path.join(job_path, '{}.log'.format(s.job)), 'a', encoding='utf-8') as f:
+                f.write('EXITED')
 
         return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
     else:

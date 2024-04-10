@@ -5,12 +5,16 @@
 import glob
 import json
 import os
-import subprocess
-import threading
-import chardet
 import signal
+import subprocess
+import sys
+import threading
 
-from base.settings import ABAQUS, ABAQUS_FORTRAN
+import chardet
+
+from base.settings import ABAQUS
+
+WIN = sys.platform.startswith('win')
 
 
 def files(curr_dir='.', ext='*.txt'):
@@ -118,7 +122,10 @@ class Solver:
         else:
             cmd = f'C:\\Users\\SunJingyu\\.conda\\envs\\pyfem311\\python.exe F:\\GitHub\\pyfem\\app.py -i {self.job}.toml'
         print(cmd)
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path)
+        if WIN:
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path)
+        else:
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path, preexec_fn=os.setsid)
         logfile = 'run.log'
         thread = threading.Thread(target=write_log, args=(proc, logfile))
         thread.start()
@@ -138,12 +145,9 @@ class Solver:
         remove_files(self.path, '{}.odb'.format(self.job))
         remove_files(self.path, '{}.npz'.format(self.job))
 
-    def terminate(self, proc):
+    def terminate(self, pid):
         os.chdir(self.path)
-        proc.terminate()
-        proc.wait()
-        os.killpg(proc.pid, signal.SIGTERM)
-        return proc
+        os.killpg(pid, signal.SIGTERM)
 
     def suspend(self):
         os.chdir(self.path)
