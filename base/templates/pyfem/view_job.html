@@ -248,6 +248,12 @@
     textarea.scrollTop = textarea.scrollHeight; // 滚动到最底部
   }
 
+  function updateRunLog(run_logs) {
+    const textarea = document.getElementById('textarea_run_log');
+    textarea.value = run_logs;
+    textarea.scrollTop = textarea.scrollHeight; // 滚动到最底部
+  }
+
   function updateSta(sta) {
     const tableBody = document.getElementById('table_sta_body');
     const newData = sta.filter(row => !lastStaData.some(lastRow => JSON.stringify(lastRow) === JSON.stringify(row))); // 只保留新数据
@@ -292,33 +298,40 @@
       const html1 = "<a href=\"{{ url_for('viewer.index') }}?url={{ url_for('pyfem.get_job_file', project_id=project_id, job_id=job_id, filename='0000', _external=True) }}\">查看</a>"
       const html2 = "<a href=\"{{ url_for('pyfem.get_job_file', project_id=project_id, job_id=job_id, filename='0000') }}\" target=\"_blank\">下载</a>"
       const html3 = "<a onclick=\"return confirm('确定删除文件？')\" href=\"{{ url_for('pyfem.delete_job_file', project_id=project_id, job_id=job_id, filename='0000') }}\">删除</a>"
-      const html = html1 + " | " + html2 + " | " + html3
-      td4.innerHTML = html.replace('0000', row['name']);
+      td4.innerHTML = html1.replace('0000', row['name']) + " | " + html2.replace('0000', row['name']) + " | " + html3.replace('0000', row['name']);
       tr.appendChild(td4);
 
       tableBody.appendChild(tr);
     });
   }
 
+  let isUpdate = true
+
   function updateStatus() {
-    fetch("{{ url_for('pyfem.job_status', project_id=project_id, job_id=job_id) }}")
-      .then(response => response.json())
-      .then(data => {
-        if (data['logs'] !== lastData['logs']) {
-          updateButtons(data["solver_status"])
-          updateLog(data['logs'])
-          updateSta(data["sta"])
-          updateFiles(data["files"])
-          updateTextSolverStatus(data["solver_status"])
-        }
-        lastData = data;
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
+    if (isUpdate === true) {
+      fetch("{{ url_for('pyfem.job_status', project_id=project_id, job_id=job_id) }}")
+        .then(response => response.json())
+        .then(data => {
+          if (data["solver_status"] === 'Stopped' || data["solver_status"] === 'Completed') {
+            isUpdate = false;
+          }
+          if (data['sta'] !== lastData['sta'] || data['log'] !== lastData['log'] || data['run_logs'] !== lastData['run_logs']) {
+            updateButtons(data["solver_status"])
+            updateLog(data['logs'])
+            updateRunLog(data['run_logs'])
+            updateSta(data["sta"])
+            updateFiles(data["files"])
+            updateTextSolverStatus(data["solver_status"])
+          }
+          lastData = data;
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
   }
 
-  // updateStatus()
+  updateStatus()
   setInterval(updateStatus, 5000);
 
   document.getElementById('pyfem').className = 'nav-item menu-open'
