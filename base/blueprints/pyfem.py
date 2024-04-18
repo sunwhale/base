@@ -485,6 +485,21 @@ def terminate_job(project_id, job_id):
         abort(404)
 
 
+@pyfem_bp.route('/reset_job/<int:project_id>/<int:job_id>')
+@login_required
+def reset_job(project_id, job_id):
+    pyfem_path = current_app.config['PYFEM_PATH']
+    job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
+    if os.path.exists(job_path):
+        s = Solver(job_path)
+        s.read_msg()
+        s.clear()
+        flash('项目文件重置成功。', 'success')
+        return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
+    else:
+        abort(404)
+
+
 @pyfem_bp.route('/get_job_file/<int:project_id>/<int:job_id>/<path:filename>')
 @login_required
 def get_job_file(project_id, job_id, filename):

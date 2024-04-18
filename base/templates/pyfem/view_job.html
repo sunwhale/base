@@ -67,6 +67,9 @@
                     <a id="terminateLink" href="{{ url_for('pyfem.terminate_job', project_id=project_id, job_id=job_id) }}" class="btn btn-danger"><strong>终
                       止</strong></a>
 
+                    <button id="resetBtn" class="btn btn-secondary" disabled><strong>重 置</strong></button>
+                    <a id="resetLink" href="{{ url_for('pyfem.reset_job', project_id=project_id, job_id=job_id) }}" class="btn btn-info"><strong>重 置</strong></a>
+
                   </div>
                 </div>
               </div>
@@ -208,6 +211,8 @@
     const continueLink = document.getElementById('continueLink');
     const terminateBtn = document.getElementById('terminateBtn');
     const terminateLink = document.getElementById('terminateLink');
+    const resetBtn = document.getElementById('resetBtn');
+    const resetLink = document.getElementById('resetLink');
 
     if (solverStatus === 'Submitting' || solverStatus === 'Running' || solverStatus === 'Pause' || solverStatus === 'Stopping') {
       calculateBtn.style.display = 'inline';
@@ -239,6 +244,14 @@
     } else {
       terminateBtn.style.display = 'inline';
       terminateLink.style.display = 'none';
+    }
+
+    if (solverStatus === 'Completed' || solverStatus === 'Stopped' || solverStatus === 'Setting') {
+      resetBtn.style.display = 'none';
+      resetLink.style.display = 'inline';
+    } else {
+      resetBtn.style.display = 'inline';
+      resetLink.style.display = 'none';
     }
   }
 

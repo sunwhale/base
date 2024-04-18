@@ -138,6 +138,7 @@ class Solver:
             '*.log',
             '*.vtu',
             '*.sta',
+            '*.lck',
         ]
         for ext in exts:
             remove_files(self.path, ext)
