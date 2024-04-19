@@ -151,57 +151,11 @@ def view_project(project_id):
                     if os.path.exists(job_path):
                         s = Solver(job_path)
                         s.read_msg()
-                        job = {'type': 'Solver',
+                        job = {'type': 'PyfemSolver',
                                'project_id': project_id,
                                'job_id': job_id,
                                'job_path': job_path,
                                'cpus': s.cpus,
-                               'time': time.strftime('%Y-%m-%d %H:%M:%S'),
-                               'status': 'Submitting'}
-                        new_jobs.append(job)
-                        event_type = job['type']
-                        event_dict = job
-                        event_source.set_event(event_type, event_dict)
-                        event_source.send_event()
-            elif queue_type == 'odb_to_npz':
-                for job_id in queue_list:
-                    job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
-                    if os.path.exists(job_path):
-                        job = {'type': 'odb_to_npz',
-                               'project_id': project_id,
-                               'job_id': job_id,
-                               'job_path': job_path,
-                               'cpus': 1,
-                               'time': time.strftime('%Y-%m-%d %H:%M:%S'),
-                               'status': 'Submitting'}
-                        new_jobs.append(job)
-                        event_type = job['type']
-                        event_dict = job
-                        event_source.set_event(event_type, event_dict)
-                        event_source.send_event()
-            elif queue_type == 'All':
-                for job_id in queue_list:
-                    job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
-                    if os.path.exists(job_path):
-                        s = Solver(job_path)
-                        s.read_msg()
-                        job = {'type': 'Solver',
-                               'project_id': project_id,
-                               'job_id': job_id,
-                               'job_path': job_path,
-                               'cpus': s.cpus,
-                               'time': time.strftime('%Y-%m-%d %H:%M:%S'),
-                               'status': 'Submitting'}
-                        new_jobs.append(job)
-                        event_type = job['type']
-                        event_dict = job
-                        event_source.set_event(event_type, event_dict)
-                        event_source.send_event()
-                        job = {'type': 'odb_to_npz',
-                               'project_id': project_id,
-                               'job_id': job_id,
-                               'job_path': job_path,
-                               'cpus': 1,
                                'time': time.strftime('%Y-%m-%d %H:%M:%S'),
                                'status': 'Submitting'}
                         new_jobs.append(job)

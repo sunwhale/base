@@ -286,7 +286,7 @@ class Solver:
             solver_status = 'Running'
 
         run_logs = self.get_run_log()
-        if 'Error' in run_logs:
+        if 'Error' in run_logs or '找不到' in run_logs:
             solver_status = 'Stopped'
 
         # 如果发生异常，则赋予默认值'Setting'
