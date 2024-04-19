@@ -282,7 +282,7 @@ class Solver:
             solver_status = 'Completed'
         elif 'EXITED' in logs:
             solver_status = 'Stopped'
-        elif 'RUNNING' in logs and solver_status != 'Stopping':
+        elif 'INITIATED' in logs and solver_status != 'Stopping':
             solver_status = 'Running'
 
         run_logs = self.get_run_log()

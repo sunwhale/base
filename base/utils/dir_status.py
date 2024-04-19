@@ -501,6 +501,8 @@ def get_job_status(path, project_id, job_id):
         odb_file = os.path.join(path, str(project_id), str(job_id), '%s.odb' % job_name)
         npz_file = os.path.join(path, str(project_id), str(job_id), '%s.npz' % job_name)
         toml_file = os.path.join(path, str(project_id), str(job_id), '%s.toml' % job_name)
+        pvd_file = os.path.join(path, str(project_id), str(job_id), '%s.pvd' % job_name)
+        vtu_file = os.path.join(path, str(project_id), str(job_id), '%s-1.vtu' % job_name)
         status['job'] = message['job']
         status['user'] = message['user']
         status['cpus'] = message['cpus']
@@ -512,6 +514,10 @@ def get_job_status(path, project_id, job_id):
             status['inp_size'] = file_size(toml_file)
         status['odb_time'] = file_time(odb_file)
         status['odb_size'] = file_size(odb_file)
+        status['pvd_time'] = file_time(pvd_file)
+        status['pvd_size'] = file_size(pvd_file)
+        status['vtu_time'] = file_time(vtu_file)
+        status['vtu_size'] = file_size(vtu_file)
         status['npz_time'] = file_time(npz_file)
         status['npz_size'] = file_size(npz_file)
         status['solver_status'] = solver_status
@@ -558,6 +564,24 @@ def get_job_status(path, project_id, job_id):
         else:
             button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>导出</button> "
         status['operation'] = button
+
+        button = ""
+        button += "<a class='btn btn-primary btn-sm' href='%s'>查看</a> " % (
+                '../view_job/' + str(project_id) + '/' + str(job_id))
+        button += "<a class='btn btn-primary btn-sm' onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a> " % (
+                '../delete_job/' + str(project_id) + '/' + str(job_id))
+        if solver_status == 'Submitting' or solver_status == 'Running' or solver_status == 'Pause' or solver_status == 'Stopping':
+            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>计算</button> "
+        else:
+            button += "<a href='%s' class='btn btn-success btn-sm'>计算</a> " % (
+                    '../run_job/' + str(project_id) + '/' + str(job_id))
+        if solver_status == 'Running':
+            button += "<a href='%s' class='btn btn-danger btn-sm'>终止</a> " % (
+                    '../terminate_job/' + str(project_id) + '/' + str(job_id))
+        else:
+            button += "<button class='btn btn-secondary btn-sm' disabled='disabled'>终止</button> "
+        status['operation_pyfem'] = button
+
     except FileNotFoundError:
         for key in ['job', 'user', 'cpus']:
             status[key] = 'None'

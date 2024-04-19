@@ -155,14 +155,12 @@
                         <th>{{ parameter }}</th>
                         {% endfor %}
                         <th>toml 时间</th>
-                        <th>toml 大小</th>
-                        <th>odb 时间</th>
-                        <th>odb 大小</th>
-                        <th>npz 时间</th>
-                        <th>npz 大小</th>
+                        <th>vtu 时间</th>
+                        <th>vtu 大小</th>
+                        <th>pvd 时间</th>
                         <th>求解状态</th>
                         <th>同步</th>
-                        <th width=150px>操作</th>
+                        <th width=180px>操作</th>
                       </tr>
                     </thead>
                   </table>
@@ -228,14 +226,12 @@
         { data: '{{ parameter }}' },
         {% endfor %}
         { data: 'inp_time' },
-        { data: 'inp_size' },
-        { data: 'odb_time' },
-        { data: 'odb_size' },
-        { data: 'npz_time' },
-        { data: 'npz_size' },
+        { data: 'vtu_time' },
+        { data: 'vtu_size' },
+        { data: 'pvd_time' },
         { data: 'solver_status' },
         { data: 'sync' },
-        { data: 'operation' },
+        { data: 'operation_pyfem' },
       ],
     });
 

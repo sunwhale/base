@@ -57,11 +57,11 @@
                     <a id="calculateLink" href="{{ url_for('pyfem.run_job', project_id=project_id, job_id=job_id) }}" class="btn btn-success"><strong>计
                       算</strong></a>
 
-                    <button id="pauseBtn" class="btn btn-secondary" disabled><strong>暂 停</strong></button>
-                    <a id="pauseLink" href="#" class="btn btn-warning"><strong>暂 停</strong></a>
+<!--                    <button id="pauseBtn" class="btn btn-secondary" disabled><strong>暂 停</strong></button>-->
+<!--                    <a id="pauseLink" href="#" class="btn btn-warning"><strong>暂 停</strong></a>-->
 
-                    <button id="continueBtn" class="btn btn-secondary" disabled><strong>继 续</strong></button>
-                    <a id="continueLink" href="#" class="btn btn-info"><strong>继 续</strong></a>
+<!--                    <button id="continueBtn" class="btn btn-secondary" disabled><strong>继 续</strong></button>-->
+<!--                    <a id="continueLink" href="#" class="btn btn-info"><strong>继 续</strong></a>-->
 
                     <button id="terminateBtn" class="btn btn-secondary" disabled><strong>终 止</strong></button>
                     <a id="terminateLink" href="{{ url_for('pyfem.terminate_job', project_id=project_id, job_id=job_id) }}" class="btn btn-danger"><strong>终
@@ -205,10 +205,10 @@
   function updateButtons(solverStatus) {
     const calculateBtn = document.getElementById('calculateBtn');
     const calculateLink = document.getElementById('calculateLink');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const pauseLink = document.getElementById('pauseLink');
-    const continueBtn = document.getElementById('continueBtn');
-    const continueLink = document.getElementById('continueLink');
+    // const pauseBtn = document.getElementById('pauseBtn');
+    // const pauseLink = document.getElementById('pauseLink');
+    // const continueBtn = document.getElementById('continueBtn');
+    // const continueLink = document.getElementById('continueLink');
     const terminateBtn = document.getElementById('terminateBtn');
     const terminateLink = document.getElementById('terminateLink');
     const resetBtn = document.getElementById('resetBtn');
@@ -222,21 +222,21 @@
       calculateLink.style.display = 'inline';
     }
 
-    if (solverStatus === 'Running') {
-      pauseBtn.style.display = 'none';
-      pauseLink.style.display = 'inline';
-    } else {
-      pauseBtn.style.display = 'inline';
-      pauseLink.style.display = 'none';
-    }
-
-    if (solverStatus === 'Pause') {
-      continueBtn.style.display = 'none';
-      continueLink.style.display = 'inline';
-    } else {
-      continueBtn.style.display = 'inline';
-      continueLink.style.display = 'none';
-    }
+    // if (solverStatus === 'Running') {
+    //   pauseBtn.style.display = 'none';
+    //   pauseLink.style.display = 'inline';
+    // } else {
+    //   pauseBtn.style.display = 'inline';
+    //   pauseLink.style.display = 'none';
+    // }
+    //
+    // if (solverStatus === 'Pause') {
+    //   continueBtn.style.display = 'none';
+    //   continueLink.style.display = 'inline';
+    // } else {
+    //   continueBtn.style.display = 'inline';
+    //   continueLink.style.display = 'none';
+    // }
 
     if (solverStatus === 'Running') {
       terminateBtn.style.display = 'none';

@@ -448,6 +448,8 @@ def reset_job(project_id, job_id):
         s = Solver(job_path)
         s.read_msg()
         s.clear()
+        with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
+            f.write('Setting')
         flash('项目文件重置成功。', 'success')
         return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
     else:
