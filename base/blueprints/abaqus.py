@@ -206,7 +206,7 @@ def view_project(project_id):
                     if os.path.exists(job_path):
                         s = Solver(job_path)
                         s.read_msg()
-                        job = {'type': 'Solver',
+                        job = {'type': 'AbaqusSolver',
                                'project_id': project_id,
                                'job_id': job_id,
                                'job_path': job_path,
@@ -240,7 +240,7 @@ def view_project(project_id):
                     if os.path.exists(job_path):
                         s = Solver(job_path)
                         s.read_msg()
-                        job = {'type': 'Solver',
+                        job = {'type': 'AbaqusSolver',
                                'project_id': project_id,
                                'job_id': job_id,
                                'job_path': job_path,

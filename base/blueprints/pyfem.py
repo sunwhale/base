@@ -500,6 +500,35 @@ def reset_job(project_id, job_id):
         abort(404)
 
 
+@pyfem_bp.route('/join_job/<int:project_id>/<int:job_id>')
+@login_required
+def join_job(project_id, job_id):
+    pyfem_path = current_app.config['PYFEM_PATH']
+    job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
+    new_jobs = []
+    if os.path.exists(job_path):
+        s = Solver(job_path)
+        s.read_msg()
+        job = {'type': 'PyfemSolver',
+               'project_id': project_id,
+               'job_id': job_id,
+               'job_path': job_path,
+               'cpus': s.cpus,
+               'time': time.strftime('%Y-%m-%d %H:%M:%S'),
+               'status': 'Submitting'}
+        new_jobs.append(job)
+        event_type = job['type']
+        event_dict = job
+        event_source.set_event(event_type, event_dict)
+        event_source.send_event()
+        make_dir(current_app.config['QUEUE_PATH'])
+        update_events_new(new_jobs, current_app.config['EVENTS_NEW'])
+        flash('选中的算例已经提交到计算队列。', 'success')
+        return redirect(url_for('queue.view_queue'))
+    else:
+        abort(404)
+
+
 @pyfem_bp.route('/get_job_file/<int:project_id>/<int:job_id>/<path:filename>')
 @login_required
 def get_job_file(project_id, job_id, filename):

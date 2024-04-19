@@ -2,13 +2,15 @@
 """
 
 """
-from base.utils.events_manager import EventManager, SolverListener, PostprocListener, EventSource
+from base.utils.events_manager import EventManager, AbaqusSolverListener, AbaqusPostprocListener, EventSource, PyfemSolverListener
 
-solver_listener = SolverListener('Solver')
-postproc_listener = PostprocListener('Postproc')
+abaqus_solver_listener = AbaqusSolverListener('AbaqusSolver')
+abaqus_postproc_listener = AbaqusPostprocListener('AbaqusPostproc')
+pyfem_solver_listener = PyfemSolverListener('PyfemSolver')
 event_manager = EventManager()
-event_manager.add_event_listener('Solver', solver_listener.handler)
-event_manager.add_event_listener('odb_to_npz', postproc_listener.handler)
+event_manager.add_event_listener('AbaqusSolver', abaqus_solver_listener.handler)
+event_manager.add_event_listener('odb_to_npz', abaqus_postproc_listener.handler)
+event_manager.add_event_listener('PyfemSolver', pyfem_solver_listener.handler)
 event_source = EventSource(event_manager)
 
 exporting_threads = {}

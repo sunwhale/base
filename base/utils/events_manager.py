@@ -12,8 +12,9 @@ from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
 from base.settings import MAX_CPUS
-from base.utils.abaqus.Postproc import Postproc
-from base.utils.abaqus.Solver import Solver
+from base.utils.abaqus.Postproc import Postproc as AbaqusPostproc
+from base.utils.abaqus.Solver import Solver as AbaqusSolver
+from base.utils.pyfem.Solver import Solver as PyfemSolver
 from base.utils.events_new import get_events_new
 
 
@@ -114,8 +115,8 @@ class EventManager:
     def __update_running_status(self):
         """更新当前运行事件的状态"""
         for event in self.__events_running:
-            if event.event_type == 'Solver':
-                s = Solver(event.dict['job_path'])
+            if event.event_type == 'AbaqusSolver':
+                s = AbaqusSolver(event.dict['job_path'])
                 event.dict['status'] = s.solver_status()
                 if s.is_done():
                     event.dict['time'] = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -123,9 +124,17 @@ class EventManager:
                     self.__events_done.append(event)
                     self.__used_cpus -= int(event.dict['cpus'])
             if event.event_type == 'odb_to_npz':
-                p = Postproc(event.dict['job_path'])
+                p = AbaqusPostproc(event.dict['job_path'])
                 event.dict['status'] = p.odb_to_npz_status()
                 if p.is_odb_to_npz_done():
+                    event.dict['time'] = time.strftime('%Y-%m-%d %H:%M:%S')
+                    self.__events_running.remove(event)
+                    self.__events_done.append(event)
+                    self.__used_cpus -= int(event.dict['cpus'])
+            if event.event_type == 'PyfemSolver':
+                s = PyfemSolver(event.dict['job_path'])
+                event.dict['status'] = s.solver_status()
+                if s.is_done():
                     event.dict['time'] = time.strftime('%Y-%m-%d %H:%M:%S')
                     self.__events_running.remove(event)
                     self.__events_done.append(event)
@@ -269,7 +278,7 @@ class EventSource:
         self.__event_manager.send_event(event)
 
 
-class SolverListener:
+class AbaqusSolverListener:
     """
     监听器
     """
@@ -284,7 +293,7 @@ class SolverListener:
         is_reload = False
         job_path = event.dict['job_path']
         if os.path.exists(job_path):
-            s = Solver(job_path)
+            s = AbaqusSolver(job_path)
             s.read_msg()
             s.clear()
             if s.check_files():
@@ -298,7 +307,7 @@ class SolverListener:
         return is_reload
 
 
-class PostprocListener:
+class AbaqusPostprocListener:
     """
     监听器
     """
@@ -313,8 +322,8 @@ class PostprocListener:
         is_reload = False
         job_path = event.dict['job_path']
         if os.path.exists(job_path):
-            p = Postproc(job_path)
-            s = Solver(job_path)
+            p = AbaqusPostproc(job_path)
+            s = AbaqusSolver(job_path)
             if p.check_setting_files():
                 if s.is_done():
                     if p.has_odb():
@@ -334,6 +343,35 @@ class PostprocListener:
                     is_reload = True
             else:
                 print('缺少odb_to_npz.json配置文件。', 'warning')
+        else:
+            print('不存在目录%s。' % job_path, 'warning')
+        return is_reload
+
+
+class PyfemSolverListener:
+    """
+    监听器
+    """
+
+    def __init__(self, username):
+        self.__username = username
+
+    # 监听器的处理函数
+    def handler(self, event):
+        print(u'%s 收到新事件' % self.__username)
+        print(u'事件内容：%s' % event.dict)
+        is_reload = False
+        job_path = event.dict['job_path']
+        if os.path.exists(job_path):
+            s = PyfemSolver(job_path)
+            s.read_msg()
+            s.clear()
+            if s.check_files():
+                proc = s.run()
+                with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
+                    f.write('Submitting')
+            else:
+                print('缺少必要的计算文件。', 'warning')
         else:
             print('不存在目录%s。' % job_path, 'warning')
         return is_reload
@@ -366,14 +404,14 @@ class StatusEventHandler(FileSystemEventHandler):
 
 def monitor(path, f_new, f_in_queue, f_running):
     # 1.实例化『监听器』
-    solver_listener = SolverListener('Solver')
+    solver_listener = AbaqusSolverListener('AbaqusSolver')
 
     # 2.实例化『事件管理器』
     event_manager = EventManager()
     event_manager.set_filename(f_in_queue, f_running)
 
     # 3.绑定『事件』和『监听器响应函数』
-    event_manager.add_event_listener('Solver', solver_listener.handler)
+    event_manager.add_event_listener('AbaqusSolver', solver_listener.handler)
 
     # 4.启动『事件管理器』
     # 4.1 这里会启动一个新的事件处理线程，一直监听下去，可以看__run()中while循环；
