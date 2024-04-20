@@ -97,7 +97,7 @@
                           <td> {{ file['name'] }} </td>
                           <td> {{ file['time'] }} </td>
                           <td> {{ file['size'] }} </td>
-                          <td> <a href="{{ url_for('pyfem.get_project_file', project_id=project_id, filename=file['name']) }}" target="_blank">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('pyfem.delete_project_file', project_id=project_id, filename=file['name']) }}">删除</a> | <a onclick="return confirm('确定将文件同步至所有算例？')" href="{{ url_for('pyfem.synchronize_project_file', project_id=project_id, filename=file['name']) }}">同步</a> </td>
+                          <td> <a href="{{ url_for('pyfem.get_project_file', project_id=project_id, filename=file['name']) }}" target="_blank">下载</a> | <a href="{{ url_for('tools.code')}}?url={{ url_for('pyfem.get_project_file', project_id=project_id, filename=file['name'], _external=True) }}" target="_blank">编辑</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('pyfem.delete_project_file', project_id=project_id, filename=file['name']) }}">删除</a> | <a onclick="return confirm('确定将文件同步至所有算例？')" href="{{ url_for('pyfem.synchronize_project_file', project_id=project_id, filename=file['name']) }}">同步</a> </td>
                         </tr>
                         {% endfor %}
                       </tbody>

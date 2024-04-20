@@ -2,8 +2,11 @@
 """
 
 """
-from flask import Blueprint, render_template, request, jsonify
+import os
+
+from flask import current_app, Blueprint, render_template, request, jsonify
 from flask_login import login_required
+
 from base.extensions import csrf
 
 tools_bp = Blueprint('tools', __name__)
@@ -22,13 +25,36 @@ def code():
 
 
 @csrf.exempt
-@tools_bp.route('/code_save', methods=['POST'])
-def code_save():
+@tools_bp.route('/code_save/<path:url>', methods=['POST'])
+def code_save(url):
+    if 'pyfem/get_job_file/' in url:
+        info = url.split('pyfem/get_job_file/')[1].split('/')
+        project_id, job_id, filename = info[0], info[1], info[2]
+        filepath = os.path.join(current_app.config['PYFEM_PATH'], str(project_id), str(job_id), filename)
+    elif 'pyfem/get_project_file/' in url:
+        info = url.split('pyfem/get_project_file/')[1].split('/')
+        project_id, filename = info[0], info[1]
+        filepath = os.path.join(current_app.config['PYFEM_PATH'], str(project_id), filename)
+    elif 'abaqus/get_job_file/' in url:
+        info = url.split('abaqus/get_job_file/')[1].split('/')
+        project_id, job_id, filename = info[0], info[1], info[2]
+        filepath = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(job_id), filename)
+    elif 'abaqus/get_project_file/' in url:
+        info = url.split('abaqus/get_project_file/')[1].split('/')
+        project_id, filename = info[0], info[1]
+        filepath = os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), filename)
+    elif 'abaqus/get_template_file/' in url:
+        info = url.split('abaqus/get_template_file/')[1].split('/')
+        template_id, filename = info[0], info[1]
+        filepath = os.path.join(current_app.config['ABAQUS_TEMPLATE_PATH'], str(template_id), filename)
+    else:
+        return jsonify({'error': 'File not founded'}), 400
+
     data = request.get_json()
     content = data.get('content')
 
     if content:
-        with open('saved_file.txt', 'w') as file:
+        with open(filepath, 'w', encoding='utf-8') as file:
             file.write(content)
         return jsonify({'message': 'File saved successfully'})
     else:
