@@ -492,6 +492,23 @@ def open_job(project_id, job_id):
         abort(404)
 
 
+@abaqus_bp.route('/reset_job/<int:project_id>/<int:job_id>')
+@login_required
+def reset_job(project_id, job_id):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
+    if os.path.exists(job_path):
+        s = Solver(job_path)
+        s.read_msg()
+        s.clear()
+        with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
+            f.write('Setting')
+        flash('项目文件重置成功。', 'success')
+        return redirect(request.referrer or url_for('.view_job', project_id=project_id, job_id=job_id))
+    else:
+        abort(404)
+
+
 @abaqus_bp.route('/open_project/<int:project_id>')
 @login_required
 def open_project(project_id):

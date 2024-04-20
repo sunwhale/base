@@ -1,0 +1,189 @@
+{% extends 'layout.html' %}
+
+{% block title %}文本编辑器{% endblock title %}
+
+{% block pageheader %}文本编辑器{% endblock pageheader %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/theme/darcula.css">
+
+<style>
+  .CodeMirror {
+    height: 100%;
+  }
+</style>
+
+{% endblock css %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主界面</a></li>
+<li class="breadcrumb-item">文本编辑器</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card card-primary">
+              <div class="card-body">
+                <select id="language-select">
+                  <option value="python">Python</option>
+                  <option value="xml">XML/HTML</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="fortran">Fortran</option>
+                  <option value="toml">Toml</option>
+                </select>
+                <button id="saveBtn" class="btn btn-success"><strong>保存</strong></button>
+                <textarea id="code"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+{% endblock content %}
+
+{% block script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/codemirror.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/mode/python/python.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/mode/fortran/fortran.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/mode/toml/toml.min.js"></script>
+
+<script type="text/javascript">
+  document.getElementById("others").className = "nav-item menu-open"
+  document.getElementById("links").className = "nav-link active"
+
+  const languageSelect = document.getElementById("language-select");
+
+  languageSelect.addEventListener("change", function () {
+    const mode = languageSelect.value;
+    editor.setOption("mode", mode);
+  });
+
+  let queryString = window.location.search;
+  let url = '#'
+  if (queryString !== "") {
+    queryString = queryString.split("?")[1];
+    let parameters = new URLSearchParams(queryString);
+    url = parameters.get("url");
+  }
+
+  console.log(url)
+
+  // 初始化 CodeMirror
+  const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+    lineNumbers: true, // 显示行号
+    mode: null, // 设置代码高亮模式
+    theme: "darcula",
+  });
+
+  setModeFromPath(url)
+
+  // 使用 fetch 获取代码内容
+  fetch(url)
+    .then(response => response.text())
+    .then(data => {
+      // 设置代码内容
+      editor.setValue(data);
+    })
+    .catch(error => {
+      console.error('Error loading code:', error);
+    });
+
+  // 注释/取消注释整行函数
+  function toggleLineComment() {
+    const cursor = editor.getCursor();
+    const line = editor.getLine(cursor.line);
+    const mode = editor.getOption("mode");
+    let commentSymbol;
+
+    if (mode === "fortran") {
+      commentSymbol = "!";
+    } else if (mode === "text/x-python") {
+      commentSymbol = "#";
+    } else if (mode === "text/x-toml") {
+      commentSymbol = "#";
+    } else {
+      commentSymbol = "//"; // 默认使用双斜杠作为注释符号
+    }
+
+    editor.operation(function () {
+      if (line.trim().startsWith(commentSymbol)) {
+        editor.replaceRange('', {line: cursor.line, ch: 0}, {line: cursor.line, ch: commentSymbol.length});
+      } else {
+        editor.replaceRange(commentSymbol, {line: cursor.line, ch: 0});
+      }
+    });
+  }
+
+  // 绑定快捷键 Ctrl+/ 到注释/取消注释整行函数
+  let commentState = false;
+  editor.setOption("extraKeys", {
+    "Ctrl-/": function (cm) {
+      if (commentState) {
+        toggleLineComment();
+      } else {
+        commentState = true;
+      }
+    }
+  });
+
+  const saveBtn = document.getElementById('saveBtn');
+
+  saveBtn.addEventListener('click', function () {
+    // 获取编辑器中的内容
+    const content = editor.getValue();
+
+    // saveUrl 是保存文件的服务器端 URL
+    const saveUrl = "{{ url_for('tools.code_save') }}";
+
+    // 发起 HTTP POST 请求将内容发送到服务器
+    fetch(saveUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({content: content}),
+    }).then(response => {
+      console.log(response)
+      if (response.ok) {
+        console.log('File saved successfully.');
+      } else {
+        console.error('Error saving file.');
+      }
+    }).catch(error => {
+      console.error('Error saving file:', error);
+    });
+  });
+
+  function setModeFromPath(url) {
+    let mode;
+    if (url.endsWith(".js")) {
+      mode = "javascript";
+      languageSelect.value = "javascript";
+    } else if (url.endsWith(".py")) {
+      mode = "python";
+      languageSelect.value = "python";
+    } else if (url.endsWith(".xml")) {
+      mode = "xml";
+      languageSelect.value = "xml";
+    } else if (url.endsWith(".for")) {
+      mode = "fortran";
+      languageSelect.value = "fortran";
+    } else if (url.endsWith(".toml")) {
+      mode = "toml";
+      languageSelect.value = "toml";
+    } else {
+      mode = null;
+      languageSelect.value = "null";
+    }
+
+    if (mode) {
+      editor.setOption("mode", mode);
+    }
+  }
+
+</script>
+{% endblock script %}

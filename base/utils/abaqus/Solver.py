@@ -120,6 +120,7 @@ class Solver:
             cmd = '%s job=%s cpus=%s ask=off' % (ABAQUS, self.job, self.cpus)
         else:
             cmd = '%s job=%s user=%s cpus=%s ask=off' % (ABAQUS_FORTRAN, self.job, self.user, self.cpus)
+        print(cmd)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path)
         logfile = 'run.log'
         thread = threading.Thread(target=write_log, args=(proc, logfile))
@@ -146,7 +147,9 @@ class Solver:
             '*.par',
             '*.pes',
             '*.pmg',
-            '*.log'
+            '*.log',
+            'prescan_odb.json',
+            '.prescan_status',
         ]
         for ext in exts:
             remove_files(self.path, ext)
@@ -157,18 +160,21 @@ class Solver:
     def terminate(self):
         os.chdir(self.path)
         cmd = '%s terminate job=%s' % (ABAQUS, self.job)
+        print(cmd)
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
     def suspend(self):
         os.chdir(self.path)
         cmd = '%s suspend job=%s' % (ABAQUS, self.job)
+        print(cmd)
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
     def resume(self):
         os.chdir(self.path)
         cmd = '%s resume job=%s' % (ABAQUS, self.job)
+        print(cmd)
         proc = subprocess.Popen(cmd, shell=True)
         return proc
 
