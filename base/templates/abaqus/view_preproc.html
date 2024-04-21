@@ -1,0 +1,242 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}{{ preproc_id }}号ABAQUS前处理{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+{% endblock css %}
+
+{% block pageheader %}ABAQUS前处理信息{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主界面</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('abaqus.manage_preprocs') }}">ABAQUS前处理管理</a></li>
+<li class="breadcrumb-item active">ABAQUS前处理信息</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-6">
+            <div class="column">
+              <div class="col-12">
+                <div class="card card-primary">
+                  <div class="card-header">
+                    <h3 class="card-title">{{ preproc_id }}号ABAQUS前处理信息</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                        <i class="fas fa-minus"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        <h5 class="text-primary">前处理信息</h5>
+                        <ul class="list-unstyled">
+                          <li> 前处理名称：{{ status['name'] }}</li>
+                          <li> 前处理编号：{{ preproc_id }}</li>
+                          <li> 创建时间：{{ status['preproc_time'] }}</li>
+                          <li> 前处理文件：{{ status['script'] }}</li>
+                          <li> 前处理简介：</li>
+                          <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
+
+                          <a class='btn btn-primary' href="{{ url_for('abaqus.edit_preproc', preproc_id=preproc_id) }}"><strong>编辑信息</strong></a>
+                          {% if env['service'] == 'client' %}
+                          <a href="{{ url_for('abaqus.open_preproc', preproc_id=preproc_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
+                          {% endif %}
+                        </ul>
+                        <h5 class="text-primary">运行控制</h5>
+                        <p class="mb-1" id="text_solver_status">{{ solver_status }}</p>
+                        <p class="mb-1">您可以通过点击下面的按钮开始ABAQUS前处理的运行。
+                        </p>
+
+                        <button id="calculateBtn" class="btn btn-secondary" disabled><strong>开 始</strong></button>
+                        <a id="calculateLink" href="{{ url_for('abaqus.run_preproc', preproc_id=preproc_id) }}" class="btn btn-success"><strong>开 始</strong></a>
+
+                        <button id="resetBtn" class="btn btn-secondary" disabled><strong>重 置</strong></button>
+                        <a id="resetLink" href="#" class="btn btn-info"><strong>重 置</strong></a>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary">
+                  <div class="card-header">
+                    <h3 class="card-title">文件列表</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        <h5 class="text-primary">上传文件</h5>
+                        <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+                          {{ form.csrf_token }}
+                          <div class="form-group">
+                            {{ form.submit }}{{ form.filename }}
+                          </div>
+                        </form>
+                      </div>
+
+                      <div class="col-12">
+                        <table class="table table-sm table-hover">
+                          <thead>
+                          <tr>
+                            <th width=40%>文件名</th>
+                            <th width=30%>修改日期</th>
+                            <th width=10%>大小</th>
+                            <th width=20%>操作</th>
+                          </tr>
+                          </thead>
+                          <tbody id="table_files_body">
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="column">
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header d-flex p-0">
+                    <h3 class="card-title p-3">前处理状态</h3>
+                    <ul class="nav nav-pills ml-auto p-2">
+                      <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">前处理日志 abaqus.rpy</a></li>
+                      <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
+                    </ul>
+                  </div>
+                  <div class="card-body">
+                    <div class="tab-content">
+                      <div class="tab-pane active" id="tab_1">
+                        <textarea id="textarea_log" class="form-control" style="height: 711.5px;"></textarea>
+                      </div>
+                      <div class="tab-pane" id="tab_2">
+                        <textarea id="textarea_run_log" class="form-control" style="height: 711.5px;"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+{% endblock content %}
+
+{% block script %}
+<script type="text/javascript">
+
+  $(document).ready(function () {
+    $('#descript').attr('disabled', true)
+  });
+  
+  document.getElementById('abaqus').className = 'nav-item menu-open'
+
+  let isUpdate = true
+
+  function updateFiles(files) {
+    const tableBody = document.getElementById('table_files_body');
+    tableBody.innerHTML = "";
+    files.forEach(row => {
+      const tr = document.createElement('tr');
+      tr.style.verticalAlign = 'middle';
+      tr.style.textAlign = 'left';
+
+      const td1 = document.createElement('td');
+      td1.textContent = row['name'];
+      tr.appendChild(td1);
+
+      const td2 = document.createElement('td');
+      td2.textContent = row['time'];
+      tr.appendChild(td2);
+
+      const td3 = document.createElement('td');
+      td3.textContent = row['size'];
+      tr.appendChild(td3);
+
+      const td4 = document.createElement('td');
+      const html1 = "<a href=\"{{ url_for('abaqus.get_preproc_file', preproc_id=preproc_id, filename='0000') }}\" target=\"_blank\">下载</a>"
+      const html2 = "<a href=\"{{ url_for('tools.code')}}?url={{ url_for('abaqus.get_preproc_file', preproc_id=preproc_id, filename='0000', _external=True) }}\" target=\"_blank\">编辑</a>"
+      const html3 = "<a onclick=\"return confirm('确定删除文件？')\" href=\"{{ url_for('abaqus.delete_preproc_file', preproc_id=preproc_id, filename='0000') }}\">删除</a>"
+      td4.innerHTML = html1.replace('0000', row['name']) + " | " + html2.replace('0000', row['name']) + " | " + html3.replace('0000', row['name']);
+      tr.appendChild(td4);
+
+      tableBody.appendChild(tr);
+    });
+  }
+
+  function updateTextSolverStatus(solverStatus) {
+    const textSolverStatus = document.getElementById('text_solver_status');
+    textSolverStatus.innerText = '当前状态：' + solverStatus;
+  }
+
+  function updateLog(logs) {
+    const textarea = document.getElementById('textarea_log');
+    textarea.value = logs;
+    textarea.scrollTop = textarea.scrollHeight; // 滚动到最底部
+  }
+
+  function updateRunLog(run_logs) {
+    const textarea = document.getElementById('textarea_run_log');
+    textarea.value = run_logs;
+    textarea.scrollTop = textarea.scrollHeight; // 滚动到最底部
+  }
+
+  function updateButtons(solverStatus) {
+    const calculateBtn = document.getElementById('calculateBtn');
+    const calculateLink = document.getElementById('calculateLink');
+    const resetBtn = document.getElementById('resetBtn');
+    const resetLink = document.getElementById('resetLink');
+
+    if (solverStatus === 'Submitting' || solverStatus === 'Running' || solverStatus === 'Pause' || solverStatus === 'Stopping') {
+      calculateBtn.style.display = 'inline';
+      calculateLink.style.display = 'none';
+    } else {
+      calculateBtn.style.display = 'none';
+      calculateLink.style.display = 'inline';
+    }
+
+    if (solverStatus === 'Completed' || solverStatus === 'Stopped' || solverStatus === 'Setting') {
+      resetBtn.style.display = 'none';
+      resetLink.style.display = 'inline';
+    } else {
+      resetBtn.style.display = 'inline';
+      resetLink.style.display = 'none';
+    }
+  }
+
+  function updateStatus() {
+    if (isUpdate === true) {
+      fetch("{{ url_for('abaqus.preproc_status', preproc_id=preproc_id) }}")
+        .then(response => response.json())
+        .then(data => {
+          console.log(data)
+          updateButtons(data["preproc_status"])
+          updateLog(data['logs'])
+          updateRunLog(data['run_logs'])
+          updateTextSolverStatus(data["preproc_status"])
+          updateFiles(data["files"])
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+  }
+
+  updateStatus()
+  setInterval(updateStatus, 4000);
+
+</script>
+{% endblock script %}
