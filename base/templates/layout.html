@@ -243,6 +243,18 @@
                   <p>新建ABAQUS模板</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="{{ url_for('abaqus.manage_preprocs') }}" class="nav-link" id="manage_preprocs">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>ABAQUS前处理管理</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('abaqus.create_preproc') }}" target="_blank" class="nav-link" id="create_preproc">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>新建ABAQUS前处理</p>
+                </a>
+              </li>
             </ul>
           </li>
           {% endif %}

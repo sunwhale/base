@@ -12,13 +12,13 @@ import uuid
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.abaqus import (JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm, FigureSettingFrom, OdbForm)
+from base.forms.abaqus import (JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm, FigureSettingFrom, OdbForm, PreprocForm)
 from base.global_var import event_source
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Solver import Solver
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status, get_template_status, project_jobs_detail,
-                                   projects_detail, templates_detail, sub_dirs_int, sub_dirs)
+                                   projects_detail, templates_detail, get_preproc_status, preprocs_detail, sub_dirs_int, sub_dirs)
 from base.utils.events_new import update_events_new
 from base.utils.make_gif import make_gif
 from base.utils.read_prescan import read_prescan
@@ -864,6 +864,22 @@ def edit_template(template_id):
     return render_template('abaqus/create_template.html', form=form)
 
 
+@abaqus_bp.route('/delete_template/<int:template_id>')
+@login_required
+def delete_template(template_id):
+    templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
+    template_path = os.path.join(templates_path, str(template_id))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该模版！', 'warning')
+        return redirect(url_for('.manage_templates'))
+    if os.path.exists(template_path):
+        shutil.rmtree(template_path)
+        flash('ABAQUS模版%s删除成功。' % template_id, 'success')
+    else:
+        flash('ABAQUS模版%s不存在。' % template_id, 'warning')
+    return redirect(url_for('.manage_templates'))
+
+
 @abaqus_bp.route('/open_template/<int:template_id>')
 @login_required
 def open_template(template_id):
@@ -897,6 +913,136 @@ def delete_template_file(template_id, filename):
     else:
         flash('文件%s不存在。' % filename, 'warning')
     return redirect(url_for('.view_template', template_id=template_id))
+
+
+@abaqus_bp.route('/manage_preprocs', methods=['GET', 'POST'])
+@login_required
+def manage_preprocs():
+    return render_template('abaqus/manage_preprocs.html')
+
+
+@abaqus_bp.route('/preprocs_status')
+@login_required
+def preprocs_status():
+    data = preprocs_detail(current_app.config['ABAQUS_PRE_PATH'])
+    return jsonify(data)
+
+
+@abaqus_bp.route('/create_preproc', methods=['GET', 'POST'])
+@login_required
+def create_preproc():
+    form = PreprocForm()
+
+    if form.validate_on_submit():
+        preprocs_path = current_app.config['ABAQUS_PRE_PATH']
+        preproc_id = create_id(preprocs_path)
+        preproc_path = os.path.join(preprocs_path, str(preproc_id))
+        make_dir(preproc_path)
+        message = {
+            'name': form.name.data,
+            'descript': form.descript.data,
+            'script': form.script.data
+        }
+        msg_file = os.path.join(preproc_path, '.preproc_msg')
+        dump_json(msg_file, message)
+        return redirect(url_for('.view_preproc', preproc_id=preproc_id))
+
+    return render_template('abaqus/create_preproc.html', form=form)
+
+
+@abaqus_bp.route('/view_preproc/<int:preproc_id>', methods=['GET', 'POST'])
+@login_required
+def view_preproc(preproc_id):
+    preprocs_path = current_app.config['ABAQUS_PRE_PATH']
+    preproc_path = os.path.join(preprocs_path, str(preproc_id))
+    form = UploadForm()
+    if form.validate_on_submit():
+        f = form.filename.data
+        f.save(os.path.join(preproc_path, f.filename))
+        flash('上传文件%s成功。' % f.filename, 'success')
+        return redirect(url_for('abaqus.view_preproc', preproc_id=preproc_id))
+    if os.path.exists(preproc_path):
+        status = get_preproc_status(preprocs_path, preproc_id)
+        files = files_in_dir(preproc_path)
+        return render_template('abaqus/view_preproc.html', preproc_id=preproc_id, status=status, files=files,
+                               form=form)
+    else:
+        abort(404)
+
+
+@abaqus_bp.route('/edit_preproc/<int:preproc_id>', methods=['GET', 'POST'])
+@login_required
+def edit_preproc(preproc_id):
+    form = PreprocForm()
+    preprocs_path = current_app.config['ABAQUS_PRE_PATH']
+    preproc_path = os.path.join(preprocs_path, str(preproc_id))
+    msg_file = os.path.join(preproc_path, '.preproc_msg')
+
+    if form.validate_on_submit():
+        message = {
+            'name': form.name.data,
+            'descript': form.descript.data,
+            'script': form.script.data
+        }
+        dump_json(msg_file, message)
+        return redirect(url_for('.view_preproc', preproc_id=preproc_id))
+
+    message = load_json(msg_file)
+    form.name.data = message['name']
+    form.descript.data = message['descript']
+    form.script.data = message['script']
+    return render_template('abaqus/create_preproc.html', form=form)
+
+
+@abaqus_bp.route('/delete_preproc/<int:preproc_id>')
+@login_required
+def delete_preproc(preproc_id):
+    preprocs_path = current_app.config['ABAQUS_PRE_PATH']
+    preproc_path = os.path.join(preprocs_path, str(preproc_id))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该前处理！', 'warning')
+        return redirect(url_for('.manage_preprocs'))
+    if os.path.exists(preproc_path):
+        shutil.rmtree(preproc_path)
+        flash('ABAQUS前处理%s删除成功。' % preproc_id, 'success')
+    else:
+        flash('ABAQUS前处理%s不存在。' % preproc_id, 'warning')
+    return redirect(url_for('.manage_preprocs'))
+
+
+@abaqus_bp.route('/open_preproc/<int:preproc_id>')
+@login_required
+def open_preproc(preproc_id):
+    preprocs_path = current_app.config['ABAQUS_PRE_PATH']
+    preproc_path = os.path.join(preprocs_path, str(preproc_id))
+    if os.path.exists(preproc_path):
+        cmd = 'explorer %s' % preproc_path
+        proc = subprocess.run(cmd)
+        return redirect(url_for('.view_preproc', preproc_id=preproc_id))
+    else:
+        abort(404)
+
+
+@abaqus_bp.route('/get_preproc_file/<int:preproc_id>/<path:filename>')
+@login_required
+def get_preproc_file(preproc_id, filename):
+    return send_from_directory(os.path.join(current_app.config['ABAQUS_PRE_PATH'], str(preproc_id)), filename)
+
+
+@abaqus_bp.route('/delete_preproc_file/<int:preproc_id>/<path:filename>')
+@login_required
+def delete_preproc_file(preproc_id, filename):
+    preprocs_path = current_app.config['ABAQUS_PRE_PATH']
+    file = os.path.join(preprocs_path, str(preproc_id), str(filename))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该文件！', 'warning')
+        return redirect(url_for('.view_preproc', preproc_id=preproc_id))
+    if os.path.exists(file):
+        os.remove(file)
+        flash('文件%s删除成功。' % filename, 'success')
+    else:
+        flash('文件%s不存在。' % filename, 'warning')
+    return redirect(url_for('.view_preproc', preproc_id=preproc_id))
 
 
 @abaqus_bp.route('/postproc', methods=['GET', 'POST'])

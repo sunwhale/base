@@ -26,6 +26,13 @@ class TemplateForm(ProjectForm):
     pass
 
 
+class PreprocForm(FlaskForm):
+    name = StringField('项目名称', validators=[DataRequired(), Length(1, 62)])
+    descript = TextAreaField('项目描述', render_kw={'rows': 12})
+    script = StringField('Python脚本文件', default='script.py')
+    submit = SubmitField('提交')
+
+
 class ImportTemplateForm(FlaskForm):
     name = SelectField('选择模板', coerce=str)
     submit = SubmitField('导入')

@@ -34,6 +34,7 @@ class BaseConfig:
     ABAQUS_PATH = os.path.join(FILE_PATH, 'abaqus')
     ABAQUS_POST_PATH = os.path.join(FILE_PATH, 'abaqus_post')
     ABAQUS_TEMPLATE_PATH = os.path.join(FILE_PATH, 'abaqus_template')
+    ABAQUS_PRE_PATH = os.path.join(FILE_PATH, 'abaqus_pre')
     VIRTUAL_PATH = os.path.join(FILE_PATH, 'virtual')
     EXPERIMENT_PATH = os.path.join(FILE_PATH, 'experiment')
     QUEUE_PATH = os.path.join(FILE_PATH, 'queue')

@@ -432,17 +432,43 @@ def get_template_status(path, template_id):
                 status['link'] = message['link']
             else:
                 status['link'] = 'None'
-            status[
-                'operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模板?')\" href='%s'>删除</a>" % (
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模板?')\" href='%s'>删除</a>" % (
                 'view_template/' + str(template_id), 'edit_template/' + str(template_id),
                 'delete_template/' + str(template_id))
         except (FileNotFoundError, KeyError):
             for key in ['name', 'template_time', 'descript', 'job', 'user', 'cpus', 'link']:
                 status[key] = 'None'
-            status[
-                'operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模板?')\" href='%s'>删除</a>" % (
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模板?')\" href='%s'>删除</a>" % (
                 'view_template/' + str(template_id), 'edit_template/' + str(template_id),
                 'delete_template/' + str(template_id))
+    return status
+
+
+def get_preproc_status(path, preproc_id):
+    msg_file = os.path.join(path, str(preproc_id), '.preproc_msg')
+    status = {}
+    if os.path.exists(msg_file):
+        status['preproc_id'] = preproc_id
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            status['name'] = message['name']
+            status['preproc_time'] = file_time(msg_file)
+            status['descript'] = message['descript']
+            status['script'] = message['script']
+            if 'link' in message.keys():
+                status['link'] = message['link']
+            else:
+                status['link'] = 'None'
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除前处理?')\" href='%s'>删除</a>" % (
+                'view_preproc/' + str(preproc_id), 'edit_preproc/' + str(preproc_id),
+                'delete_preproc/' + str(preproc_id))
+        except (FileNotFoundError, KeyError):
+            for key in ['name', 'preproc_time', 'descript', 'job', 'user', 'cpus', 'link']:
+                status[key] = 'None'
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除前处理?')\" href='%s'>删除</a>" % (
+                'view_preproc/' + str(preproc_id), 'edit_preproc/' + str(preproc_id),
+                'delete_preproc/' + str(preproc_id))
     return status
 
 
@@ -721,6 +747,20 @@ def templates_detail(path):
     template_id_list = sub_dirs_int(path)
     for template_id in template_id_list:
         status = get_template_status(path, template_id)
+        data_list.append(status)
+
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def preprocs_detail(path):
+    data_list = []
+    preproc_id_list = sub_dirs_int(path)
+    for preproc_id in preproc_id_list:
+        status = get_preproc_status(path, preproc_id)
         data_list.append(status)
 
     data = {
