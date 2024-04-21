@@ -7,6 +7,7 @@ import json
 import os
 import subprocess
 import threading
+
 import chardet
 
 from base.settings import ABAQUS, ABAQUS_FORTRAN

@@ -14,6 +14,7 @@ from flask_login import current_user, login_required
 
 from base.forms.abaqus import (JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm, FigureSettingFrom, OdbForm, PreprocForm)
 from base.global_var import event_source
+from base.utils.abaqus.Preproc import Preproc
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Solver import Solver
 from base.utils.common import make_dir, dump_json, load_json
@@ -964,8 +965,10 @@ def view_preproc(preproc_id):
     if os.path.exists(preproc_path):
         status = get_preproc_status(preprocs_path, preproc_id)
         files = files_in_dir(preproc_path)
-        return render_template('abaqus/view_preproc.html', preproc_id=preproc_id, status=status, files=files,
-                               form=form)
+        p = Preproc(preproc_path)
+        run_logs = p.get_run_log()
+        logs = p.get_rpy()
+        return render_template('abaqus/view_preproc.html', preproc_id=preproc_id, status=status, form=form)
     else:
         abort(404)
 
@@ -1019,6 +1022,49 @@ def open_preproc(preproc_id):
         cmd = 'explorer %s' % preproc_path
         proc = subprocess.run(cmd)
         return redirect(url_for('.view_preproc', preproc_id=preproc_id))
+    else:
+        abort(404)
+
+
+@abaqus_bp.route('/run_preproc/<int:preproc_id>')
+@login_required
+def run_preproc(preproc_id):
+    preprocs_path = current_app.config['ABAQUS_PRE_PATH']
+    preproc_path = os.path.join(preprocs_path, str(preproc_id))
+    if os.path.exists(preproc_path):
+        p = Preproc(preproc_path)
+        p.read_msg()
+        p.clear()
+        if p.check_setting_files():
+            proc = p.run()
+            with open(os.path.join(preproc_path, '.preproc_status'), 'w', encoding='utf-8') as f:
+                f.write('Submitting')
+        else:
+            flash(f'缺少{p.script}脚本文件。', 'warning')
+        return redirect(request.referrer or url_for('.view_perproc', project_id=preproc_id))
+    else:
+        abort(404)
+
+
+@abaqus_bp.route('/preproc_status/<int:preproc_id>', methods=['GET', 'POST'])
+@login_required
+def preproc_status(preproc_id):
+    preprocs_path = current_app.config['ABAQUS_PRE_PATH']
+    preproc_path = os.path.join(preprocs_path, str(preproc_id))
+    if os.path.exists(preproc_path):
+        p = Preproc(preproc_path)
+        p.read_msg()
+        logs = p.get_rpy()
+        run_logs = p.get_run_log()
+        files = files_in_dir(preproc_path)
+        preproc_status = p.preproc_status()
+        status = {
+            'logs': logs,
+            'run_logs': run_logs,
+            'files': files,
+            'preproc_status': preproc_status
+        }
+        return jsonify(status)
     else:
         abort(404)
 
