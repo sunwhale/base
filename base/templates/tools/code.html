@@ -87,8 +87,6 @@
     document.getElementById('urlParam').innerText = url;
   }
 
-  console.log(url)
-
   // 初始化 CodeMirror
   const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
     lineNumbers: true, // 显示行号
@@ -97,8 +95,6 @@
   });
 
   setModeFromPath(url)
-
-  console.log(url)
 
   // 使用 fetch 获取代码内容
   fetch(url)
