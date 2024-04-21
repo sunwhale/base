@@ -5,8 +5,9 @@
 {% block pageheader %}文本编辑器{% endblock pageheader %}
 
 {% block css %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/codemirror.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/theme/darcula.css">
+
+<link rel="stylesheet" href="{{ url_for('static', filename='codemirror-5.65.16/lib/codemirror.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='codemirror-5.65.16/theme/monokai.css') }}">
 
 <style>
   .CodeMirror {
@@ -57,13 +58,14 @@
 {% endblock content %}
 
 {% block script %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/codemirror.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/mode/python/python.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/mode/fortran/fortran.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/mode/toml/toml.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/mode/javascript/javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/mode/xml/xml.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.64.0/mode/htmlmixed/htmlmixed.min.js"></script>
+
+<script src="{{ url_for('static', filename='codemirror-5.65.16/lib/codemirror.js') }}"></script>
+<script src="{{ url_for('static', filename='codemirror-5.65.16/mode/python/python.js') }}"></script>
+<script src="{{ url_for('static', filename='codemirror-5.65.16/mode/fortran/fortran.js') }}"></script>
+<script src="{{ url_for('static', filename='codemirror-5.65.16/mode/toml/toml.js') }}"></script>
+<script src="{{ url_for('static', filename='codemirror-5.65.16/mode/javascript/javascript.js') }}"></script>
+<script src="{{ url_for('static', filename='codemirror-5.65.16/mode/xml/xml.js') }}"></script>
+<script src="{{ url_for('static', filename='codemirror-5.65.16/mode/htmlmixed/htmlmixed.js') }}"></script>
 
 <script type="text/javascript">
   // document.getElementById("others").className = "nav-item menu-open"
@@ -91,7 +93,7 @@
   const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
     lineNumbers: true, // 显示行号
     mode: null, // 设置代码高亮模式
-    theme: "darcula",
+    theme: "monokai",
   });
 
   setModeFromPath(url)
