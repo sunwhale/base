@@ -416,7 +416,10 @@ def terminate_job(project_id, job_id):
         with open(os.path.join(job_path, '.pid'), 'r', encoding='utf-8') as f:
             pid = int(f.read())
 
-        proc = current_app.config['PYFEM_PROC_DICT'][f'{project_id}{job_id}']
+        if f'{project_id}{job_id}' in current_app.config['PYFEM_PROC_DICT']:
+            proc = current_app.config['PYFEM_PROC_DICT'][f'{project_id}{job_id}']
+        else:
+            pass
 
         if current_app.config['IS_WIN']:
             cmd = 'taskkill /t /f /pid {}'.format(pid)

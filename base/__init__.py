@@ -26,6 +26,8 @@ from base.extensions import bootstrap, csrf, db, login_manager, mail, moment
 from base.models import Role
 from base.settings import config
 
+__version__ = '0.1.7'
+
 
 def create_app(config_name=None):
     if config_name is None:
