@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "BaseServer"
-#define MyAppVersion "0.1.5"
+#define MyAppVersion "0.1.7"
 #define MyAppPublisher "Sun Jingyu"
 #define MyAppURL "https://www.sunjingyu.com/"
 #define MyAppExeName "BaseServer.exe"
@@ -26,7 +26,7 @@ InfoAfterFile=F:\GitHub\base\install\information.txt
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=F:\GitHub\base\install
-OutputBaseFilename=BaseServer-setup
+OutputBaseFilename=BaseServer-setup-{#MyAppVersion}
 SetupIconFile=F:\GitHub\base\install\logo_delta.ico
 Compression=lzma
 SolidCompression=yes
