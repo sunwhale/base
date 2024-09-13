@@ -147,11 +147,19 @@ export DISPLAY=:1
 ## 10. 安装glances
 用于监视系统进程。
 ```shell
-sudo apt install glances
+sudo snap install glances
 glances -w
 ```
 
-## 10.  命令流
+## 11. 安装ftp
+```shell
+sudo apt install vsftpd
+cp /www/conf/vsftpd.conf /etc/vsftpd.conf
+sudo service vsftpd restart
+sudo adduser sunwhale
+```
+
+## 12.  命令流
 ```shell
 sudo wget -O auto_disk.sh http://download.bt.cn/tools/auto_disk.sh
 sudo bash auto_disk.sh << XXG
@@ -164,6 +172,11 @@ sudo sed -i '$aexport PATH=/opt/miniconda3/bin:$PATH' /etc/profile # 写入环�
 source /etc/profile
 conda init
 exit
+
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/free/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
+conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
+conda config --set show_channel_urls yes
 
 conda create -n flask -y python==3.11
 conda activate flask
@@ -179,7 +192,8 @@ jupyter lab --generate-config # 生成jupyterlab配置文件
 jupyter lab password # 设置密码，输入两次
 sudo cp /home/ubuntu/base/conf/jupyter/jupyter_lab_config.py /home/ubuntu/.jupyter/jupyter_lab_config.py
 
-sudo apt install -y supervisor nginx xvfb glances
+sudo apt install -y supervisor nginx xvfb
+sudo snap install glances
 
 sudo rm /etc/nginx/sites-enabled/default
 sudo cp /home/ubuntu/base/conf/nginx/*.conf /etc/nginx/conf.d
@@ -187,6 +201,11 @@ sudo service nginx restart
 sudo cp /home/ubuntu/base/conf/supervisor/*.conf /etc/supervisor/conf.d
 sudo service supervisor restart
 sudo supervisorctl
+
+sudo apt install -y vsftpd
+sudo cp /www/conf/vsftpd.conf /etc/vsftpd.conf
+sudo service vsftpd restart
+sudo adduser sunwhale
 ```
 
 ps aux | grep nginx
