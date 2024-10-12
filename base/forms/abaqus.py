@@ -70,6 +70,10 @@ class FigureSettingFrom(FlaskForm):
     mirrorAboutXyPlane = SelectField('mirrorAboutXyPlane', coerce=str)
     mirrorAboutXzPlane = SelectField('mirrorAboutXzPlane', coerce=str)
     mirrorAboutYzPlane = SelectField('mirrorAboutYzPlane', coerce=str)
+
+    removeElementSet = SelectField('removeElementSet', coerce=str)
+    replaceElementSet = SelectField('replaceElementSet', coerce=str)
+
     plotState = SelectField('plotState', coerce=str)
     uniformScaleFactor = FloatField('uniformScaleFactor', default=1.0, validators=[DataRequired()])
     step = SelectField('step', coerce=str)
@@ -108,6 +112,10 @@ class FigureSettingFrom(FlaskForm):
         self.mirrorAboutXyPlane.choices = ['False', 'True']
         self.mirrorAboutXzPlane.choices = ['False', 'True']
         self.mirrorAboutYzPlane.choices = ['False', 'True']
+
+        self.removeElementSet.choices = ['']
+        self.replaceElementSet.choices = ['']
+
         self.plotState.choices = ['(CONTOURS_ON_DEF, )', '(CONTOURS_ON_UNDEF, )', '(UNDEFORMED, )', '(DEFORMED, )']
         self.step.choices = ['Step-1']
         self.variableLabel.choices = ['S']

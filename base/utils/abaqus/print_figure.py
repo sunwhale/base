@@ -80,6 +80,14 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
     viewport.viewportAnnotationOptions.setValues(legendPosition=setting['legendPosition'])
     viewport.odbDisplay.basicOptions.setValues(mirrorAboutXyPlane=setting['mirrorAboutXyPlane'], mirrorAboutXzPlane=setting['mirrorAboutXzPlane'], mirrorAboutYzPlane=setting['mirrorAboutYzPlane'])
 
+    if setting['removeElementSet'] != '':
+        leaf = dgo.LeafFromElementSets(elementSets=(setting['removeElementSet'],))
+        viewport.odbDisplay.displayGroup.remove(leaf=leaf)
+
+    if setting['replaceElementSet'] != '':
+        leaf = dgo.LeafFromElementSets(elementSets=(setting['replaceElementSet'],))
+        viewport.odbDisplay.displayGroup.replace(leaf=leaf)
+
     viewport.enableMultipleColors()
     viewport.setColor(initialColor='#BDBDBD')
     cmap = viewport.colorMappings[setting['colorMappings']]

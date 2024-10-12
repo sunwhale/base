@@ -645,6 +645,8 @@ def print_figure(project_id, job_id):
                 form.refinement.choices = sorted(list(set(refinement_list)))
                 form.statusLabel.choices = sorted(list(set(variableLabel_list)))
                 form.statusRefinement.choices = sorted(list(set(refinement_list)))
+                form.removeElementSet.choices = [''] + sorted(list(prescan_odb_dict['rootAssembly']['elementSets']))
+                form.replaceElementSet.choices = [''] + sorted(list(prescan_odb_dict['rootAssembly']['elementSets']))
             else:
                 flash('请先对odb文件进行预扫描。', 'warning')
 
@@ -659,6 +661,8 @@ def print_figure(project_id, job_id):
                     'mirrorAboutXyPlane': form.mirrorAboutXyPlane.data,
                     'mirrorAboutXzPlane': form.mirrorAboutXzPlane.data,
                     'mirrorAboutYzPlane': form.mirrorAboutYzPlane.data,
+                    'removeElementSet': form.removeElementSet.data,
+                    'replaceElementSet': form.replaceElementSet.data,
                     'plotState': form.plotState.data,
                     'uniformScaleFactor': form.uniformScaleFactor.data,
                     'step': form.step.data,
@@ -708,6 +712,8 @@ def print_figure(project_id, job_id):
                 form.mirrorAboutXyPlane.data = message['mirrorAboutXyPlane']
                 form.mirrorAboutXzPlane.data = message['mirrorAboutXzPlane']
                 form.mirrorAboutYzPlane.data = message['mirrorAboutYzPlane']
+                form.removeElementSet.data = message['removeElementSet']
+                form.replaceElementSet.data = message['replaceElementSet']
                 form.plotState.data = message['plotState']
                 form.uniformScaleFactor.data = message['uniformScaleFactor']
                 form.step.data = message['step']

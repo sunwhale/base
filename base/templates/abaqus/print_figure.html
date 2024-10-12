@@ -51,6 +51,8 @@
                           {{ render_form_row([form.minAutoCompute, form.minValue]) }}
                           {{ render_form_row([form.colorMappings, form.mirrorAboutXyPlane]) }}
                           {{ render_form_row([form.mirrorAboutXzPlane, form.mirrorAboutYzPlane]) }}
+                          <h5 class="text-primary">单元集合</h5><hr/>
+                          {{ render_form_row([form.removeElementSet, form.replaceElementSet]) }}
                           <h5 class="text-primary">状态变量</h5><hr/>
                           {{ render_form_row([form.useStatus, form.statusLabel]) }}
                           {{ render_form_row([form.statusPosition, form.statusRefinement]) }}
