@@ -640,13 +640,20 @@ def print_figure(project_id, job_id):
                             refinement_list.append("(COMPONENT, '%s')" % i)
                 refinement_list.append("()")
 
+                element_set_list = ['']
+                for elementset_key, elementset in prescan_odb_dict['rootAssembly']['elementSets'].items():
+                    element_set_list.append(elementset['name'])
+                for instances_key, instances in prescan_odb_dict['rootAssembly']['instances'].items():
+                    for elset_key, elset in instances['elementSets'].items():
+                        element_set_list.append(str(instances['name']) + '.' + str(elset['name']))
+
                 form.step.choices = list(prescan_odb_dict['steps'].keys())
                 form.variableLabel.choices = sorted(list(set(variableLabel_list)))
                 form.refinement.choices = sorted(list(set(refinement_list)))
                 form.statusLabel.choices = sorted(list(set(variableLabel_list)))
                 form.statusRefinement.choices = sorted(list(set(refinement_list)))
-                form.removeElementSet.choices = [''] + sorted(list(prescan_odb_dict['rootAssembly']['elementSets']))
-                form.replaceElementSet.choices = [''] + sorted(list(prescan_odb_dict['rootAssembly']['elementSets']))
+                form.removeElementSet.choices = sorted(element_set_list)
+                form.replaceElementSet.choices = sorted(element_set_list)
             else:
                 flash('请先对odb文件进行预扫描。', 'warning')
 
