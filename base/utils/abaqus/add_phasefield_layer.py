@@ -9,13 +9,12 @@ def insert_list_at_index(A: list, B: list, index: int) -> None:
         B.insert(index + i, A[i])
 
 
-def add_phasefield_layer(inp_file_path: str,
-                         dim: int,
+def add_phasefield_layer(inp_filepath: str,
                          dof: int,
                          properties: int,
                          variables: int,
                          properties_str: str) -> None:
-    with open(inp_file_path, 'r') as file:
+    with open(inp_filepath, 'r') as file:
         lines = file.readlines()
 
     elements = {}
@@ -27,7 +26,7 @@ def add_phasefield_layer(inp_file_path: str,
 
     for line_id, line in enumerate(lines):
         line = line.strip()
-        if line.startswith('*Element'):
+        if line.startswith('*Element') and line.split(',')[0].replace(' ', '') == '*Element':
             reading_elements = True
             type_start_index = line.find('type=')
             if type_start_index != -1:
@@ -54,7 +53,7 @@ def add_phasefield_layer(inp_file_path: str,
     phasefield_elements = {}
 
     for element_type, element_data in elements.items():
-        if element_type == 'CPS4' or element_type == 'CPE4':
+        if element_type in ['CPS4', 'CPE4', 'CPE4RT']:
             phasefield_elements['QUAD4'] = [(a[0] + element_id_max, a[1]) for a in element_data]
             dim = 2
         if element_type == 'CPS3' or element_type == 'CPE3':
@@ -94,14 +93,13 @@ def add_phasefield_layer(inp_file_path: str,
 
     insert_list_at_index(phasefield_lines, lines, element_end_index)
 
-    with open(inp_file_path[:-4] + '_uel.inp', 'w') as file:
+    with open(inp_filepath[:-4] + '_uel.inp', 'w') as file:
         for line_id, line in enumerate(lines):
             file.write(line)
 
 
 if __name__ == "__main__":
-    add_phasefield_layer(inp_file_path='rectangle_hole_quad4.inp',
-                         dim=2,
+    add_phasefield_layer(inp_filepath='rectangle_hole_quad4.inp',
                          dof=4,
                          properties=3,
                          variables=12,

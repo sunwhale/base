@@ -13,6 +13,11 @@ class UploadForm(FlaskForm):
     submit = SubmitField('上传')
 
 
+class InputFileUploadForm(FlaskForm):
+    filename = FileField('上传文件', validators=[FileRequired()], render_kw={'accept': '.inp'})
+    submit = SubmitField('上传')
+
+
 class ProjectForm(FlaskForm):
     name = StringField('项目名称', validators=[DataRequired(), Length(1, 62)])
     descript = TextAreaField('项目描述', render_kw={'rows': 12})
@@ -46,6 +51,15 @@ class JobForm(FlaskForm):
     job = StringField('算例名', default='Job-1', validators=[DataRequired(), Length(1, 126)])
     user = StringField('算例user文件', default='user.for')
     cpus = IntegerField('算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 16)])
+    submit = SubmitField('提交')
+
+
+class PhasefieldForm(FlaskForm):
+    inp_filename = StringField('需要更新的inp文件名', default='Job-1.inp', validators=[DataRequired()])
+    dof = IntegerField('UEL自由度', default=4, validators=[DataRequired()])
+    properties = IntegerField('UEL属性数量', default=3, validators=[DataRequired()])
+    variables = IntegerField('UEL内变量数量', default=12, validators=[DataRequired()])
+    properties_str = StringField('UEL属性内容', default='<LC>, <GC>, <THICK>', validators=[DataRequired()])
     submit = SubmitField('提交')
 
 
