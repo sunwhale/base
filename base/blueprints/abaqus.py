@@ -18,7 +18,7 @@ from base.global_var import event_source
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Preproc import Preproc
 from base.utils.abaqus.Solver import Solver
-from base.utils.abaqus.add_phasefield_layer import add_phasefield_layer
+from base.utils.abaqus.add_phasefield_layer import add_phasefield_layer as add_phasefield_layer_abaqus
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status, get_template_status, project_jobs_detail,
                                    projects_detail, templates_detail, get_preproc_status, preprocs_detail, sub_dirs_int, sub_dirs)
@@ -1192,9 +1192,9 @@ def postproc():
                            regions=regions, frames=frames, odb_to_npz_json=odb_to_npz_json)
 
 
-@abaqus_bp.route('/view_modification', methods=['GET', 'POST'])
+@abaqus_bp.route('/add_phasefield_layer', methods=['GET', 'POST'])
 @login_required
-def view_modification():
+def add_phasefield_layer():
     abaqus_inp_path = current_app.config['ABAQUS_INP_PATH']
 
     form_upload = InputFileUploadForm()
@@ -1205,10 +1205,10 @@ def view_modification():
         if f.filename.endswith('.inp'):
             f.save(os.path.join(abaqus_inp_path, f.filename))
             flash('上传文件%s成功。' % f.filename, 'success')
-            return redirect(url_for('abaqus.view_modification'))
+            return redirect(url_for('abaqus.add_phasefield_layer'))
         else:
             flash('上传文件%s失败，只支持后缀为.inp的文件。' % f.filename, 'warning')
-            return redirect(url_for('abaqus.view_modification'))
+            return redirect(url_for('abaqus.add_phasefield_layer'))
 
     if form_phasefield.validate_on_submit():
         inp_filename = form_phasefield.inp_filename.data
@@ -1217,18 +1217,19 @@ def view_modification():
         variables = int(form_phasefield.variables.data)
         properties_str = form_phasefield.properties_str.data
         inp_filepath = os.path.join(abaqus_inp_path, inp_filename)
-        print(inp_filepath, dof, properties, variables, properties_str)
         if os.path.exists(inp_filepath):
-            add_phasefield_layer(inp_filepath, dof, properties, variables, properties_str)
-            return redirect(url_for('abaqus.view_modification'))
-
+            add_phasefield_layer_abaqus(inp_filepath, dof, properties, variables, properties_str)
+            flash('更新文件%s成功。' % inp_filename, 'success')
+        else:
+            flash('文件%s不存在。' % inp_filename, 'warning')
+        return redirect(url_for('abaqus.add_phasefield_layer'))
     if request.method == 'POST':
         data = request.form.to_dict()
         pass
     if not os.path.exists(abaqus_inp_path):
         make_dir(abaqus_inp_path)
     files = files_in_dir(abaqus_inp_path)
-    return render_template('abaqus/view_modification.html', files=files, form_upload=form_upload, form_phasefield=form_phasefield)
+    return render_template('abaqus/add_phasefield_layer.html', files=files, form_upload=form_upload, form_phasefield=form_phasefield)
 
 
 @abaqus_bp.route('/get_inp_file/<path:filename>')
@@ -1244,13 +1245,13 @@ def delete_inp_file(filename):
     file = os.path.join(abaqus_inp_path, str(filename))
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该文件！', 'warning')
-        return redirect(url_for('.view_modification'))
+        return redirect(request.referrer)
     if os.path.exists(file):
         os.remove(file)
         flash('文件%s删除成功。' % filename, 'success')
     else:
         flash('文件%s不存在。' % filename, 'warning')
-    return redirect(url_for('.view_modification'))
+    return redirect(request.referrer)
 
 
 @abaqus_bp.route('/postproc_prescan_odb_data/<path:filename>', methods=['GET', 'POST'])
