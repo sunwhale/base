@@ -818,6 +818,9 @@ def create_template():
         template_id = create_id(templates_path)
         template_path = os.path.join(templates_path, str(template_id))
         make_dir(template_path)
+        uuid_file = os.path.join(templates_path, '.uuid')
+        with open(uuid_file, 'w', encoding='utf-8') as f:
+            f.write(str(uuid.uuid4()))
         message = {
             'name': form.name.data,
             'descript': form.descript.data,
@@ -954,6 +957,9 @@ def create_preproc():
         preproc_id = create_id(preprocs_path)
         preproc_path = os.path.join(preprocs_path, str(preproc_id))
         make_dir(preproc_path)
+        uuid_file = os.path.join(preprocs_path, '.uuid')
+        with open(uuid_file, 'w', encoding='utf-8') as f:
+            f.write(str(uuid.uuid4()))
         message = {
             'name': form.name.data,
             'descript': form.descript.data,
