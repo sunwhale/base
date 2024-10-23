@@ -71,6 +71,7 @@ def add_phasefield_layer(inp_filepath: str,
         phasefield_lines.append(f"{dof}\n")
         phasefield_lines.append(f"*Uel property, elset=ESET-{element_type}\n")
         phasefield_lines.append(f"{properties_str}\n")
+        phasefield_lines.append(f"*Element, type={element_type}\n")
         for element in element_data:
             line = f'{element[0]}, '
             for e in element[1]:
