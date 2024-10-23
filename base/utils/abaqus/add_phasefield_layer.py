@@ -53,13 +53,13 @@ def add_phasefield_layer(inp_filepath: str,
     phasefield_elements = {}
 
     for element_type, element_data in elements.items():
-        if element_type in ['CPS4', 'CPE4', 'CPE4RT']:
+        if 'CP' in element_type and '4' in element_type:
             phasefield_elements['QUAD4'] = [(a[0] + element_id_max, a[1]) for a in element_data]
             dim = 2
-        if element_type == 'CPS3' or element_type == 'CPE3':
+        if 'CP' in element_type and '3' in element_type:
             phasefield_elements['TRI3'] = [(a[0] + element_id_max, a[1]) for a in element_data]
             dim = 2
-        if element_type == 'C3D8' or element_type == 'C3D8R':
+        if 'C3' in element_type and 'D8' in element_type:
             phasefield_elements['HEX8'] = [(a[0] + element_id_max, a[1]) for a in element_data]
             dim = 3
 
