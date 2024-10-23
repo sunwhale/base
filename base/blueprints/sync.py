@@ -37,6 +37,7 @@ def get_module_path_dict():
     module_path_dict = {
         'abaqus': current_app.config['ABAQUS_PATH'],
         'abaqus_template': current_app.config['ABAQUS_TEMPLATE_PATH'],
+        'abaqus_pre': current_app.config['ABAQUS_PRE_PATH'],
         'virtual': current_app.config['VIRTUAL_PATH'],
         'experiment': current_app.config['EXPERIMENT_PATH'],
         'doc': current_app.config['DOC_PATH'],
