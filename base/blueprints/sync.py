@@ -23,6 +23,7 @@ server_url = 'https://sunjingyu.com'
 allowed_suffix_dict = {
     'abaqus': ['.project_msg', '.inp', '.for', '.FOR', '.json', '.abaqus_msg', '.job_msg', '.uuid'],
     'abaqus_template': ['.inp', '.for', '.FOR', '.json', '.template_msg', '.job_msg', '.uuid'],
+    'abaqus_pre': ['.inp', '.for', '.FOR', '.py', '.json', '.template_msg', '.job_msg', '.uuid'],
     'virtual': ['.inp', '.for', '.json', '.abaqus_msg', '.job_msg', '.uuid'],
     'experiment': ['.*'],
     'doc': ['.*'],
