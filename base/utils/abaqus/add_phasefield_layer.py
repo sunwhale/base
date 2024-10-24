@@ -65,13 +65,15 @@ def add_phasefield_layer(inp_filepath: str,
 
     phasefield_lines = []
 
+    i = 0
     for element_type, element_data in phasefield_elements.items():
+        i += 1
         phasefield_lines.append(
-            f"*User element, nodes={len(element_data[0][1])}, type={element_type}, properties={properties}, coordinates={dim}, variables={variables}\n")
+            f"*User element, nodes={len(element_data[0][1])}, type=U{i}, properties={properties}, coordinates={dim}, variables={variables}\n")
         phasefield_lines.append(f"{dof}\n")
-        phasefield_lines.append(f"*Uel property, elset=ESET-{element_type}\n")
+        phasefield_lines.append(f"*Uel property, elset=ESET-U{i}\n")
         phasefield_lines.append(f"{properties_str}\n")
-        phasefield_lines.append(f"*Element, type={element_type}\n")
+        phasefield_lines.append(f"*Element, type=U{i}\n")
         for element in element_data:
             line = f'{element[0]}, '
             for e in element[1]:
