@@ -81,8 +81,10 @@ def add_phasefield_layer(inp_filepath: str,
             line = line[:-2] + '\n'
             phasefield_lines.append(line)
 
+    i = 0
     for element_type, element_data in phasefield_elements.items():
-        phasefield_lines.append(f"*Elset, elset=ESET-{element_type}\n")
+        i += 1
+        phasefield_lines.append(f"*Elset, elset=ESET-U{i}\n")
         line = ''
         for i, element in enumerate(element_data):
             line += f'{element[0]}, '
