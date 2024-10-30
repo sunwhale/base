@@ -212,7 +212,7 @@ def get_file():
 @sync_bp.route('/uuid', methods=['GET', 'POST'])
 def uuid():
     local_uuid = get_path_uuid(current_app.config['FILE_PATH'])
-    return jsonify(local_uuid)
+    return jsonify(sorted(local_uuid))
 
 
 @sync_bp.route('/get_server_uuid', methods=['GET', 'POST'])

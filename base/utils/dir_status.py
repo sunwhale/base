@@ -44,7 +44,7 @@ def get_path_uuid(path):
                     uuid_file = os.path.join(path, d0, d1, '.uuid')
                     with open(uuid_file, "r") as f:
                         uuid_str = f.read()
-                        server_uuid.append([d0, d1, uuid_str])
+                        server_uuid.append([d0, int(d1), uuid_str])
     return server_uuid
 
 
