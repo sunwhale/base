@@ -29,7 +29,7 @@
 {% endblock content %}
 
 {% block script %}
-{% if env['service'] == 'server' %}
+{% if env['cdn'] == 'cdn' %}
 <script src="https://cdn.bootcdn.net/ajax/libs/editor-md/1.5.0/editormd.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/marked/0.3.3/marked.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/prettify/r298/prettify.min.js"></script>

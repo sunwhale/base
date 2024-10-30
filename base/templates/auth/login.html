@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>登录</title>
 <link type="image-icon" href="{{ url_for('static', filename='imgs/logo.svg') }}" rel="icon"/>
-{% if env['service'] == 'server' %}
+{% if env['cdn'] == 'cdn' %}
 <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
 {% else %}
 <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/dist/css/adminlte.min.css') }}">
@@ -48,7 +48,7 @@
   <p></p>
   <p class="mb-0"> Jingyu Sun &copy; 2020-2024</p>
 
-{% if env['service'] == 'server' %}
+{% if env['cdn'] == 'cdn' %}
 <!-- jQuery -->
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <!-- Bootstrap 4 -->

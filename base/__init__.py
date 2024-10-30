@@ -31,7 +31,7 @@ __version__ = '0.1.8'
 
 def create_app(config_name=None):
     if config_name is None:
-        config_name = os.getenv('FLASK_CONFIG', 'development')
+        config_name = os.getenv('FLASK_CONFIG')
 
     app = Flask('base')
 
@@ -106,10 +106,16 @@ def register_shell_context(app):
 def register_template_context(app):
     @app.context_processor
     def make_template_context():
+        env = {}
         if app.config['SERVICE'] == 'client':
-            env = {'service': 'client'}
+            env['service'] = 'client'
         else:
-            env = {'service': 'server'}
+            env['service'] = 'server'
+
+        if os.getenv('CDN') == 'True':
+            env['cdn'] = 'cdn'
+        else:
+            env['cdn'] = 'static'
         return dict(env=env)
 
 

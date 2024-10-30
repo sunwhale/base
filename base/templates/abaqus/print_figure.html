@@ -159,7 +159,7 @@
 {% endblock content %}
 
 {% block script %}
-{% if env['service'] == 'server' %}
+{% if env['cdn'] == 'cdn' %}
 <script src="https://cdn.bootcdn.net/ajax/libs/zTree.v3/3.5.42/js/jquery.ztree.core.min.js"></script>
 {% else %}
 <script src="{{ url_for('static', filename='zTree/js/jquery.ztree.core.min.js') }}"></script>
