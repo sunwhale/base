@@ -7,7 +7,7 @@
   },
   {
    "optionDest": "filenames",
-   "value": "F:/Github/base/Base.py"
+   "value": "F:/GitHub/base/BaseServer.py"
   },
   {
    "optionDest": "onefile",
@@ -20,6 +20,10 @@
   {
    "optionDest": "icon_file",
    "value": "F:/Github/base/base/static/imgs/logo_delta.ico"
+  },
+  {
+   "optionDest": "contents_directory",
+   "value": "baselib"
   },
   {
    "optionDest": "clean_build",
