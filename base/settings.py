@@ -63,6 +63,11 @@ class BaseConfig:
     IS_WIN = WIN
     WTF_I18N_ENABLED = False
 
+    if os.getenv('HOST_PORT') is not None:
+        HOST_PORT = os.getenv('HOST_PORT')
+    else:
+        HOST_PORT = 0
+
 
 class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = prefix + os.path.join(basedir, 'data.db')

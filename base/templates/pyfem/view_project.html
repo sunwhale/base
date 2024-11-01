@@ -91,15 +91,7 @@
                           <th width=20%>操作</th>
                         </tr>
                       </thead>
-                      <tbody>
-                        {% for file in files %}
-                        <tr>
-                          <td> {{ file['name'] }} </td>
-                          <td> {{ file['time'] }} </td>
-                          <td> {{ file['size'] }} </td>
-                          <td> <a href="{{ url_for('pyfem.get_project_file', project_id=project_id, filename=file['name']) }}" target="_blank">下载</a> | <a href="{{ url_for('tools.code')}}?url={{ url_for('pyfem.get_project_file', project_id=project_id, filename=file['name'], _external=True) }}" target="_blank">编辑</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('pyfem.delete_project_file', project_id=project_id, filename=file['name']) }}">删除</a> | <a onclick="return confirm('确定将文件同步至所有算例？')" href="{{ url_for('pyfem.synchronize_project_file', project_id=project_id, filename=file['name']) }}">同步</a> </td>
-                        </tr>
-                        {% endfor %}
+                      <tbody id="table_files_body">
                       </tbody>
                     </table>
                   </div>
@@ -335,6 +327,54 @@
       document.getElementById('queue_type').value = 'All';
     });
   });
+
+  function updateFiles(files) {
+    const tableBody = document.getElementById('table_files_body');
+    tableBody.innerHTML = "";
+    files.forEach(row => {
+      const tr = document.createElement('tr');
+      tr.style.verticalAlign = 'middle';
+      tr.style.textAlign = 'left';
+
+      const td1 = document.createElement('td');
+      td1.textContent = row['name'];
+      tr.appendChild(td1);
+
+      const td2 = document.createElement('td');
+      td2.textContent = row['time'];
+      tr.appendChild(td2);
+
+      const td3 = document.createElement('td');
+      td3.textContent = row['size'];
+      tr.appendChild(td3);
+
+      const td4 = document.createElement('td');
+      const html1 = "<a href=\"{{ url_for('pyfem.get_project_file', project_id=project_id, filename='0000') }}\" target=\"_blank\">下载</a>"
+      const html2 = "<a href=\"{{ url_for('tools.code')}}?url={{ url_for('pyfem.get_project_file', project_id=project_id, filename='0000', _external=True) }}\" target=\"_blank\">编辑</a>"
+      const html3 = "<a onclick=\"return confirm('确定删除文件？')\" href=\"{{ url_for('pyfem.get_project_file', project_id=project_id, filename='0000') }}\">删除</a>"
+      const html4 = "<a onclick=\"return confirm('确定将文件同步至所有算例？')\" href=\"{{ url_for('pyfem.synchronize_project_file', project_id=project_id, filename='0000') }}\">同步</a>"
+      td4.innerHTML = html1.replace('0000', row['name']) + " | " + html2.replace('0000', row['name']) + " | " + html3.replace('0000', row['name']) + " | " + html4.replace('0000', row['name']);
+      if ({{ config.HOST_PORT }} !== 0){
+        td4.innerHTML = td4.innerHTML.replace('http://sunjingyu.com', 'https://sunjingyu.com:{{ config.HOST_PORT }}').replace('http://www.sunjingyu.com', 'https://www.sunjingyu.com:{{ config.HOST_PORT }}')
+      }
+      tr.appendChild(td4);
+
+      tableBody.appendChild(tr);
+    });
+  }
+
+  function updateStatus() {
+    fetch("{{ url_for('pyfem.project_status', project_id=project_id) }}")
+      .then(response => response.json())
+      .then(data => {
+        updateFiles(data["files"])
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+
+  updateStatus()
 
   $(document).ready(function () {
     $('#descript').attr('disabled', true)

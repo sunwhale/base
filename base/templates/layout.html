@@ -339,7 +339,7 @@
                   <p>计算队列管理</p>
                 </a>
               </li>
-              {% if env['service'] != 'server' %}
+              {% if env['service'] != '' %}
               <li class="nav-item">
                 <a href="{{ url_for('sync.index') }}" class="nav-link" id="sync">
                   <i class="far fa-circle nav-icon"></i>
@@ -399,7 +399,7 @@
               </li>
               {% if env['service'] == 'server' %}
               <li class="nav-item">
-                <a href="https://jupyter.sunjingyu.com:8080/" target="_blank" class="nav-link" id="jupyter">
+                <a href="https://www.sunjingyu.com:8018/" target="_blank" class="nav-link" id="jupyter">
                   <i class="far fa-circle nav-icon"></i>
                   <p>JupyterLab</p>
                 </a>

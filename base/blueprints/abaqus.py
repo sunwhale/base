@@ -273,8 +273,7 @@ def view_project(project_id):
             return redirect(url_for('queue.view_queue'))
     if os.path.exists(project_path):
         status = get_project_status(abaqus_path, project_id)
-        files = files_in_dir(project_path)
-        return render_template('abaqus/view_project.html', project_id=project_id, status=status, files=files,
+        return render_template('abaqus/view_project.html', project_id=project_id, status=status,
                                parameters=parameters, form_upload=form_upload, form_template=form_template)
     else:
         abort(404)
@@ -397,9 +396,9 @@ def view_job(project_id, job_id):
     if os.path.exists(job_path):
         s = Solver(job_path)
         s.read_msg()
-        sta = s.get_sta()
-        logs = s.get_log()
-        run_logs = s.get_run_log()
+        # sta = s.get_sta()
+        # logs = s.get_log()
+        # run_logs = s.get_run_log()
         para = s.get_parameters()
         form = ParameterForm()
         if form.validate_on_submit():
@@ -409,12 +408,10 @@ def view_job(project_id, job_id):
             return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
         form.para.data = para
         s.parameters_to_json()
-        files = files_in_dir(job_path)
-        solver_status = s.solver_status()
+        # files = files_in_dir(job_path)
+        # solver_status = s.solver_status()
         status = get_job_status(abaqus_path, project_id, job_id)
-        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status,
-                               logs=logs[-5000:], sta=sta[-100:], run_logs=run_logs, form=form,
-                               solver_status=solver_status, files=files)
+        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status, form=form)
     else:
         abort(404)
 
@@ -440,6 +437,36 @@ def job_status(project_id, job_id):
             'para': para,
             'files': files,
             'solver_status': solver_status
+        }
+        return jsonify(status)
+    else:
+        abort(404)
+
+
+@abaqus_bp.route('/project_status/<int:project_id>', methods=['GET', 'POST'])
+@login_required
+def project_status(project_id):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    project_path = os.path.join(abaqus_path, str(project_id))
+    if os.path.exists(project_path):
+        files = files_in_dir(project_path)
+        status = {
+            'files': files,
+        }
+        return jsonify(status)
+    else:
+        abort(404)
+
+
+@abaqus_bp.route('/template_status/<int:template_id>', methods=['GET', 'POST'])
+@login_required
+def template_status(template_id):
+    templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
+    template_path = os.path.join(templates_path, str(template_id))
+    if os.path.exists(template_path):
+        files = files_in_dir(template_path)
+        status = {
+            'files': files,
         }
         return jsonify(status)
     else:

@@ -317,6 +317,9 @@
       } else {
         td4.innerHTML = html1.replace('0000', row['name']) + " | " + html2.replace('0000', row['name']) + " | " + html3.replace('0000', row['name']);
       }
+      if ({{ config.HOST_PORT }} !== 0){
+        td4.innerHTML = td4.innerHTML.replace('http://sunjingyu.com', 'https://sunjingyu.com:{{ config.HOST_PORT }}').replace('http://www.sunjingyu.com', 'https://www.sunjingyu.com:{{ config.HOST_PORT }}')
+      }
       tr.appendChild(td4);
 
       tableBody.appendChild(tr);
