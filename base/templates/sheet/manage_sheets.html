@@ -44,7 +44,7 @@
 
 {% block script %}
 
-{% if env['cdn'] == 'cdn' %}
+{% if config.CDN %}
 <script src="{{ url_for('static', filename='AdminLTE/plugins/datatables/jquery.dataTables.min.js') }}"></script>
 <script src="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
 {% else %}

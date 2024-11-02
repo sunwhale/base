@@ -63,33 +63,55 @@ class BaseConfig:
     IS_WIN = WIN
     WTF_I18N_ENABLED = False
 
-    if os.getenv('HOST_PORT') is not None:
-        HOST_PORT = os.getenv('HOST_PORT')
-    else:
+    if os.getenv('HOST_PORT') is None:
         HOST_PORT = 0
+    else:
+        HOST_PORT = os.getenv('HOST_PORT')
+
+    if os.getenv('JUPYTER_PORT') is None:
+        JUPYTER_PORT = 0
+    else:
+        JUPYTER_PORT = os.getenv('JUPYTER_PORT')
+
+    if os.getenv('CLIENT') is None:
+        CLIENT = False
+    elif os.getenv('CLIENT') == 'True':
+        CLIENT = True
+    else:
+        CLIENT = False
+
+    if os.getenv('SYNC') is None:
+        SYNC = False
+    elif os.getenv('SYNC') == 'True':
+        SYNC = True
+    else:
+        SYNC = False
+
+    if os.getenv('CDN') is None:
+        CDN = False
+    elif os.getenv('CDN') == 'True':
+        CDN = True
+    else:
+        CDN = False
 
 
 class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = prefix + os.path.join(basedir, 'data.db')
     REDIS_URL = "redis://localhost"
-    SERVICE = 'client'
 
 
 class TestingConfig(BaseConfig):
     TESTING = True
     WTF_CSRF_ENABLED = False
     SQLALCHEMY_DATABASE_URI = 'sqlite:///'  # in-memory database
-    SERVICE = 'client'
 
 
 class ProductionConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', prefix + os.path.join(basedir, 'data.db'))
-    SERVICE = 'server'
 
 
 class ClientConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = prefix + os.path.join(basedir, 'data.db')
-    SERVICE = 'client'
 
 
 config = {

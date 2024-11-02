@@ -7,7 +7,7 @@
   <title>{% block title %}固体力学与数值模拟{% endblock title %}</title>
   <link type="image-icon" href="{{ url_for('static', filename='imgs/logo_delta.svg') }}" rel="icon"/>
   <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/fontawesome-free/css/all.min.css') }}">
-  {% if env['cdn'] == 'cdn' %}
+  {% if config.cdn %}
   <!--<link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">-->
   <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css">
   {% else %}
@@ -39,8 +39,7 @@
       <li class="nav-item d-none d-sm-inline-block">
         <a href="/" class="nav-link">主界面</a>
       </li>
-      {% if env['service'] != 'client' %}
-      {{env['CLIENT']}}
+      {% if not config.CLIENT %}
       {% if current_user.is_authenticated %}
       <li class="nav-item">
         <a href="{{ url_for('auth.logout') }}" class="nav-link">登出</a>
@@ -339,7 +338,7 @@
                   <p>计算队列管理</p>
                 </a>
               </li>
-              {% if env['service'] != '' %}
+              {% if config.SYNC %}
               <li class="nav-item">
                 <a href="{{ url_for('sync.index') }}" class="nav-link" id="sync">
                   <i class="far fa-circle nav-icon"></i>
@@ -347,7 +346,7 @@
                 </a>
               </li>
               {% endif %}
-              {% if env['service'] != 'server' %}
+              {% if config.SYNC %}
               <li class="nav-item">
                 <a href="{{ url_for('sync.url') }}" class="nav-link" id="url">
                   <i class="far fa-circle nav-icon"></i>
@@ -355,7 +354,7 @@
                 </a>
               </li>
               {% endif %}
-              {% if env['service'] == 'server' %}
+              {% if not config.CLIENT %}
               <li class="nav-item">
                 <a href="/glances/" target="_blank" class="nav-link" id="glances">
                   <i class="far fa-circle nav-icon"></i>
@@ -397,9 +396,9 @@
                   <p>ChatGPT(API)</p>
                 </a>
               </li>
-              {% if env['service'] == 'server' %}
+              {% if config.JUPYTER_PORT != 0 %}
               <li class="nav-item">
-                <a href="https://www.sunjingyu.com:8018/" target="_blank" class="nav-link" id="jupyter">
+                <a href="https://www.sunjingyu.com:{{ config.JUPYTER_PORT }}/" target="_blank" class="nav-link" id="jupyter">
                   <i class="far fa-circle nav-icon"></i>
                   <p>JupyterLab</p>
                 </a>
@@ -411,7 +410,7 @@
           {% endblock nav_others %}
 
           {% block nav_admin %}
-          {% if env['service'] != 'client' %}
+          {% if not config.CLIENT %}
           {% if current_user.is_admin %}
           <li class="nav-item" id="user">
             <a href="#" class="nav-link">
@@ -500,7 +499,7 @@
   <footer class="main-footer">
     <strong>Jingyu Sun &copy; 2020-2024</strong>
     <div class="float-right d-none d-sm-inline-block">
-      <b>固体力学与数值模拟 V1.0</b>{% if env['service'] == 'server' %} | <a href="https://beian.miit.gov.cn">京ICP备17030790号-1</a>{%
+      <b>固体力学与数值模拟 V1.0</b>{% if not config.CLIENT %} | <a href="https://beian.miit.gov.cn">京ICP备17030790号-1</a>{%
       endif %}
     </div>
   </footer>
@@ -513,7 +512,7 @@
 </div>
 <!-- ./wrapper -->
 
-{% if env['cdn'] == 'cdn' %}
+{% if config.CDN %}
 <!-- jQuery -->
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 <!-- jQuery UI 1.11.4 -->

@@ -107,15 +107,10 @@ def register_template_context(app):
     @app.context_processor
     def make_template_context():
         env = {}
-        if app.config['SERVICE'] == 'client':
-            env['service'] = 'client'
-        else:
-            env['service'] = 'server'
-
-        if os.getenv('CDN') == 'True':
-            env['cdn'] = 'cdn'
-        else:
-            env['cdn'] = 'static'
+        # if os.getenv('CDN') == 'True':
+        #     env['cdn'] = 'cdn'
+        # else:
+        #     env['cdn'] = 'static'
         return dict(env=env)
 
 
