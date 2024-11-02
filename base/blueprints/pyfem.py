@@ -239,7 +239,8 @@ def create_job(project_id):
         message = {
             'job': form.job.data,
             'user': form.user.data,
-            'cpus': form.cpus.data
+            'cpus': form.cpus.data,
+            'descript': form.descript.data
         }
         msg_file = os.path.join(job_path, '.job_msg')
         dump_json(msg_file, message)
@@ -254,6 +255,7 @@ def create_job(project_id):
     form.job.data = message['job']
     form.user.data = message['user']
     form.cpus.data = message['cpus']
+    form.descript.data = message['descript']
     return render_template('pyfem/create_job.html', form=form)
 
 
@@ -351,7 +353,8 @@ def edit_job(project_id, job_id):
         message = {
             'job': form.job.data,
             'user': form.user.data,
-            'cpus': form.cpus.data
+            'cpus': form.cpus.data,
+            'descript': form.descript.data
         }
         dump_json(msg_file, message)
         return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
@@ -360,6 +363,7 @@ def edit_job(project_id, job_id):
     form.job.data = message['job']
     form.user.data = message['user']
     form.cpus.data = message['cpus']
+    form.descript.data = message['descript']
     return render_template('pyfem/create_job.html', form=form)
 
 

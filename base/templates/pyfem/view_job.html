@@ -42,6 +42,8 @@
                       <li> 算例toml文件：{{ status['job'] }}.toml</li>
                       <li> 算例user文件：{{ status['user'] }}</li>
                       <li> 算例使用CPU核心数量：{{ status['cpus'] }}</li>
+                      <li> 算例备注：</li>
+                      <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
                       <a class='btn btn-primary' href="{{ url_for('pyfem.edit_job', project_id=project_id, job_id=job_id) }}"><strong>编辑信息</strong></a>
                       {% if env['service'] == 'client' %}
                       <a href="{{ url_for('pyfem.open_job', project_id=project_id, job_id=job_id) }}"
@@ -354,6 +356,10 @@
 
   updateStatus()
   setInterval(updateStatus, 4000);
+
+  $(document).ready(function () {
+    $('#descript').attr('disabled', true)
+  });
 
   document.getElementById('pyfem').className = 'nav-item menu-open'
 
