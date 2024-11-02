@@ -42,6 +42,8 @@
                           <li> 算例inp文件：{{ status['job'] }}.inp</li>
                           <li> 算例user文件：{{ status['user'] }}</li>
                           <li> 算例使用CPU核心数量：{{ status['cpus'] }}</li>
+                          <li> 算例备注：</li>
+                          <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
                           <a class='btn btn-primary' href="{{ url_for('abaqus.edit_job', project_id=project_id, job_id=job_id) }}"><strong>编辑信息</strong></a>
                           {% if env['service'] == 'client' %}
                           <a href="{{ url_for('abaqus.open_job', project_id=project_id, job_id=job_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
@@ -417,6 +419,10 @@
 
   $(document).ready(function(){
     $.fn.zTree.init($("#ztree-npz"), setting_npz);
+  });
+
+  $(document).ready(function () {
+    $('#descript').attr('disabled', true)
   });
 
   document.getElementById('abaqus').className = 'nav-item menu-open'

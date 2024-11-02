@@ -40,7 +40,7 @@
                       <li> 缺省算例名：{{ status['job'] }} </li>
                       <li> 缺省user文件：{{ status['user'] }} </li>
                       <li> 缺省算例使用CPU核心数量：{{ status['cpus'] }} </li>
-                      <li> 项目简介：</li>
+                      <li> 项目备注：</li>
                       <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
                       <a class='btn btn-primary' href="{{ url_for('pyfem.edit_project', project_id=project_id) }}"><strong>编辑信息</strong></a>
                       {% if env['service'] == 'client' %}

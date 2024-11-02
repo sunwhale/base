@@ -40,7 +40,7 @@
                           <li> 前处理编号：{{ preproc_id }}</li>
                           <li> 创建时间：{{ status['preproc_time'] }}</li>
                           <li> 前处理文件：{{ status['script'] }}</li>
-                          <li> 前处理简介：</li>
+                          <li> 前处理备注：</li>
                           <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
 
                           <a class='btn btn-primary' href="{{ url_for('abaqus.edit_preproc', preproc_id=preproc_id) }}"><strong>编辑信息</strong></a>

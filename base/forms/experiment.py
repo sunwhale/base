@@ -25,7 +25,7 @@ class ExperimentForm(FlaskForm):
     standard = StringField('参考标准', default='无')
     parameters = TextAreaField('实验参数', default='请按照以下格式输入实验参数，例如：\nTemperature, ℃ = \nKt = ',
                                render_kw={'rows': 12})
-    descript = TextAreaField('项目详情', render_kw={'rows': 12})
+    descript = TextAreaField('项目备注', render_kw={'rows': 12})
     submit = SubmitField('提交')
 
     def __init__(self, *args, **kwargs):
@@ -35,5 +35,5 @@ class ExperimentForm(FlaskForm):
 
 class SpecimenForm(FlaskForm):
     name = StringField('试件编号', default='1', validators=[DataRequired(), Length(1, 62)])
-    descript = TextAreaField('实验详情', render_kw={'rows': 12})
+    descript = TextAreaField('实验备注', render_kw={'rows': 12})
     submit = SubmitField('提交')

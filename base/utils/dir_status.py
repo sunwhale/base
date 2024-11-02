@@ -532,6 +532,7 @@ def get_job_status(path, project_id, job_id):
         status['job'] = message['job']
         status['user'] = message['user']
         status['cpus'] = message['cpus']
+        status['descript'] = message['descript']
         if os.path.exists(inp_file):
             status['inp_time'] = file_time(inp_file)
             status['inp_size'] = file_size(inp_file)

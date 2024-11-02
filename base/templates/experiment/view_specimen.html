@@ -40,7 +40,7 @@
                           <li> 实验序号：{{ specimen_id }} </li>
                           <li> 试件编号：{{ status['name'] }} </li>
                           <li> 创建时间：{{ status['specimen_time'] }}</li>
-                          <li> 实验详情：</li>
+                          <li> 实验备注：</li>
                           <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
                           <p></p>
                           <a class='btn btn-primary' href="{{ url_for('experiment.edit_specimen', experiment_id=experiment_id, specimen_id=specimen_id) }}"><strong>编辑信息</strong></a>

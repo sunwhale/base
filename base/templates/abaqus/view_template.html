@@ -40,7 +40,7 @@
                       <li> 缺省算例名：{{ status['job'] }} </li>
                       <li> 缺省user文件：{{ status['user'] }} </li>
                       <li> 缺省算例使用CPU核心数量：{{ status['cpus'] }} </li>
-                      <li> 模板简介：</li>
+                      <li> 模板备注：</li>
                       <textarea id="descript" class="form-control" rows="16">{{ status['descript'] }}</textarea>
 
                       <a class='btn btn-primary' href="{{ url_for('abaqus.edit_template', template_id=template_id) }}"><strong>编辑信息</strong></a>
