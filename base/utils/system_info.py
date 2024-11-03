@@ -21,7 +21,7 @@ def system_info():
     # info['cpu_freq'] = psutil.cpu_freq()._asdict()
     # info['cpu_usage'] = psutil.cpu_percent(interval=1)
     info['物理核心数'] = psutil.cpu_count(logical=False)
-    info['逻辑物理核心数'] = psutil.cpu_count(logical=True)
+    info['逻辑核心数'] = psutil.cpu_count(logical=True)
     info['CPU频率'] = psutil.cpu_freq()._asdict()
     info['CPU使用率'] = psutil.cpu_percent(interval=1)
 
