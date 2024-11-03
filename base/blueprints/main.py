@@ -14,6 +14,7 @@ from base.forms.main import ConfigurationForm
 from base.models import User
 from base.settings import USER_CONF_FILE
 from base.utils.common import dump_json, load_json
+from base.utils.system_info import system_info
 
 main_bp = Blueprint('main', __name__)
 
@@ -57,3 +58,10 @@ def configure():
         form.MAX_CPUS.data = message['MAX_CPUS']
 
     return render_template('main/configure.html', form=form)
+
+
+@main_bp.route('/info', methods=['GET'])
+@login_required
+def info():
+    information = system_info()
+    return render_template('main/info.html', information=information)
