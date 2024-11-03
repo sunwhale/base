@@ -1,13 +1,13 @@
 {% extends 'layout.html' %}
 {% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
 
-{% block title %}节点 {{ config.NODE }} 信息{% endblock title %}
+{% block title %}{% if not config.CLIENT %}节点 {{ config.NODE }} {% else %}本地客户端{% endif %}信息{% endblock title %}
 
-{% block pageheader %}节点 {{ config.NODE }} 信息{% endblock pageheader %}
+{% block pageheader %}{% if not config.CLIENT %}节点 {{ config.NODE }} {% else %}本地客户端{% endif %}信息{% endblock pageheader %}
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主界面</a></li>
-<li class="breadcrumb-item active">节点 {{ config.NODE }} 信息</li>
+<li class="breadcrumb-item active">{% if not config.CLIENT %}节点 {{ config.NODE }} {% else %}本地客户端{% endif %}信息</li>
 {% endblock level %}
 
 {% block content %}
@@ -18,7 +18,7 @@
           <div class="col-md-12">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">节点 {{ config.NODE }} 信息</h3>
+                <h3 class="card-title">{% if not config.CLIENT %}节点 {{ config.NODE }} {% else %}本地客户端{% endif %}信息</h3>
               </div>
               <div class="card-body">
                 {% for info in information %}
