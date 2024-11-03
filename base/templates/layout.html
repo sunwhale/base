@@ -39,9 +39,9 @@
       <li class="nav-item d-none d-sm-inline-block">
         {% if current_user.is_moderator or current_user.is_admin %}
         {% if not config.CLIENT %}
-        <a href="info" class="nav-link">节点 {{ config.NODE }}</a>
+        <a href="{{ url_for('main.info') }}" class="nav-link">节点 {{ config.NODE }}</a>
         {% else %}
-        <a href="info" class="nav-link">本地客户端</a>
+        <a href="{{ url_for('main.info') }}" class="nav-link">本地客户端</a>
         {% endif %}
         {% endif %}
       </li>
@@ -108,7 +108,7 @@
           {% block nav_node_number %}
           {% if current_user.is_moderator or current_user.is_admin %}
           <li class="nav-item" id="info">
-            <a href="info" class="nav-link">
+            <a href="{{ url_for('main.info') }}" class="nav-link">
               <i class="nav-icon fas fa-server"></i>
               {% if not config.CLIENT %}
               <p>节点 {{ config.NODE }}</p>
