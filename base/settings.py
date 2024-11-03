@@ -94,6 +94,11 @@ class BaseConfig:
     else:
         CDN = False
 
+    if os.getenv('NODE') is None:
+        NODE = -1
+    else:
+        NODE = os.getenv('NODE')
+
 
 class DevelopmentConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = prefix + os.path.join(basedir, 'data.db')
