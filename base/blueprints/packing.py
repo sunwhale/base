@@ -241,6 +241,7 @@ def create_abaqus(model_id):
                     abaqus_message['job'] = form_abaqus.job.data
                     abaqus_message['user'] = form_abaqus.user.data
                     abaqus_message['cpus'] = form_abaqus.cpus.data
+                    abaqus_message['descript'] = form_abaqus.descript.data
                     dump_json(abaqus_msg_file, abaqus_message)
                     is_create = True
             else:
@@ -281,7 +282,8 @@ def create_abaqus(model_id):
                 job_message = {
                     'job': abaqus_message['job'],
                     'user': abaqus_message['user'],
-                    'cpus': abaqus_message['cpus']
+                    'cpus': abaqus_message['cpus'],
+                    'descript': abaqus_message['descript']
                 }
                 job_msg_file = os.path.join(job_path, '.job_msg')
                 dump_json(job_msg_file, job_message)
