@@ -23,7 +23,7 @@ def make_gif(path, gif_path, fps):
 
     gif_images = [imageio.v3.imread(image) for image in sorted_images]
     gif_name = gif_path.split(os.sep)[-1] + '.gif'
-    imageio.mimsave(os.path.join(path, gif_name), gif_images, duration=1000*1/fps)
+    imageio.mimsave(os.path.join(path, gif_name), gif_images, duration=1000*1/fps, loop=0)
 
 
 if __name__ == '__main__':
