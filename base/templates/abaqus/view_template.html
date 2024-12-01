@@ -44,7 +44,7 @@
                       <textarea id="descript" class="form-control" rows="16">{{ status['descript'] }}</textarea>
 
                       <a class='btn btn-primary' href="{{ url_for('abaqus.edit_template', template_id=template_id) }}"><strong>编辑信息</strong></a>
-                      {% if env['service'] == 'client' %}
+                      {% if config.CLIENT %}
                       <a href="{{ url_for('abaqus.open_template', template_id=template_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
                       {% endif %}
                     </ul>

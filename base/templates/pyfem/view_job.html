@@ -45,7 +45,7 @@
                       <li> 算例备注：</li>
                       <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
                       <a class='btn btn-primary' href="{{ url_for('pyfem.edit_job', project_id=project_id, job_id=job_id) }}"><strong>编辑信息</strong></a>
-                      {% if env['service'] == 'client' %}
+                      {% if config.CLIENT %}
                       <a href="{{ url_for('pyfem.open_job', project_id=project_id, job_id=job_id) }}"
                          class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
                       {% endif %}
