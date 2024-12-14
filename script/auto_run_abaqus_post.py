@@ -1,7 +1,9 @@
-import requests
+import os
 import re
 import time
-import pandas as pd
+
+import requests
+from tqdm import tqdm
 
 host = 'https://www.sunjingyu.com:8010'
 
@@ -78,7 +80,7 @@ def print_figure(host, session, project_id, job_id):
     data = {
         'width': '200.0',
         'height': '400.0',
-        'imageSize': '(300, 600)',
+        'imageSize': '(200, 400)',
         'legend': 'OFF',
         'legendPosition': '(2, 98)',
         'triad': 'OFF',
@@ -110,7 +112,7 @@ def print_figure(host, session, project_id, job_id):
         'statusMinimum': '0.8',
         'statusMaximum': '1.0',
         'animate': 'ON',
-        'frameInterval': '1',
+        'frameInterval': '2',
         'startFrame': '0',
         'endFrame': '-1',
         'fps': '12',
@@ -130,13 +132,29 @@ def print_figure(host, session, project_id, job_id):
 def print_figure_gif(host, session, project_id, job_id, variable):
     print_figure_gif_url = f'{host}/abaqus/print_figure_gif/{project_id}/{job_id}/{variable}'
     print_figure_gif_response = session.get(print_figure_gif_url)
-    time.sleep(2)
+    time.sleep(1)
     if print_figure_gif_response.status_code == 200:
         print(f'Create gif {project_id}-{job_id} success!')
         return True
     else:
         print(f'Create gif {project_id}-{job_id} failed!')
         return False
+
+
+def get_job_file(session, url, destination):
+    response = session.get(url, stream=True)
+    total_size = int(response.headers.get('content-length', 0))
+
+    print(url)
+    # 使用 tqdm 显示下载进度条
+    progress_bar = tqdm(total=total_size, unit='B', unit_scale=True)
+
+    with open(destination, 'wb') as file:
+        for data in response.iter_content(chunk_size=1024):
+            progress_bar.update(len(data))
+            file.write(data)
+
+    progress_bar.close()
 
 
 if __name__ == '__main__':
@@ -159,11 +177,19 @@ if __name__ == '__main__':
     #             break
     #         time.sleep(1)
 
-    # for job_id in job_ids:
-    #     print_figure(host, session, project_id, job_id)
+    for job_id in job_ids:
+        print_figure(host, session, project_id, job_id)
 
     # for job_id in job_ids:
     #     print_figure_gif(host, session, project_id, job_id, 'NT11')
 
     for job_id in job_ids:
         print_figure_gif(host, session, project_id, job_id, 'DEFORMED_Set')
+
+    variable = 'DEFORMED_Set'
+    if not os.path.exists('downloads'):
+        os.makedirs('downloads')
+    for job_id in job_ids:
+        file_url = f'{host}/abaqus/get_job_file/{project_id}/{job_id}/{variable}.gif'
+        destination = os.path.join('downloads', f'{project_id}-{job_id}-{variable}.gif')
+        get_job_file(session, file_url, destination)
