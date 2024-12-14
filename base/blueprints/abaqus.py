@@ -690,7 +690,7 @@ def print_figure(project_id, job_id):
             else:
                 flash('请先对odb文件进行预扫描。', 'warning')
 
-            if form.validate_on_submit():
+            if request.method == 'POST':
                 message = {
                     'width': form.width.data,
                     'height': form.height.data,
