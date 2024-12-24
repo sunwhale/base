@@ -167,7 +167,7 @@ def zip_folder(folder_path, zip_path):
             for file in files:
                 file_path = os.path.join(root, file)
                 arcname = os.path.relpath(file_path, os.path.dirname(folder_path))
-                print(arcname)
+                print('添加压缩文件：', arcname)
                 zipf.write(file_path, arcname)
 
 
