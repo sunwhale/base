@@ -1,0 +1,7 @@
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+<form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+  {{ form_upload.csrf_token }}
+  <div class="form-group">
+  {{ form_upload.submit }}{{ form_upload.filename }}
+  </div>
+</form>

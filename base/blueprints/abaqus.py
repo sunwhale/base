@@ -1303,34 +1303,17 @@ def postproc_prescan_odb_data(filename):
     return ztree
 
 
-# @abaqus_bp.route('/postproc_prescan_odb/<path:odbname>')
-# @login_required
-# def postproc_prescan_odb(odbname):
-#     dirname = os.path.dirname(odbname)
-#     basename = os.path.basename(odbname)
-#     jobname = basename.split('.')[0]
-#     if os.path.exists(odbname):
-#         p = Postproc(dirname, job=jobname)
-#         proc = p.prescan_odb()
-#         with open(os.path.join(job_path, '.prescan_status'), 'w', encoding='utf-8') as f:
-#             f.write('Submitting')
-#             flash('预扫描开始', 'success')
-#         return redirect(request.referrer)
-#     else:
-#         abort(404)
-
-
-@abaqus_bp.route('/prescan')
+@abaqus_bp.route('/upload_job_file/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
 @login_required
-def prescan():
-    return render_template('abaqus/prescan.html')
+def upload_job_file(project_id, job_id):
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
 
+    form_upload = UploadForm()
 
-@abaqus_bp.route('/prescan_data', methods=['GET', 'POST'])
-@login_required
-def prescan_data():
-    odb_json_file = 'H:\\files\\abaqus\\1\\1\\prescan_odb.json'
-    with open(odb_json_file, 'r', encoding='utf-8') as f:
-        odb_dict = json.load(f)
-    ztree = json_to_ztree(odb_dict)
-    return ztree
+    if request.method == 'POST':
+        f = form_upload.filename.data
+        f.save(os.path.join(job_path, f.filename))
+        return '上传文件%s成功。' % f.filename
+
+    return render_template('abaqus/upload_job_file.html', form_upload=form_upload)
