@@ -2,6 +2,7 @@ import os
 import re
 import time
 import json
+import random
 
 import pyhttpx
 from tqdm import tqdm
@@ -23,6 +24,14 @@ def load_json(file_path, encoding='utf-8'):
     """
     with open(file_path, 'r', encoding=encoding) as f:
         return json.load(f)
+
+
+def get_local_pii_values(path):
+    fns = []
+    for root, dirs, files in os.walk(path):
+        for fn in files:
+            fns.append(fn.split('.')[0])
+    return fns
 
 
 def download_bibtex_from_sciencedirect(pii_value: str, bib_path: str = 'bibs') -> None:
@@ -50,13 +59,16 @@ def download_bibtex_from_sciencedirect(pii_value: str, bib_path: str = 'bibs') -
         print('Failed to retrieve data. Status code:', response.status_code)
 
 
-def download_html_code_from_sciencedirect(driver, pii_value: str, sleep_time: int = 5, html_path: str = 'htmls') -> None:
+def download_html_code_from_sciencedirect(driver, pii_value: str, sleep_time: float = 5.0, html_path: str = 'htmls') -> None:
     driver.get(f'https://www.sciencedirect.com/science/article/pii/{pii_value}')
     time.sleep(sleep_time)
     html_code = driver.page_source
-    print(f'get_rendered_source_code_from_sciencedirect: Done')
-    with open(os.path.join(html_path, f'{pii_value}.html'), 'w', encoding='utf-8') as f:
-        f.write(html_code)
+    if str(pii_value) in html_code:
+        print(f'download_html_code_from_sciencedirect with pii {pii_value} is Done')
+        with open(os.path.join(html_path, f'{pii_value}.html'), 'w', encoding='utf-8') as f:
+            f.write(html_code)
+    else:
+        raise NotImplementedError('Stopped')
 
 
 def analyze_html_code(pii_value: str, html_path: str = 'htmls', json_path: str = 'jsons') -> None:
@@ -76,6 +88,25 @@ def analyze_html_code(pii_value: str, html_path: str = 'htmls', json_path: str =
     }
 
     dump_json(os.path.join(json_path, f'{pii_value}.json'), data, encoding='utf-8')
+
+
+def analyze_related_html_code(pii_value: str, html_path: str = 'htmls', json_path: str = 'jsons') -> None:
+    data = load_json(os.path.join(json_path, f'{pii_value}.json'), encoding='utf-8')
+    related_pii_values = data['cited_pii'] + data['ref_pii']
+    local_pii_values = get_local_pii_values(json_path)
+    for related_pii_value in related_pii_values:
+        if related_pii_value not in local_pii_values:
+            analyze_html_code(related_pii_value, html_path, json_path)
+
+
+def download_related_bibtex(pii_value: str, json_path: str = 'jsons', bib_path: str = 'bibs') -> None:
+    data = load_json(os.path.join(json_path, f'{pii_value}.json'), encoding='utf-8')
+    related_pii_values = data['cited_pii'] + data['ref_pii']
+    local_pii_values = get_local_pii_values(bib_path)
+    for related_pii_value in related_pii_values:
+        if related_pii_value not in local_pii_values:
+            download_bibtex_from_sciencedirect(related_pii_value, bib_path)
+            time.sleep(random.random())
 
 
 def find_pdf_url(soup: BeautifulSoup) -> str:
@@ -132,16 +163,52 @@ def find_cited_count(soup: BeautifulSoup) -> int:
     return -1
 
 
+def download_related_html(driver, pii_value: str, json_path: str = 'jsons', html_path: str = 'htmls') -> None:
+    data = load_json(os.path.join(json_path, f'{pii_value}.json'), encoding='utf-8')
+    related_pii_values = data['cited_pii'] + data['ref_pii']
+    local_pii_values = get_local_pii_values(html_path)
+    for related_pii_value in related_pii_values:
+        if related_pii_value not in local_pii_values:
+            download_html_code_from_sciencedirect(driver, related_pii_value)
+            time.sleep(random.random())
+
+
+def get_top_cited(pii_value: str, top_number: int = 3, json_path: str = 'jsons') -> tuple:
+    data = load_json(os.path.join(json_path, f'{pii_value}.json'), encoding='utf-8')
+    cited_list = []
+    for cited_pii_value in data['cited_pii']:
+        cited_count = load_json(os.path.join(json_path, f'{cited_pii_value}.json'), encoding='utf-8')['cited_count']
+        cited_list.append([cited_pii_value, cited_count])
+    ref_list = []
+    for ref_pii_value in data['ref_pii']:
+        cited_count = load_json(os.path.join(json_path, f'{ref_pii_value}.json'), encoding='utf-8')['cited_count']
+        ref_list.append([ref_pii_value, cited_count])
+
+    # 按第二列排序二维列表
+    sorted_cited_list = sorted(cited_list, key=lambda x: x[1])
+    sorted_ref_list = sorted(ref_list, key=lambda x: x[1])
+    return [s[0] for s in sorted_cited_list[-top_number:]], [s[0] for s in sorted_ref_list[-top_number:]]
+
+
+def recursive_download(driver, pii_value: str, depth: int = 0, max_depth: int = 2, json_path: str = 'jsons', bib_path: str = 'bibs',
+                       html_path: str = 'htmls') -> None:
+    depth += 1
+    if depth <= max_depth:
+        download_html_code_from_sciencedirect(driver, pii_value, 5.0 + 5.0 * random.random(), html_path)
+        analyze_html_code(pii_value, html_path, json_path)
+        download_related_bibtex(pii_value, json_path, bib_path)
+        download_related_html(driver, pii_value, json_path, html_path)
+        analyze_related_html_code(pii_value, html_path, json_path)
+        top_cited_list, top_ref_list = get_top_cited(pii_value, 5, json_path)
+        for next_pii_value in set(top_cited_list + top_ref_list):
+            recursive_download(driver, next_pii_value, depth, max_depth, json_path, bib_path, html_path)
+    else:
+        pass
+
+
 if __name__ == '__main__':
     pii_value = 'S0022509622001284'
-    # driver = webdriver.Edge()
-    # rendered_source_code = download_html_code_from_sciencedirect(driver, pii_value)
-    analyze_html_code('S0022509622001284')
+    driver = webdriver.Edge()
+    recursive_download(driver, pii_value, 0, 1)
 
-    # identifier_value_list = find_references_identifier_value_in_html(rendered_source_code)
-    # print(find_cited_count_in_html(rendered_source_code))
-    # print(find_cited_pii_in_html(rendered_source_code))
-    # print(find_references_pii_in_html(rendered_source_code))
-    # for identifier_value in identifier_value_list:
-    #     download_bibtex_from_sciencedirect(identifier_value)
     # driver.quit()
