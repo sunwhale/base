@@ -7,6 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.interpolate import interp1d
+from scipy.optimize import fmin
 
 host = 'https://www.sunjingyu.com:8010'
 
@@ -191,9 +192,9 @@ def func(x: list, optimizations: list, constants: dict):
         para = f"""*Parameter
             Time = 1.4
             E = 1.0
-            g_1 = 0.1
-            g_2 = 0.63
-            g_3 = 0.12
+            g_1 = {x[0]}
+            g_2 = {x[1]}
+            g_3 = {x[2]}
             k_1 = 0.1
             k_2 = 0.1
             k_3 = 0.1
@@ -282,15 +283,15 @@ def func(x: list, optimizations: list, constants: dict):
                 cost += np.sum(((stress_exp - stress_sim) / max(stress_exp)) ** 2, axis=0) / len(stress_exp)
             except Exception as e:
                 print('error:' + csv_file)
-
+    print('--------', x, cost)
     return cost
 
 
 if __name__ == '__main__':
-    # optimizations = [{'project_id': 48, 'job_id': 1, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 1, 'csv_name': 'timed.csv'}]},
-    #                  {'project_id': 48, 'job_id': 2, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 4, 'csv_name': 'timed.csv'}]}]
+    optimizations = [{'project_id': 48, 'job_id': 1, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 1, 'csv_name': 'timed.csv'}]},
+                     {'project_id': 48, 'job_id': 2, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 4, 'csv_name': 'timed.csv'}]}]
 
-    optimizations = [{'project_id': 48, 'job_id': 1, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 4, 'csv_name': 'timed.csv'}]}]
+    # optimizations = [{'project_id': 48, 'job_id': 1, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 4, 'csv_name': 'timed.csv'}]}]
 
     exp_path = r'F:\Github\base\script\exp'
     sim_path = r'F:\Github\base\script\sim'
@@ -299,81 +300,86 @@ if __name__ == '__main__':
 
     session = login_session(host)
 
-    if not is_exp_downloaded:
-        for optimization in optimizations:
-            for experiment in optimization['experiments']:
-                print(get_specimen_file(host, session, experiment['experiment_id'], experiment['specimen_id'], experiment['csv_name'], exp_path))
+    paras_0 = np.array([0.09962697, 0.66318053, 0.12377017])
+    constants = {'exp_path': exp_path, 'sim_path': sim_path, 'session': session}
+    max_iter = 100.0
+    fmin(func, paras_0, args=(optimizations, constants), maxiter=max_iter, ftol=1e-4, xtol=1e-4, disp=True)
 
-    paras_0 = [10, 1, 1]
-    constants = {'E_inf': 1.0,
-                 'nu': 0.14,
-                 'mode': 'analytical',
-                 'tau_count': 3,
-                 'tau': [0.1, 2.0, 1000.0],
-                 'E': [4.37822768, 3.52537335, 0.71464186],
-                 'lc': 1.0}
-
-    is_set_parameter_success = True
-    for optimization in optimizations:
-        para = f"""*Parameter
-        Time = 1.4
-        E = 1.0
-        g_1 = 0.1
-        g_2 = 0.63
-        g_3 = 0.12
-        k_1 = 0.1
-        k_2 = 0.1
-        k_3 = 0.1
-        Tau_1 = 0.05
-        Tau_2 = 1.0
-        Tau_3 = 100.0""".replace(' ', '')
-
-        if not set_job_parameter(host, session, optimization['project_id'], optimization['job_id'], para[:-1]):
-            is_set_parameter_success = False
-
-    is_run_job_success = True
-    if is_set_parameter_success:
-        for optimization in optimizations:
-            if not run_job(host, session, optimization['project_id'], optimization['job_id']):
-                is_run_job_success = False
-
-    is_odb_to_npz_success = False
-    if is_run_job_success:
-        while True:
-            jobs_solver_status = []
-            for optimization in optimizations:
-                jobs_solver_status += get_jobs_solver_status(host, session, optimization['project_id'], [optimization['job_id']])
-            print(jobs_solver_status)
-            if set(jobs_solver_status) == {'Completed'}:
-                is_odb_to_npz_success = True
-                for optimization in optimizations:
-                    if not odb_to_npz(host, session, optimization['project_id'], optimization['job_id']):
-                        is_odb_to_npz_success = False
-            if is_odb_to_npz_success:
-                break
-            time.sleep(1)
-
-    is_odb_to_npz_done = False
-    if is_odb_to_npz_success:
-        while True:
-            jobs_odb_to_npz_status = []
-            for optimization in optimizations:
-                jobs_odb_to_npz_status += get_jobs_odb_to_npz_status(host, session, optimization['project_id'], [optimization['job_id']])
-            print(jobs_odb_to_npz_status)
-            if set(jobs_odb_to_npz_status) == {'Done'}:
-                is_odb_to_npz_done = True
-                break
-            time.sleep(1)
-
-    is_npz_download = True
-    if is_odb_to_npz_done:
-        while True:
-            for optimization in optimizations:
-                if not get_job_file(host, session, optimization['project_id'], optimization['job_id'], optimization['npz_name'], sim_path):
-                    is_npz_download = False
-            if is_npz_download:
-                break
-            time.sleep(1)
+    # if not is_exp_downloaded:
+    #     for optimization in optimizations:
+    #         for experiment in optimization['experiments']:
+    #             print(get_specimen_file(host, session, experiment['experiment_id'], experiment['specimen_id'], experiment['csv_name'], exp_path))
+    #
+    # paras_0 = [10, 1, 1]
+    # constants = {'E_inf': 1.0,
+    #              'nu': 0.14,
+    #              'mode': 'analytical',
+    #              'tau_count': 3,
+    #              'tau': [0.1, 2.0, 1000.0],
+    #              'E': [4.37822768, 3.52537335, 0.71464186],
+    #              'lc': 1.0}
+    #
+    # is_set_parameter_success = True
+    # for optimization in optimizations:
+    #     para = f"""*Parameter
+    #     Time = 1.4
+    #     E = 1.0
+    #     g_1 = 0.1
+    #     g_2 = 0.63
+    #     g_3 = 0.12
+    #     k_1 = 0.1
+    #     k_2 = 0.1
+    #     k_3 = 0.1
+    #     Tau_1 = 0.05
+    #     Tau_2 = 1.0
+    #     Tau_3 = 100.0""".replace(' ', '')
+    #
+    #     if not set_job_parameter(host, session, optimization['project_id'], optimization['job_id'], para[:-1]):
+    #         is_set_parameter_success = False
+    #
+    # is_run_job_success = True
+    # if is_set_parameter_success:
+    #     for optimization in optimizations:
+    #         if not run_job(host, session, optimization['project_id'], optimization['job_id']):
+    #             is_run_job_success = False
+    #
+    # is_odb_to_npz_success = False
+    # if is_run_job_success:
+    #     while True:
+    #         jobs_solver_status = []
+    #         for optimization in optimizations:
+    #             jobs_solver_status += get_jobs_solver_status(host, session, optimization['project_id'], [optimization['job_id']])
+    #         print(jobs_solver_status)
+    #         if set(jobs_solver_status) == {'Completed'}:
+    #             is_odb_to_npz_success = True
+    #             for optimization in optimizations:
+    #                 if not odb_to_npz(host, session, optimization['project_id'], optimization['job_id']):
+    #                     is_odb_to_npz_success = False
+    #         if is_odb_to_npz_success:
+    #             break
+    #         time.sleep(1)
+    #
+    # is_odb_to_npz_done = False
+    # if is_odb_to_npz_success:
+    #     while True:
+    #         jobs_odb_to_npz_status = []
+    #         for optimization in optimizations:
+    #             jobs_odb_to_npz_status += get_jobs_odb_to_npz_status(host, session, optimization['project_id'], [optimization['job_id']])
+    #         print(jobs_odb_to_npz_status)
+    #         if set(jobs_odb_to_npz_status) == {'Done'}:
+    #             is_odb_to_npz_done = True
+    #             break
+    #         time.sleep(1)
+    #
+    # is_npz_download = True
+    # if is_odb_to_npz_done:
+    #     while True:
+    #         for optimization in optimizations:
+    #             if not get_job_file(host, session, optimization['project_id'], optimization['job_id'], optimization['npz_name'], sim_path):
+    #                 is_npz_download = False
+    #         if is_npz_download:
+    #             break
+    #         time.sleep(1)
 
     sim_data = {}
     for i, optimization in enumerate(optimizations):
@@ -416,6 +422,8 @@ if __name__ == '__main__':
         stress = exp_data[key]['Stress_MPa']
         plt.plot(strain, stress, marker='o', label=f'Exp. {key}')
 
+    plt.xlim(0, 0.1)
+    plt.ylim(0, 0.8)
     plt.xlabel('Strain')
     plt.ylabel('Stress, MPa')
     plt.legend(loc='upper right')
