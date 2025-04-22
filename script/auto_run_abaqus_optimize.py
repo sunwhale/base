@@ -287,100 +287,7 @@ def func(x: list, optimizations: list, constants: dict):
     return cost
 
 
-if __name__ == '__main__':
-    optimizations = [{'project_id': 48, 'job_id': 1, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 1, 'csv_name': 'timed.csv'}]},
-                     {'project_id': 48, 'job_id': 2, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 4, 'csv_name': 'timed.csv'}]}]
-
-    # optimizations = [{'project_id': 48, 'job_id': 1, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 4, 'csv_name': 'timed.csv'}]}]
-
-    exp_path = r'F:\Github\base\script\exp'
-    sim_path = r'F:\Github\base\script\sim'
-
-    is_exp_downloaded = True
-
-    session = login_session(host)
-
-    paras_0 = np.array([0.09962697, 0.66318053, 0.12377017])
-    constants = {'exp_path': exp_path, 'sim_path': sim_path, 'session': session}
-    max_iter = 100.0
-    fmin(func, paras_0, args=(optimizations, constants), maxiter=max_iter, ftol=1e-4, xtol=1e-4, disp=True)
-
-    # if not is_exp_downloaded:
-    #     for optimization in optimizations:
-    #         for experiment in optimization['experiments']:
-    #             print(get_specimen_file(host, session, experiment['experiment_id'], experiment['specimen_id'], experiment['csv_name'], exp_path))
-    #
-    # paras_0 = [10, 1, 1]
-    # constants = {'E_inf': 1.0,
-    #              'nu': 0.14,
-    #              'mode': 'analytical',
-    #              'tau_count': 3,
-    #              'tau': [0.1, 2.0, 1000.0],
-    #              'E': [4.37822768, 3.52537335, 0.71464186],
-    #              'lc': 1.0}
-    #
-    # is_set_parameter_success = True
-    # for optimization in optimizations:
-    #     para = f"""*Parameter
-    #     Time = 1.4
-    #     E = 1.0
-    #     g_1 = 0.1
-    #     g_2 = 0.63
-    #     g_3 = 0.12
-    #     k_1 = 0.1
-    #     k_2 = 0.1
-    #     k_3 = 0.1
-    #     Tau_1 = 0.05
-    #     Tau_2 = 1.0
-    #     Tau_3 = 100.0""".replace(' ', '')
-    #
-    #     if not set_job_parameter(host, session, optimization['project_id'], optimization['job_id'], para[:-1]):
-    #         is_set_parameter_success = False
-    #
-    # is_run_job_success = True
-    # if is_set_parameter_success:
-    #     for optimization in optimizations:
-    #         if not run_job(host, session, optimization['project_id'], optimization['job_id']):
-    #             is_run_job_success = False
-    #
-    # is_odb_to_npz_success = False
-    # if is_run_job_success:
-    #     while True:
-    #         jobs_solver_status = []
-    #         for optimization in optimizations:
-    #             jobs_solver_status += get_jobs_solver_status(host, session, optimization['project_id'], [optimization['job_id']])
-    #         print(jobs_solver_status)
-    #         if set(jobs_solver_status) == {'Completed'}:
-    #             is_odb_to_npz_success = True
-    #             for optimization in optimizations:
-    #                 if not odb_to_npz(host, session, optimization['project_id'], optimization['job_id']):
-    #                     is_odb_to_npz_success = False
-    #         if is_odb_to_npz_success:
-    #             break
-    #         time.sleep(1)
-    #
-    # is_odb_to_npz_done = False
-    # if is_odb_to_npz_success:
-    #     while True:
-    #         jobs_odb_to_npz_status = []
-    #         for optimization in optimizations:
-    #             jobs_odb_to_npz_status += get_jobs_odb_to_npz_status(host, session, optimization['project_id'], [optimization['job_id']])
-    #         print(jobs_odb_to_npz_status)
-    #         if set(jobs_odb_to_npz_status) == {'Done'}:
-    #             is_odb_to_npz_done = True
-    #             break
-    #         time.sleep(1)
-    #
-    # is_npz_download = True
-    # if is_odb_to_npz_done:
-    #     while True:
-    #         for optimization in optimizations:
-    #             if not get_job_file(host, session, optimization['project_id'], optimization['job_id'], optimization['npz_name'], sim_path):
-    #                 is_npz_download = False
-    #         if is_npz_download:
-    #             break
-    #         time.sleep(1)
-
+def plot(optimizations):
     sim_data = {}
     for i, optimization in enumerate(optimizations):
         npz_file = os.path.join(sim_path, str(optimization['project_id']), str(optimization['job_id']), optimization['npz_name'])
@@ -396,8 +303,6 @@ if __name__ == '__main__':
         plt.plot(strain_fem, stress_fem, marker='*', label="fem%s" % sim_id)
 
     exp_data = {}
-
-    cost = 0.0
     for i, optimization in enumerate(optimizations):
         f = sim_data[i]['PART-1-1.SET-X1']['f']
         for experiment in optimization['experiments']:
@@ -407,13 +312,6 @@ if __name__ == '__main__':
             try:
                 df = pd.read_csv(csv_file)
                 exp_data[f'{experiment_id}-{specimen_id}'] = df
-                strain_exp = df['Strain'].to_numpy()
-                stress_exp = df['Stress_MPa'].to_numpy()
-                condition = strain_exp < 0.1
-                strain_exp = strain_exp[condition]
-                stress_exp = stress_exp[condition]
-                stress_sim = f(strain_exp)
-                cost += np.sum(((stress_exp - stress_sim) / max(stress_exp)) ** 2, axis=0) / len(stress_exp)
             except Exception as e:
                 print('error:' + csv_file)
 
@@ -428,3 +326,24 @@ if __name__ == '__main__':
     plt.ylabel('Stress, MPa')
     plt.legend(loc='upper right')
     plt.show()
+
+
+if __name__ == '__main__':
+    optimizations = [{'project_id': 48, 'job_id': 1, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 1, 'csv_name': 'timed.csv'}]},
+                     {'project_id': 48, 'job_id': 2, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 4, 'csv_name': 'timed.csv'}]}]
+
+    # optimizations = [{'project_id': 48, 'job_id': 1, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 4, 'csv_name': 'timed.csv'}]}]
+
+    exp_path = r'F:\Github\base\script\exp'
+    sim_path = r'F:\Github\base\script\sim'
+
+    is_exp_downloaded = True
+
+    # session = login_session(host)
+
+    # paras_0 = np.array([0.09962697, 0.66318053, 0.12377017])
+    # constants = {'exp_path': exp_path, 'sim_path': sim_path, 'session': session}
+    # max_iter = 100.0
+    # fmin(func, paras_0, args=(optimizations, constants), maxiter=max_iter, ftol=1e-4, xtol=1e-4, disp=True)
+
+    plot(optimizations)
