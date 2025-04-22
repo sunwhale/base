@@ -182,6 +182,18 @@ def load_region_data(npz_file, regions):
     return out_data
 
 
+def func(x: list, processed_tensile_data: dict, constants: dict):
+    cost = 0.0
+    cost += cal_tensile_cost(processed_tensile_data, x, constants)
+    punish = 0.0
+    y = cost
+    for i in range(len(x)):
+        punish += (max(0, -x[i])) ** 2
+    y += 1e16 * punish
+    print(y)
+    return y
+
+
 if __name__ == '__main__':
     optimizations = [{'project_id': 47, 'job_id': 1, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 1, 'csv_name': 'timed.csv'},
                                                                                               {'experiment_id': 3, 'specimen_id': 2, 'csv_name': 'timed.csv'}]},
@@ -291,6 +303,7 @@ if __name__ == '__main__':
 
     exp_data = {}
 
+    cost = 0.0
     for i, optimization in enumerate(optimizations):
         f = sim_data[i]['PART-1-1.SET-Y1']['f']
         for experiment in optimization['experiments']:
@@ -299,10 +312,13 @@ if __name__ == '__main__':
             csv_file = os.path.join(exp_path, str(experiment['experiment_id']), str(experiment['specimen_id']), experiment['csv_name'])
             try:
                 df = pd.read_csv(csv_file)
-                strain_exp = df['Strain']
-                stress_exp = df['Stress_MPa']
+                strain_exp = df['Strain'].to_numpy()
+                stress_exp = df['Stress_MPa'].to_numpy()
+                condition = strain_exp < 0.1
+                strain_exp = strain_exp[condition]
+                stress_exp = stress_exp[condition]
                 stress_sim = f(strain_exp)
-                print(stress_sim)
+                cost += np.sum(((stress_exp - stress_sim) / max(stress_exp)) ** 2, axis=0) / len(stress_exp)
                 exp_data[f'{experiment_id}-{specimen_id}'] = df
             except Exception as e:
                 print('error:' + csv_file)
