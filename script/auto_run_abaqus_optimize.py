@@ -190,7 +190,7 @@ def func(x: list, optimizations: list, constants: dict):
     is_set_parameter_success = True
     for optimization in optimizations:
         para = f"""*Parameter
-            Time = 1.4
+            Time = {optimization['time']}
             E = 1.0
             g_1 = {x[0]}
             g_2 = {x[1]}
@@ -300,7 +300,7 @@ def plot(optimizations):
         strain_fem = sim_data[sim_id]['PART-1-1.SET-X1']['disp'] / 1.0
         stress_fem = sim_data[sim_id]['PART-1-1.SET-X1']['force'] / 1.0
         sim_data[sim_id]['PART-1-1.SET-X1']['f'] = interp1d(strain_fem, stress_fem, kind='linear')
-        plt.plot(strain_fem, stress_fem, marker='*', label="fem%s" % sim_id)
+        plt.plot(strain_fem, stress_fem, label="fem%s" % sim_id)
 
     exp_data = {}
     for i, optimization in enumerate(optimizations):
@@ -320,8 +320,8 @@ def plot(optimizations):
         stress = exp_data[key]['Stress_MPa']
         plt.plot(strain, stress, marker='o', label=f'Exp. {key}')
 
-    plt.xlim(0, 0.1)
-    plt.ylim(0, 0.8)
+    # plt.xlim(0, 0.1)
+    # plt.ylim(0, 1.0)
     plt.xlabel('Strain')
     plt.ylabel('Stress, MPa')
     plt.legend(loc='upper right')
@@ -329,21 +329,27 @@ def plot(optimizations):
 
 
 if __name__ == '__main__':
-    optimizations = [{'project_id': 48, 'job_id': 1, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 1, 'csv_name': 'timed.csv'}]},
-                     {'project_id': 48, 'job_id': 2, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 4, 'csv_name': 'timed.csv'}]}]
+    optimizations = [{'project_id': 48, 'job_id': 1, 'npz_name': 'Job-1.npz', 'time': 1.4, 'experiments': [{'experiment_id': 3, 'specimen_id': 7, 'csv_name': 'timed.csv'}]},
+                     {'project_id': 48, 'job_id': 2, 'npz_name': 'Job-1.npz', 'time': 8.4, 'experiments': [{'experiment_id': 3, 'specimen_id': 4, 'csv_name': 'timed.csv'}]},
+                     {'project_id': 48, 'job_id': 3, 'npz_name': 'Job-1.npz', 'time': 8.4, 'experiments': [{'experiment_id': 3, 'specimen_id': 1, 'csv_name': 'timed.csv'}]}]
 
     # optimizations = [{'project_id': 48, 'job_id': 1, 'npz_name': 'Job-1.npz', 'experiments': [{'experiment_id': 3, 'specimen_id': 4, 'csv_name': 'timed.csv'}]}]
 
     exp_path = r'F:\Github\base\script\exp'
     sim_path = r'F:\Github\base\script\sim'
 
-    is_exp_downloaded = True
+    is_exp_downloaded = False
 
-    # session = login_session(host)
+    session = login_session(host)
 
-    # paras_0 = np.array([0.09962697, 0.66318053, 0.12377017])
-    # constants = {'exp_path': exp_path, 'sim_path': sim_path, 'session': session}
-    # max_iter = 100.0
-    # fmin(func, paras_0, args=(optimizations, constants), maxiter=max_iter, ftol=1e-4, xtol=1e-4, disp=True)
+    if not is_exp_downloaded:
+        for optimization in optimizations:
+            for experiment in optimization['experiments']:
+                print(get_specimen_file(host, session, experiment['experiment_id'], experiment['specimen_id'], experiment['csv_name'], exp_path))
+
+    paras_0 = np.array([0.09962697, 0.66318053, 0.12377017])
+    constants = {'exp_path': exp_path, 'sim_path': sim_path, 'session': session}
+    max_iter = 10.0
+    fmin(func, paras_0, args=(optimizations, constants), maxiter=max_iter, ftol=1e-4, xtol=1e-4, disp=True)
 
     plot(optimizations)
