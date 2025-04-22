@@ -182,16 +182,108 @@ def load_region_data(npz_file, regions):
     return out_data
 
 
-def func(x: list, processed_tensile_data: dict, constants: dict):
+def func(x: list, optimizations: list, constants: dict):
+    exp_path = constants['exp_path']
+    sim_path = constants['sim_path']
+    session = constants['session']
+    is_set_parameter_success = True
+    for optimization in optimizations:
+        para = f"""*Parameter
+            Time = 1.4
+            E = 1.0
+            g_1 = 0.1
+            g_2 = 0.63
+            g_3 = 0.12
+            k_1 = 0.1
+            k_2 = 0.1
+            k_3 = 0.1
+            Tau_1 = 0.05
+            Tau_2 = 1.0
+            Tau_3 = 100.0""".replace(' ', '')
+
+        if not set_job_parameter(host, session, optimization['project_id'], optimization['job_id'], para[:-1]):
+            is_set_parameter_success = False
+
+    is_run_job_success = True
+    if is_set_parameter_success:
+        for optimization in optimizations:
+            if not run_job(host, session, optimization['project_id'], optimization['job_id']):
+                is_run_job_success = False
+
+    is_odb_to_npz_success = False
+    if is_run_job_success:
+        while True:
+            jobs_solver_status = []
+            for optimization in optimizations:
+                jobs_solver_status += get_jobs_solver_status(host, session, optimization['project_id'], [optimization['job_id']])
+            print(jobs_solver_status)
+            if set(jobs_solver_status) == {'Completed'}:
+                is_odb_to_npz_success = True
+                for optimization in optimizations:
+                    if not odb_to_npz(host, session, optimization['project_id'], optimization['job_id']):
+                        is_odb_to_npz_success = False
+            if is_odb_to_npz_success:
+                break
+            time.sleep(1)
+
+    is_odb_to_npz_done = False
+    if is_odb_to_npz_success:
+        while True:
+            jobs_odb_to_npz_status = []
+            for optimization in optimizations:
+                jobs_odb_to_npz_status += get_jobs_odb_to_npz_status(host, session, optimization['project_id'], [optimization['job_id']])
+            print(jobs_odb_to_npz_status)
+            if set(jobs_odb_to_npz_status) == {'Done'}:
+                is_odb_to_npz_done = True
+                break
+            time.sleep(1)
+
+    is_npz_download = True
+    if is_odb_to_npz_done:
+        while True:
+            for optimization in optimizations:
+                if not get_job_file(host, session, optimization['project_id'], optimization['job_id'], optimization['npz_name'], sim_path):
+                    is_npz_download = False
+            if is_npz_download:
+                break
+            time.sleep(1)
+
+    sim_data = {}
+    for i, optimization in enumerate(optimizations):
+        npz_file = os.path.join(sim_path, str(optimization['project_id']), str(optimization['job_id']), optimization['npz_name'])
+        try:
+            sim_data[i] = load_region_data(npz_file, ['PART-1-1.SET-X1'])
+        except:
+            print('error:' + npz_file)
+
+    for sim_id in sim_data.keys():
+        strain_fem = sim_data[sim_id]['PART-1-1.SET-X1']['disp'] / 1.0
+        stress_fem = sim_data[sim_id]['PART-1-1.SET-X1']['force'] / 1.0
+        sim_data[sim_id]['PART-1-1.SET-X1']['f'] = interp1d(strain_fem, stress_fem, kind='linear')
+
+    exp_data = {}
+
     cost = 0.0
-    cost += cal_tensile_cost(processed_tensile_data, x, constants)
-    punish = 0.0
-    y = cost
-    for i in range(len(x)):
-        punish += (max(0, -x[i])) ** 2
-    y += 1e16 * punish
-    print(y)
-    return y
+    for i, optimization in enumerate(optimizations):
+        f = sim_data[i]['PART-1-1.SET-X1']['f']
+        for experiment in optimization['experiments']:
+            experiment_id = experiment['experiment_id']
+            specimen_id = experiment['specimen_id']
+            csv_file = os.path.join(exp_path, str(experiment['experiment_id']), str(experiment['specimen_id']), experiment['csv_name'])
+            try:
+                df = pd.read_csv(csv_file)
+                exp_data[f'{experiment_id}-{specimen_id}'] = df
+                strain_exp = df['Strain'].to_numpy()
+                stress_exp = df['Stress_MPa'].to_numpy()
+                condition = strain_exp < 0.1
+                strain_exp = strain_exp[condition]
+                stress_exp = stress_exp[condition]
+                stress_sim = f(strain_exp)
+                cost += np.sum(((stress_exp - stress_sim) / max(stress_exp)) ** 2, axis=0) / len(stress_exp)
+            except Exception as e:
+                print('error:' + csv_file)
+
+    return cost
 
 
 if __name__ == '__main__':
