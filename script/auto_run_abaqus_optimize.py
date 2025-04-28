@@ -190,9 +190,10 @@ def func(x: list, optimizations: list, constants: dict):
     is_set_parameter_success = True
     for optimization in optimizations:
         para = f"""*Parameter
-            E = {x[0]}
-            d1 = {x[1]}
-            A = {x[2]}
+            E = 6.625
+            d1 = {x[0]}
+            A = {x[1]}
+            B = {x[2]}
             time = 8.4""".replace(' ', '')
 
         if not set_job_parameter(host, session, optimization['project_id'], optimization['job_id'], para[:-1]):
@@ -265,7 +266,7 @@ def func(x: list, optimizations: list, constants: dict):
             exp_data[f'{experiment_id}-{specimen_id}'] = df
             strain_exp = df['Strain'].to_numpy()
             stress_exp = df['Stress_MPa'].to_numpy()
-            condition = strain_exp < 0.8
+            condition = strain_exp < 0.80
             strain_exp = strain_exp[condition]
             stress_exp = stress_exp[condition]
             stress_sim = f(strain_exp)
@@ -290,7 +291,7 @@ def plot(optimizations):
         strain_fem = sim_data[sim_id]['PART-1-1.SET-X1']['disp'] / 1.0
         stress_fem = sim_data[sim_id]['PART-1-1.SET-X1']['force'] / 1.0
         sim_data[sim_id]['PART-1-1.SET-X1']['f'] = interp1d(strain_fem, stress_fem, kind='linear', fill_value='extrapolate')
-        plt.plot(strain_fem, stress_fem, label="fem%s" % sim_id)
+        plt.plot(strain_fem, stress_fem, marker='^', label="fem%s" % sim_id)
 
     exp_data = {}
     for i, optimization in enumerate(optimizations):
@@ -308,7 +309,7 @@ def plot(optimizations):
     for key in exp_data.keys():
         strain = exp_data[key]['Strain']
         stress = exp_data[key]['Stress_MPa']
-        plt.plot(strain, stress, marker='o', label=f'Exp. {key}')
+        plt.plot(strain, stress, marker='', label=f'Exp. {key}')
 
     # plt.xlim(0, 0.2)
     # plt.ylim(0, 1.0)
@@ -339,7 +340,7 @@ if __name__ == '__main__':
             for experiment in optimization['experiments']:
                 print(get_specimen_file(host, session, experiment['experiment_id'], experiment['specimen_id'], experiment['csv_name'], exp_path))
 
-    paras_0 = np.array([5.0, -0.15, 0.2])
+    paras_0 = np.array([-0.02283019, 0.13448071, 0.44597116])
     constants = {'exp_path': exp_path, 'sim_path': sim_path, 'session': session}
     max_iter = 100
     fmin(func, paras_0, args=(optimizations, constants), maxiter=max_iter, ftol=1e-4, xtol=1e-4, disp=True)
