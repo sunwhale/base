@@ -51,3 +51,6 @@ ifort安装位置：/opt/intel/oneapi/compiler/2023.0.0/linux/bin/intel64
 sudo sed -i '$aPATH=/opt/intel/oneapi/compiler/2023.0.0/linux/bin/intel64:$PATH' /etc/profile # 写入环境变量
 source /etc/profile
  ```
+
+## 3. 单机并行计算设置
+修改/usr/SIMULIA/EstProducts/2022/linux_a64/SMA/site/basic_v6.env中的"mp_mode = MPI" -> "mp_mode = THREADS"
