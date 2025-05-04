@@ -301,6 +301,8 @@ class Solver:
             solver_status = 'Stopped'
         elif 'Run standard' in logs and solver_status != 'Stopping':
             solver_status = 'Running'
+        elif 'Run explicit' in logs and solver_status != 'Stopping':
+            solver_status = 'Running'
 
         run_logs = self.get_run_log()
         if '不是' in run_logs:
