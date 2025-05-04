@@ -188,11 +188,25 @@ class Solver:
             for line in lines:
                 ls = line.split()
                 if ls:
-                    if is_number(ls[0]):
+                    if is_number(ls[0]) and len(ls) > 6:
                         status.append(ls)
         else:
             status = []
         return status
+
+    def get_solver_type(self):
+        sta_file = os.path.join(self.path, '{}.sta'.format(self.job))
+        if os.path.exists(sta_file):
+            with open(sta_file, 'r') as f:
+                sta = f.read()
+                if 'Abaqus/Explicit' in sta:
+                    return 'Abaqus/Explicit'
+                elif 'Abaqus/Standard' in sta:
+                    return 'Abaqus/Standard'
+                else:
+                    return 'Unknown'
+        else:
+            return 'Unknown'
 
     def get_log(self):
         log_file = os.path.join(self.path, '{}.log'.format(self.job))

@@ -415,7 +415,9 @@ def view_job(project_id, job_id):
         # files = files_in_dir(job_path)
         # solver_status = s.solver_status()
         status = get_job_status(abaqus_path, project_id, job_id)
-        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status, form=form)
+        solver_type = s.get_solver_type()
+        print('solver_type',solver_type)
+        return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status, form=form, solver_type=solver_type)
     else:
         abort(404)
 

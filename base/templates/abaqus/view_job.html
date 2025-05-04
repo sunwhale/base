@@ -142,6 +142,7 @@
                       <div class="tab-pane active" id="tab_1">
                         <div class="card-body table-responsive p-0" style="height: 711.5px;">
                           <table class="table table-sm table-hover table-head-fixed text-nowrap" id="table_sta">
+                            {% if solver_type == "Abaqus/Standard" or solver_type == "Unknown" %}
                             <thead>
                               <tr>
                                 <th width=10% style="vertical-align: middle;text-align: center;">Step</th>
@@ -155,6 +156,21 @@
                                 <th width=10% style="vertical-align: middle;text-align: center;">Time/LPF<br>Inc</th>
                               </tr>
                             </thead>
+                            {% else %}
+                            <thead>
+                              <tr>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Increment</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Step<br>Time</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Time</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Wall<br>Time</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Stable<br>Increment</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Critical<br>Element</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Kinetic<br>Energy</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Total<br>Energy</th>
+                                <th width=10% style="vertical-align: middle;text-align: center;">Percent<br>Chng Mass</th>
+                              </tr>
+                            </thead>
+                            {% endif %}
                             <tbody id="table_sta_body">
                             </tbody>
                           </table>
