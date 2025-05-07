@@ -59,7 +59,6 @@ def run_preproc(flow_id):
     if os.path.exists(flow_path):
         p = Preproc(flow_path)
         p.read_msg()
-        print(p.script)
         p.clear()
         if p.check_setting_files():
             proc = p.run()
@@ -94,6 +93,10 @@ def cut():
             'r2': form.r2.data,
             'n': form.n.data,
             'length': form.length.data,
+            'pitch': form.pitch.data,
+            'x_length_of_plane': form.x_length_of_plane.data,
+            'y_length_of_plane': form.y_length_of_plane.data,
+            'z_length_of_plane': form.z_length_of_plane.data,
         }
         dump_json(setting_file, message)
 
@@ -104,6 +107,10 @@ def cut():
             form.r2.data = message['r2']
             form.n.data = message['n']
             form.length.data = message['length']
+            form.pitch.data = message['pitch']
+            form.x_length_of_plane.data = message['x_length_of_plane']
+            form.y_length_of_plane.data = message['y_length_of_plane']
+            form.z_length_of_plane.data = message['z_length_of_plane']
         except KeyError:
             pass
 
