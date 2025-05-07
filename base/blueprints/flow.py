@@ -12,7 +12,7 @@ import uuid
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.flow import UploadForm, FigureSettingFrom
+from base.forms.flow import UploadForm, CutFrom
 from base.global_var import event_source
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Preproc import Preproc
@@ -51,12 +51,34 @@ def delete_flow_file(flow_id, filename):
     return redirect(request.referrer)
 
 
+@flow_bp.route('/run_preproc/<int:flow_id>')
+@login_required
+def run_preproc(flow_id):
+    flows_path = current_app.config['FLOW_PATH']
+    flow_path = os.path.join(flows_path, str(flow_id))
+    if os.path.exists(flow_path):
+        p = Preproc(flow_path)
+        p.read_msg()
+        print(p.script)
+        p.clear()
+        if p.check_setting_files():
+            proc = p.run()
+            with open(os.path.join(flow_path, '.preproc_status'), 'w', encoding='utf-8') as f:
+                f.write('Submitting')
+        else:
+            flash(f'缺少{p.script}脚本文件。', 'warning')
+        return redirect(request.referrer)
+    else:
+        abort(404)
+
+
 @flow_bp.route('/cut', methods=['GET', 'POST'])
 @login_required
 def cut():
     flow_id = 1
     flows_path = current_app.config['FLOW_PATH']
     flow_path = os.path.join(flows_path, str(flow_id))
+    setting_file = os.path.join(flow_path, 'setting.json')
 
     upload_form = UploadForm()
     if upload_form.validate_on_submit():
@@ -65,48 +87,25 @@ def cut():
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('flow.cut', flow_id=flow_id))
 
-    form = FigureSettingFrom()
+    form = CutFrom()
     if form.validate_on_submit():
         message = {
-            'width': form.r1.data,
-            'height': form.r2.data,
-            'imageSize': form.imageSize.data,
-            'legend': form.legend.data,
-            'triad': form.triad.data,
-            'legendPosition': form.legendPosition.data,
-            'mirrorAboutXyPlane': form.mirrorAboutXyPlane.data,
-            'mirrorAboutXzPlane': form.mirrorAboutXzPlane.data,
-            'mirrorAboutYzPlane': form.mirrorAboutYzPlane.data,
-            'removeElementSet': form.removeElementSet.data,
-            'replaceElementSet': form.replaceElementSet.data,
-            'plotState': form.plotState.data,
-            'uniformScaleFactor': form.uniformScaleFactor.data,
-            'step': form.step.data,
-            'frame': form.frame.data,
-            'variableLabel': form.variableLabel.data,
-            'refinement': form.refinement.data,
-            'outputPosition': form.outputPosition.data,
-            'visibleEdges': form.visibleEdges.data,
-            'maxAutoCompute': form.maxAutoCompute.data,
-            'maxValue': form.maxValue.data,
-            'minAutoCompute': form.minAutoCompute.data,
-            'minValue': form.minValue.data,
-            'colorMappings': form.colorMappings.data,
-            'projection': form.projection.data,
-            'views': form.views.data,
-            'useStatus': form.useStatus.data,
-            'statusLabel': form.statusLabel.data,
-            'statusPosition': form.statusPosition.data,
-            'statusRefinement': form.statusRefinement.data,
-            'statusMinimum': form.statusMinimum.data,
-            'statusMaximum': form.statusMaximum.data,
-            'animate': form.animate.data,
-            'frameInterval': form.frameInterval.data,
-            'startFrame': form.startFrame.data,
-            'endFrame': form.endFrame.data,
-            'fps': form.fps.data,
+            'r1': form.r1.data,
+            'r2': form.r2.data,
+            'n': form.n.data,
+            'length': form.length.data,
         }
-        print(message)
+        dump_json(setting_file, message)
+
+    if os.path.exists(setting_file):
+        try:
+            message = load_json(setting_file)
+            form.r1.data = message['r1']
+            form.r2.data = message['r2']
+            form.n.data = message['n']
+            form.length.data = message['length']
+        except KeyError:
+            pass
 
     if os.path.exists(flow_path):
         msg_file = os.path.join(flow_path, '.flow_msg')
@@ -122,8 +121,6 @@ def cut():
             except (FileNotFoundError, KeyError):
                 for key in ['name', 'flow_time', 'descript']:
                     status[key] = 'None'
-
-
 
         return render_template('flow/cut.html', flow_id=flow_id, status=status, form=form, upload_form=upload_form)
     else:

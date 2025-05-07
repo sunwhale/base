@@ -46,8 +46,8 @@
                         <p class="mb-1">您可以通过点击下面的按钮开始ABAQUS前处理的运行。
                         </p>
 
-                        <button id="calculateBtn" class="btn btn-secondary" disabled><strong>开 始</strong></button>
-                        <a id="calculateLink" href="#" class="btn btn-success"><strong>开 始</strong></a>
+                        <button id="calculateBtn" class="btn btn-secondary" disabled><strong>开 始 前 处 理</strong></button>
+                        <a id="calculateLink" href="{{ url_for('flow.run_preproc', flow_id=flow_id) }}" class="btn btn-success"><strong>开 始 前 处 理</strong></a>
 
                         <button id="resetBtn" class="btn btn-secondary" disabled><strong>重 置</strong></button>
                         <a id="resetLink" href="#" class="btn btn-info"><strong>重 置</strong></a>
@@ -60,12 +60,12 @@
               <form action="" method="post" class="form" role="form">
               {{ form.csrf_token() }}
                 <div class="col-12">
-                  <div class="card card-primary collapsed-card">
+                  <div class="card card-primary">
                     <div class="card-header">
                       <h3 class="card-title">铣刀参数</h3>
                       <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                          <i class="fas fa-plus"></i>
+                          <i class="fas fa-minus"></i>
                         </button>
                       </div>
                     </div>
@@ -73,17 +73,7 @@
                       <div class="row">
                         <div class="col-12">
                           {{ render_form_row([form.r1, form.r2]) }}
-                          {{ render_form_row([form.imageSize, form.legend]) }}
-                          {{ render_form_row([form.legendPosition, form.triad]) }}
-                          {{ render_form_row([form.projection, form.views]) }}
-                          {{ render_form_row([form.plotState, form.uniformScaleFactor]) }}
-                          {{ render_form_row([form.step, form.frame]) }}
-                          {{ render_form_row([form.variableLabel, form.refinement]) }}
-                          {{ render_form_row([form.outputPosition, form.visibleEdges]) }}
-                          {{ render_form_row([form.maxAutoCompute, form.maxValue]) }}
-                          {{ render_form_row([form.minAutoCompute, form.minValue]) }}
-                          {{ render_form_row([form.colorMappings, form.mirrorAboutXyPlane]) }}
-                          {{ render_form_row([form.mirrorAboutXzPlane, form.mirrorAboutYzPlane]) }}
+                          {{ render_form_row([form.n, form.length]) }}
                           {{ render_field(form.submit, button_style='btn btn-primary') }}
                         </div>
                       </div>
@@ -91,29 +81,18 @@
                   </div>
                 </div>
                 <div class="col-12">
-                  <div class="card card-primary collapsed-card">
+                  <div class="card card-primary">
                     <div class="card-header">
                       <h3 class="card-title">铣刀参数</h3>
                       <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                          <i class="fas fa-plus"></i>
+                          <i class="fas fa-minus"></i>
                         </button>
                       </div>
                     </div>
                     <div class="card-body">
                       <div class="row">
                         <div class="col-12">
-                          <h5 class="text-primary">单元集合</h5><hr/>
-                          {{ render_form_row([form.removeElementSet, form.replaceElementSet]) }}
-                          <h5 class="text-primary">状态变量</h5><hr/>
-                          {{ render_form_row([form.useStatus, form.statusLabel]) }}
-                          {{ render_form_row([form.statusPosition, form.statusRefinement]) }}
-                          {{ render_form_row([form.statusMinimum, form.statusMaximum]) }}
-                          <h5 class="text-primary">批量输出</h5><hr/>
-                          {{ render_form_row([form.animate, form.frameInterval]) }}
-                          {{ render_form_row([form.startFrame, form.endFrame]) }}
-                          <h5 class="text-primary">动图帧率</h5><hr/>
-                          {{ render_form_row([form.fps]) }}
                           {{ render_field(form.submit, button_style='btn btn-primary') }}
                         </div>
                       </div>
@@ -122,11 +101,11 @@
                 </div>
               </form>
               <div class="col-12">
-                <div class="card card-primary">
+                <div class="card card-primary collapsed-card">
                   <div class="card-header">
                     <h3 class="card-title">文件列表</h3>
                     <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i></button>
                     </div>
                   </div>
                   <div class="card-body">
