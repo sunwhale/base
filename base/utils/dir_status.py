@@ -252,14 +252,38 @@ def get_doc_status(path, doc_id):
             status['title'] = message['title']
             status['md_time'] = file_time(md_file)
             status[
-                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除文章?')\" href='%s'>删除</a>" % (
                 '../viewmd/' + str(doc_id), '../editmd/' + str(doc_id), '../deletemd/' + str(doc_id))
         except FileNotFoundError:
             for key in ['title', 'md_time']:
                 status[key] = 'None'
             status[
-                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模型?')\" href='%s'>删除</a>" % (
+                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除文章?')\" href='%s'>删除</a>" % (
                 '../viewmd/' + str(doc_id), '../editmd/' + str(doc_id), '../deletemd/' + str(doc_id))
+    return status
+
+
+def get_material_status(path, material_id):
+    json_file = os.path.join(path, str(material_id), 'material.json')
+    msg_file = os.path.join(path, str(material_id), '.material_msg')
+    status = {}
+    if os.path.exists(msg_file):
+        status['material_id'] = material_id
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            status['name'] = message['name']
+            status['type'] = message['type']
+            status['json_time'] = file_time(json_file)
+            status[
+                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除材料?')\" href='%s'>删除</a>" % (
+                '../view_material/' + str(material_id), '../edit_material/' + str(material_id), '../delete_material/' + str(material_id))
+        except FileNotFoundError:
+            for key in ['title', 'md_time']:
+                status[key] = 'None'
+            status[
+                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除材料?')\" href='%s'>删除</a>" % (
+                '../view_material/' + str(material_id), '../edit_material/' + str(material_id), '../delete_material/' + str(material_id))
     return status
 
 
@@ -650,6 +674,20 @@ def docs_detail(path):
     doc_id_list = sub_dirs_int(path)
     for doc_id in doc_id_list:
         status = get_doc_status(path, doc_id)
+        data_list.append(status)
+
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def materials_detail(path):
+    data_list = []
+    material_id_list = sub_dirs_int(path)
+    for material_id in material_id_list:
+        status = get_material_status(path, material_id)
         data_list.append(status)
 
     data = {
