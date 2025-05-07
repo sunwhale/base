@@ -62,7 +62,7 @@
                 <div class="col-12">
                   <div class="card card-info">
                     <div class="card-header">
-                      <h3 class="card-title">铣刀参数</h3>
+                      <h3 class="card-title">铣刀零件参数</h3>
                       <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-card-widget="collapse">
                           <i class="fas fa-minus"></i>
@@ -74,7 +74,7 @@
                         <div class="col-12">
                           {{ render_form_row([form.r1, form.r2]) }}
                           {{ render_form_row([form.n, form.length]) }}
-                          {{ render_form_row([form.pitch]) }}
+                          {{ render_form_row([form.pitch, form.tool_seed_size]) }}
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                         </div>
                       </div>
@@ -84,7 +84,7 @@
                 <div class="col-12">
                   <div class="card card-info">
                     <div class="card-header">
-                      <h3 class="card-title">平板参数</h3>
+                      <h3 class="card-title">平板零件参数</h3>
                       <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-card-widget="collapse">
                           <i class="fas fa-minus"></i>
@@ -95,7 +95,47 @@
                       <div class="row">
                         <div class="col-12">
                           {{ render_form_row([form.x_length_of_plane, form.y_length_of_plane]) }}
-                          {{ render_form_row([form.z_length_of_plane]) }}
+                          {{ render_form_row([form.z_length_of_plane, form.plane_seed_size]) }}
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="card card-info">
+                    <div class="card-header">
+                      <h3 class="card-title">铣刀参考点初始位置</h3>
+                      <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                          <i class="fas fa-minus"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.x_shift_of_tool, form.y_shift_of_tool, form.z_shift_of_tool]) }}
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="card card-info">
+                    <div class="card-header">
+                      <h3 class="card-title">求解控制</h3>
+                      <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                          <i class="fas fa-minus"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.timeIncrementationMethod, form.userDefinedInc]) }}
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                         </div>
                       </div>

@@ -94,9 +94,14 @@ def cut():
             'n': form.n.data,
             'length': form.length.data,
             'pitch': form.pitch.data,
+            'tool_seed_size': form.tool_seed_size.data,
             'x_length_of_plane': form.x_length_of_plane.data,
             'y_length_of_plane': form.y_length_of_plane.data,
             'z_length_of_plane': form.z_length_of_plane.data,
+            'plane_seed_size': form.plane_seed_size.data,
+            'x_shift_of_tool': form.x_shift_of_tool.data,
+            'y_shift_of_tool': form.y_shift_of_tool.data,
+            'z_shift_of_tool': form.z_shift_of_tool.data,
         }
         dump_json(setting_file, message)
 
@@ -108,9 +113,14 @@ def cut():
             form.n.data = message['n']
             form.length.data = message['length']
             form.pitch.data = message['pitch']
+            form.tool_seed_size.data = message['tool_seed_size']
             form.x_length_of_plane.data = message['x_length_of_plane']
             form.y_length_of_plane.data = message['y_length_of_plane']
             form.z_length_of_plane.data = message['z_length_of_plane']
+            form.plane_seed_size.data = message['plane_seed_size']
+            form.x_shift_of_tool.data = message['x_shift_of_tool']
+            form.y_shift_of_tool.data = message['y_shift_of_tool']
+            form.z_shift_of_tool.data = message['z_shift_of_tool']
         except KeyError:
             pass
 
