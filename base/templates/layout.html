@@ -318,6 +318,34 @@
           {% endif %}
           {% endblock nav_abaqus %}
 
+          {% block nav_material %}
+          {% if current_user.is_moderator or current_user.is_admin %}
+          <li class="nav-item" id="material">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-atom"></i>
+              <p>
+                材料
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('material.manage_materials') }}" class="nav-link" id="manage_materials">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>材料管理</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('material.create_material') }}" class="nav-link" id="create_material">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>新建材料</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          {% endblock nav_material %}
+
           {% block nav_pyfem %}
           {% if current_user.is_moderator or current_user.is_admin %}
           <li class="nav-item" id="pyfem">
@@ -350,7 +378,7 @@
           {% if current_user.is_moderator or current_user.is_admin %}
           <li class="nav-item" id="virtual">
             <a href="#" class="nav-link">
-              <i class="nav-icon fas fa-atom"></i>
+              <i class="nav-icon fas fa-door-open"></i>
               <p>
                 虚拟实验
                 <i class="right fas fa-angle-left"></i>
