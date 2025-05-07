@@ -14,8 +14,8 @@ class UploadForm(FlaskForm):
 
 
 class FigureSettingFrom(FlaskForm):
-    width = FloatField('width', default=200.0)
-    height = FloatField('height', default=200.0)
+    r1 = FloatField('r1', default=200.0)
+    r2 = FloatField('r2', default=200.0)
     imageSize = StringField('imageSize', default='(600, 600)', validators=[DataRequired()])
     legend = SelectField('legend', coerce=str)
     triad = SelectField('triad', coerce=str)

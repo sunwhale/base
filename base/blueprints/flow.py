@@ -12,8 +12,7 @@ import uuid
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.abaqus import (JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm, FigureSettingFrom, OdbForm, PreprocForm,
-                               InputFileUploadForm, PhasefieldForm)
+from base.forms.flow import UploadForm, FigureSettingFrom
 from base.global_var import event_source
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Preproc import Preproc
@@ -59,12 +58,55 @@ def cut():
     flows_path = current_app.config['FLOW_PATH']
     flow_path = os.path.join(flows_path, str(flow_id))
 
-    form = UploadForm()
-    if form.validate_on_submit():
-        f = form.filename.data
-        f.save(os.path.join(flow_path, str(flow_id), f.filename))
+    upload_form = UploadForm()
+    if upload_form.validate_on_submit():
+        f = upload_form.filename.data
+        f.save(os.path.join(flow_path, f.filename))
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('flow.cut', flow_id=flow_id))
+
+    form = FigureSettingFrom()
+    if form.validate_on_submit():
+        message = {
+            'width': form.r1.data,
+            'height': form.r2.data,
+            'imageSize': form.imageSize.data,
+            'legend': form.legend.data,
+            'triad': form.triad.data,
+            'legendPosition': form.legendPosition.data,
+            'mirrorAboutXyPlane': form.mirrorAboutXyPlane.data,
+            'mirrorAboutXzPlane': form.mirrorAboutXzPlane.data,
+            'mirrorAboutYzPlane': form.mirrorAboutYzPlane.data,
+            'removeElementSet': form.removeElementSet.data,
+            'replaceElementSet': form.replaceElementSet.data,
+            'plotState': form.plotState.data,
+            'uniformScaleFactor': form.uniformScaleFactor.data,
+            'step': form.step.data,
+            'frame': form.frame.data,
+            'variableLabel': form.variableLabel.data,
+            'refinement': form.refinement.data,
+            'outputPosition': form.outputPosition.data,
+            'visibleEdges': form.visibleEdges.data,
+            'maxAutoCompute': form.maxAutoCompute.data,
+            'maxValue': form.maxValue.data,
+            'minAutoCompute': form.minAutoCompute.data,
+            'minValue': form.minValue.data,
+            'colorMappings': form.colorMappings.data,
+            'projection': form.projection.data,
+            'views': form.views.data,
+            'useStatus': form.useStatus.data,
+            'statusLabel': form.statusLabel.data,
+            'statusPosition': form.statusPosition.data,
+            'statusRefinement': form.statusRefinement.data,
+            'statusMinimum': form.statusMinimum.data,
+            'statusMaximum': form.statusMaximum.data,
+            'animate': form.animate.data,
+            'frameInterval': form.frameInterval.data,
+            'startFrame': form.startFrame.data,
+            'endFrame': form.endFrame.data,
+            'fps': form.fps.data,
+        }
+        print(message)
 
     if os.path.exists(flow_path):
         msg_file = os.path.join(flow_path, '.flow_msg')
@@ -81,9 +123,9 @@ def cut():
                 for key in ['name', 'flow_time', 'descript']:
                     status[key] = 'None'
 
-        form = FigureSettingFrom()
 
-        return render_template('flow/cut.html', flow_id=flow_id, status=status, form=form)
+
+        return render_template('flow/cut.html', flow_id=flow_id, status=status, form=form, upload_form=upload_form)
     else:
         abort(404)
 
