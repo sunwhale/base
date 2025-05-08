@@ -149,7 +149,7 @@
     }
   }
 
-  let url = 'http://127.0.0.1:5000/material/get_material_file/1/material.json'
+  const url = "{{ url_for('material.get_material_file', material_id=material_id, filename='material.json') }}"
 
   fetch(url)
     .then(response => {
