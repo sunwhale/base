@@ -75,6 +75,7 @@
                           {{ render_form_row([form.r1, form.r2]) }}
                           {{ render_form_row([form.n, form.length]) }}
                           {{ render_form_row([form.pitch, form.tool_seed_size]) }}
+                          {{ render_form_row([form.material_tool]) }}
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                         </div>
                       </div>
@@ -96,6 +97,7 @@
                         <div class="col-12">
                           {{ render_form_row([form.x_length_of_plane, form.y_length_of_plane]) }}
                           {{ render_form_row([form.z_length_of_plane, form.plane_seed_size]) }}
+                          {{ render_form_row([form.material_plane]) }}
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                         </div>
                       </div>

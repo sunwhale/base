@@ -274,6 +274,7 @@ def get_material_status(path, material_id):
                 message = json.load(f)
             status['name'] = message['name']
             status['type'] = message['type']
+            status['json_file'] = json_file
             status['json_time'] = file_time(json_file)
             status[
                 'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除材料?')\" href='%s'>删除</a>" % (

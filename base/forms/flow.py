@@ -30,6 +30,9 @@ class CutFrom(FlaskForm):
     y_shift_of_tool = FloatField('y，mm', default=0.0)
     z_shift_of_tool = FloatField('z，mm', default=0.0)
 
+    material_tool = SelectField('material_tool', coerce=str)
+    material_plane = SelectField('material_plane', coerce=str)
+
     timeIncrementationMethod = SelectField('timeIncrementationMethod', coerce=str)
     userDefinedInc = FloatField('userDefinedInc', default=1.0e-7)
 
@@ -38,3 +41,5 @@ class CutFrom(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(CutFrom, self).__init__(*args, **kwargs)
         self.timeIncrementationMethod.choices = ['AUTO', 'AUTOMATIC_EBE', 'FIXED_USER_DEFINED_INC']
+        self.material_tool.choices = ['']
+        self.material_plane.choices = ['']

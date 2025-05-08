@@ -20,7 +20,7 @@ from base.utils.abaqus.Solver import Solver
 from base.utils.abaqus.add_phasefield_layer import add_phasefield_layer as add_phasefield_layer_abaqus
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status, get_template_status, project_jobs_detail,
-                                   projects_detail, templates_detail, get_preproc_status, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
+                                   projects_detail, materials_detail, get_preproc_status, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
 from base.utils.events_new import update_events_new
 from base.utils.make_gif import make_gif
 from base.utils.read_prescan import read_prescan
@@ -79,6 +79,12 @@ def cut():
     flow_path = os.path.join(flows_path, str(flow_id))
     setting_file = os.path.join(flow_path, 'setting.json')
 
+    materials_path = current_app.config['MATERIAL_PATH']
+    material_dict = materials_detail(materials_path)
+    material_list = []
+    for material in material_dict['data']:
+        material_list.append('%s_%s' % (material['material_id'], material['name']))
+
     upload_form = UploadForm()
     if upload_form.validate_on_submit():
         f = upload_form.filename.data
@@ -87,6 +93,9 @@ def cut():
         return redirect(url_for('flow.cut', flow_id=flow_id))
 
     form = CutFrom()
+    form.material_tool.choices = material_list
+    form.material_plane.choices = material_list
+
     if form.validate_on_submit():
         message = {
             'r1': form.r1.data,
@@ -102,8 +111,22 @@ def cut():
             'x_shift_of_tool': form.x_shift_of_tool.data,
             'y_shift_of_tool': form.y_shift_of_tool.data,
             'z_shift_of_tool': form.z_shift_of_tool.data,
+            'material_tool': form.material_tool.data,
+            'material_plane': form.material_plane.data,
+            'timeIncrementationMethod': form.timeIncrementationMethod.data,
+            'userDefinedInc': form.userDefinedInc.data,
         }
         dump_json(setting_file, message)
+
+        material_id = int(form.material_tool.data.split('_')[0])
+        material_json_path = os.path.join(materials_path, str(material_id), 'material.json')
+        shutil.copy(material_json_path, os.path.join(flow_path, 'material_tool.json'))
+        flash('从材料导入文件%s成功。' % 'material_tool.json', 'success')
+
+        material_id = int(form.material_plane.data.split('_')[0])
+        material_json_path = os.path.join(materials_path, str(material_id), 'material.json')
+        shutil.copy(material_json_path, os.path.join(flow_path, 'material_plane.json'))
+        flash('从材料导入文件%s成功。' % 'material_plane.json', 'success')
 
     if os.path.exists(setting_file):
         try:
@@ -121,6 +144,10 @@ def cut():
             form.x_shift_of_tool.data = message['x_shift_of_tool']
             form.y_shift_of_tool.data = message['y_shift_of_tool']
             form.z_shift_of_tool.data = message['z_shift_of_tool']
+            form.material_tool.data = message['material_tool']
+            form.material_plane.data = message['material_plane']
+            form.timeIncrementationMethod.data = message['timeIncrementationMethod']
+            form.userDefinedInc.data = message['userDefinedInc']
         except KeyError:
             pass
 
