@@ -288,6 +288,24 @@ def get_material_status(path, material_id):
     return status
 
 
+def get_flow_status(path, flow_id):
+    msg_file = os.path.join(path, str(flow_id), '.flow_msg')
+    status = {}
+    if os.path.exists(msg_file):
+        status['flow_id'] = flow_id
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            status['name'] = message['name']
+            status['flow_time'] = file_time(msg_file)
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a>" % ('../' + str(flow_id), '../edit_flow/' + str(flow_id))
+        except FileNotFoundError:
+            for key in ['title', 'md_time']:
+                status[key] = 'None'
+            status['operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a>" % ('../' + str(flow_id), '../edit_flow/' + str(flow_id))
+    return status
+
+
 def get_sheet_status(path, sheet_id):
     sheet_file = os.path.join(path, str(sheet_id), 'sheet.json')
     msg_file = os.path.join(path, str(sheet_id), 'sheet.msg')
@@ -689,6 +707,20 @@ def materials_detail(path):
     material_id_list = sub_dirs_int(path)
     for material_id in material_id_list:
         status = get_material_status(path, material_id)
+        data_list.append(status)
+
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def flows_detail(path):
+    data_list = []
+    flow_id_list = sub_dirs_int(path)
+    for flow_id in flow_id_list:
+        status = get_flow_status(path, flow_id)
         data_list.append(status)
 
     data = {

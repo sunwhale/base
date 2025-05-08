@@ -346,6 +346,28 @@
           {% endif %}
           {% endblock nav_material %}
 
+          {% block nav_flow %}
+          {% if current_user.is_moderator or current_user.is_admin %}
+          <li class="nav-item" id="flow">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-code-branch"></i>
+              <p>
+                流程
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('flow.manage_flows') }}" class="nav-link" id="manage_flows">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>流程管理</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          {% endblock nav_flow %}
+
           {% block nav_pyfem %}
           {% if current_user.is_moderator or current_user.is_admin %}
           <li class="nav-item" id="pyfem">

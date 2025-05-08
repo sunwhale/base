@@ -11,6 +11,7 @@
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主界面</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('flow.manage_flows') }}">流程管理</a></li>
 <li class="breadcrumb-item active">流程信息</li>
 {% endblock level %}
 
@@ -223,7 +224,7 @@
     $('#descript').attr('disabled', true)
   });
   
-  document.getElementById('abaqus').className = 'nav-item menu-open'
+  document.getElementById('flow').className = 'nav-item menu-open'
 
   let isUpdate = true
 

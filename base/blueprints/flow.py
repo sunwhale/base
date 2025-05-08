@@ -12,7 +12,7 @@ import uuid
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.flow import UploadForm, CutFrom
+from base.forms.flow import UploadForm, FlowForm, F1From
 from base.global_var import event_source
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Preproc import Preproc
@@ -20,13 +20,48 @@ from base.utils.abaqus.Solver import Solver
 from base.utils.abaqus.add_phasefield_layer import add_phasefield_layer as add_phasefield_layer_abaqus
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status, get_template_status, project_jobs_detail,
-                                   projects_detail, materials_detail, get_preproc_status, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
+                                   flows_detail, materials_detail, get_preproc_status, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
 from base.utils.events_new import update_events_new
 from base.utils.make_gif import make_gif
 from base.utils.read_prescan import read_prescan
 from base.utils.tree import json_to_ztree, odb_json_to_ztree
 
 flow_bp = Blueprint('flow', __name__)
+
+
+@flow_bp.route('/flows_status/')
+@login_required
+def flows_status():
+    data = flows_detail(current_app.config['FLOW_PATH'])
+    return jsonify(data)
+
+
+@flow_bp.route('/manage_flows/')
+@login_required
+def manage_flows():
+    return render_template('flow/manage_flows.html')
+
+
+@flow_bp.route('/edit_flow/<int:flow_id>', methods=['GET', 'POST'])
+@login_required
+def edit_flow(flow_id):
+    form = FlowForm()
+    flows_path = current_app.config['FLOW_PATH']
+    flow_path = os.path.join(flows_path, str(flow_id))
+    msg_file = os.path.join(flow_path, '.flow_msg')
+
+    if form.validate_on_submit():
+        message = {
+            'name': form.name.data,
+            'descript': form.descript.data
+        }
+        dump_json(msg_file, message)
+        return redirect(url_for('.manage_flows'))
+
+    message = load_json(msg_file)
+    form.name.data = message['name']
+    form.descript.data = message['descript']
+    return render_template('flow/edit_flow.html', form=form)
 
 
 @flow_bp.route('/get_flow_file/<int:flow_id>/<path:filename>')
@@ -71,9 +106,9 @@ def run_preproc(flow_id):
         abort(404)
 
 
-@flow_bp.route('/cut', methods=['GET', 'POST'])
+@flow_bp.route('/1', methods=['GET', 'POST'])
 @login_required
-def cut():
+def f1():
     flow_id = 1
     flows_path = current_app.config['FLOW_PATH']
     flow_path = os.path.join(flows_path, str(flow_id))
@@ -92,7 +127,7 @@ def cut():
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('flow.cut', flow_id=flow_id))
 
-    form = CutFrom()
+    form = F1From()
     form.material_tool.choices = material_list
     form.material_plane.choices = material_list
 
@@ -166,7 +201,7 @@ def cut():
                 for key in ['name', 'flow_time', 'descript']:
                     status[key] = 'None'
 
-        return render_template('flow/cut.html', flow_id=flow_id, status=status, form=form, upload_form=upload_form)
+        return render_template('flow/f1.html', flow_id=flow_id, status=status, form=form, upload_form=upload_form)
     else:
         abort(404)
 

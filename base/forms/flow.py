@@ -13,7 +13,13 @@ class UploadForm(FlaskForm):
     submit = SubmitField('上传')
 
 
-class CutFrom(FlaskForm):
+class FlowForm(FlaskForm):
+    name = StringField('流程名称', validators=[DataRequired(), Length(1, 62)])
+    descript = TextAreaField('流程备注', render_kw={'rows': 12})
+    submit = SubmitField('提交')
+
+
+class F1From(FlaskForm):
     r1 = FloatField('r1，mm', default=3.5)
     r2 = FloatField('r2，mm', default=5.0)
     n = IntegerField('刀数', default=4, validators=[DataRequired(), NumberRange(4, 8)])
@@ -39,7 +45,7 @@ class CutFrom(FlaskForm):
     submit = SubmitField('保存')
 
     def __init__(self, *args, **kwargs):
-        super(CutFrom, self).__init__(*args, **kwargs)
+        super(F1From, self).__init__(*args, **kwargs)
         self.timeIncrementationMethod.choices = ['AUTO', 'AUTOMATIC_EBE', 'FIXED_USER_DEFINED_INC']
         self.material_tool.choices = ['']
         self.material_plane.choices = ['']
