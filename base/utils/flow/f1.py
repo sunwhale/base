@@ -157,8 +157,8 @@ if __name__ == '__main__':
 
     step_time = 1.0
 
-    timeIncrementationMethod = 'AUTO'
-    userDefinedInc = 1.0e-7
+    timeIncrementationMethod = message['timeIncrementationMethod']
+    userDefinedInc = message['userDefinedInc']
 
     viewport = session.Viewport(name='Viewport: 1', origin=(0.0, 0.0))
     viewport.makeCurrent()
@@ -216,14 +216,7 @@ if __name__ == '__main__':
     model.RigidBody(name='Constraint-1', refPointRegion=a.instances['Part-1-1'].sets['Set-Tool-RP'],
                     bodyRegion=a.instances['Part-1-1'].sets['SET-TOOL-ALL'])
 
-    model.ContactProperty('IntProp-1')
-    model.interactionProperties['IntProp-1'].TangentialBehavior(formulation=PENALTY, directionality=ISOTROPIC, slipRateDependency=OFF,
-                                                                pressureDependency=OFF, temperatureDependency=OFF, dependencies=0,
-                                                                table=((0.4,),),
-                                                                shearStressLimit=None, maximumElasticSlip=FRACTION, fraction=0.005,
-                                                                elasticSlipStiffness=None)
-    model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=ON, constraintEnforcementMethod=DEFAULT)
-    model.interactionProperties['IntProp-1'].HeatGeneration(conversionFraction=1.0, secondaryFraction=0.5)
+    set_material(model.ContactProperty('IntProp-1'), load_json('material_interaction.json'))
 
     model.SurfaceToSurfaceContactExp(name='Int-1',
                                      createStepName='Initial', main=a.instances['Part-1-1'].surfaces['Surf-Tool-All'],
@@ -307,3 +300,5 @@ if __name__ == '__main__':
             numThreadsPerMpiProcess=1, multiprocessingMode=DEFAULT, numCpus=1)
 
     mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
+
+    mdb.saveAs(pathName='f1.cae')

@@ -124,7 +124,11 @@ InelasticHeatFraction()
 Conductivity(table=((79.6,),))
 SpecificHeat(table=((176000000.0,),))
 """
-
+input_code = """
+TangentialBehavior(formulation=PENALTY, directionality=ISOTROPIC, slipRateDependency=OFF, pressureDependency=OFF, temperatureDependency=OFF, dependencies=0, table=((0.4,),), shearStressLimit=None, maximumElasticSlip=FRACTION, fraction=0.005, elasticSlipStiffness=None)
+NormalBehavior(pressureOverclosure=HARD, allowSeparation=ON, constraintEnforcementMethod=DEFAULT)
+HeatGeneration(conversionFraction=1.0, secondaryFraction=0.5)
+"""
 material_dict = parse_material_code(input_code)
 dump_json('material.json', material_dict)
 from pprint import pprint
