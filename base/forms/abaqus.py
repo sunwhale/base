@@ -105,6 +105,13 @@ class FigureSettingFrom(FlaskForm):
     projection = SelectField('projection', coerce=str)
     views = SelectField('views', coerce=str)
 
+    translucency = SelectField('translucency', coerce=str)
+    translucencyFactor = FloatField('translucencyFactor', default=0.3)
+    xAngle = FloatField('xAngle', default=0.0)
+    yAngle = FloatField('yAngle', default=0.0)
+    zAngle = FloatField('zAngle', default=0.0)
+    zoomFactor = FloatField('zoomFactor', default=1.0)
+
     useStatus = SelectField('useStatus', coerce=str)
     statusLabel = SelectField('statusLabel', coerce=str)
     statusPosition = SelectField('statusPosition', coerce=str)
@@ -143,6 +150,7 @@ class FigureSettingFrom(FlaskForm):
                                       'Averaging region', 'Internal set', 'Composite layup', 'Composite ply']
         self.projection.choices = ['PARALLEL', 'PERSPECTIVE']
         self.views.choices = ['Front', 'Back', 'Top', 'Bottom', 'Left', 'Right', 'Iso']
+        self.translucency.choices = ['OFF', 'ON']
 
         self.useStatus.choices = ['False', 'True']
         self.statusLabel.choices = ['NT11']

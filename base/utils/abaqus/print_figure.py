@@ -63,6 +63,7 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
     setting['mirrorAboutXzPlane'] = eval(setting['mirrorAboutXzPlane'])
     setting['mirrorAboutYzPlane'] = eval(setting['mirrorAboutYzPlane'])
     setting['triad'] = eval(setting['triad'])
+    setting['translucency'] = eval(setting['translucency'])
 
     session.pngOptions.setValues(imageSize=setting['imageSize'])
     session.printOptions.setValues(vpDecorations=OFF, vpBackground=OFF, reduceColors=False)
@@ -120,6 +121,10 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
 
     viewport.view.fitView()
 
+    viewport.odbDisplay.commonOptions.setValues(translucency=setting['translucency'], translucencyFactor=setting['translucencyFactor'])
+    viewport.view.zoom(zoomFactor=setting['zoomFactor'], mode=ABSOLUTE)
+    viewport.view.rotate(xAngle=setting['xAngle'], yAngle=setting['yAngle'], zAngle=setting['zAngle'], mode=MODEL)
+
     frames_len = len(odb.steps[setting['step']].frames)
     if setting['animate'] == "OFF":
         if setting['frame'] > frames_len - 1:
@@ -135,8 +140,7 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
         elif setting['plotState'] == (DEFORMED,):
             figurename = 'DEFORMED_%s_%s.png' % (setting['colorMappings'], setting['frame'])
 
-        session.printToFile(fileName=figurename, format=PNG,
-                            canvasObjects=(viewport,))
+        session.printToFile(fileName=figurename, format=PNG, canvasObjects=(viewport,))
 
     elif setting['animate'] == "ON":
         start = setting['startFrame']
@@ -174,8 +178,7 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
             elif setting['plotState'] == (DEFORMED,):
                 figurename = '%s%sDEFORMED_%s_%s.png' % (path, os.sep, setting['colorMappings'], frame_id)
 
-            session.printToFile(fileName=figurename, format=PNG,
-                                canvasObjects=(viewport,))
+            session.printToFile(fileName=figurename, format=PNG, canvasObjects=(viewport,))
 
         with open('.print_figure_status', 'w') as f:
             f.write('Done')

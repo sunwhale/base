@@ -720,6 +720,12 @@ def print_figure(project_id, job_id):
                     'colorMappings': form.colorMappings.data,
                     'projection': form.projection.data,
                     'views': form.views.data,
+                    'translucency': form.translucency.data,
+                    'translucencyFactor': form.translucencyFactor.data,
+                    'xAngle': form.xAngle.data,
+                    'yAngle': form.yAngle.data,
+                    'zAngle': form.zAngle.data,
+                    'zoomFactor': form.zoomFactor.data,
                     'useStatus': form.useStatus.data,
                     'statusLabel': form.statusLabel.data,
                     'statusPosition': form.statusPosition.data,
@@ -771,6 +777,12 @@ def print_figure(project_id, job_id):
                 form.colorMappings.data = message['colorMappings']
                 form.projection.data = message['projection']
                 form.views.data = message['views']
+                form.translucency.data = message['translucency']
+                form.translucencyFactor.data = message['translucencyFactor']
+                form.xAngle.data = message['xAngle']
+                form.yAngle.data = message['yAngle']
+                form.zAngle.data = message['zAngle']
+                form.zoomFactor.data = message['zoomFactor']
                 form.useStatus.data = message['useStatus']
                 form.statusLabel.data = message['statusLabel']
                 form.statusPosition.data = message['statusPosition']
