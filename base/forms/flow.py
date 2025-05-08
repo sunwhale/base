@@ -20,27 +20,29 @@ class FlowForm(FlaskForm):
 
 
 class F1From(FlaskForm):
-    r1 = FloatField('r1，mm', default=3.5)
-    r2 = FloatField('r2，mm', default=5.0)
+    r1 = FloatField('r1，mm', default=20.0)
+    r2 = FloatField('r2，mm', default=25.0)
     n = IntegerField('刀数', default=4, validators=[DataRequired(), NumberRange(4, 8)])
-    length = FloatField('长度，mm', default=10.0)
+    length = FloatField('长度，mm', default=20.0)
     pitch = FloatField('螺距，mm', default=-60.0)
-    tool_seed_size = FloatField('铣刀网格尺寸，mm', default=1.0)
+    tool_seed_size = FloatField('铣刀网格尺寸，mm', default=5.0)
 
-    x_length_of_plane = FloatField('x方向长度，mm', default=10.0)
-    y_length_of_plane = FloatField('y方向长度，mm', default=10.0)
+    x_length_of_plane = FloatField('x方向长度，mm', default=50.0)
+    y_length_of_plane = FloatField('y方向长度，mm', default=50.0)
     z_length_of_plane = FloatField('z方向长度，mm', default=10.0)
-    plane_seed_size = FloatField('平面网格尺寸，mm', default=1.0)
+    plane_seed_size = FloatField('平面网格尺寸，mm', default=5.0)
 
     x_shift_of_tool = FloatField('x，mm', default=0.0)
     y_shift_of_tool = FloatField('y，mm', default=0.0)
     z_shift_of_tool = FloatField('z，mm', default=0.0)
 
-    material_tool = SelectField('material_tool', coerce=str)
-    material_plane = SelectField('material_plane', coerce=str)
+    material_tool = SelectField('铣刀材料', coerce=str)
+    material_plane = SelectField('平板材料', coerce=str)
+    material_interaction = SelectField('接触属性', coerce=str)
 
     timeIncrementationMethod = SelectField('timeIncrementationMethod', coerce=str)
     userDefinedInc = FloatField('userDefinedInc', default=1.0e-7)
+    step_time = FloatField('step_time', default=1.0)
 
     submit = SubmitField('保存')
 
@@ -49,3 +51,4 @@ class F1From(FlaskForm):
         self.timeIncrementationMethod.choices = ['AUTO', 'AUTOMATIC_EBE', 'FIXED_USER_DEFINED_INC']
         self.material_tool.choices = ['']
         self.material_plane.choices = ['']
+        self.material_interaction.choices = ['']
