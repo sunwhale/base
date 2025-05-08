@@ -130,6 +130,7 @@ def f1():
     form = F1From()
     form.material_tool.choices = material_list
     form.material_plane.choices = material_list
+    form.material_interaction.choices = material_list
 
     if form.validate_on_submit():
         message = {
@@ -148,8 +149,10 @@ def f1():
             'z_shift_of_tool': form.z_shift_of_tool.data,
             'material_tool': form.material_tool.data,
             'material_plane': form.material_plane.data,
+            'material_interaction': form.material_interaction.data,
             'timeIncrementationMethod': form.timeIncrementationMethod.data,
             'userDefinedInc': form.userDefinedInc.data,
+            'step_time': form.step_time.data,
         }
         dump_json(setting_file, message)
 
@@ -162,6 +165,11 @@ def f1():
         material_json_path = os.path.join(materials_path, str(material_id), 'material.json')
         shutil.copy(material_json_path, os.path.join(flow_path, 'material_plane.json'))
         flash('从材料导入文件%s成功。' % 'material_plane.json', 'success')
+
+        material_id = int(form.material_interaction.data.split('_')[0])
+        material_json_path = os.path.join(materials_path, str(material_id), 'material.json')
+        shutil.copy(material_json_path, os.path.join(flow_path, 'material_interaction.json'))
+        flash('从材料导入文件%s成功。' % 'material_interaction.json', 'success')
 
     if os.path.exists(setting_file):
         try:
@@ -181,8 +189,10 @@ def f1():
             form.z_shift_of_tool.data = message['z_shift_of_tool']
             form.material_tool.data = message['material_tool']
             form.material_plane.data = message['material_plane']
+            form.material_interaction.data = message['material_interaction']
             form.timeIncrementationMethod.data = message['timeIncrementationMethod']
             form.userDefinedInc.data = message['userDefinedInc']
+            form.step_time.data = message['step_time']
         except KeyError:
             pass
 
