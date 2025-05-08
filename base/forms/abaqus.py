@@ -154,7 +154,7 @@ class FigureSettingFrom(FlaskForm):
         self.projection.choices = ['PARALLEL', 'PERSPECTIVE']
         self.views.choices = ['Front', 'Back', 'Top', 'Bottom', 'Left', 'Right', 'Iso']
 
-        self.contourType.choices = ['QUILT', 'BANDED']
+        self.contourType.choices = ['BANDED', 'QUILT']
         self.contourStyle.choices = ['DISCRETE', 'CONTINUOUS']
         self.translucency.choices = ['OFF', 'ON']
 
