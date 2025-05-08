@@ -155,48 +155,19 @@ def delete_material_file(material_id, filename):
         flash('文件%s不存在。' % filename, 'warning')
     return redirect(url_for('.view_material', material_id=material_id))
 
-
-@material_bp.route('/getmd/<int:material_id>')
-def getmd(material_id):
-    return send_from_directory(os.path.join(current_app.config['MATERIAL_PATH'], str(material_id)), 'article.md')
-
-
 @csrf.exempt
-@material_bp.route('/upload/<int:material_id>', methods=['POST'])
-@login_required
-def upload(material_id):
-    file = request.files.get('editormd-image-file')
-    if not file:
-        res = {
-            'success': 0,
-            'message': '上传失败'
-        }
+@material_bp.route('/code_save/<int:material_id>', methods=['POST'])
+def code_save(material_id):
+    materials_path = current_app.config['MATERIAL_PATH']
+    filepath = os.path.join(materials_path, str(material_id), 'material.json')
+
+    data = request.get_json()
+    content = data.get('content')
+
+    if content:
+        with open(filepath, 'w', encoding='utf-8') as file:
+            file.write(content)
+        return jsonify({'message': 'File saved successfully'})
     else:
-        filename = os.path.join(current_app.config['MATERIAL_PATH'], str(material_id), file.filename)
-        file.save(filename)
-        res = {
-            'success': 1,
-            'message': '上传成功',
-            'url': url_for('.image', material_id=material_id, filename=file.filename)
-        }
-    return jsonify(res)
+        return jsonify({'error': 'Content not provided'}), 400
 
-
-@material_bp.route('/<int:material_id>/image/<filename>')
-def image(material_id, filename):
-    return send_from_directory(os.path.join(current_app.config['MATERIAL_PATH'], str(material_id)), filename)
-
-
-@material_bp.route('/deletemd/<int:material_id>')
-@login_required
-def deletemd(material_id):
-    if not current_user.can('MODERATE'):
-        flash('您的权限不能删除该文章！', 'warning')
-    else:
-        material_path = os.path.join(current_app.config['MATERIAL_PATH'], str(material_id))
-        if os.path.exists(material_path):
-            shutil.rmtree(material_path)
-            flash('文章%s删除成功。' % material_id, 'success')
-        else:
-            flash('文章%s不存在！' % material_id, 'warning')
-    return redirect(url_for('.manage_materials'))

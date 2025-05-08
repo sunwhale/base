@@ -5,6 +5,15 @@
 
 {% block css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='codemirror-5.65.16/lib/codemirror.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='codemirror-5.65.16/theme/monokai.css') }}">
+
+<style>
+  .CodeMirror {
+    height: 800px;
+  }
+</style>
+
 {% endblock css %}
 
 {% block pageheader %}材料信息{% endblock pageheader %}
@@ -19,7 +28,7 @@
     <section class="content">
       <div class="container-fluid">
         <div class="row">
-          <div class="col-12">
+          <div class="col-6">
             <div class="card card-primary">
               <div class="card-header">
                 <h3 class="card-title">{{ material_id }}号材料信息</h3>
@@ -30,59 +39,67 @@
                 </div>
               </div>
               <div class="card-body">
-                <div class="row">
-                  <div class="col-6">
-
-                    <h5 class="text-primary">材料信息</h5>
-                    <ul class="list-unstyled">
-                      <li> 材料名称：{{ status['name'] }} </li>
-                      <li> 材料编号：{{ material_id }} </li>
-                      <li> 材料类型：{{ status['type'] }} </li>
-                      <li> 创建时间：{{ status['json_time'] }} </li>
-                      <li> 材料备注：</li>
-                      <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
-                      <p></p>
-                      <a class='btn btn-primary' href="{{ url_for('material.edit_material', material_id=material_id) }}"><strong>编辑信息</strong></a>
-                      {% if config.CLIENT %}
-                      <a href="{{ url_for('material.open_material', material_id=material_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
-                      {% endif %}
-                    </ul>
-                    
+                <h5 class="text-primary">材料信息</h5>
+                <ul class="list-unstyled">
+                  <li> 材料名称：{{ status['name'] }} </li>
+                  <li> 材料编号：{{ material_id }} </li>
+                  <li> 材料类型：{{ status['type'] }} </li>
+                  <li> 创建时间：{{ status['json_time'] }} </li>
+                  <li> 材料备注：</li>
+                  <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
+                  <p></p>
+                  <a class='btn btn-primary' href="{{ url_for('material.edit_material', material_id=material_id) }}"><strong>编辑信息</strong></a>
+                  {% if config.CLIENT %}
+                  <a href="{{ url_for('material.open_material', material_id=material_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
+                  {% endif %}
+                </ul>
+                <h5 class="text-primary">上传文件</h5>
+                <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+                  {{ form_upload.csrf_token }}
+                  <div class="form-group">
+                  {{ form_upload.submit }}{{ form_upload.filename }}
                   </div>
-                  <div class="col-6">
+                </form>
 
-                    <h5 class="text-primary">上传文件</h5>
-                    <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
-                      {{ form_upload.csrf_token }}
-                      <div class="form-group">
-                      {{ form_upload.submit }}{{ form_upload.filename }}
-                      </div>
-                    </form>
-
-                    <h5 class="text-primary">材料文件</h5>
-                    <table class="table table-sm table-hover">
-                      <thead>
-                        <tr>
-                          <th width=40%>文件名</th>
-                          <th width=30%>修改日期</th>
-                          <th width=10%>大小</th>
-                          <th width=20%>操作</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% for file in files %}
-                        <tr>
-                          <td> {{ file['name'] }} </td>
-                          <td> {{ file['time'] }} </td>
-                          <td> {{ file['size'] }} </td>
-                          <td> <a href="{{ url_for('material.get_material_file', material_id=material_id, filename=file['name']) }}" target="_blank">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('material.delete_material_file', material_id=material_id, filename=file['name']) }}">删除</a> </td>
-                        </tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
-
-                  </div>
+                <h5 class="text-primary">材料文件</h5>
+                <table class="table table-sm table-hover">
+                  <thead>
+                    <tr>
+                      <th width=40%>文件名</th>
+                      <th width=30%>修改日期</th>
+                      <th width=10%>大小</th>
+                      <th width=20%>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for file in files %}
+                    <tr>
+                      <td> {{ file['name'] }} </td>
+                      <td> {{ file['time'] }} </td>
+                      <td> {{ file['size'] }} </td>
+                      <td> <a href="{{ url_for('material.get_material_file', material_id=material_id, filename=file['name']) }}" target="_blank">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('material.delete_material_file', material_id=material_id, filename=file['name']) }}">删除</a> </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+          </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ material_id }}号材料信息</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
                 </div>
+              </div>
+              <div class="card-body">
+                <a class='btn btn-primary' id="formatBtn"><strong>代码格式化</strong></a>
+                <a class='btn btn-primary' id="saveBtn"><strong>保存</strong></a>
+                <p></p>
+                <textarea id="code"></textarea>
               </div>
             </div>
           </div>
@@ -95,6 +112,8 @@
 {% block script %}
 <script src="{{ url_for('static', filename='AdminLTE/plugins/datatables/jquery.dataTables.min.js') }}"></script>
 <script src="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('static', filename='codemirror-5.65.16/lib/codemirror.js') }}"></script>
+<script src="{{ url_for('static', filename='codemirror-5.65.16/mode/javascript/javascript.js') }}"></script>
 
 <script type="text/javascript">
 
@@ -102,10 +121,84 @@
     $('#descript').attr('disabled', true)
   });
 
-  document.getElementById('queue_value').style.display = 'none'
-  document.getElementById('queue_type').style.display = 'none'
+  // 初始化 CodeMirror
+  const editor = CodeMirror.fromTextArea(document.getElementById("code"), {
+    lineNumbers: true, // 显示行号
+    mode: "application/json", // 设置代码高亮模式
+    theme: "monokai",
+    indentUnit: 4,
+    tabSize: 4,
+    lineWrapping: false,
+    autoCloseBrackets: true,
+    matchBrackets: true,
+    viewportMargin: Infinity,
+    extraKeys: {
+      "Ctrl-Enter": formatJson,
+      "Cmd-Enter": formatJson,
+      "Tab": "indentMore",
+      "Shift-Tab": "indentLess"
+    }
+  });
+
+  function formatJson() {
+    try {
+      const json = JSON.parse(editor.getValue())
+      editor.setValue(JSON.stringify(json, null, 4))
+    } catch (e) {
+      alert('JSON格式错误: ' + e.message)
+    }
+  }
+
+  let url = 'http://127.0.0.1:5000/material/get_material_file/1/material.json'
+
+  fetch(url)
+    .then(response => {
+      if (!response.ok) {
+        alert('文件不存在，url错误: ' + response.status);
+        throw new Error('文件不存在，url错误: ' + response.status);
+      }
+      return response.text();
+    })
+    .then(data => {
+      // 设置代码内容
+      editor.setValue(data);
+    })
+    .catch(error => {
+      console.error('文件加载错误:', error);
+    });
+
+  const saveBtn = document.getElementById('saveBtn');
+
+  saveBtn.addEventListener('click', function () {
+    formatJson()
+    // 获取编辑器中的内容
+    const content = editor.getValue();
+
+    // saveUrl 是保存文件的服务器端 URL
+    const saveUrl= "{{ url_for('material.code_save', material_id=material_id) }}";
+
+    // 发起 HTTP POST 请求将内容发送到服务器
+    fetch(saveUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({content: content}),
+    }).then(response => {
+      if (response.ok) {
+        alert('保存成功！');
+      } else {
+        alert('保存失败！');
+        console.error('保存失败！');
+      }
+    }).catch(error => {
+      alert('保存失败：' + error);
+      console.error('保存失败:', error);
+    });
+  });
+
+  document.getElementById('formatBtn').addEventListener('click', formatJson)
 
   document.getElementById('material').className = 'nav-item menu-open'
-
 </script>
 {% endblock script %}
