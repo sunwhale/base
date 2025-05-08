@@ -63,6 +63,8 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
     setting['mirrorAboutXzPlane'] = eval(setting['mirrorAboutXzPlane'])
     setting['mirrorAboutYzPlane'] = eval(setting['mirrorAboutYzPlane'])
     setting['triad'] = eval(setting['triad'])
+    setting['contourType'] = eval(setting['contourType'])
+    setting['contourStyle'] = eval(setting['contourStyle'])
     setting['translucency'] = eval(setting['translucency'])
 
     session.pngOptions.setValues(imageSize=setting['imageSize'])
@@ -117,7 +119,7 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
                                refinement=setting['refinement'], )
 
     display.display.setValues(plotState=setting['plotState'])
-    display.contourOptions.setValues(contourStyle=CONTINUOUS)
+    display.contourOptions.setValues(contourType=setting['contourType'], contourStyle=setting['contourStyle'])
 
     viewport.view.fitView()
 

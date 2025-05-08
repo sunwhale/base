@@ -105,6 +105,9 @@ class FigureSettingFrom(FlaskForm):
     projection = SelectField('projection', coerce=str)
     views = SelectField('views', coerce=str)
 
+    contourType = SelectField('contourType', coerce=str)
+    contourStyle = SelectField('contourStyle', coerce=str)
+
     translucency = SelectField('translucency', coerce=str)
     translucencyFactor = FloatField('translucencyFactor', default=0.3)
     xAngle = FloatField('xAngle', default=0.0)
@@ -150,6 +153,9 @@ class FigureSettingFrom(FlaskForm):
                                       'Averaging region', 'Internal set', 'Composite layup', 'Composite ply']
         self.projection.choices = ['PARALLEL', 'PERSPECTIVE']
         self.views.choices = ['Front', 'Back', 'Top', 'Bottom', 'Left', 'Right', 'Iso']
+
+        self.contourType.choices = ['QUILT', 'BANDED']
+        self.contourStyle.choices = ['DISCRETE', 'CONTINUOUS']
         self.translucency.choices = ['OFF', 'ON']
 
         self.useStatus.choices = ['False', 'True']
