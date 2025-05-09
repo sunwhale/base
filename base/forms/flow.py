@@ -32,13 +32,19 @@ class F1From(FlaskForm):
     z_length_of_plane = FloatField('z方向长度，mm', default=10.0)
     plane_seed_size = FloatField('平面网格尺寸，mm', default=5.0)
 
-    x_shift_of_tool = FloatField('x，mm', default=0.0)
-    y_shift_of_tool = FloatField('y，mm', default=0.0)
-    z_shift_of_tool = FloatField('z，mm', default=0.0)
+    x_shift_of_tool = FloatField('初始x，mm', default=0.0)
+    y_shift_of_tool = FloatField('初始y，mm', default=0.0)
+    z_shift_of_tool = FloatField('初始z，mm', default=0.0)
 
     material_tool = SelectField('铣刀材料', coerce=str)
     material_plane = SelectField('平板材料', coerce=str)
     material_interaction = SelectField('接触属性', coerce=str)
+
+    tool_rotation_speed = FloatField('铣刀转速，rpm', default=300.0)
+    tool_shift_speed = FloatField('铣刀进给速度，mm/min', default=10.0)
+    square_wave_width = FloatField('方波宽度，mm', default=25.0)
+    square_wave_height = FloatField('方波高度，mm', default=50.0)
+    square_wave_cycles = IntegerField('方波周期数', default=100, validators=[DataRequired(), NumberRange(1, 10000)])
 
     timeIncrementationMethod = SelectField('timeIncrementationMethod', coerce=str)
     userDefinedInc = FloatField('userDefinedInc', default=1.0e-7)

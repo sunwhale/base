@@ -151,11 +151,14 @@ if __name__ == '__main__':
     y_shift_of_tool = message['y_shift_of_tool']
     z_shift_of_tool = message['z_shift_of_tool']
 
-    tool_rotation_speed = 10.0
-    tool_shift_speed = 10.0
-    square_wave_cycles = 20
+    tool_rotation_speed = message['tool_rotation_speed']
+    tool_shift_speed = message['tool_shift_speed']
 
-    step_time = 1.0
+    square_wave_width = message['square_wave_width']
+    square_wave_height = message['square_wave_height']
+    square_wave_cycles = message['square_wave_cycles']
+
+    step_time = message['step_time']
 
     timeIncrementationMethod = message['timeIncrementationMethod']
     userDefinedInc = message['userDefinedInc']

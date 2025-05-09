@@ -149,6 +149,11 @@ def f1():
             'z_shift_of_tool': form.z_shift_of_tool.data,
             'material_tool': form.material_tool.data,
             'material_plane': form.material_plane.data,
+            'tool_rotation_speed': form.tool_rotation_speed.data,
+            'tool_shift_speed': form.tool_shift_speed.data,
+            'square_wave_width': form.square_wave_width.data,
+            'square_wave_height': form.square_wave_height.data,
+            'square_wave_cycles': form.square_wave_cycles.data,
             'material_interaction': form.material_interaction.data,
             'timeIncrementationMethod': form.timeIncrementationMethod.data,
             'userDefinedInc': form.userDefinedInc.data,
@@ -190,6 +195,11 @@ def f1():
             form.material_tool.data = message['material_tool']
             form.material_plane.data = message['material_plane']
             form.material_interaction.data = message['material_interaction']
+            form.tool_rotation_speed.data = message['tool_rotation_speed']
+            form.tool_shift_speed.data = message['tool_shift_speed']
+            form.square_wave_width.data = message['square_wave_width']
+            form.square_wave_height.data = message['square_wave_height']
+            form.square_wave_cycles.data = message['square_wave_cycles']
             form.timeIncrementationMethod.data = message['timeIncrementationMethod']
             form.userDefinedInc.data = message['userDefinedInc']
             form.step_time.data = message['step_time']
