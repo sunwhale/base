@@ -217,42 +217,42 @@
     const resetLink = document.getElementById('resetLink');
 
     if (solverStatus === 'Submitting' || solverStatus === 'Running' || solverStatus === 'Pause' || solverStatus === 'Stopping') {
-      calculateBtn.style.display = 'inline';
+      calculateBtn.style.display = 'inline-block';
       calculateLink.style.display = 'none';
     } else {
       calculateBtn.style.display = 'none';
-      calculateLink.style.display = 'inline';
+      calculateLink.style.display = 'inline-block';
     }
 
     // if (solverStatus === 'Running') {
     //   pauseBtn.style.display = 'none';
-    //   pauseLink.style.display = 'inline';
+    //   pauseLink.style.display = 'inline-block';
     // } else {
-    //   pauseBtn.style.display = 'inline';
+    //   pauseBtn.style.display = 'inline-block';
     //   pauseLink.style.display = 'none';
     // }
     //
     // if (solverStatus === 'Pause') {
     //   continueBtn.style.display = 'none';
-    //   continueLink.style.display = 'inline';
+    //   continueLink.style.display = 'inline-block';
     // } else {
-    //   continueBtn.style.display = 'inline';
+    //   continueBtn.style.display = 'inline-block';
     //   continueLink.style.display = 'none';
     // }
 
     if (solverStatus === 'Running') {
       terminateBtn.style.display = 'none';
-      terminateLink.style.display = 'inline';
+      terminateLink.style.display = 'inline-block';
     } else {
-      terminateBtn.style.display = 'inline';
+      terminateBtn.style.display = 'inline-block';
       terminateLink.style.display = 'none';
     }
 
     if (solverStatus === 'Completed' || solverStatus === 'Stopped' || solverStatus === 'Setting') {
       resetBtn.style.display = 'none';
-      resetLink.style.display = 'inline';
+      resetLink.style.display = 'inline-block';
     } else {
-      resetBtn.style.display = 'inline';
+      resetBtn.style.display = 'inline-block';
       resetLink.style.display = 'none';
     }
   }

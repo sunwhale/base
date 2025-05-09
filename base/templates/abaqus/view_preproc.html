@@ -204,18 +204,18 @@
     const resetLink = document.getElementById('resetLink');
 
     if (solverStatus === 'Submitting' || solverStatus === 'Running' || solverStatus === 'Pause' || solverStatus === 'Stopping') {
-      calculateBtn.style.display = 'inline';
+      calculateBtn.style.display = 'inline-block';
       calculateLink.style.display = 'none';
     } else {
       calculateBtn.style.display = 'none';
-      calculateLink.style.display = 'inline';
+      calculateLink.style.display = 'inline-block';
     }
 
     if (solverStatus === 'Completed' || solverStatus === 'Stopped' || solverStatus === 'Setting') {
       resetBtn.style.display = 'none';
-      resetLink.style.display = 'inline';
+      resetLink.style.display = 'inline-block';
     } else {
-      resetBtn.style.display = 'inline';
+      resetBtn.style.display = 'inline-block';
       resetLink.style.display = 'none';
     }
   }
