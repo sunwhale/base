@@ -201,7 +201,7 @@
               <div class="col-12">
                 <div class="card card-primary">
                   <div class="card-header">
-                    <h3 class="card-title">模型示意图</h3>
+                    <h3 class="card-title">模型预览</h3>
                     <div class="card-tools">
                       <button type="button" class="btn btn-tool" data-card-widget="collapse">
                         <i class="fas fa-minus"></i>
@@ -210,32 +210,34 @@
                   </div>
                   <div class="card-body">
                     <div class="row">
-                      <div class="col-6">
-                        <h6 class="text">Iso视图</h6><hr/>
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">刀具网格</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='part_tool_mesh_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">平板网格</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='part_plane_mesh_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">Iso视图</h6>
                         <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
                       </div>
-                      <div class="col-6">
-                        <h6 class="text">Bottom视图</h6><hr/>
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">Bottom视图</h6>
                          <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_bottom.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
                       </div>
 
-                      <div class="col-6">
-                        <h6 class="text">Front视图</h6><hr/>
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">Front视图</h6>
                         <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_front.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
                       </div>
-                      <div class="col-6">
-                        <h6 class="text">刀具路径</h6><hr/>
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">刀具路径</h6>
                         <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_front_with_path.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
                       </div>
 
-                      <div class="col-6">
-                        <h6 class="text">刀具网格</h6><hr/>
-                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='part_tool_mesh_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
-                      </div>
-                      <div class="col-6">
-                        <h6 class="text">平板网格</h6><hr/>
-                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='part_plane_mesh_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
-                      </div>
+
                     </div>
                   </div>
                 </div>
