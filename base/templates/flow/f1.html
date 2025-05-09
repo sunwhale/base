@@ -353,11 +353,24 @@
   function editMaterialPlane() {
     const material_plane_choices = "{{ form.material_plane.data }}"
     const material_id = material_plane_choices.split("_")[0]
-    const url = "{{ url_for('material.edit_material', material_id=material_id) }}"
-    window.open(url, "_blank")
+    const url = "{{ url_for('material.view_material', material_id=0) }}"
+    window.open(url.replace('0', material_id), "_blank")
   }
-
+  function editMaterialTool() {
+    const material_plane_choices = "{{ form.material_tool.data }}"
+    const material_id = material_plane_choices.split("_")[0]
+    const url = "{{ url_for('material.view_material', material_id=0) }}"
+    window.open(url.replace('0', material_id), "_blank")
+  }
+    function editMaterialInteraction() {
+    const material_plane_choices = "{{ form.material_interaction.data }}"
+    const material_id = material_plane_choices.split("_")[0]
+    const url = "{{ url_for('material.view_material', material_id=0) }}"
+    window.open(url.replace('0', material_id), "_blank")
+  }
   document.getElementById('editMaterialPlaneBtn').addEventListener('click', editMaterialPlane)
+  document.getElementById('editMaterialToolBtn').addEventListener('click', editMaterialTool)
+  document.getElementById('editMaterialInteractionBtn').addEventListener('click', editMaterialInteraction)
 
 </script>
 {% endblock script %}
