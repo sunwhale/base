@@ -16,7 +16,7 @@ from base.utils.dir_status import (create_id, get_path_uuid, files_in_dir, calcu
 
 sync_bp = Blueprint('sync', __name__)
 
-server_url = 'https://sunjingyu.com'
+server_url = 'https://sunjingyu.com:8010'
 
 # server_url = 'http://127.0.0.1:5000'
 
@@ -29,6 +29,7 @@ allowed_suffix_dict = {
     'doc': ['.*'],
     'sheet': ['.*'],
     'packing_models': ['.*'],
+    'material': ['.*'],
     'pyfem': ['.toml', '.inp', '.msh', '.json', '.project_msg', '.job_msg', '.uuid']
 }
 
@@ -41,6 +42,7 @@ def get_module_path_dict():
         'virtual': current_app.config['VIRTUAL_PATH'],
         'experiment': current_app.config['EXPERIMENT_PATH'],
         'doc': current_app.config['DOC_PATH'],
+        'material': current_app.config['MATERIAL_PATH'],
         'sheet': current_app.config['SHEET_PATH'],
         'packing_models': current_app.config['PACKING_MODELS_PATH'],
         'pyfem': current_app.config['PYFEM_PATH']
