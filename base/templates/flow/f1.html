@@ -173,6 +173,63 @@
                   </div>
                 </div>
               </form>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="column">
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header d-flex p-0">
+                    <h3 class="card-title p-3">前处理状态</h3>
+                    <ul class="nav nav-pills ml-auto p-2">
+                      <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">前处理日志 abaqus.rpy</a></li>
+                      <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
+                    </ul>
+                  </div>
+                  <div class="card-body">
+                    <div class="tab-content">
+                      <div class="tab-pane active" id="tab_1">
+                        <textarea id="textarea_log" class="form-control" style="height: 721.5px;"></textarea>
+                      </div>
+                      <div class="tab-pane" id="tab_2">
+                        <textarea id="textarea_run_log" class="form-control" style="height: 711.5px;"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary">
+                  <div class="card-header">
+                    <h3 class="card-title">模型示意图</h3>
+                    <div class="card-tools">
+                      <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                        <i class="fas fa-minus"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-6">
+                        <h5 class="text">Iso视图</h5><hr/>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+                      <div class="col-6">
+                        <h5 class="text">Bottom视图</h5><hr/>
+                         <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_bottom.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+                      <div class="col-6">
+                        <h5 class="text">Front视图</h5><hr/>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_front.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+                      <div class="col-6">
+                        <h5 class="text">刀具路径</h5><hr/>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_front_with_path.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div class="col-12">
                 <div class="card card-primary collapsed-card">
                   <div class="card-header">
@@ -206,31 +263,6 @@
                           <tbody id="table_files_body">
                           </tbody>
                         </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-6">
-            <div class="column">
-              <div class="col-12">
-                <div class="card">
-                  <div class="card-header d-flex p-0">
-                    <h3 class="card-title p-3">前处理状态</h3>
-                    <ul class="nav nav-pills ml-auto p-2">
-                      <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">前处理日志 abaqus.rpy</a></li>
-                      <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
-                    </ul>
-                  </div>
-                  <div class="card-body">
-                    <div class="tab-content">
-                      <div class="tab-pane active" id="tab_1">
-                        <textarea id="textarea_log" class="form-control" style="height: 711.5px;"></textarea>
-                      </div>
-                      <div class="tab-pane" id="tab_2">
-                        <textarea id="textarea_run_log" class="form-control" style="height: 711.5px;"></textarea>
                       </div>
                     </div>
                   </div>
