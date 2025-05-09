@@ -367,6 +367,23 @@ if __name__ == '__main__':
     viewport.view.setValues(session.views['Front'])
     session.printToFile(fileName='assembly_front_with_path.png', format=PNG, canvasObjects=(viewport,))
 
-    viewport.assemblyDisplay.setValues(mesh=ON)
-    viewport.assemblyDisplay.meshOptions.setValues(meshTechnique=ON)
+    # viewport.assemblyDisplay.setValues(mesh=ON)
+    # viewport.assemblyDisplay.meshOptions.setValues(meshTechnique=ON)
+
+    viewport = session.viewports['Viewport: 1']
+    viewport.partDisplay.setValues(mesh=ON)
+    viewport.partDisplay.meshOptions.setValues(meshTechnique=ON)
+    viewport.view.setProjection(projection=PERSPECTIVE)
+    viewport.partDisplay.geometryOptions.setValues(referenceRepresentation=OFF)
+
+    viewport.setValues(displayedObject=part_tool)
+    viewport.view.setValues(session.views['Iso'])
+    viewport.view.rotate(xAngle=-90, yAngle=0, zAngle=0, mode=MODEL)
+    session.printToFile(fileName='part_tool_mesh_iso.png', format=PNG, canvasObjects=(viewport,))
+
+    viewport.setValues(displayedObject=part_plane)
+    viewport.view.setValues(session.views['Iso'])
+    viewport.view.rotate(xAngle=-90, yAngle=0, zAngle=0, mode=MODEL)
+    session.printToFile(fileName='part_plane_mesh_iso.png', format=PNG, canvasObjects=(viewport,))
+
     mdb.saveAs(pathName='f1.cae')
