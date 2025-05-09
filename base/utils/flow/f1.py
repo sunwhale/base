@@ -24,6 +24,39 @@ def is_unicode_all_uppercase(obj):
     return isinstance(obj, unicode) and obj.isupper() and any(c.isalpha() for c in obj)
 
 
+def interpolate_points(array, n):
+    """
+    在每两个相邻点之间进行n等分的线性插值
+
+    参数:
+        array: 原始二维数组，形状为 (m, 2)
+        n: 每两个点之间插入的等分点数(包括第一个点但不包括最后一个点)
+
+    返回:
+        插值后的二维数组
+    """
+    interpolated = []
+    for i in range(len(array) - 1):
+        # 当前点和下一个点
+        p0 = array[i]
+        p1 = array[i + 1]
+
+        # 生成从0到1的n+1个等分点(包括0但不包括1)
+        t = np.linspace(0, 1, n + 1, endpoint=False)
+
+        # 线性插值
+        interpolated_segment = p0 + (p1 - p0) * t[:, np.newaxis]
+
+        # 添加到结果中
+        interpolated.append(interpolated_segment)
+
+    # 添加最后一个点
+    interpolated.append(np.array([array[-1]]))
+
+    # 合并所有结果
+    return np.vstack(interpolated)
+
+
 def set_material(material_obj, material_dict):
     for material_key, material_value in material_dict.items():
         if hasattr(material_obj, material_key):
@@ -151,8 +184,8 @@ if __name__ == '__main__':
     y_shift_of_tool = message['y_shift_of_tool']
     z_shift_of_tool = message['z_shift_of_tool']
 
-    tool_rotation_speed = message['tool_rotation_speed']
-    tool_shift_speed = message['tool_shift_speed']
+    tool_rotation_speed = message['tool_rotation_speed'] * 2.0 * np.pi / 60.0
+    tool_shift_speed = message['tool_shift_speed'] / 60.0
 
     square_wave_width = message['square_wave_width']
     square_wave_height = message['square_wave_height']
@@ -257,7 +290,7 @@ if __name__ == '__main__':
     else:
         raise KeyError('Unknown timeIncrementationMethod: {}'.format(timeIncrementationMethod))
 
-    f, t_vs_x, t_vs_y = square_wave(width=r2, height=y_length_of_plane / 2.0, velocity=tool_shift_speed, cycles=square_wave_cycles)
+    f, t_vs_x, t_vs_y = square_wave(width=square_wave_width, height=square_wave_height, velocity=tool_shift_speed, cycles=square_wave_cycles)
     model.TabularAmplitude(name='Amp-x', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_x)
     model.TabularAmplitude(name='Amp-y', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_y)
 
@@ -304,4 +337,36 @@ if __name__ == '__main__':
 
     mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
 
+    a = mdb.models['Model-1'].rootAssembly
+    viewport.setValues(displayedObject=a)
+    cmap = viewport.colorMappings['Set']
+    viewport.setColor(colorMapping=cmap)
+
+    viewport = session.viewports['Viewport: 1']
+    viewport.makeCurrent()
+    viewport.setValues(width=100)
+    viewport.setValues(height=100)
+
+    session.printOptions.setValues(reduceColors=False)
+    viewport.view.setValues(session.views['Iso'])
+    viewport.view.rotate(xAngle=-90, yAngle=0, zAngle=0, mode=MODEL)
+    session.printToFile(fileName='assembly_iso.png', format=PNG, canvasObjects=(viewport,))
+
+    viewport.view.setValues(session.views['Bottom'])
+    session.printToFile(fileName='assembly_bottom.png', format=PNG, canvasObjects=(viewport,))
+
+    viewport.view.setProjection(projection=PARALLEL)
+    viewport.view.setValues(session.views['Front'])
+    session.printToFile(fileName='assembly_front.png', format=PNG, canvasObjects=(viewport,))
+
+    t_vs_x_interpolated = interpolate_points(np.array(t_vs_x), 8)
+    t_vs_y_interpolated = interpolate_points(np.array(t_vs_y), 8)
+    for i in range(len(t_vs_x_interpolated)):
+        a.DatumPointByCoordinate(coords=(t_vs_x_interpolated[i][1] + x_shift_of_tool, t_vs_y_interpolated[i][1] + y_shift_of_tool, z_shift_of_tool))
+    viewport.view.setProjection(projection=PARALLEL)
+    viewport.view.setValues(session.views['Front'])
+    session.printToFile(fileName='assembly_front_with_path.png', format=PNG, canvasObjects=(viewport,))
+
+    viewport.assemblyDisplay.setValues(mesh=ON)
+    viewport.assemblyDisplay.meshOptions.setValues(meshTechnique=ON)
     mdb.saveAs(pathName='f1.cae')
