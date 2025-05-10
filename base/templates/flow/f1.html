@@ -212,9 +212,10 @@
                     </div>
                   </div>
                   <div class="card-body">
-                    <a id="updateFigures" href="#" class="btn btn-success"><strong>刷新图片</strong></a>
+                    <a id="updateFigures" href="#" class="btn btn-success" onclick="refreshImages(); return false;"><strong>刷新图片</strong></a>
+                    <span id="refreshStatus" style="margin-left: 10px; display: none;"></span>
                     <hr>
-                    <div class="row">
+                    <div class="row" id="imageContainer">
                       <div class="col-6" style="border: 1px solid black">
                         <h6 class="text">刀具网格</h6>
                         <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='part_tool_mesh_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
@@ -418,6 +419,36 @@
   document.getElementById('editMaterialPlaneBtn').addEventListener('click', editMaterialPlane)
   document.getElementById('editMaterialToolBtn').addEventListener('click', editMaterialTool)
   document.getElementById('editMaterialInteractionBtn').addEventListener('click', editMaterialInteraction)
+
+  function refreshImages() {
+    const refreshStatus = document.getElementById('refreshStatus');
+    const container = document.getElementById('imageContainer');
+    const images = container.getElementsByTagName('img');
+    const button = document.getElementById('updateFigures');
+
+    // Disable button during refresh
+    button.disabled = true;
+    refreshStatus.textContent = "正在刷新...";
+    refreshStatus.style.color = "#666";
+    refreshStatus.style.display = "inline";
+
+    // Force refresh each image
+    for (let img of images) {
+      img.src = img.src.split('?')[0] + '?t=' + new Date().getTime();
+    }
+
+    // Set a small delay before showing success to allow images to start loading
+    setTimeout(() => {
+      refreshStatus.textContent = "刷新成功!";
+      refreshStatus.style.color = "green";
+      button.disabled = false;
+
+      // Hide message after 3 seconds
+      setTimeout(() => {
+        refreshStatus.style.display = "none";
+      }, 3000);
+    }, 500);
+  }
 
 </script>
 {% endblock script %}
