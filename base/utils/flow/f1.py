@@ -352,10 +352,10 @@ if __name__ == '__main__':
     viewport.view.rotate(xAngle=-90, yAngle=0, zAngle=0, mode=MODEL)
     session.printToFile(fileName='assembly_iso.png', format=PNG, canvasObjects=(viewport,))
 
+    viewport.view.setProjection(projection=PARALLEL)
     viewport.view.setValues(session.views['Bottom'])
     session.printToFile(fileName='assembly_bottom.png', format=PNG, canvasObjects=(viewport,))
 
-    viewport.view.setProjection(projection=PARALLEL)
     viewport.view.setValues(session.views['Front'])
     session.printToFile(fileName='assembly_front.png', format=PNG, canvasObjects=(viewport,))
 
