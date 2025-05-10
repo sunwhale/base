@@ -50,7 +50,7 @@ class F1From(FlaskForm):
     userDefinedInc = FloatField('userDefinedInc', default=1.0e-7)
     step_time = FloatField('step_time', default=1.0)
 
-    submit = SubmitField('保存')
+    submit = SubmitField('保存当前参数')
 
     def __init__(self, *args, **kwargs):
         super(F1From, self).__init__(*args, **kwargs)
