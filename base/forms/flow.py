@@ -19,6 +19,14 @@ class FlowForm(FlaskForm):
     submit = SubmitField('提交')
 
 
+class JobForm(FlaskForm):
+    job = StringField('算例名', default='Job-1', validators=[DataRequired(), Length(1, 126)])
+    user = StringField('算例user文件', default='user.for')
+    cpus = IntegerField('算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 64)])
+    descript = TextAreaField('算例备注', render_kw={'rows': 2})
+    submit = SubmitField('提交')
+
+
 class F1From(FlaskForm):
     r1 = FloatField('r1，mm', default=20.0)
     r2 = FloatField('r2，mm', default=25.0)

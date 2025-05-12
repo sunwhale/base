@@ -12,7 +12,7 @@ import uuid
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.flow import UploadForm, FlowForm, F1From
+from base.forms.flow import UploadForm, FlowForm, JobForm, F1From
 from base.global_var import event_source
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Preproc import Preproc
@@ -125,7 +125,25 @@ def f1():
         f = upload_form.filename.data
         f.save(os.path.join(flow_path, f.filename))
         flash('上传文件%s成功。' % f.filename, 'success')
-        return redirect(url_for('flow.cut', flow_id=flow_id))
+        return redirect(url_for('flow.f1', flow_id=flow_id))
+
+    job_form = JobForm()
+    if job_form.validate_on_submit():
+        job_message = {}
+        job_message['job'] = job_form.job.data
+        job_message['user'] = job_form.user.data
+        job_message['cpus'] = job_form.cpus.data
+        job_message['descript'] = job_form.descript.data
+        print(job_message)
+
+    #     dump_json(msg_file, message)
+    #
+    # message = load_json(msg_file)
+    # job_form.job.data = message['job']
+    # job_form.user.data = message['user']
+    # job_form.cpus.data = message['cpus']
+    # job_form.descript.data = message['descript']
+
 
     form = F1From()
     form.material_tool.choices = material_list
@@ -225,7 +243,7 @@ def f1():
                 for key in ['name', 'flow_time', 'descript']:
                     status[key] = 'None'
 
-        return render_template('flow/f1.html', flow_id=flow_id, status=status, form=form, upload_form=upload_form)
+        return render_template('flow/f1.html', flow_id=flow_id, status=status, form=form, upload_form=upload_form, job_form=job_form)
     else:
         abort(404)
 
