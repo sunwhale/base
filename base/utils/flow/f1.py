@@ -191,8 +191,10 @@ if __name__ == '__main__':
     square_wave_height = message['square_wave_height']
     square_wave_cycles = message['square_wave_cycles']
 
-    step_time = message['step_time']
+    output_variables = str(message['output_variables']).replace(' ', '').split(',')
+    output_numIntervals = message['output_numIntervals']
 
+    step_time = message['step_time']
     timeIncrementationMethod = message['timeIncrementationMethod']
     userDefinedInc = message['userDefinedInc']
 
@@ -324,8 +326,7 @@ if __name__ == '__main__':
                          amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='',
                          localCsys=None)
 
-    model.fieldOutputRequests['F-Output-1'].setValues(
-        variables=('S', 'SVAVG', 'PE', 'PEVAVG', 'PEEQ', 'PEEQVAVG', 'LE', 'U', 'V', 'A', 'RF', 'CSTRESS', 'NT', 'HFL', 'RFL', 'EVF', 'STATUS'))
+    model.fieldOutputRequests['F-Output-1'].setValues(numIntervals=output_numIntervals, variables=output_variables)
 
     mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
             atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
