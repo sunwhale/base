@@ -120,37 +120,50 @@ def f1():
     for material in material_dict['data']:
         material_list.append('%s_%s' % (material['material_id'], material['name']))
 
-    upload_form = UploadForm()
-    if upload_form.validate_on_submit():
-        f = upload_form.filename.data
-        f.save(os.path.join(flow_path, f.filename))
-        flash('上传文件%s成功。' % f.filename, 'success')
-        return redirect(url_for('flow.f1', flow_id=flow_id))
-
-    job_form = JobForm()
-    if job_form.validate_on_submit():
-        job_message = {}
-        job_message['job'] = job_form.job.data
-        job_message['user'] = job_form.user.data
-        job_message['cpus'] = job_form.cpus.data
-        job_message['descript'] = job_form.descript.data
-        print(job_message)
-
-    #     dump_json(msg_file, message)
-    #
-    # message = load_json(msg_file)
-    # job_form.job.data = message['job']
-    # job_form.user.data = message['user']
-    # job_form.cpus.data = message['cpus']
-    # job_form.descript.data = message['descript']
-
-
+    upload_form = UploadForm(prefix='upload')
+    job_form = JobForm(prefix='job')
     form = F1From()
     form.material_tool.choices = material_list
     form.material_plane.choices = material_list
     form.material_interaction.choices = material_list
 
-    if form.validate_on_submit():
+    if upload_form.submit.data and upload_form.validate():
+        f = upload_form.filename.data
+        f.save(os.path.join(flow_path, f.filename))
+        flash('上传文件%s成功。' % f.filename, 'success')
+        return redirect(url_for('flow.f1', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
+
+    if job_form.submit.data and job_form.validate():
+        project_id = 11
+        abaqus_path = current_app.config['ABAQUS_PATH']
+        project_path = os.path.join(abaqus_path, str(project_id))
+        job_id = create_id(project_path)
+        job_path = os.path.join(project_path, str(job_id))
+
+        make_dir(job_path)
+        job_message = {
+            'job': job_form.job.data,
+            'user': job_form.user.data,
+            'cpus': job_form.cpus.data,
+            'descript': job_form.descript.data
+        }
+
+        job_message_file = os.path.join(job_path, '.job_msg')
+        dump_json(job_message_file, job_message)
+
+        files = files_in_dir(flow_path)
+        for file in files:
+            shutil.copy(os.path.join(flow_path, file['name']), os.path.join(job_path, file['name']))
+
+        return redirect(url_for('flow.f1', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
+
+    # job_message = load_json(job_message_file)
+    # job_form.job.data = job_message['job']
+    # job_form.user.data = job_message['user']
+    # job_form.cpus.data = job_message['cpus']
+    # job_form.descript.data = job_message['descript']
+
+    if form.submit.data and form.validate():
         message = {
             'r1': form.r1.data,
             'r2': form.r2.data,

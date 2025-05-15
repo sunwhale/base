@@ -59,9 +59,9 @@
                 </div>
               </div>
               <div class="col-12">
-                <div class="card card-primary">
+                <div class="card card-info">
                   <div class="card-header">
-                    <h3 class="card-title">{{ flow_id }}号流程信息</h3>
+                    <h3 class="card-title">新建ABAQUS作业</h3>
                     <div class="card-tools">
                       <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
                         <i class="fas fa-minus"></i>
@@ -79,7 +79,7 @@
                 </div>
               </div>
               <form action="" method="post" class="form" role="form">
-              {{ form.csrf_token() }}
+                {{ form.csrf_token() }}
                 <div class="col-12">
                   <div class="card card-info">
                     <div class="card-header">
@@ -214,10 +214,10 @@
                   <div class="card-body">
                     <div class="tab-content">
                       <div class="tab-pane active" id="tab_1">
-                        <textarea id="textarea_log" class="form-control" style="height: 733.0px;"></textarea>
+                        <textarea id="textarea_log" class="form-control" style="height: 370.0px;"></textarea>
                       </div>
                       <div class="tab-pane" id="tab_2">
-                        <textarea id="textarea_run_log" class="form-control" style="height: 733.0px;"></textarea>
+                        <textarea id="textarea_run_log" class="form-control" style="height: 360.0px;"></textarea>
                       </div>
                     </div>
                   </div>
