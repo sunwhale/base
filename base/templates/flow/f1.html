@@ -61,7 +61,7 @@
               <div class="col-12">
                 <div class="card card-info">
                   <div class="card-header">
-                    <h3 class="card-title">新建ABAQUS作业</h3>
+                    <h3 class="card-title">新建/编辑ABAQUS作业</h3>
                     <div class="card-tools">
                       <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
                         <i class="fas fa-minus"></i>
@@ -71,6 +71,7 @@
                   <div class="card-body">
                     <form action="" method="post" class="form" role="form">
                       {{ job_form.csrf_token() }}
+                      {{ render_form_row([job_form.project_id, job_form.job_id]) }}
                       {{ render_form_row([job_form.job, job_form.user, job_form.cpus]) }}
                       {{ render_form_row([job_form.descript]) }}
                       {{ render_field(job_form.submit, button_style='btn btn-info') }}
@@ -404,7 +405,7 @@
       fetch("{{ url_for('flow.flow_status', flow_id=flow_id) }}")
         .then(response => response.json())
         .then(data => {
-          console.log(data)
+          // console.log(data)
           updateButtons(data["flow_status"])
           updateLog(data['logs'])
           updateRunLog(data['run_logs'])
@@ -471,6 +472,52 @@
       }, 3000);
     }, 500);
   }
+
+  // $.ajax({
+  //   type: "get",
+  //   url: "{{ url_for('abaqus.projects_status') }}",
+  //   dataType: "json",
+  //   success: function (projects_status) {
+  //     console.log(projects_status);
+  //     window.projects_status = projects_status
+  //   }
+  // });
+
+  async function fetchJSON(url) {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP 错误: ${response.status}`);
+      }
+      const data = await response.json(); // 解析 JSON 数据
+      return data; // 返回解析后的 JSON 对象
+    } catch (error) {
+      console.error("获取数据失败:", error);
+    }
+  }
+
+  fetchJSON("{{ url_for('abaqus.projects_status') }}").then(projects_status => {
+    console.log(projects_status);
+    window.projects_status = projects_status
+  })
+
+  sel_project_id = document.getElementById("job-project_id")
+  sel_job_id = document.getElementById("job-job_id");
+
+  sel_project_id.addEventListener("change", function () {
+    const project_id = sel_project_id.value.split('_')[0];
+    const apiUrl = "{{ url_for('abaqus.project_jobs_status', project_id=0) }}".replace("0", project_id);
+    fetchJSON(apiUrl).then(project_jobs_status => {
+      sel_job_id.options.length = 0;
+      for (var i = 0; i < project_jobs_status['data'].length; i++) {
+        var job_id = project_jobs_status['data'][i]['job_id'];
+        var option_job_id = document.createElement("option");
+        var textNode = document.createTextNode(job_id);
+        option_job_id.appendChild(textNode);
+        sel_job_id.appendChild(option_job_id);
+      }
+    });
+  })
 
 </script>
 {% endblock script %}

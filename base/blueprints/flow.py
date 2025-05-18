@@ -20,7 +20,7 @@ from base.utils.abaqus.Solver import Solver
 from base.utils.abaqus.add_phasefield_layer import add_phasefield_layer as add_phasefield_layer_abaqus
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status, get_template_status, project_jobs_detail,
-                                   flows_detail, materials_detail, get_preproc_status, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
+                                   flows_detail, materials_detail, projects_detail, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
 from base.utils.events_new import update_events_new
 from base.utils.make_gif import make_gif
 from base.utils.read_prescan import read_prescan
@@ -120,12 +120,20 @@ def f1():
     for material in material_dict['data']:
         material_list.append('%s_%s' % (material['material_id'], material['name']))
 
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    project_dict = projects_detail(abaqus_path)
+    project_list = []
+    for project in project_dict['data']:
+        project_list.append('%s_%s' % (project['project_id'], project['name']))
+
     upload_form = UploadForm(prefix='upload')
     job_form = JobForm(prefix='job')
     form = F1From()
     form.material_tool.choices = material_list
     form.material_plane.choices = material_list
     form.material_interaction.choices = material_list
+
+    job_form.project_id.choices = project_list
 
     if upload_form.submit.data and upload_form.validate():
         f = upload_form.filename.data
@@ -134,7 +142,7 @@ def f1():
         return redirect(url_for('flow.f1', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
 
     if job_form.submit.data and job_form.validate():
-        project_id = 11
+        project_id = 20
         abaqus_path = current_app.config['ABAQUS_PATH']
         project_path = os.path.join(abaqus_path, str(project_id))
         job_id = create_id(project_path)
@@ -154,6 +162,7 @@ def f1():
         files = files_in_dir(flow_path)
         for file in files:
             shutil.copy(os.path.join(flow_path, file['name']), os.path.join(job_path, file['name']))
+        flash('从流程1导出文件到ABAQUS项目%s-%s成功。' % (project_id, job_id), 'success')
 
         return redirect(url_for('flow.f1', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
 
