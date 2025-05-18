@@ -133,7 +133,7 @@ def f1():
     form.material_plane.choices = material_list
     form.material_interaction.choices = material_list
 
-    job_form.project_id.choices = project_list
+    # job_form.project_id.choices = project_list
 
     if upload_form.submit.data and upload_form.validate():
         f = upload_form.filename.data
@@ -142,6 +142,7 @@ def f1():
         return redirect(url_for('flow.f1', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
 
     if job_form.submit.data and job_form.validate():
+        print(job_form.project_id)
         project_id = 20
         abaqus_path = current_app.config['ABAQUS_PATH']
         project_path = os.path.join(abaqus_path, str(project_id))

@@ -496,13 +496,22 @@
     }
   }
 
+  sel_project_id = document.getElementById("job-project_id")
+  sel_job_id = document.getElementById("job-job_id");
+
   fetchJSON("{{ url_for('abaqus.projects_status') }}").then(projects_status => {
     console.log(projects_status);
     window.projects_status = projects_status
+    sel_project_id.options.length = 0;
+    for (var i = 0; i < projects_status['data'].length; i++) {
+      var project_id = projects_status['data'][i]['project_id'];
+      var option_project_id = document.createElement("option");
+      var textNode = document.createTextNode(project_id);
+      option_project_id.appendChild(textNode);
+      sel_project_id.appendChild(option_project_id);
+    }
   })
 
-  sel_project_id = document.getElementById("job-project_id")
-  sel_job_id = document.getElementById("job-job_id");
 
   sel_project_id.addEventListener("change", function () {
     const project_id = sel_project_id.value.split('_')[0];
