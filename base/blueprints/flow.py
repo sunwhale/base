@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import time
 import uuid
+from markupsafe import Markup
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
@@ -170,7 +171,11 @@ def f1():
         files = files_in_dir(flow_path)
         for file in files:
             shutil.copy(os.path.join(flow_path, file['name']), os.path.join(job_path, file['name']))
-        flash('从流程1导出文件到ABAQUS项目%s-%s成功。' % (project_id, job_id), 'success')
+        flash(
+            Markup('从流程1导出文件到<a href="%s">ABAQUS项目%s-%s</a>成功。') % (
+                url_for('abaqus.view_job', project_id=project_id, job_id=job_id), project_id, job_id),
+            'success'
+        )
 
         job_form_message = {
             'project_id': job_form.project_id.data,

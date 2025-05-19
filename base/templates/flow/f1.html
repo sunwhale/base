@@ -61,7 +61,7 @@
               <div class="col-12">
                 <div class="card card-info">
                   <div class="card-header">
-                    <h3 class="card-title">新建/编辑ABAQUS作业</h3>
+                    <h3 class="card-title">新建/重写ABAQUS作业</h3>
                     <div class="card-tools">
                       <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
                         <i class="fas fa-minus"></i>
@@ -499,29 +499,19 @@
     }, 500);
   }
 
-  // $.ajax({
-  //   type: "get",
-  //   url: "{{ url_for('abaqus.projects_status') }}",
-  //   dataType: "json",
-  //   success: function (projects_status) {
-  //     console.log(projects_status);
-  //     window.projects_status = projects_status
+  // async function fetchJSON(url) {
+  //   try {
+  //     const response = await fetch(url);
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP 错误: ${response.status}`);
+  //     }
+  //     const data = await response.json(); // 解析 JSON 数据
+  //     return data; // 返回解析后的 JSON 对象
+  //   } catch (error) {
+  //     console.error("获取数据失败:", error);
   //   }
-  // });
-
-  async function fetchJSON(url) {
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP 错误: ${response.status}`);
-      }
-      const data = await response.json(); // 解析 JSON 数据
-      return data; // 返回解析后的 JSON 对象
-    } catch (error) {
-      console.error("获取数据失败:", error);
-    }
-  }
-
+  // }
+  //
   // sel_project_id = document.getElementById("job-project_id")
   // sel_job_id = document.getElementById("job-job_id");
   //

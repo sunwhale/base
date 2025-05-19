@@ -21,8 +21,8 @@ class FlowForm(FlaskForm):
 
 class JobForm(FlaskForm):
     project_id = SelectField('ABAQUS项目编号', coerce=str)
-    job_id = IntegerField('需要覆盖的ABAQUS作业编号', default=1, validators=[DataRequired(), NumberRange(1, 1024 * 1024)])
-    overwrite = BooleanField('覆盖指定算例（不选则新建算例）')
+    job_id = IntegerField('需要重写的ABAQUS作业编号', default=1, validators=[DataRequired(), NumberRange(1, 1024 * 1024)])
+    overwrite = BooleanField('重写指定算例（不选则新建算例）')
     job = StringField('算例名', default='Job-1', validators=[DataRequired(), Length(1, 126)])
     user = StringField('算例user文件', default='user.for')
     cpus = IntegerField('算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 64)])
