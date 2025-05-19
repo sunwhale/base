@@ -71,9 +71,35 @@
                   <div class="card-body">
                     <form action="" method="post" class="form" role="form">
                       {{ job_form.csrf_token() }}
-                      {{ render_form_row([job_form.project_id, job_form.job_id]) }}
+                      {{ render_form_row([job_form.project_id]) }}
                       {{ render_form_row([job_form.job, job_form.user, job_form.cpus]) }}
                       {{ render_form_row([job_form.descript]) }}
+                      <div class="form-row align-items-center">
+                        <!-- Overwrite 复选框（占 33% 宽度） -->
+                        <div class="col-md-4">
+                          <div class="form-check">
+                            {{ job_form.overwrite(class="form-check-input") }}
+                            <label class="form-check-label" for="{{ job_form.overwrite.id }}">
+                              {{ job_form.overwrite.label.text }}
+                            </label>
+                          </div>
+                        </div>
+                        <!-- Job ID + Label（占 66% 宽度） -->
+                        <div class="col-md-8">
+                          <div class="form-row align-items-center">
+                            <!-- Label（可选：固定宽度） -->
+                            <div class="col-auto">
+                              <label for="{{ job_form.job_id.id }}" class="col-form-label">
+                                {{ job_form.job_id.label.text }}:
+                              </label>
+                            </div>
+                            <!-- Input（占剩余空间） -->
+                            <div class="col">
+                              {{ job_form.job_id(class="form-control") }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                       {{ render_field(job_form.submit, button_style='btn btn-info') }}
                     </form>
                   </div>
@@ -496,37 +522,36 @@
     }
   }
 
-  sel_project_id = document.getElementById("job-project_id")
-  sel_job_id = document.getElementById("job-job_id");
-
-  fetchJSON("{{ url_for('abaqus.projects_status') }}").then(projects_status => {
-    console.log(projects_status);
-    window.projects_status = projects_status
-    sel_project_id.options.length = 0;
-    for (var i = 0; i < projects_status['data'].length; i++) {
-      var project_id = projects_status['data'][i]['project_id'];
-      var option_project_id = document.createElement("option");
-      var textNode = document.createTextNode(project_id);
-      option_project_id.appendChild(textNode);
-      sel_project_id.appendChild(option_project_id);
-    }
-  })
-
-
-  sel_project_id.addEventListener("change", function () {
-    const project_id = sel_project_id.value.split('_')[0];
-    const apiUrl = "{{ url_for('abaqus.project_jobs_status', project_id=0) }}".replace("0", project_id);
-    fetchJSON(apiUrl).then(project_jobs_status => {
-      sel_job_id.options.length = 0;
-      for (var i = 0; i < project_jobs_status['data'].length; i++) {
-        var job_id = project_jobs_status['data'][i]['job_id'];
-        var option_job_id = document.createElement("option");
-        var textNode = document.createTextNode(job_id);
-        option_job_id.appendChild(textNode);
-        sel_job_id.appendChild(option_job_id);
-      }
-    });
-  })
+  // sel_project_id = document.getElementById("job-project_id")
+  // sel_job_id = document.getElementById("job-job_id");
+  //
+  // fetchJSON("{{ url_for('abaqus.projects_status') }}").then(projects_status => {
+  //   console.log(projects_status);
+  //   window.projects_status = projects_status
+  //   sel_project_id.options.length = 0;
+  //   for (var i = 0; i < projects_status['data'].length; i++) {
+  //     var project_id = projects_status['data'][i]['project_id'];
+  //     var option_project_id = document.createElement("option");
+  //     var textNode = document.createTextNode(project_id);
+  //     option_project_id.appendChild(textNode);
+  //     sel_project_id.appendChild(option_project_id);
+  //   }
+  // })
+  //
+  // sel_project_id.addEventListener("change", function () {
+  //   const project_id = sel_project_id.value.split('_')[0];
+  //   const apiUrl = "{{ url_for('abaqus.project_jobs_status', project_id=0) }}".replace("0", project_id);
+  //   fetchJSON(apiUrl).then(project_jobs_status => {
+  //     sel_job_id.options.length = 0;
+  //     for (var i = 0; i < project_jobs_status['data'].length; i++) {
+  //       var job_id = project_jobs_status['data'][i]['job_id'];
+  //       var option_job_id = document.createElement("option");
+  //       var textNode = document.createTextNode(job_id);
+  //       option_job_id.appendChild(textNode);
+  //       sel_job_id.appendChild(option_job_id);
+  //     }
+  //   });
+  // })
 
 </script>
 {% endblock script %}

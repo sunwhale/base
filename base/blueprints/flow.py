@@ -113,6 +113,7 @@ def f1():
     flows_path = current_app.config['FLOW_PATH']
     flow_path = os.path.join(flows_path, str(flow_id))
     setting_file = os.path.join(flow_path, 'setting.json')
+    job_form_message_file = os.path.join(flow_path, '.job_form_msg')
 
     materials_path = current_app.config['MATERIAL_PATH']
     material_dict = materials_detail(materials_path)
@@ -133,7 +134,7 @@ def f1():
     form.material_plane.choices = material_list
     form.material_interaction.choices = material_list
 
-    # job_form.project_id.choices = project_list
+    job_form.project_id.choices = project_list
 
     if upload_form.submit.data and upload_form.validate():
         f = upload_form.filename.data
@@ -142,21 +143,27 @@ def f1():
         return redirect(url_for('flow.f1', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
 
     if job_form.submit.data and job_form.validate():
-        print(job_form.project_id)
-        project_id = 20
+        project_id = job_form.project_id.data.split('_')[0]
         abaqus_path = current_app.config['ABAQUS_PATH']
         project_path = os.path.join(abaqus_path, str(project_id))
-        job_id = create_id(project_path)
-        job_path = os.path.join(project_path, str(job_id))
+        overwrite = job_form.overwrite.data
+        if overwrite:
+            job_id = job_form.job_id.data
+            job_path = os.path.join(project_path, str(job_id))
+            if not os.path.exists(job_path):
+                flash('不存在ABAQUS作业%s-%s！' % (project_id, job_id), 'danger')
+                return redirect(url_for('flow.f1', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
+        else:
+            job_id = create_id(project_path)
+            job_path = os.path.join(project_path, str(job_id))
+            make_dir(job_path)
 
-        make_dir(job_path)
         job_message = {
             'job': job_form.job.data,
             'user': job_form.user.data,
             'cpus': job_form.cpus.data,
             'descript': job_form.descript.data
         }
-
         job_message_file = os.path.join(job_path, '.job_msg')
         dump_json(job_message_file, job_message)
 
@@ -165,13 +172,28 @@ def f1():
             shutil.copy(os.path.join(flow_path, file['name']), os.path.join(job_path, file['name']))
         flash('从流程1导出文件到ABAQUS项目%s-%s成功。' % (project_id, job_id), 'success')
 
+        job_form_message = {
+            'project_id': job_form.project_id.data,
+            'job_id': job_form.job_id.data,
+            'overwrite': job_form.overwrite.data,
+            'job': job_form.job.data,
+            'user': job_form.user.data,
+            'cpus': job_form.cpus.data,
+            'descript': job_form.descript.data
+        }
+        dump_json(job_form_message_file, job_form_message)
+
         return redirect(url_for('flow.f1', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
 
-    # job_message = load_json(job_message_file)
-    # job_form.job.data = job_message['job']
-    # job_form.user.data = job_message['user']
-    # job_form.cpus.data = job_message['cpus']
-    # job_form.descript.data = job_message['descript']
+    if os.path.exists(job_form_message_file):
+        job_form_message = load_json(job_form_message_file)
+        job_form.project_id.data = job_form_message['project_id']
+        job_form.job_id.data = job_form_message['job_id']
+        job_form.overwrite.data = job_form_message['overwrite']
+        job_form.job.data = job_form_message['job']
+        job_form.user.data = job_form_message['user']
+        job_form.cpus.data = job_form_message['cpus']
+        job_form.descript.data = job_form_message['descript']
 
     if form.submit.data and form.validate():
         message = {
