@@ -57,17 +57,29 @@ def interpolate_points(array, n):
     return np.vstack(interpolated)
 
 
+def set_obj(obj, attr, attr_dict):
+    args = {}
+    for arg_key, arg_value in attr_dict.items():
+        if is_unicode_all_uppercase(arg_value):
+            args[str(arg_key)] = eval(arg_value)
+        else:
+            args[str(arg_key)] = arg_value
+    method = getattr(obj, attr)
+    method(**args)
+
+
 def set_material(material_obj, material_dict):
     for material_key, material_value in material_dict.items():
-        if hasattr(material_obj, material_key):
-            args = {}
-            for arg_key, arg_value in material_value.items():
-                if is_unicode_all_uppercase(arg_value):
-                    args[str(arg_key)] = eval(arg_value)
-                else:
-                    args[str(arg_key)] = arg_value
-            method = getattr(material_obj, material_key)
-            method(**args)
+        print(material_key)
+        if '.' in material_key:
+            if hasattr(material_obj, material_key.split('.')[1]):
+                material_sub_obj = getattr(material_obj, material_key.split('.')[1])
+                for material_sub_key, material_sub_value in material_value.items():
+                    if hasattr(material_sub_obj, material_sub_key):
+                        set_obj(material_sub_obj, material_sub_key, material_sub_value)
+        else:
+            if hasattr(material_obj, material_key):
+                set_obj(material_obj, material_key, material_value)
 
 
 def square_wave(width, height, velocity, cycles):
