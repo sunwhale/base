@@ -115,7 +115,7 @@ def square_wave(width, height, velocity, cycles):
     return f, t_vs_x, t_vs_y
 
 
-def create_tool(r1, r2, n, depth, pitch, model, part_name):
+def create_tool(r1, r2, n, depth, pitch, tool_ref_point, model, part_name):
     theta = 360.0 / n / 180.0 * np.pi
 
     x0 = -r1 * np.sin(theta)
@@ -148,8 +148,21 @@ def create_tool(r1, r2, n, depth, pitch, model, part_name):
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     p.BaseSolidExtrude(sketch=s, depth=depth, pitch=pitch)
     s.unsetPrimaryObject()
-    p.ReferencePoint(point=(0.0, 0.0, 0.0))
+    p.ReferencePoint(point=tool_ref_point)
 
+    r = p.referencePoints
+    refPoints = (r[2],)
+    p.Set(cells=p.cells, referencePoints=refPoints, name='SET-TOOL-ALL')
+    p.Set(referencePoints=refPoints, name='Set-Tool-RP')
+    p.Surface(side1Faces=p.faces, name='Surf-Tool-All')
+
+    return p
+
+
+def import_tool(step_file_name, tool_ref_point, model, part_name):
+    step = mdb.openStep(step_file_name, scaleFromFile=OFF)
+    p = model.PartFromGeometryFile(name=part_name, geometryFile=step, combine=False, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    p.ReferencePoint(point=tool_ref_point)
     r = p.referencePoints
     refPoints = (r[2],)
     p.Set(cells=p.cells, referencePoints=refPoints, name='SET-TOOL-ALL')
@@ -210,6 +223,14 @@ if __name__ == '__main__':
     timeIncrementationMethod = message['timeIncrementationMethod']
     userDefinedInc = message['userDefinedInc']
 
+    is_import_tool = True
+    step_file_name = 'tool_2.stp'
+    tool_ref_point_x = 0.0
+    tool_ref_point_y = 0.0
+    tool_ref_point_z = 0.0
+
+    tool_ref_point = (tool_ref_point_x, tool_ref_point_y, tool_ref_point_z)
+
     viewport = session.Viewport(name='Viewport: 1', origin=(0.0, 0.0))
     viewport.makeCurrent()
     viewport.maximize()
@@ -226,7 +247,11 @@ if __name__ == '__main__':
     model.HomogeneousSolidSection(name='Section-Tool', material='Material-Tool', thickness=None)
     model.HomogeneousSolidSection(name='Section-Plane', material='Material-Plane', thickness=None)
 
-    part_tool = create_tool(r1, r2, n, length, pitch, model, 'Part-1')
+    if is_import_tool:
+        part_tool = import_tool(step_file_name, tool_ref_point, model, 'Part-1')
+    else:
+        part_tool = create_tool(r1, r2, n, length, pitch, tool_ref_point, model, 'Part-1')
+
     part_plane = create_plane(x_length_of_plane, y_length_of_plane, z_length_of_plane, model, 'Part-2')
 
     part_tool.SectionAssignment(region=part_tool.sets['SET-TOOL-ALL'], sectionName='Section-Tool', offset=0.0,

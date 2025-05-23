@@ -4,7 +4,7 @@
 """
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
-from wtforms import (FloatField, IntegerField, SelectField, StringField, SubmitField, TextAreaField, BooleanField)
+from wtforms import (FloatField, IntegerField, SelectField, StringField, SubmitField, TextAreaField, BooleanField, RadioField)
 from wtforms.validators import (DataRequired, Length, NumberRange)
 
 
@@ -35,11 +35,16 @@ class JobForm(FlaskForm):
 
 
 class F1From(FlaskForm):
+    tool_option = RadioField('刀具选项', choices=[('analytical', '理想刀具参数建模'), ('file', '从CAD文件导入')], default='理想刀具参数建模', validators=[DataRequired()])
     r1 = FloatField('r1，mm', default=20.0)
     r2 = FloatField('r2，mm', default=25.0)
     n = IntegerField('刀数', default=4, validators=[DataRequired(), NumberRange(4, 8)])
     length = FloatField('长度，mm', default=20.0)
     pitch = FloatField('螺距，mm', default=-60.0)
+    tool_ref_point_x = FloatField('参考点x坐标，mm', default=0.0)
+    tool_ref_point_y = FloatField('参考点y坐标，mm', default=0.0)
+    tool_ref_point_z = FloatField('参考点z坐标，mm', default=0.0)
+    step_file_name = SelectField('stp文件名称', coerce=str)
     tool_seed_size = FloatField('铣刀网格尺寸，mm', default=5.0)
 
     x_length_of_plane = FloatField('x方向长度，mm', default=50.0)
@@ -72,6 +77,7 @@ class F1From(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(F1From, self).__init__(*args, **kwargs)
+        self.step_file_name.choices = ['']
         self.timeIncrementationMethod.choices = ['AUTO', 'AUTOMATIC_EBE', 'FIXED_USER_DEFINED_INC']
         self.material_tool.choices = ['']
         self.material_plane.choices = ['']
