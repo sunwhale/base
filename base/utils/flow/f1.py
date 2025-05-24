@@ -152,9 +152,9 @@ def create_tool(r1, r2, n, depth, pitch, tool_ref_point, model, part_name):
 
     r = p.referencePoints
     refPoints = (r[2],)
-    p.Set(cells=p.cells, referencePoints=refPoints, name='SET-TOOL-ALL')
-    p.Set(referencePoints=refPoints, name='Set-Tool-RP')
-    p.Surface(side1Faces=p.faces, name='Surf-Tool-All')
+    p.Set(cells=p.cells, name='SET-TOOL-ALL')
+    p.Set(referencePoints=refPoints, name='SET-TOOL-RP')
+    p.Surface(side1Faces=p.faces, name='SURF-TOOL-ALL')
 
     return p
 
@@ -165,9 +165,18 @@ def import_tool(step_file_name, tool_ref_point, model, part_name):
     p.ReferencePoint(point=tool_ref_point)
     r = p.referencePoints
     refPoints = (r[2],)
-    p.Set(cells=p.cells, referencePoints=refPoints, name='SET-TOOL-ALL')
-    p.Set(referencePoints=refPoints, name='Set-Tool-RP')
-    p.Surface(side1Faces=p.faces, name='Surf-Tool-All')
+    p.Set(cells=p.cells, name='SET-TOOL-ALL')
+    p.Set(referencePoints=refPoints, name='SET-TOOL-RP')
+    p.Surface(side1Faces=p.faces, name='SURF-TOOL-ALL')
+
+    b = p.cells.getBoundingBox()
+    x0 = b['low'][0]
+    y0 = b['low'][1]
+    z0 = b['low'][2]
+    x1 = b['high'][0]
+    y1 = b['high'][1]
+    z1 = b['high'][2]
+    p.Set(faces=p.faces.getByBoundingBox(x0, y0, z1, x1, y1, z1), name='SET-TOOL-Z1')
 
     return p
 
@@ -179,7 +188,7 @@ def create_plane(x, y, depth, model, part_name):
     s.setPrimaryObject(option=STANDALONE)
     s.rectangle(point1=(0.0, 0.0), point2=(x, y))
 
-    p = mdb.models['Model-1'].Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     p.BaseSolidExtrude(sketch=s, depth=depth)
     s.unsetPrimaryObject()
 
@@ -288,13 +297,13 @@ if __name__ == '__main__':
     # a.translate(instanceList=('Part-1-1',), vector=(-r2 - tol, y_length_of_plane / 2.0, z_length_of_plane - cut_in))
     a.translate(instanceList=('Part-1-1',), vector=(x_shift_of_tool, y_shift_of_tool, z_shift_of_tool))
 
-    model.RigidBody(name='Constraint-1', refPointRegion=a.instances['Part-1-1'].sets['Set-Tool-RP'],
+    model.RigidBody(name='Constraint-1', refPointRegion=a.instances['Part-1-1'].sets['SET-TOOL-RP'],
                     bodyRegion=a.instances['Part-1-1'].sets['SET-TOOL-ALL'])
 
     set_material(model.ContactProperty('IntProp-1'), load_json('material_interaction.json'))
 
     model.SurfaceToSurfaceContactExp(name='Int-1',
-                                     createStepName='Initial', main=a.instances['Part-1-1'].surfaces['Surf-Tool-All'],
+                                     createStepName='Initial', main=a.instances['Part-1-1'].surfaces['SURF-TOOL-ALL'],
                                      secondary=a.instances['Part-2-1'].sets['NSET-PLANE-ALL'],
                                      mechanicalConstraint=PENALTY, sliding=FINITE,
                                      interactionProperty='IntProp-1', initialClearance=OMIT, datumAxis=None,
@@ -333,35 +342,52 @@ if __name__ == '__main__':
     model.TabularAmplitude(name='Amp-x', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_x)
     model.TabularAmplitude(name='Amp-y', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_y)
 
-    model.DisplacementBC(name='BC-1', createStepName='Initial',
+    model.DisplacementBC(name='BC-PLANE-FIXED', createStepName='Initial',
                          region=a.instances['Part-2-1'].sets['Z0'], u1=0.0, u2=0.0, u3=0.0, ur1=0.0, ur2=0.0, ur3=0.0,
                          amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='',
                          localCsys=None)
 
-    model.VelocityBC(name='BC-2', createStepName='Step-1',
-                     region=a.instances['Part-1-1'].sets['Set-Tool-RP'], v1=UNSET, v2=UNSET, v3=UNSET, vr1=UNSET, vr2=UNSET,
+    model.VelocityBC(name='BC-TOOL-VR3', createStepName='Step-1',
+                     region=a.instances['Part-1-1'].sets['SET-TOOL-RP'], v1=UNSET, v2=UNSET, v3=UNSET, vr1=UNSET, vr2=UNSET,
                      vr3=tool_rotation_speed, amplitude=UNSET, localCsys=None, distributionType=UNIFORM,
                      fieldName='')
 
-    model.DisplacementBC(name='BC-x', createStepName='Step-1',
-                         region=a.instances['Part-1-1'].sets['Set-Tool-RP'], u1=1.0, u2=UNSET, u3=UNSET, ur1=UNSET, ur2=UNSET, ur3=UNSET,
+    model.DisplacementBC(name='BC-TOOL-U1', createStepName='Step-1',
+                         region=a.instances['Part-1-1'].sets['SET-TOOL-RP'], u1=1.0, u2=UNSET, u3=UNSET, ur1=UNSET, ur2=UNSET, ur3=UNSET,
                          amplitude='Amp-x', fixed=OFF, distributionType=UNIFORM, fieldName='',
                          localCsys=None)
 
-    model.DisplacementBC(name='BC-y', createStepName='Step-1',
-                         region=a.instances['Part-1-1'].sets['Set-Tool-RP'], u1=UNSET, u2=1.0, u3=UNSET, ur1=UNSET, ur2=UNSET, ur3=UNSET,
+    model.DisplacementBC(name='BC-TOOL-U2', createStepName='Step-1',
+                         region=a.instances['Part-1-1'].sets['SET-TOOL-RP'], u1=UNSET, u2=1.0, u3=UNSET, ur1=UNSET, ur2=UNSET, ur3=UNSET,
                          amplitude='Amp-y', fixed=OFF, distributionType=UNIFORM, fieldName='',
                          localCsys=None)
 
-    model.DisplacementBC(name='BC-z', createStepName='Step-1',
-                         region=a.instances['Part-1-1'].sets['Set-Tool-RP'], u1=UNSET, u2=UNSET, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET,
+    model.DisplacementBC(name='BC-TOOL-U3', createStepName='Step-1',
+                         region=a.instances['Part-1-1'].sets['SET-TOOL-RP'], u1=UNSET, u2=UNSET, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET,
                          amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='',
                          localCsys=None)
 
-    model.DisplacementBC(name='BC-UR', createStepName='Step-1',
-                         region=a.instances['Part-1-1'].sets['Set-Tool-RP'], u1=UNSET, u2=UNSET, u3=UNSET, ur1=0.0, ur2=0.0, ur3=UNSET,
+    model.DisplacementBC(name='BC-TOOL-UR1', createStepName='Step-1',
+                         region=a.instances['Part-1-1'].sets['SET-TOOL-RP'], u1=UNSET, u2=UNSET, u3=UNSET, ur1=0.0, ur2=UNSET, ur3=UNSET,
                          amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='',
                          localCsys=None)
+
+    model.DisplacementBC(name='BC-TOOL-UR2', createStepName='Step-1',
+                         region=a.instances['Part-1-1'].sets['SET-TOOL-RP'], u1=UNSET, u2=UNSET, u3=UNSET, ur1=UNSET, ur2=0.0, ur3=UNSET,
+                         amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='',
+                         localCsys=None)
+
+    model.TemperatureBC(name='BC-TOOL-TEMP', createStepName='Step-1',
+                        region=a.instances['Part-1-1'].sets['SET-TOOL-Z1'], fixed=OFF, distributionType=UNIFORM, fieldName='',
+                        magnitude=20.0, amplitude=UNSET)
+
+    model.Temperature(name='Predefined Field-1',
+                      createStepName='Initial', region=a.instances['Part-1-1'].sets['SET-TOOL-ALL'], distributionType=UNIFORM,
+                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(20.0,))
+
+    model.Temperature(name='Predefined Field-2',
+                      createStepName='Initial', region=a.instances['Part-2-1'].sets['SET-PLANE-ALL'], distributionType=UNIFORM,
+                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(20.0,))
 
     model.fieldOutputRequests['F-Output-1'].setValues(numIntervals=output_numIntervals, variables=output_variables)
 
