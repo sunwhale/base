@@ -128,9 +128,17 @@ def f1():
     for project in project_dict['data']:
         project_list.append('%s_%s' % (project['project_id'], project['name']))
 
+    files = files_in_dir(flow_path)
+    step_file_name_list = []
+    for file in files:
+        if file['name'].endswith('.stp'):
+            step_file_name_list.append(file['name'])
+
     upload_form = UploadForm(prefix='upload')
     job_form = JobForm(prefix='job')
     form = F1From()
+
+    form.step_file_name.choices = step_file_name_list
     form.material_tool.choices = material_list
     form.material_plane.choices = material_list
     form.material_interaction.choices = material_list
