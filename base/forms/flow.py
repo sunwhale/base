@@ -66,7 +66,7 @@ class F1From(FlaskForm):
     square_wave_height = FloatField('方波高度，mm', default=50.0)
     square_wave_cycles = IntegerField('方波周期数', default=100, validators=[DataRequired(), NumberRange(1, 10000)])
 
-    output_variables = StringField('输出变量', validators=[DataRequired(), Length(1, 1024)], default='S, LE, NT, STATUS')
+    output_variables = StringField('输出变量', validators=[DataRequired(), Length(1, 1024)], default='U, RF, S, LE, NT, STATUS')
     output_numIntervals = IntegerField('输出间隔数量', default=20, validators=[DataRequired(), NumberRange(1, 1024)])
 
     timeIncrementationMethod = SelectField('timeIncrementationMethod', coerce=str)
