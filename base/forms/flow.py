@@ -35,7 +35,7 @@ class JobForm(FlaskForm):
 
 
 class F1From(FlaskForm):
-    tool_option = RadioField('刀具选项', choices=[('analytical', '理想刀具参数建模'), ('file', '从CAD文件导入')], default='理想刀具参数建模', validators=[DataRequired()])
+    tool_option = RadioField('刀具选项', choices=[('analytical', '理想刀具参数建模'), ('file', '从CAD文件导入')], default='analytical', validators=[DataRequired()])
     r1 = FloatField('r1，mm', default=20.0)
     r2 = FloatField('r2，mm', default=25.0)
     n = IntegerField('刀数', default=4, validators=[DataRequired(), NumberRange(4, 8)])

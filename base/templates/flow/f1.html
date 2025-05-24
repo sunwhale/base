@@ -122,12 +122,14 @@
                         <div class="col-12">
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                           <hr>
-                          <input id="tool_option-0" name="tool_option" required type="radio" value="{{ form.tool_option.choices[0][0] }}"> <label class="text-info" for="tool_option-0">{{ form.tool_option.choices[0][1] }}</label>
-                          {{ render_form_row([form.r1, form.r2, form.n]) }}
-                          {{ render_form_row([form.length, form.pitch]) }}
-                          <input id="tool_option-1" name="tool_option" required type="radio" value="{{ form.tool_option.choices[1][0] }}"> <label class="text-info" for="tool_option-1">{{ form.tool_option.choices[1][1] }}</label>
-                          {{ render_form_row([form.step_file_name]) }}
-                          <hr>
+                          {{ render_form_row([form.tool_option]) }}
+                          <div id="analytical-fields" style="display: {% if form.tool_option.data == 'analytical' %}block{% else %}none{% endif %};">
+                            {{ render_form_row([form.r1, form.r2, form.n]) }}
+                            {{ render_form_row([form.length, form.pitch]) }}
+                          </div>
+                          <div id="file-fields" style="display: {% if form.tool_option.data == 'file' %}block{% else %}none{% endif %};">
+                            {{ render_form_row([form.step_file_name]) }}
+                          </div>
                           {{ render_form_row([form.tool_ref_point_x, form.tool_ref_point_y, form.tool_ref_point_z]) }}
                         </div>
                       </div>
@@ -546,6 +548,19 @@
   //     }
   //   });
   // })
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const radioButtons = document.querySelectorAll('[name="tool_option"]');
+    radioButtons.forEach(radio => {
+      radio.addEventListener('change', function () {
+        console.log('Selected:', this.value); // 调试用
+        document.getElementById('analytical-fields').style.display =
+          (this.value === 'analytical') ? 'block' : 'none';
+        document.getElementById('file-fields').style.display =
+          (this.value === 'file') ? 'block' : 'none';
+      });
+    });
+  });
 
 </script>
 {% endblock script %}

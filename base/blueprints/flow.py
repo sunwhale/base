@@ -134,6 +134,7 @@ def f1():
     form.material_tool.choices = material_list
     form.material_plane.choices = material_list
     form.material_interaction.choices = material_list
+    form.tool_option.data = 'analytical'
 
     job_form.project_id.choices = project_list
 
@@ -201,6 +202,7 @@ def f1():
         job_form.descript.data = job_form_message['descript']
 
     if form.submit.data and form.validate():
+        print(form.tool_option.data)
         message = {
             'r1': form.r1.data,
             'r2': form.r2.data,
