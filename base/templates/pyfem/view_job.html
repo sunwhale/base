@@ -313,7 +313,7 @@
       const html1 = "<a href=\"{{ url_for('pyfem.get_job_file', project_id=project_id, job_id=job_id, filename='0000') }}\" target=\"_blank\">下载</a>"
       const html2 = "<a href=\"{{ url_for('tools.code')}}?url={{ url_for('pyfem.get_job_file', project_id=project_id, job_id=job_id, filename='0000', _external=True) }}\" target=\"_blank\">编辑</a>"
       const html3 = "<a onclick=\"return confirm('确定删除文件？')\" href=\"{{ url_for('pyfem.delete_job_file', project_id=project_id, job_id=job_id, filename='0000') }}\">删除</a>"
-      const html4 = "<a href=\"{{ url_for('viewer.index') }}?url={{ url_for('pyfem.get_job_file', project_id=project_id, job_id=job_id, filename='0000', _external=True) }}\">查看</a>"
+      const html4 = "<a href=\"{{ url_for('viewer.index') }}?url={{ url_for('pyfem.get_job_file', project_id=project_id, job_id=job_id, filename='0000', _external=True) }}\" target=\"_blank\">查看</a>"
       if (row['name'].includes('vtu')) {
         td4.innerHTML = html1.replace('0000', row['name']) + " | " + html4.replace('0000', row['name']) + " | " + html3.replace('0000', row['name']);
       } else {
