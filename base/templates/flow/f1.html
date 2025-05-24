@@ -131,6 +131,7 @@
                             {{ render_form_row([form.step_file_name]) }}
                           </div>
                           {{ render_form_row([form.tool_ref_point_x, form.tool_ref_point_y, form.tool_ref_point_z]) }}
+                          {{ render_form_row([form.tool_seed_size]) }}
                         </div>
                       </div>
                     </div>
@@ -149,8 +150,8 @@
                     <div class="card-body">
                       <div class="row">
                         <div class="col-12">
-                          {{ render_form_row([form.x_length_of_plane, form.y_length_of_plane]) }}
-                          {{ render_form_row([form.z_length_of_plane, form.plane_seed_size]) }}
+                          {{ render_form_row([form.x_length_of_plane, form.y_length_of_plane, form.z_length_of_plane]) }}
+                          {{ render_form_row([form.plane_seed_size]) }}
                         </div>
                       </div>
                     </div>

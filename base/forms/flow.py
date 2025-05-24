@@ -22,10 +22,10 @@ class FlowForm(FlaskForm):
 class JobForm(FlaskForm):
     project_id = SelectField('ABAQUS项目编号', coerce=str)
     job_id = IntegerField('需要重写的ABAQUS作业编号', default=1, validators=[DataRequired(), NumberRange(1, 1024 * 1024)])
-    overwrite = BooleanField('重写指定算例（不选则新建算例）')
+    overwrite = BooleanField('重写作业（不选则新建作业）')
     job = StringField('算例名', default='Job-1', validators=[DataRequired(), Length(1, 126)])
     user = StringField('算例user文件', default='user.for')
-    cpus = IntegerField('算例使用CPU核心数量', default=1, validators=[DataRequired(), NumberRange(1, 64)])
+    cpus = IntegerField('CPU数量', default=1, validators=[DataRequired(), NumberRange(1, 64)])
     descript = TextAreaField('算例备注', render_kw={'rows': 2})
     submit = SubmitField('提交')
 

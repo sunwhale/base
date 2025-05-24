@@ -223,11 +223,11 @@ if __name__ == '__main__':
     timeIncrementationMethod = message['timeIncrementationMethod']
     userDefinedInc = message['userDefinedInc']
 
-    is_import_tool = True
+    tool_option = message['tool_option']
     step_file_name = 'tool_2.stp'
-    tool_ref_point_x = 0.0
-    tool_ref_point_y = 0.0
-    tool_ref_point_z = 0.0
+    tool_ref_point_x = message['tool_ref_point_x']
+    tool_ref_point_y = message['tool_ref_point_y']
+    tool_ref_point_z = message['tool_ref_point_z']
 
     tool_ref_point = (tool_ref_point_x, tool_ref_point_y, tool_ref_point_z)
 
@@ -247,7 +247,7 @@ if __name__ == '__main__':
     model.HomogeneousSolidSection(name='Section-Tool', material='Material-Tool', thickness=None)
     model.HomogeneousSolidSection(name='Section-Plane', material='Material-Plane', thickness=None)
 
-    if is_import_tool:
+    if tool_option == 'file':
         part_tool = import_tool(step_file_name, tool_ref_point, model, 'Part-1')
     else:
         part_tool = create_tool(r1, r2, n, length, pitch, tool_ref_point, model, 'Part-1')

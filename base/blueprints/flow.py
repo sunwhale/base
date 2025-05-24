@@ -134,7 +134,6 @@ def f1():
     form.material_tool.choices = material_list
     form.material_plane.choices = material_list
     form.material_interaction.choices = material_list
-    form.tool_option.data = 'analytical'
 
     job_form.project_id.choices = project_list
 
@@ -202,13 +201,17 @@ def f1():
         job_form.descript.data = job_form_message['descript']
 
     if form.submit.data and form.validate():
-        print(form.tool_option.data)
         message = {
+            'tool_option': form.tool_option.data,
             'r1': form.r1.data,
             'r2': form.r2.data,
             'n': form.n.data,
             'length': form.length.data,
             'pitch': form.pitch.data,
+            'step_file_name': form.step_file_name.data,
+            'tool_ref_point_x': form.tool_ref_point_x.data,
+            'tool_ref_point_y': form.tool_ref_point_y.data,
+            'tool_ref_point_z': form.tool_ref_point_z.data,
             'tool_seed_size': form.tool_seed_size.data,
             'x_length_of_plane': form.x_length_of_plane.data,
             'y_length_of_plane': form.y_length_of_plane.data,
@@ -251,11 +254,16 @@ def f1():
     if os.path.exists(setting_file):
         try:
             message = load_json(setting_file)
+            form.tool_option.data = message['tool_option']
             form.r1.data = message['r1']
             form.r2.data = message['r2']
             form.n.data = message['n']
             form.length.data = message['length']
             form.pitch.data = message['pitch']
+            form.step_file_name.data = message['step_file_name']
+            form.tool_ref_point_x.data = message['tool_ref_point_x']
+            form.tool_ref_point_y.data = message['tool_ref_point_y']
+            form.tool_ref_point_z.data = message['tool_ref_point_z']
             form.tool_seed_size.data = message['tool_seed_size']
             form.x_length_of_plane.data = message['x_length_of_plane']
             form.y_length_of_plane.data = message['y_length_of_plane']
