@@ -224,7 +224,7 @@ if __name__ == '__main__':
     userDefinedInc = message['userDefinedInc']
 
     tool_option = message['tool_option']
-    step_file_name = 'tool_2.stp'
+    step_file_name = str(message['step_file_name'])
     tool_ref_point_x = message['tool_ref_point_x']
     tool_ref_point_y = message['tool_ref_point_y']
     tool_ref_point_z = message['tool_ref_point_z']
