@@ -415,7 +415,7 @@ if __name__ == '__main__':
 
     a = mdb.models['Model-1'].rootAssembly
     viewport.setValues(displayedObject=a)
-    cmap = viewport.colorMappings['Set']
+    cmap = viewport.colorMappings['Section']
     viewport.setColor(colorMapping=cmap)
 
     viewport = session.viewports['Viewport: 1']
