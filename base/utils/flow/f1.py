@@ -156,6 +156,15 @@ def create_tool(r1, r2, n, depth, pitch, tool_ref_point, model, part_name):
     p.Set(referencePoints=refPoints, name='SET-TOOL-RP')
     p.Surface(side1Faces=p.faces, name='SURF-TOOL-ALL')
 
+    b = p.cells.getBoundingBox()
+    x0 = b['low'][0]
+    y0 = b['low'][1]
+    z0 = b['low'][2]
+    x1 = b['high'][0]
+    y1 = b['high'][1]
+    z1 = b['high'][2]
+    p.Set(faces=p.faces.getByBoundingBox(x0, y0, z1, x1, y1, z1), name='SET-TOOL-Z1')
+
     return p
 
 
@@ -224,6 +233,9 @@ if __name__ == '__main__':
     square_wave_width = message['square_wave_width']
     square_wave_height = message['square_wave_height']
     square_wave_cycles = message['square_wave_cycles']
+
+    temperature_tool = 20.0
+    temperature_init = 20.0
 
     output_variables = str(message['output_variables']).replace(' ', '').split(',')
     output_numIntervals = message['output_numIntervals']
@@ -379,15 +391,15 @@ if __name__ == '__main__':
 
     model.TemperatureBC(name='BC-TOOL-TEMP', createStepName='Step-1',
                         region=a.instances['Part-1-1'].sets['SET-TOOL-Z1'], fixed=OFF, distributionType=UNIFORM, fieldName='',
-                        magnitude=20.0, amplitude=UNSET)
+                        magnitude=temperature_tool, amplitude=UNSET)
 
     model.Temperature(name='Predefined Field-1',
                       createStepName='Initial', region=a.instances['Part-1-1'].sets['SET-TOOL-ALL'], distributionType=UNIFORM,
-                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(20.0,))
+                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(temperature_init,))
 
     model.Temperature(name='Predefined Field-2',
                       createStepName='Initial', region=a.instances['Part-2-1'].sets['SET-PLANE-ALL'], distributionType=UNIFORM,
-                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(20.0,))
+                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(temperature_init,))
 
     model.fieldOutputRequests['F-Output-1'].setValues(numIntervals=output_numIntervals, variables=output_variables)
 
