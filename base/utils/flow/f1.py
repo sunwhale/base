@@ -234,8 +234,9 @@ if __name__ == '__main__':
     square_wave_height = message['square_wave_height']
     square_wave_cycles = message['square_wave_cycles']
 
-    temperature_tool = 20.0
-    temperature_init = 20.0
+    temperature_tool_z1 = message['temperature_tool_z1']
+    temperature_tool_init = message['temperature_tool_init']
+    temperature_plane_init = message['temperature_plane_init']
 
     output_variables = str(message['output_variables']).replace(' ', '').split(',')
     output_numIntervals = message['output_numIntervals']
@@ -391,15 +392,15 @@ if __name__ == '__main__':
 
     model.TemperatureBC(name='BC-TOOL-TEMP', createStepName='Step-1',
                         region=a.instances['Part-1-1'].sets['SET-TOOL-Z1'], fixed=OFF, distributionType=UNIFORM, fieldName='',
-                        magnitude=temperature_tool, amplitude=UNSET)
+                        magnitude=temperature_tool_z1, amplitude=UNSET)
 
     model.Temperature(name='Predefined Field-1',
                       createStepName='Initial', region=a.instances['Part-1-1'].sets['SET-TOOL-ALL'], distributionType=UNIFORM,
-                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(temperature_init,))
+                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(temperature_tool_init,))
 
     model.Temperature(name='Predefined Field-2',
                       createStepName='Initial', region=a.instances['Part-2-1'].sets['SET-PLANE-ALL'], distributionType=UNIFORM,
-                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(temperature_init,))
+                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(temperature_plane_init,))
 
     model.fieldOutputRequests['F-Output-1'].setValues(numIntervals=output_numIntervals, variables=output_variables)
 

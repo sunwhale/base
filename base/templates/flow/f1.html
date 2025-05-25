@@ -160,7 +160,29 @@
                 <div class="col-12">
                   <div class="card card-info">
                     <div class="card-header">
-                      <h3 class="card-title">铣刀边界条件</h3>
+                      <h3 class="card-title">初始条件</h3>
+                      <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                          <i class="fas fa-minus"></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          <h6 class="text-info">铣刀初始位置</h6>
+                          {{ render_form_row([form.x_shift_of_tool, form.y_shift_of_tool, form.z_shift_of_tool]) }}
+                          <h6 class="text-info">初始温度</h6>
+                          {{ render_form_row([form.temperature_tool_init, form.temperature_plane_init]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="card card-info">
+                    <div class="card-header">
+                      <h3 class="card-title">边界条件</h3>
                       <div class="card-tools">
                         <button type="button" class="btn btn-tool" data-card-widget="collapse">
                           <i class="fas fa-minus"></i>
@@ -171,8 +193,8 @@
                       <div class="row">
                         <div class="col-12">
                           {{ render_form_row([form.tool_rotation_speed, form.tool_shift_speed]) }}
-                          {{ render_form_row([form.x_shift_of_tool, form.y_shift_of_tool, form.z_shift_of_tool]) }}
                           {{ render_form_row([form.square_wave_width, form.square_wave_height, form.square_wave_cycles]) }}
+                          {{ render_form_row([form.temperature_tool_z1]) }}
                         </div>
                       </div>
                     </div>

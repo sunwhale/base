@@ -232,6 +232,9 @@ def f1():
             'material_plane': form.material_plane.data,
             'tool_rotation_speed': form.tool_rotation_speed.data,
             'tool_shift_speed': form.tool_shift_speed.data,
+            'temperature_tool_z1': form.temperature_tool_z1.data,
+            'temperature_tool_init': form.temperature_tool_init.data,
+            'temperature_plane_init': form.temperature_plane_init.data,
             'square_wave_width': form.square_wave_width.data,
             'square_wave_height': form.square_wave_height.data,
             'square_wave_cycles': form.square_wave_cycles.data,
@@ -285,6 +288,9 @@ def f1():
             form.material_interaction.data = message['material_interaction']
             form.tool_rotation_speed.data = message['tool_rotation_speed']
             form.tool_shift_speed.data = message['tool_shift_speed']
+            form.temperature_tool_z1.data = message['temperature_tool_z1']
+            form.temperature_tool_init.data = message['temperature_tool_init']
+            form.temperature_plane_init.data = message['temperature_plane_init']
             form.square_wave_width.data = message['square_wave_width']
             form.square_wave_height.data = message['square_wave_height']
             form.square_wave_cycles.data = message['square_wave_cycles']

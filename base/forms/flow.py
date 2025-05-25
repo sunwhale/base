@@ -61,7 +61,12 @@ class F1From(FlaskForm):
     material_interaction = SelectField('接触属性', coerce=str)
 
     tool_rotation_speed = FloatField('铣刀转速，rpm', default=300.0)
-    tool_shift_speed = FloatField('铣刀进给速度，mm/min', default=10.0)
+    tool_shift_speed = FloatField('铣刀平移速度，mm/min', default=10.0)
+
+    temperature_tool_z1 = FloatField('铣刀端面温度，℃', default=20.0)
+    temperature_tool_init = FloatField('铣刀初始温度，℃', default=20.0)
+    temperature_plane_init = FloatField('平板初始温度，℃', default=20.0)
+
     square_wave_width = FloatField('方波宽度，mm', default=25.0)
     square_wave_height = FloatField('方波高度，mm', default=50.0)
     square_wave_cycles = IntegerField('方波周期数', default=100, validators=[DataRequired(), NumberRange(1, 10000)])
