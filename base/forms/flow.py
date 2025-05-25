@@ -67,7 +67,7 @@ class F1From(FlaskForm):
     temperature_tool_init = FloatField('铣刀初始温度，℃', default=20.0)
     temperature_plane_init = FloatField('平板初始温度，℃', default=20.0)
 
-    tool_path_type = RadioField('刀具选项', choices=[('square_wave', '方波铣削'), ('drill', '钻孔'), ('file', '文件')], default='square_wave', validators=[DataRequired()])
+    tool_path_type = RadioField('刀具选项', choices=[('square_wave', '方波铣削'), ('drill', '钻孔'), ('tool_path_file', '刀具路径文件')], default='square_wave', validators=[DataRequired()])
 
     square_wave_width = FloatField('方波宽度，mm', default=30.0)
     square_wave_height = FloatField('方波高度，mm', default=70.0)

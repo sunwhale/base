@@ -235,6 +235,7 @@ def f1():
             'temperature_tool_z1': form.temperature_tool_z1.data,
             'temperature_tool_init': form.temperature_tool_init.data,
             'temperature_plane_init': form.temperature_plane_init.data,
+            'tool_path_type': form.tool_path_type.data,
             'square_wave_width': form.square_wave_width.data,
             'square_wave_height': form.square_wave_height.data,
             'square_wave_depth': form.square_wave_depth.data,
@@ -242,6 +243,7 @@ def f1():
             'square_wave_tail_shift': form.square_wave_tail_shift.data,
             'square_wave_cycles': form.square_wave_cycles.data,
             'square_wave_layers': form.square_wave_layers.data,
+            'drill_depth': form.drill_depth.data,
             'material_interaction': form.material_interaction.data,
             'output_variables': form.output_variables.data,
             'output_numIntervals': form.output_numIntervals.data,
@@ -295,6 +297,7 @@ def f1():
             form.temperature_tool_z1.data = message['temperature_tool_z1']
             form.temperature_tool_init.data = message['temperature_tool_init']
             form.temperature_plane_init.data = message['temperature_plane_init']
+            form.tool_path_type.data = message['tool_path_type']
             form.square_wave_width.data = message['square_wave_width']
             form.square_wave_height.data = message['square_wave_height']
             form.square_wave_depth.data = message['square_wave_depth']
@@ -302,6 +305,7 @@ def f1():
             form.square_wave_tail_shift.data = message['square_wave_tail_shift']
             form.square_wave_cycles.data = message['square_wave_cycles']
             form.square_wave_layers.data = message['square_wave_layers']
+            form.drill_depth.data = message['drill_depth']
             form.output_variables.data = message['output_variables']
             form.output_numIntervals.data = message['output_numIntervals']
             form.timeIncrementationMethod.data = message['timeIncrementationMethod']

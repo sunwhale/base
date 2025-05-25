@@ -195,9 +195,14 @@
                         <div class="col-12">
                           {{ render_form_row([form.tool_rotation_speed, form.tool_shift_speed, form.temperature_tool_z1]) }}
                           {{ render_form_row([form.tool_path_type]) }}
-                          {{ render_form_row([form.square_wave_width, form.square_wave_height, form.square_wave_depth]) }}
-                          {{ render_form_row([form.square_wave_head_shift, form.square_wave_tail_shift]) }}
-                          {{ render_form_row([form.square_wave_cycles, form.square_wave_layers]) }}
+                          <div id="square_wave-fields" style="display: {% if form.tool_path_type.data == 'square_wave' %}block{% else %}none{% endif %};">
+                            {{ render_form_row([form.square_wave_width, form.square_wave_height, form.square_wave_depth]) }}
+                            {{ render_form_row([form.square_wave_head_shift, form.square_wave_tail_shift]) }}
+                            {{ render_form_row([form.square_wave_cycles, form.square_wave_layers]) }}
+                          </div>
+                          <div id="drill-fields" style="display: {% if form.tool_path_type.data == 'drill' %}block{% else %}none{% endif %};">
+                            {{ render_form_row([form.drill_depth]) }}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -584,6 +589,19 @@
           (this.value === 'analytical') ? 'block' : 'none';
         document.getElementById('file-fields').style.display =
           (this.value === 'file') ? 'block' : 'none';
+      });
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const radioButtons = document.querySelectorAll('[name="tool_path_type"]');
+    radioButtons.forEach(radio => {
+      radio.addEventListener('change', function () {
+        console.log('Selected:', this.value); // 调试用
+        document.getElementById('square_wave-fields').style.display =
+          (this.value === 'square_wave') ? 'block' : 'none';
+        document.getElementById('drill-fields').style.display =
+          (this.value === 'drill') ? 'block' : 'none';
       });
     });
   });
