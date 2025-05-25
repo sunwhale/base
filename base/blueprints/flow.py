@@ -237,6 +237,7 @@ def f1():
             'temperature_plane_init': form.temperature_plane_init.data,
             'square_wave_width': form.square_wave_width.data,
             'square_wave_height': form.square_wave_height.data,
+            'square_wave_depth': form.square_wave_depth.data,
             'square_wave_cycles': form.square_wave_cycles.data,
             'material_interaction': form.material_interaction.data,
             'output_variables': form.output_variables.data,
@@ -293,6 +294,7 @@ def f1():
             form.temperature_plane_init.data = message['temperature_plane_init']
             form.square_wave_width.data = message['square_wave_width']
             form.square_wave_height.data = message['square_wave_height']
+            form.square_wave_depth.data = message['square_wave_depth']
             form.square_wave_cycles.data = message['square_wave_cycles']
             form.output_variables.data = message['output_variables']
             form.output_numIntervals.data = message['output_numIntervals']

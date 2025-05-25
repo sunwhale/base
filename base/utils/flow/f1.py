@@ -82,9 +82,10 @@ def set_material(material_obj, material_dict):
                 set_obj(material_obj, material_key, material_value)
 
 
-def square_wave(width, height, velocity, cycles):
+def square_wave(width, height, depth, velocity, cycles):
     w = float(width)
     h = float(height)
+    d = float(depth)
     v = float(velocity)
 
     t = (2.0 * w + 4.0 * h) / v
@@ -230,8 +231,11 @@ if __name__ == '__main__':
     tool_rotation_speed = message['tool_rotation_speed'] * 2.0 * np.pi / 60.0
     tool_shift_speed = message['tool_shift_speed'] / 60.0
 
+    tool_path_type = 'square_wave'
+
     square_wave_width = message['square_wave_width']
     square_wave_height = message['square_wave_height']
+    square_wave_depth = message['square_wave_depth']
     square_wave_cycles = message['square_wave_cycles']
 
     temperature_tool_z1 = message['temperature_tool_z1']
@@ -351,7 +355,7 @@ if __name__ == '__main__':
     else:
         raise KeyError('Unknown timeIncrementationMethod: {}'.format(timeIncrementationMethod))
 
-    f, t_vs_x, t_vs_y = square_wave(width=square_wave_width, height=square_wave_height, velocity=tool_shift_speed, cycles=square_wave_cycles)
+    f, t_vs_x, t_vs_y = square_wave(width=square_wave_width, height=square_wave_height, depth=square_wave_depth, velocity=tool_shift_speed, cycles=square_wave_cycles)
     model.TabularAmplitude(name='Amp-x', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_x)
     model.TabularAmplitude(name='Amp-y', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_y)
 
