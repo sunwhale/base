@@ -6,6 +6,8 @@ import os
 import json
 
 import numpy as np
+from scipy.interpolate import interp1d
+
 from abaqus import *
 from abaqusConstants import *
 from caeModules import *
@@ -85,7 +87,7 @@ def set_material(material_obj, material_dict):
 def square_wave(width, height, depth, velocity, cycles, layers=1, head_shift=0.0, tail_shift=0.0):
     w = float(width)
     h = float(height)
-    d = float(depth)
+    d = -float(depth)
     v = float(velocity)
 
     t = (2.0 * w + 4.0 * h) / v
@@ -127,15 +129,16 @@ def square_wave(width, height, depth, velocity, cycles, layers=1, head_shift=0.0
 
         if l % 2 == 0:
             fl = np.array(fl)
-            fl[:, 0] = fl[:, 0] + (t * cycles - t_head_shift - t_tail_shift) * l + d / v * l
+            fl[:, 0] = fl[:, 0] + (t * cycles - t_head_shift - t_tail_shift) * l + abs(d) / v * l
         else:
             fl = np.array(fl)[::-1]
             fl[:, 0] = fl[::-1, 0]
-            fl[:, 0] = fl[:, 0] + (t * cycles - t_head_shift - t_tail_shift) * l + d / v * l
+            fl[:, 0] = fl[:, 0] + (t * cycles - t_head_shift - t_tail_shift) * l + abs(d) / v * l
 
         f += fl.tolist()
 
     f = np.array(f)
+    f[:, [0, 1, 2]] = f[:, [0, 1, 2]] - f[0, [0, 1, 2]]
     t_vs_x = f[:, [0, 1]].tolist()
     t_vs_y = f[:, [0, 2]].tolist()
     t_vs_z = f[:, [0, 3]].tolist()
@@ -473,10 +476,11 @@ if __name__ == '__main__':
     viewport.view.setValues(session.views['Front'])
     session.printToFile(fileName='assembly_front.png', format=PNG, canvasObjects=(viewport,))
 
-    t_vs_x_interpolated = interpolate_points(np.array(t_vs_x), 8)
-    t_vs_y_interpolated = interpolate_points(np.array(t_vs_y), 8)
+    t_vs_x_interpolated = interpolate_points(np.array(t_vs_x), 2)
+    t_vs_y_interpolated = interpolate_points(np.array(t_vs_y), 2)
+    t_vs_z_interpolated = interpolate_points(np.array(t_vs_z), 2)
     for i in range(len(t_vs_x_interpolated)):
-        a.DatumPointByCoordinate(coords=(t_vs_x_interpolated[i][1] + x_shift_of_tool, t_vs_y_interpolated[i][1] + y_shift_of_tool, z_shift_of_tool))
+        a.DatumPointByCoordinate(coords=(t_vs_x_interpolated[i][1] + x_shift_of_tool, t_vs_y_interpolated[i][1] + y_shift_of_tool, t_vs_z_interpolated[i][1]))
     viewport.view.setProjection(projection=PARALLEL)
     viewport.view.setValues(session.views['Front'])
     session.printToFile(fileName='assembly_front_with_path.png', format=PNG, canvasObjects=(viewport,))
