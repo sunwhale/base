@@ -130,6 +130,7 @@
                           <div id="file-fields" style="display: {% if form.tool_option.data == 'file' %}block{% else %}none{% endif %};">
                             {{ render_form_row([form.step_file_name]) }}
                           </div>
+                          <hr>
                           {{ render_form_row([form.tool_ref_point_x, form.tool_ref_point_y, form.tool_ref_point_z]) }}
                           {{ render_form_row([form.tool_seed_size]) }}
                         </div>
@@ -194,7 +195,9 @@
                         <div class="col-12">
                           {{ render_form_row([form.tool_rotation_speed, form.tool_shift_speed, form.temperature_tool_z1]) }}
                           {{ render_form_row([form.tool_path_type]) }}
-                          {{ render_form_row([form.square_wave_width, form.square_wave_height, form.square_wave_depth, form.square_wave_cycles]) }}
+                          {{ render_form_row([form.square_wave_width, form.square_wave_height, form.square_wave_depth]) }}
+                          {{ render_form_row([form.square_wave_head_shift, form.square_wave_tail_shift]) }}
+                          {{ render_form_row([form.square_wave_cycles, form.square_wave_layers]) }}
                         </div>
                       </div>
                     </div>

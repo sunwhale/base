@@ -238,7 +238,10 @@ def f1():
             'square_wave_width': form.square_wave_width.data,
             'square_wave_height': form.square_wave_height.data,
             'square_wave_depth': form.square_wave_depth.data,
+            'square_wave_head_shift': form.square_wave_head_shift.data,
+            'square_wave_tail_shift': form.square_wave_tail_shift.data,
             'square_wave_cycles': form.square_wave_cycles.data,
+            'square_wave_layers': form.square_wave_layers.data,
             'material_interaction': form.material_interaction.data,
             'output_variables': form.output_variables.data,
             'output_numIntervals': form.output_numIntervals.data,
@@ -295,7 +298,10 @@ def f1():
             form.square_wave_width.data = message['square_wave_width']
             form.square_wave_height.data = message['square_wave_height']
             form.square_wave_depth.data = message['square_wave_depth']
+            form.square_wave_head_shift.data = message['square_wave_head_shift']
+            form.square_wave_tail_shift.data = message['square_wave_tail_shift']
             form.square_wave_cycles.data = message['square_wave_cycles']
+            form.square_wave_layers.data = message['square_wave_layers']
             form.output_variables.data = message['output_variables']
             form.output_numIntervals.data = message['output_numIntervals']
             form.timeIncrementationMethod.data = message['timeIncrementationMethod']

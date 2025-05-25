@@ -82,7 +82,7 @@ def set_material(material_obj, material_dict):
                 set_obj(material_obj, material_key, material_value)
 
 
-def square_wave(width, height, depth, velocity, cycles):
+def square_wave(width, height, depth, velocity, cycles, layers=1, head_shift=0.0, tail_shift=0.0):
     w = float(width)
     h = float(height)
     d = float(depth)
@@ -93,27 +93,54 @@ def square_wave(width, height, depth, velocity, cycles):
     f0 = np.array([[0, 0, 0],
                    [0, h, h / v],
                    [w, h, h / v + w / v],
+                   [w, 0, h / v + w / v + h / v],
                    [w, -h, h / v + w / v + 2 * h / v],
                    [w + w, -h, h / v + w / v + 2 * h / v + w / v],
                    [w + w, 0, h / v + w / v + 2 * h / v + w / v + h / v]])
     f = []
-    t_vs_x = []
-    t_vs_y = []
 
-    for i in range(int(cycles)):
-        for j in range(len(f0)):
-            if i == 0:
-                f.append([f0[j, 0] + 2 * w * i, f0[j, 1], f0[j, 2] + t * i])
-                t_vs_x.append([f0[j, 2] + t * i, f0[j, 0] + 2 * w * i])
-                t_vs_y.append([f0[j, 2] + t * i, f0[j, 1]])
-            if i > 0 and j > 0:
-                f.append([f0[j, 0] + 2 * w * i, f0[j, 1], f0[j, 2] + t * i])
-                t_vs_x.append([f0[j, 2] + t * i, f0[j, 0] + 2 * w * i])
-                t_vs_y.append([f0[j, 2] + t * i, f0[j, 1]])
+    for l in range(layers):
+        t_head_shift = head_shift * t
+        t_tail_shift = tail_shift * t
+        fl = []
+
+        for c in range(int(cycles)):
+            if c == 0:
+                x = interp1d(f0[:, 2], f0[:, 0], kind='linear')(t_head_shift)
+                y = interp1d(f0[:, 2], f0[:, 1], kind='linear')(t_head_shift)
+                f1 = f0[f0[:, 2] > t_head_shift]
+                f1 = np.insert(f1, 0, np.array([x, y, head_shift * t]), axis=0)
+                for i in range(len(f1)):
+                    fl.append([f1[i, 2] + t * c - t_head_shift, f1[i, 0] + 2 * w * c, f1[i, 1], d * l])
+
+            elif c == int(cycles - 1):
+                x = interp1d(f0[:, 2], f0[:, 0], kind='linear')(t - t_tail_shift)
+                y = interp1d(f0[:, 2], f0[:, 1], kind='linear')(t - t_tail_shift)
+                f1 = f0[f0[:, 2] < t - t_tail_shift]
+                f1 = np.append(f1, np.array([[x, y, t - t_tail_shift]]), axis=0)
+                for i in range(1, len(f1)):
+                    fl.append([f1[i, 2] + t * c - t_head_shift, f1[i, 0] + 2 * w * c, f1[i, 1], d * l])
+
+            else:
+                for i in range(1, len(f0)):
+                    fl.append([f0[i, 2] + t * c - t_head_shift, f0[i, 0] + 2 * w * c, f0[i, 1], d * l])
+
+        if l % 2 == 0:
+            fl = np.array(fl)
+            fl[:, 0] = fl[:, 0] + (t * cycles - t_head_shift - t_tail_shift) * l + d / v * l
+        else:
+            fl = np.array(fl)[::-1]
+            fl[:, 0] = fl[::-1, 0]
+            fl[:, 0] = fl[:, 0] + (t * cycles - t_head_shift - t_tail_shift) * l + d / v * l
+
+        f += fl.tolist()
 
     f = np.array(f)
+    t_vs_x = f[:, [0, 1]].tolist()
+    t_vs_y = f[:, [0, 2]].tolist()
+    t_vs_z = f[:, [0, 3]].tolist()
 
-    return f, t_vs_x, t_vs_y
+    return f, t_vs_x, t_vs_y, t_vs_z
 
 
 def create_tool(r1, r2, n, depth, pitch, tool_ref_point, model, part_name):
@@ -236,7 +263,10 @@ if __name__ == '__main__':
     square_wave_width = message['square_wave_width']
     square_wave_height = message['square_wave_height']
     square_wave_depth = message['square_wave_depth']
+    square_wave_head_shift = message['square_wave_head_shift']
+    square_wave_tail_shift = message['square_wave_tail_shift']
     square_wave_cycles = message['square_wave_cycles']
+    square_wave_layers = message['square_wave_layers']
 
     temperature_tool_z1 = message['temperature_tool_z1']
     temperature_tool_init = message['temperature_tool_init']
@@ -355,9 +385,12 @@ if __name__ == '__main__':
     else:
         raise KeyError('Unknown timeIncrementationMethod: {}'.format(timeIncrementationMethod))
 
-    f, t_vs_x, t_vs_y = square_wave(width=square_wave_width, height=square_wave_height, depth=square_wave_depth, velocity=tool_shift_speed, cycles=square_wave_cycles)
+    f, t_vs_x, t_vs_y, t_vs_z = square_wave(width=square_wave_width, height=square_wave_height, depth=square_wave_depth, velocity=tool_shift_speed, cycles=square_wave_cycles,
+                                            layers=square_wave_layers, head_shift=square_wave_head_shift, tail_shift=square_wave_tail_shift)
+    np.savetxt('tool_path_000.txt', f, delimiter=',')
     model.TabularAmplitude(name='Amp-x', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_x)
     model.TabularAmplitude(name='Amp-y', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_y)
+    model.TabularAmplitude(name='Amp-z', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_z)
 
     model.DisplacementBC(name='BC-PLANE-FIXED', createStepName='Initial',
                          region=a.instances['Part-2-1'].sets['Z0'], u1=0.0, u2=0.0, u3=0.0, ur1=0.0, ur2=0.0, ur3=0.0,

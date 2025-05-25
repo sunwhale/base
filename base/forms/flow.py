@@ -72,7 +72,12 @@ class F1From(FlaskForm):
     square_wave_width = FloatField('方波宽度，mm', default=30.0)
     square_wave_height = FloatField('方波高度，mm', default=70.0)
     square_wave_depth = FloatField('方波深度，mm', default=5.0)
-    square_wave_cycles = IntegerField('方波周期数', default=100, validators=[DataRequired(), NumberRange(1, 10000)])
+    square_wave_head_shift = FloatField('头部平移量', default=0.0, validators=[NumberRange(0.0, 1.0)])
+    square_wave_tail_shift = FloatField('尾部平移量', default=0.0, validators=[NumberRange(0.0, 1.0)])
+    square_wave_cycles = IntegerField('面内周期数', default=2, validators=[DataRequired(), NumberRange(1, 10000)])
+    square_wave_layers = IntegerField('深度层数', default=1, validators=[DataRequired(), NumberRange(1, 10000)])
+
+    drill_depth = FloatField('钻孔深度，mm', default=10.0)
 
     output_variables = StringField('输出变量', validators=[DataRequired(), Length(1, 1024)], default='U, RF, S, LE, NT, STATUS')
     output_numIntervals = IntegerField('输出间隔数量', default=20, validators=[DataRequired(), NumberRange(1, 1024)])
