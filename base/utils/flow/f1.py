@@ -289,6 +289,7 @@ if __name__ == '__main__':
     step_time = message['step_time']
     timeIncrementationMethod = message['timeIncrementationMethod']
     userDefinedInc = message['userDefinedInc']
+    mass_scaling_factor = message['mass_scaling_factor']
 
     tool_option = message['tool_option']
     step_file_name = str(message['step_file_name'])
@@ -370,7 +371,7 @@ if __name__ == '__main__':
     if timeIncrementationMethod == 'AUTO':
         model.TempDisplacementDynamicsStep(name='Step-1',
                                            previous='Initial', timePeriod=step_time, scaleFactor=1.0,
-                                           massScaling=((SEMI_AUTOMATIC, MODEL, AT_BEGINNING, 1.0, 0.0, None, 0, 0, 0.0, 0.0, 0, None),),
+                                           massScaling=((SEMI_AUTOMATIC, MODEL, AT_BEGINNING, mass_scaling_factor, 0.0, None, 0, 0, 0.0, 0.0, 0, None),),
                                            linearBulkViscosity=0.06,
                                            quadBulkViscosity=1.2,
                                            improvedDtMethod=ON)
@@ -379,7 +380,7 @@ if __name__ == '__main__':
         model.TempDisplacementDynamicsStep(name='Step-1',
                                            previous='Initial', timePeriod=step_time,
                                            timeIncrementationMethod=FIXED_USER_DEFINED_INC, userDefinedInc=userDefinedInc,
-                                           massScaling=((SEMI_AUTOMATIC, MODEL, AT_BEGINNING, 1.0, 0.0, None, 0, 0, 0.0, 0.0, 0, None),),
+                                           massScaling=((SEMI_AUTOMATIC, MODEL, AT_BEGINNING, mass_scaling_factor, 0.0, None, 0, 0, 0.0, 0.0, 0, None),),
                                            linearBulkViscosity=0.06,
                                            quadBulkViscosity=1.2,
                                            improvedDtMethod=ON)
@@ -388,7 +389,7 @@ if __name__ == '__main__':
         model.TempDisplacementDynamicsStep(name='Step-1',
                                            previous='Initial', timePeriod=step_time,
                                            timeIncrementationMethod=AUTOMATIC_EBE, scaleFactor=1.0,
-                                           massScaling=((SEMI_AUTOMATIC, MODEL, AT_BEGINNING, 1.0, 0.0, None, 0, 0, 0.0, 0.0, 0, None),),
+                                           massScaling=((SEMI_AUTOMATIC, MODEL, AT_BEGINNING, mass_scaling_factor, 0.0, None, 0, 0, 0.0, 0.0, 0, None),),
                                            linearBulkViscosity=0.06,
                                            quadBulkViscosity=1.2,
                                            improvedDtMethod=ON)

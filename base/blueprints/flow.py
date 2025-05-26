@@ -255,6 +255,7 @@ def f1():
             'timeIncrementationMethod': form.timeIncrementationMethod.data,
             'userDefinedInc': form.userDefinedInc.data,
             'step_time': form.step_time.data,
+            'mass_scaling_factor': form.mass_scaling_factor.data,
         }
         dump_json(setting_file, message)
 
@@ -317,6 +318,7 @@ def f1():
             form.timeIncrementationMethod.data = message['timeIncrementationMethod']
             form.userDefinedInc.data = message['userDefinedInc']
             form.step_time.data = message['step_time']
+            form.mass_scaling_factor.data = message['mass_scaling_factor']
         except KeyError:
             pass
 

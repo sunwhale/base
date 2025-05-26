@@ -253,9 +253,9 @@
                     <div class="card-body">
                       <div class="row">
                         <div class="col-12">
-                          {{ render_form_row([form.output_variables]) }}
-                          {{ render_form_row([form.output_numIntervals]) }}
-                          {{ render_form_row([form.step_time, form.timeIncrementationMethod, form.userDefinedInc]) }}
+                          {{ render_form_row([form.output_variables, form.output_numIntervals]) }}
+                          {{ render_form_row([form.step_time, form.mass_scaling_factor]) }}
+                          {{ render_form_row([form.timeIncrementationMethod, form.userDefinedInc]) }}
                           <hr>
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                         </div>

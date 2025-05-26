@@ -80,11 +80,12 @@ class F1From(FlaskForm):
     tool_path_file_name = SelectField('刀具路径文件', coerce=str)
 
     output_variables = StringField('输出变量', validators=[DataRequired(), Length(1, 1024)], default='U, RF, S, LE, NT, STATUS')
-    output_numIntervals = IntegerField('输出间隔数量', default=20, validators=[DataRequired(), NumberRange(1, 1024)])
+    output_numIntervals = IntegerField('输出增量步数量', default=20, validators=[DataRequired(), NumberRange(1, 1024)])
 
-    timeIncrementationMethod = SelectField('timeIncrementationMethod', coerce=str)
-    userDefinedInc = FloatField('userDefinedInc', default=1.0e-7)
-    step_time = FloatField('step_time', default=1.0)
+    timeIncrementationMethod = SelectField('时间增量步长方法', coerce=str)
+    userDefinedInc = FloatField('用户自定义增量步长', default=1.0e-7)
+    step_time = FloatField('载荷步时间，s', default=1.0)
+    mass_scaling_factor = FloatField('质量缩放系数', default=1.0)
 
     submit = SubmitField('保存当前参数')
 
