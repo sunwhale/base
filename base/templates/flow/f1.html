@@ -197,11 +197,13 @@
                           {{ render_form_row([form.tool_path_type]) }}
                           <div id="square_wave-fields" style="display: {% if form.tool_path_type.data == 'square_wave' %}block{% else %}none{% endif %};">
                             {{ render_form_row([form.square_wave_width, form.square_wave_height, form.square_wave_depth]) }}
-                            {{ render_form_row([form.square_wave_head_shift, form.square_wave_tail_shift]) }}
-                            {{ render_form_row([form.square_wave_cycles, form.square_wave_layers]) }}
+                            {{ render_form_row([form.square_wave_cycles, form.square_wave_layers, form.square_wave_head_shift, form.square_wave_tail_shift]) }}
                           </div>
                           <div id="drill-fields" style="display: {% if form.tool_path_type.data == 'drill' %}block{% else %}none{% endif %};">
                             {{ render_form_row([form.drill_depth]) }}
+                          </div>
+                          <div id="tool_path_file_name-fields" style="display: {% if form.tool_path_type.data == 'tool_path_file' %}block{% else %}none{% endif %};">
+                            {{ render_form_row([form.tool_path_file_name]) }}
                           </div>
                         </div>
                       </div>
@@ -602,6 +604,8 @@
           (this.value === 'square_wave') ? 'block' : 'none';
         document.getElementById('drill-fields').style.display =
           (this.value === 'drill') ? 'block' : 'none';
+        document.getElementById('tool_path_file_name-fields').style.display =
+          (this.value === 'tool_path_file') ? 'block' : 'none';
       });
     });
   });

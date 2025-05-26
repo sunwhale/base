@@ -67,7 +67,7 @@ class F1From(FlaskForm):
     temperature_tool_init = FloatField('铣刀初始温度，℃', default=20.0)
     temperature_plane_init = FloatField('平板初始温度，℃', default=20.0)
 
-    tool_path_type = RadioField('刀具选项', choices=[('square_wave', '方波铣削'), ('drill', '钻孔'), ('tool_path_file', '刀具路径文件')], default='square_wave', validators=[DataRequired()])
+    tool_path_type = RadioField('刀具路径选项', choices=[('square_wave', '方波铣削'), ('drill', '钻孔'), ('tool_path_file', '刀具路径文件')], default='square_wave', validators=[DataRequired()])
 
     square_wave_width = FloatField('方波宽度，mm', default=30.0)
     square_wave_height = FloatField('方波高度，mm', default=70.0)
@@ -76,8 +76,8 @@ class F1From(FlaskForm):
     square_wave_tail_shift = FloatField('尾部平移量', default=0.0, validators=[NumberRange(0.0, 1.0)])
     square_wave_cycles = IntegerField('面内周期数', default=2, validators=[DataRequired(), NumberRange(1, 10000)])
     square_wave_layers = IntegerField('深度层数', default=1, validators=[DataRequired(), NumberRange(1, 10000)])
-
     drill_depth = FloatField('钻孔深度，mm', default=10.0)
+    tool_path_file_name = SelectField('刀具路径文件', coerce=str)
 
     output_variables = StringField('输出变量', validators=[DataRequired(), Length(1, 1024)], default='U, RF, S, LE, NT, STATUS')
     output_numIntervals = IntegerField('输出间隔数量', default=20, validators=[DataRequired(), NumberRange(1, 1024)])
@@ -91,6 +91,7 @@ class F1From(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(F1From, self).__init__(*args, **kwargs)
         self.step_file_name.choices = ['']
+        self.tool_path_file_name.choices = ['']
         self.timeIncrementationMethod.choices = ['AUTO', 'AUTOMATIC_EBE', 'FIXED_USER_DEFINED_INC']
         self.material_tool.choices = ['']
         self.material_plane.choices = ['']

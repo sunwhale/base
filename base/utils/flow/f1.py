@@ -139,11 +139,8 @@ def square_wave(width, height, depth, velocity, cycles, layers=1, head_shift=0.0
 
     f = np.array(f)
     f[:, [0, 1, 2]] = f[:, [0, 1, 2]] - f[0, [0, 1, 2]]
-    t_vs_x = f[:, [0, 1]].tolist()
-    t_vs_y = f[:, [0, 2]].tolist()
-    t_vs_z = f[:, [0, 3]].tolist()
 
-    return f, t_vs_x, t_vs_y, t_vs_z
+    return f
 
 
 def drill(depth, velocity):
@@ -152,11 +149,8 @@ def drill(depth, velocity):
 
     f = [[0, 0, 0, 0], [abs(d) / v, 0, 0, d]]
     f = np.array(f)
-    t_vs_x = f[:, [0, 1]].tolist()
-    t_vs_y = f[:, [0, 2]].tolist()
-    t_vs_z = f[:, [0, 3]].tolist()
 
-    return f, t_vs_x, t_vs_y, t_vs_z
+    return f
 
 
 def create_tool(r1, r2, n, depth, pitch, tool_ref_point, model, part_name):
@@ -275,7 +269,6 @@ if __name__ == '__main__':
     tool_shift_speed = message['tool_shift_speed'] / 60.0
 
     tool_path_type = message['tool_path_type']
-
     square_wave_width = message['square_wave_width']
     square_wave_height = message['square_wave_height']
     square_wave_depth = message['square_wave_depth']
@@ -283,8 +276,8 @@ if __name__ == '__main__':
     square_wave_tail_shift = message['square_wave_tail_shift']
     square_wave_cycles = message['square_wave_cycles']
     square_wave_layers = message['square_wave_layers']
-
     drill_depth = message['drill_depth']
+    tool_path_file_name = message['tool_path_file_name']
 
     temperature_tool_z1 = message['temperature_tool_z1']
     temperature_tool_init = message['temperature_tool_init']
@@ -404,12 +397,23 @@ if __name__ == '__main__':
         raise KeyError('Unknown timeIncrementationMethod: {}'.format(timeIncrementationMethod))
 
     if tool_path_type == 'square_wave':
-        f, t_vs_x, t_vs_y, t_vs_z = square_wave(width=square_wave_width, height=square_wave_height, depth=square_wave_depth, velocity=tool_shift_speed, cycles=square_wave_cycles,
+        f = square_wave(width=square_wave_width, height=square_wave_height, depth=square_wave_depth, velocity=tool_shift_speed, cycles=square_wave_cycles,
                                                 layers=square_wave_layers, head_shift=square_wave_head_shift, tail_shift=square_wave_tail_shift)
     elif tool_path_type == 'drill':
-        f, t_vs_x, t_vs_y, t_vs_z = drill(depth=drill_depth, velocity=tool_shift_speed)
+        f = drill(depth=drill_depth, velocity=tool_shift_speed)
+
+    elif tool_path_type == 'tool_path_file':
+        f = np.loadtxt(tool_path_file_name, delimiter=',')
+
+    else:
+        raise KeyError('Unknown tool_path_type: {}'.format(tool_path_type))
+
+    t_vs_x = f[:, [0, 1]].tolist()
+    t_vs_y = f[:, [0, 2]].tolist()
+    t_vs_z = f[:, [0, 3]].tolist()
 
     np.savetxt('tool_path_000.txt', f, delimiter=',')
+
     model.TabularAmplitude(name='Amp-x', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_x)
     model.TabularAmplitude(name='Amp-y', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_y)
     model.TabularAmplitude(name='Amp-z', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=t_vs_z)

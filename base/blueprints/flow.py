@@ -130,9 +130,12 @@ def f1():
 
     files = files_in_dir(flow_path)
     step_file_name_list = []
+    tool_path_file_name_list = []
     for file in files:
         if file['name'].endswith('.stp'):
             step_file_name_list.append(file['name'])
+        elif file['name'].endswith('.txt'):
+            tool_path_file_name_list.append(file['name'])
 
     upload_form = UploadForm(prefix='upload')
     job_form = JobForm(prefix='job')
@@ -142,6 +145,7 @@ def f1():
     form.material_tool.choices = material_list
     form.material_plane.choices = material_list
     form.material_interaction.choices = material_list
+    form.tool_path_file_name.choices = tool_path_file_name_list
 
     job_form.project_id.choices = project_list
 
@@ -244,6 +248,7 @@ def f1():
             'square_wave_cycles': form.square_wave_cycles.data,
             'square_wave_layers': form.square_wave_layers.data,
             'drill_depth': form.drill_depth.data,
+            'tool_path_file_name': form.tool_path_file_name.data,
             'material_interaction': form.material_interaction.data,
             'output_variables': form.output_variables.data,
             'output_numIntervals': form.output_numIntervals.data,
@@ -306,6 +311,7 @@ def f1():
             form.square_wave_cycles.data = message['square_wave_cycles']
             form.square_wave_layers.data = message['square_wave_layers']
             form.drill_depth.data = message['drill_depth']
+            form.tool_path_file_name.data = message['tool_path_file_name']
             form.output_variables.data = message['output_variables']
             form.output_numIntervals.data = message['output_numIntervals']
             form.timeIncrementationMethod.data = message['timeIncrementationMethod']
