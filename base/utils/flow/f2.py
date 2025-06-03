@@ -7,7 +7,7 @@ import regionToolset
 from abaqus import mdb
 from abaqusConstants import *
 from abaqusConstants import (CLOCKWISE, COUNTERCLOCKWISE, THREE_D, MIDDLE_SURFACE, FROM_SECTION,
-                             DEFORMABLE_BODY, STANDARD, C3D4,
+                             DEFORMABLE_BODY, STANDARD, C3D4, XAXIS, TOP, XYPLANE, C3D8T,
                              C3D6, C3D8, STEP, ON)
 from caeModules import mesh
 import numpy as np
@@ -541,6 +541,18 @@ def create_sets(part, geo_type, n, layer_number, layer_height, layer_gap, faces,
 
     create_sets_common('SET-SHELL', part, n, layer_number, layer_height, layer_gap, faces, z_list, cell_points)
 
+    f1 = p.faces.getByBoundingCylinder(center1=(0, 0, 0), center2=(0, 0, z_list[-1]), radius=points[2, -1, 1] - 1.0)
+    p.Surface(side1Faces=f1, name='SURF-INNER')
+
+    b = p.cells.getBoundingBox()
+    x0 = b['low'][0]
+    y0 = b['low'][1]
+    z0 = b['low'][2]
+    x1 = b['high'][0]
+    y1 = b['high'][1]
+    z1 = b['high'][2]
+    p.Set(faces=p.faces.getByBoundingBox(x0, y0, z0, x1, y1, z0), name='SET-Z0')
+    p.Set(faces=p.faces.getByBoundingBox(x0, y0, z1, x1, y1, z1), name='SET-Z1')
 
 def create_mesh(part, element_size):
     part.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
@@ -594,12 +606,9 @@ if __name__ == "__main__":
 
     s3 = create_sketch_3(model, 'Sketch-3', n, points)
 
-    p = create_part(model, s1, part_name, total_z_length)
+    p = create_part(model, s1, 'PART-1', total_z_length)
 
     partition_part(model, p, s2, s3, geo_type, n, points, lines, z_list)
 
     create_sets(p, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
 
-    # for i in range(faces.shape[0]):
-    #     for j in range(faces.shape[1]):
-    #         p.Set(cells=p.cells.findAt(((faces[i, j, 0], faces[i, j, 1], 1.0),)), name='c-%s%s-1' % (i, j))
