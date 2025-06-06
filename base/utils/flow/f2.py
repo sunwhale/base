@@ -2,15 +2,54 @@
 """
 
 """
+import json
 import math
+
+import numpy as np
 import regionToolset
 from abaqus import mdb
 from abaqusConstants import *
-from abaqusConstants import (CLOCKWISE, COUNTERCLOCKWISE, THREE_D, MIDDLE_SURFACE, FROM_SECTION,
+from abaqusConstants import (CLOCKWISE, COUNTERCLOCKWISE, THREE_D, MIDDLE_SURFACE, FROM_SECTION, CYLINDRICAL,
                              DEFORMABLE_BODY, STANDARD, C3D4, XAXIS, TOP, XYPLANE, C3D8T,
-                             C3D6, C3D8, STEP, ON)
+                             C3D6, C3D8, STEP, ON, CARTESIAN)
 from caeModules import mesh
-import numpy as np
+
+
+def load_json(file_path, encoding='utf-8'):
+    """
+    Read JSON data from file.
+    """
+    with open(file_path, 'r') as f:
+        return json.load(f)
+
+
+def is_unicode_all_uppercase(obj):
+    return isinstance(obj, unicode) and obj.isupper() and any(c.isalpha() for c in obj)
+
+
+def set_obj(obj, attr, attr_dict):
+    args = {}
+    for arg_key, arg_value in attr_dict.items():
+        if is_unicode_all_uppercase(arg_value):
+            args[str(arg_key)] = eval(arg_value)
+        else:
+            args[str(arg_key)] = arg_value
+    method = getattr(obj, attr)
+    method(**args)
+
+
+def set_material(material_obj, material_dict):
+    for material_key, material_value in material_dict.items():
+        print(material_key)
+        if '.' in material_key:
+            if hasattr(material_obj, material_key.split('.')[1]):
+                material_sub_obj = getattr(material_obj, material_key.split('.')[1])
+                for material_sub_key, material_sub_value in material_value.items():
+                    if hasattr(material_sub_obj, material_sub_key):
+                        set_obj(material_sub_obj, material_sub_key, material_sub_value)
+        else:
+            if hasattr(material_obj, material_key):
+                set_obj(material_obj, material_key, material_value)
 
 
 def get_z_list(layer_height, layer_insulation_thickness, layer_gap, layer_number):
@@ -554,6 +593,7 @@ def create_sets(part, geo_type, n, layer_number, layer_height, layer_gap, faces,
     p.Set(faces=p.faces.getByBoundingBox(x0, y0, z0, x1, y1, z0), name='SET-Z0')
     p.Set(faces=p.faces.getByBoundingBox(x0, y0, z1, x1, y1, z1), name='SET-Z1')
 
+
 def create_mesh(part, element_size):
     part.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
     part.generateMesh()
@@ -566,9 +606,9 @@ def create_mesh(part, element_size):
 
 if __name__ == "__main__":
     geo_type = 'inner_polygon'
-    d = 3800
+    d = 3600
     e = 905
-    epsilon = 0.9
+    epsilon = 0.95
     n = 9
     beta = math.pi / n
     zeta = beta * 2.0 + 1.5 * math.pi / 180.0
@@ -576,35 +616,45 @@ if __name__ == "__main__":
     r2 = 50.0
     d2 = 600.0
     radius_insulation_thickness = 3.0
-    radius_gap = 5.0
-    shell_insulation_thickness = 5.0
+    radius_gap = 4.0
+    shell_insulation_thickness = 10.0
     shell_thickness = 30.0
 
     theta_insulation_thickness = 3.0
     theta_gap = 4.0
 
-    layer_height = 1229.0
-    layer_insulation_thickness = 3.0
+    layer_height = 1247.0
+    layer_insulation_thickness = 2.5
     layer_gap = 8.0
     layer_number = 2
 
     z_list = get_z_list(layer_height, layer_insulation_thickness, layer_gap, layer_number)
     total_z_length = z_list[-1]
 
-    element_size = 50
+    element_size = 100
 
     model = mdb.models['Model-1']
+
+    set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain.json'))
+    set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
+    set_material(model.Material(name='MATERIAL-KINEMATIC'), load_json('material_kinematic.json'))
+    set_material(model.Material(name='MATERIAL-SHELL'), load_json('material_shell.json'))
+
+    model.HomogeneousSolidSection(name='SECTION-GRAIN', material='MATERIAL-GRAIN', thickness=None)
+    model.HomogeneousSolidSection(name='SECTION-INSULATION', material='MATERIAL-INSULATION', thickness=None)
+    model.HomogeneousSolidSection(name='SECTION-KINEMATIC', material='MATERIAL-KINEMATIC', thickness=None)
+    model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
 
     points, lines, faces = geometries(model, geo_type, d, e, epsilon, beta, zeta, r1, r2, d2, radius_insulation_thickness, radius_gap,
                                       shell_insulation_thickness,
                                       shell_thickness,
                                       theta_gap, theta_insulation_thickness)
 
-    s1 = create_sketch_1(model, 'Sketch-1', geo_type, n, points)
+    s1 = create_sketch_1(model, 'SKETCH-1', geo_type, n, points)
 
-    s2 = create_sketch_2(model, 'Sketch-2', points)
+    s2 = create_sketch_2(model, 'SKETCH-2', points)
 
-    s3 = create_sketch_3(model, 'Sketch-3', n, points)
+    s3 = create_sketch_3(model, 'SKETCH-3', n, points)
 
     p = create_part(model, s1, 'PART-1', total_z_length)
 
@@ -612,3 +662,41 @@ if __name__ == "__main__":
 
     create_sets(p, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
 
+    csys = p.DatumCsysByThreePoints(name='DATUM CSYS-1', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
+    region = p.sets['SET-SHELL']
+    orientation = p.datums[csys.id]
+    p.MaterialOrientation(region=region, orientationType=SYSTEM, axis=AXIS_3, localCsys=orientation, fieldName='',
+                          additionalRotationType=ROTATION_NONE, angle=0.0, additionalRotationField='', stackDirection=STACK_3)
+
+    p.SectionAssignment(region=p.sets['SET-SHELL'], sectionName='SECTION-SHELL', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+                        thicknessAssignment=FROM_SECTION)
+    p.SectionAssignment(region=p.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+                        thicknessAssignment=FROM_SECTION)
+    p.SectionAssignment(region=p.sets['SET-INSULATION-SHELL'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+                        thicknessAssignment=FROM_SECTION)
+    p.SectionAssignment(region=p.sets['SET-INSULATION-GRAIN'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+                        thicknessAssignment=FROM_SECTION)
+    p.SectionAssignment(region=p.sets['SET-GAP'], sectionName='SECTION-KINEMATIC', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+                        thicknessAssignment=FROM_SECTION)
+    p.SectionAssignment(region=p.sets['SET-TIE'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+                        thicknessAssignment=FROM_SECTION)
+
+    # c = p.cells
+    # elemType1 = mesh.ElemType(elemCode=C3D8RT, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # elemType2 = mesh.ElemType(elemCode=C3D6T, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # elemType3 = mesh.ElemType(elemCode=C3D4T, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
+    # p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    # p.generateMesh()
+
+    a = model.rootAssembly
+    a.DatumCsysByDefault(CARTESIAN)
+    a.Instance(name='PART-1-1', part=p, dependent=ON)
+
+    model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
+    model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
+
+    model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
+    model.ZsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z0'], localCsys=None)
+    model.ZsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z1'], localCsys=None)
+    model.Pressure(name='Load-1', createStepName='Step-1', region=a.instances['PART-1-1'].surfaces['SURF-INNER'], distributionType=UNIFORM, field='', magnitude=10.0, amplitude='AMP-PRESSURE')
