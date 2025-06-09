@@ -593,6 +593,9 @@ def create_sets(part, geo_type, n, layer_number, layer_height, layer_gap, faces,
     p.Set(faces=p.faces.getByBoundingBox(x0, y0, z0, x1, y1, z0), name='SET-Z0')
     p.Set(faces=p.faces.getByBoundingBox(x0, y0, z1, x1, y1, z1), name='SET-Z1')
 
+    f2 = p.faces.getByBoundingCylinder(center1=(0, 0, 0), center2=(0, 0, 1e-6), radius=points[4, -1, 1] - 1.0)
+    p.Surface(side1Faces=f2, name='SURF-Z0-PRESSURE')
+
 
 def create_mesh(part, element_size):
     part.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
@@ -631,7 +634,7 @@ if __name__ == "__main__":
     z_list = get_z_list(layer_height, layer_insulation_thickness, layer_gap, layer_number)
     total_z_length = z_list[-1]
 
-    element_size = 100
+    element_size = 80
 
     model = mdb.models['Model-1']
 
@@ -681,22 +684,26 @@ if __name__ == "__main__":
     p.SectionAssignment(region=p.sets['SET-TIE'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
                         thicknessAssignment=FROM_SECTION)
 
-    # c = p.cells
-    # elemType1 = mesh.ElemType(elemCode=C3D8RT, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    # elemType2 = mesh.ElemType(elemCode=C3D6T, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    # elemType3 = mesh.ElemType(elemCode=C3D4T, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    # p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
-    # p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
-    # p.generateMesh()
+    c = p.cells
+    elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
+    p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    p.generateMesh()
 
     a = model.rootAssembly
     a.DatumCsysByDefault(CARTESIAN)
     a.Instance(name='PART-1-1', part=p, dependent=ON)
 
-    model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
-    model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
+    # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
+    # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
+    model.StaticStep(name='Step-1', previous='Initial', timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
 
     model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
     model.ZsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z0'], localCsys=None)
     model.ZsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z1'], localCsys=None)
-    model.Pressure(name='Load-1', createStepName='Step-1', region=a.instances['PART-1-1'].surfaces['SURF-INNER'], distributionType=UNIFORM, field='', magnitude=10.0, amplitude='AMP-PRESSURE')
+    model.Pressure(name='Load-1', createStepName='Step-1', region=a.instances['PART-1-1'].surfaces['SURF-INNER'], distributionType=UNIFORM, field='',
+                   magnitude=10.8, amplitude='AMP-PRESSURE')
+    # model.Pressure(name='Load-2', createStepName='Step-1', region=a.instances['PART-1-1'].surfaces['SURF-Z0-PRESSURE'], distributionType=UNIFORM, field='',
+    #                magnitude=10.8, amplitude='AMP-PRESSURE')
