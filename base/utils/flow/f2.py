@@ -305,6 +305,54 @@ def create_sketch_1(model, sketch_name, geo_type, n, points):
     return s
 
 
+def create_sketch_1_block(model, sketch_name, geo_type, n, points):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+
+    geom_list = []
+    geom_mirrored_list = []
+
+    if geo_type == 'inner_polygon':
+        geom_list.append(s.Line(point1=points[1, -2], point2=points[1, 2]))
+        geom_list.append(s.ArcByCenterEnds(center=points[0, 2], point1=points[1, 2], point2=points[1, 1], direction=COUNTERCLOCKWISE))
+        geom_list.append(s.Line(point1=points[1, 1], point2=points[0, 1]))
+        geom_list.append(s.Line(point1=points[1, 0], point2=points[0, 1]))
+        geom_list.append(s.Line(point1=points[1, -2], point2=points[-4, -2]))
+
+        geom_mirrored_list.append(s.Line(point1=mirror_y_axis(points[1, -2]), point2=mirror_y_axis(points[1, 2])))
+        geom_mirrored_list.append(
+            s.ArcByCenterEnds(center=mirror_y_axis(points[0, 2]), point1=mirror_y_axis(points[1, 2]), point2=mirror_y_axis(points[1, 1]), direction=CLOCKWISE))
+        geom_mirrored_list.append(s.Line(point1=mirror_y_axis(points[1, 1]), point2=mirror_y_axis(points[0, 1])))
+        geom_mirrored_list.append(s.Line(point1=mirror_y_axis(points[1, 0]), point2=mirror_y_axis(points[0, 1])))
+        geom_mirrored_list.append(s.Line(point1=mirror_y_axis(points[1, -2]), point2=mirror_y_axis(points[-4, -2])))
+    else:
+        geom_list.append(s.Line(point1=points[1, -2], point2=points[1, 2]))
+        geom_list.append(s.ArcByCenterEnds(center=points[0, 2], point1=points[1, 2], point2=points[1, 1], direction=COUNTERCLOCKWISE))
+        geom_list.append(s.Line(point1=points[1, 1], point2=points[0, 1]))
+        geom_list.append(s.ArcByCenterEnds(center=points[1, 0], point1=points[0, 1], point2=points[0, 0], direction=CLOCKWISE))
+        geom_list.append(s.Line(point1=points[1, -2], point2=points[-4, -2]))
+
+        geom_mirrored_list.append(s.Line(point1=mirror_y_axis(points[1, -2]), point2=mirror_y_axis(points[1, 2])))
+        geom_mirrored_list.append(
+            s.ArcByCenterEnds(center=mirror_y_axis(points[0, 2]), point1=mirror_y_axis(points[1, 2]), point2=mirror_y_axis(points[1, 1]), direction=CLOCKWISE))
+        geom_mirrored_list.append(s.Line(point1=mirror_y_axis(points[1, 1]), point2=mirror_y_axis(points[0, 1])))
+        geom_mirrored_list.append(s.ArcByCenterEnds(center=mirror_y_axis(points[1, 0]), point1=mirror_y_axis(points[0, 1]), point2=mirror_y_axis(points[0, 0]),
+                                                    direction=COUNTERCLOCKWISE))
+        geom_mirrored_list.append(s.Line(point1=mirror_y_axis(points[1, -2]), point2=mirror_y_axis(points[-4, -2])))
+
+    s.radialPattern(geomList=geom_mirrored_list, vertexList=(), number=2, totalAngle=360.0 / n * 1, centerPoint=(0.0, 0.0))
+    s.delete(objectList=geom_mirrored_list)
+
+    theta = 2.0 * math.pi / n
+    x = mirror_y_axis(points[-4, -2])[0]
+    y = mirror_y_axis(points[-4, -2])[1]
+    x_p = x * math.cos(theta) - y * math.sin(theta)
+    y_p = x * math.sin(theta) + y * math.cos(theta)
+
+    s.ArcByCenterEnds(center=(0.0, 0.0), point1=points[-4, -2], point2=(x_p, y_p), direction=COUNTERCLOCKWISE)
+
+    return s
+
+
 def create_sketch_2(model, sketch_name, points):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200)
     for i in range(2, points.shape[0]):
@@ -347,36 +395,47 @@ def create_sketch_3(model, sketch_name, n, points):
     return s
 
 
-def create_part(model, sketch, part_name, total_z_length):
+def create_part(model, sketch, part_name, z_length):
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    p.BaseSolidExtrude(sketch=sketch, depth=total_z_length)
+    p.BaseSolidExtrude(sketch=sketch, depth=z_length)
+
+    return p
+
+
+def create_part_block(model, sketch, part_name, z_length):
+    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    p.BaseSolidExtrude(sketch=sketch, depth=z_length)
 
     return p
 
 
 def partition_part(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_type, n, points, lines, z_list):
     z_0 = 0.0
-
+    part_type = 'block'
     p = part
     datum_id = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS).id
-    p.PartitionFaceBySketch(sketchUpEdge=p.datums[datum_id], faces=p.faces.findAt((-1.0, d / 2.0 - e + 1, 0.0)), sketchOrientation=TOP,
-                            sketch=sketch_cut_latitude)
+    p.PartitionFaceBySketch(sketchUpEdge=p.datums[datum_id],
+                            faces=p.faces.getByBoundingBox(-points[-1, -1, 1], -points[-1, -1, 1], z_0, points[-1, -1, 1], points[-1, -1, 1], z_0),
+                            sketchOrientation=TOP, sketch=sketch_cut_latitude)
 
     total_z_length = z_list[-1]
 
     swap_edge = p.edges.findAt((points[1, 1, 0], points[1, 1, 1], total_z_length / 2))
 
-    p.PartitionCellBySweepEdge(
-        sweepPath=swap_edge,
-        cells=p.cells,
-        edges=(p.edges.findAt((points[2, 0, 0], points[2, 0, 1], z_0)),
-               p.edges.findAt((points[3, 0, 0], points[3, 0, 1], z_0)),
-               p.edges.findAt((points[4, 0, 0], points[4, 0, 1], z_0)),
-               p.edges.findAt((points[5, 0, 0], points[5, 0, 1], z_0)),
-               p.edges.findAt((points[6, 0, 0], points[6, 0, 1], z_0)))
-    )
+    if part_type == 'block':
+        cut_edges = (p.edges.findAt((points[2, 0, 0], points[2, 0, 1], z_0)),
+                     p.edges.findAt((points[3, 0, 0], points[3, 0, 1], z_0)),
+                     p.edges.findAt((points[4, 0, 0], points[4, 0, 1], z_0)))
+    else:
+        cut_edges = (p.edges.findAt((points[2, 0, 0], points[2, 0, 1], z_0)),
+                     p.edges.findAt((points[3, 0, 0], points[3, 0, 1], z_0)),
+                     p.edges.findAt((points[4, 0, 0], points[4, 0, 1], z_0)),
+                     p.edges.findAt((points[5, 0, 0], points[5, 0, 1], z_0)),
+                     p.edges.findAt((points[6, 0, 0], points[6, 0, 1], z_0)))
 
-    p.PartitionFaceBySketch(sketchUpEdge=p.datums[2],
+    p.PartitionCellBySweepEdge(sweepPath=swap_edge, cells=p.cells, edges=cut_edges)
+
+    p.PartitionFaceBySketch(sketchUpEdge=p.datums[datum_id],
                             faces=p.faces.getByBoundingBox(-points[-1, -1, 1], -points[-1, -1, 1], z_0, points[-1, -1, 1], points[-1, -1, 1], z_0),
                             sketchOrientation=TOP, sketch=sketch_cut_longitude)
 
@@ -385,10 +444,17 @@ def partition_part(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_t
         pass
     else:
         line_keys += ['00-10', '10-01']
-    line_keys += ['11-21', '21-31', '31-41', '41-51', '51-61', '61-71']
-    line_keys += ['12-22', '22-32', '32-42', '42-52', '52-62', '62-72']
-    line_keys += ['13-23', '23-33', '33-43', '43-53', '53-63', '63-73']
-    line_keys += ['14-24', '24-34', '34-44', '44-54', '54-64', '64-74']
+
+    if part_type == 'block':
+        line_keys += ['11-21', '21-31', '31-41']
+        line_keys += ['12-22', '22-32', '32-42']
+        line_keys += ['13-23', '23-33', '33-43']
+        line_keys += ['14-24', '24-34', '34-44']
+    else:
+        line_keys += ['11-21', '21-31', '31-41', '41-51', '51-61', '61-71']
+        line_keys += ['12-22', '22-32', '32-42', '42-52', '52-62', '62-72']
+        line_keys += ['13-23', '23-33', '33-43', '43-53', '53-63', '63-73']
+        line_keys += ['14-24', '24-34', '34-44', '44-54', '54-64', '64-74']
 
     for i in range(0, n, 1):
         print(i)
@@ -402,21 +468,28 @@ def partition_part(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_t
             x_p = x * math.cos(theta) - y * math.sin(theta)
             y_p = x * math.sin(theta) + y * math.cos(theta)
             edge_sequence = p.edges.findAt(((x_p, y_p, z_0),))
-            partition_edges.append(edge_sequence[0])
+            if len(edge_sequence) > 0:
+                partition_edges.append(edge_sequence[0])
 
             x, y = line_middle_point
             x = -x
             x_p = x * math.cos(theta) - y * math.sin(theta)
             y_p = x * math.sin(theta) + y * math.cos(theta)
             edge_sequence = p.edges.findAt(((x_p, y_p, z_0),))
-            partition_edges.append(edge_sequence[0])
+            if len(edge_sequence) > 0:
+                partition_edges.append(edge_sequence[0])
+        if partition_edges:
+            p.PartitionCellBySweepEdge(sweepPath=swap_edge, cells=p.cells, edges=partition_edges)
 
-        p.PartitionCellBySweepEdge(sweepPath=swap_edge, cells=p.cells, edges=partition_edges)
-
-    for i in range(0, n, 1):
-        x = d * math.cos(-i * math.pi / n + math.pi / 2.0)
-        y = d * math.sin(-i * math.pi / n + math.pi / 2.0)
+    if part_type == 'block':
+        x = d * math.cos(-(n - 1) * math.pi / n + math.pi / 2.0)
+        y = d * math.sin(-(n - 1) * math.pi / n + math.pi / 2.0)
         p.PartitionCellByPlaneThreePoints(cells=p.cells, point1=(0.0, 0.0, 0.0), point2=(0.0, 0.0, total_z_length), point3=(x, y, 0.0))
+    else:
+        for i in range(0, n, 1):
+            x = d * math.cos(-i * math.pi / n + math.pi / 2.0)
+            y = d * math.sin(-i * math.pi / n + math.pi / 2.0)
+            p.PartitionCellByPlaneThreePoints(cells=p.cells, point1=(0.0, 0.0, 0.0), point2=(0.0, 0.0, total_z_length), point3=(x, y, 0.0))
 
     for z in z_list[1:-1]:
         print(z)
@@ -597,6 +670,53 @@ def create_sets(part, geo_type, n, layer_number, layer_height, layer_gap, faces,
     p.Surface(side1Faces=f2, name='SURF-Z0-PRESSURE')
 
 
+def create_sets_block(part, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list):
+    print(z_list)
+
+    # SET-INSULATION-GRAIN
+    cell_points = []
+    z = (z_list[0] + z_list[1]) / 2.0
+    if geo_type == 'inner_polygon':
+        pass
+    else:
+        cell_points.append([0, 0, z])
+    for i in range(1, faces.shape[0] - 3):
+        for j in range(0, faces.shape[1] - 1):
+            cell_points.append([i, j, z])
+
+    z = (z_list[1] + z_list[2]) / 2.0
+    for i in range(3, 4):
+        for j in range(0, faces.shape[1] - 1):
+            cell_points.append([i, j, z])
+    for i in range(1, 3):
+        for j in range(3, 4):
+            cell_points.append([i, j, z])
+
+    z = (z_list[2] + z_list[3]) / 2.0
+    if geo_type == 'inner_polygon':
+        pass
+    else:
+        cell_points.append([0, 0, z])
+    for i in range(1, faces.shape[0] - 3):
+        for j in range(0, faces.shape[1] - 1):
+            cell_points.append([i, j, z])
+
+    create_sets_common('SET-INSULATION-GRAIN', part, n, layer_number, layer_height, layer_gap, faces, z_list, cell_points)
+
+    # SET-GRAIN
+    cell_points = []
+    z = (z_list[1] + z_list[2]) / 2.0
+    if geo_type == 'inner_polygon':
+        pass
+    else:
+        cell_points.append([0, 0, z])
+    for i in range(1, faces.shape[0] - 4):
+        for j in range(0, faces.shape[1] - 2):
+            cell_points.append([i, j, z])
+
+    create_sets_common('SET-GRAIN', part, n, layer_number, layer_height, layer_gap, faces, z_list, cell_points)
+
+
 def create_mesh(part, element_size):
     part.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
     part.generateMesh()
@@ -629,7 +749,7 @@ if __name__ == "__main__":
     layer_height = 1247.0
     layer_insulation_thickness = 2.5
     layer_gap = 8.0
-    layer_number = 2
+    layer_number = 1
 
     z_list = get_z_list(layer_height, layer_insulation_thickness, layer_gap, layer_number)
     total_z_length = z_list[-1]
@@ -653,57 +773,64 @@ if __name__ == "__main__":
                                       shell_thickness,
                                       theta_gap, theta_insulation_thickness)
 
-    s1 = create_sketch_1(model, 'SKETCH-1', geo_type, n, points)
+    # s1 = create_sketch_1(model, 'SKETCH-1', geo_type, n, points)
+
+    s1 = create_sketch_1_block(model, 'SKETCH-1', geo_type, n, points)
 
     s2 = create_sketch_2(model, 'SKETCH-2', points)
 
     s3 = create_sketch_3(model, 'SKETCH-3', n, points)
 
-    p = create_part(model, s1, 'PART-1', total_z_length)
+    # p = create_part(model, s1, 'PART-1', total_z_length)
+
+    p = create_part_block(model, s1, 'PART-1', total_z_length)
 
     partition_part(model, p, s2, s3, geo_type, n, points, lines, z_list)
 
-    create_sets(p, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
+    create_sets_block(p, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
 
-    csys = p.DatumCsysByThreePoints(name='DATUM CSYS-1', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
-    region = p.sets['SET-SHELL']
-    orientation = p.datums[csys.id]
-    p.MaterialOrientation(region=region, orientationType=SYSTEM, axis=AXIS_3, localCsys=orientation, fieldName='',
-                          additionalRotationType=ROTATION_NONE, angle=0.0, additionalRotationField='', stackDirection=STACK_3)
-
-    p.SectionAssignment(region=p.sets['SET-SHELL'], sectionName='SECTION-SHELL', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-INSULATION-SHELL'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-INSULATION-GRAIN'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-GAP'], sectionName='SECTION-KINEMATIC', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-TIE'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-
-    c = p.cells
-    elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
-    p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
-    p.generateMesh()
+    # csys = p.DatumCsysByThreePoints(name='DATUM CSYS-1', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
+    # region = p.sets['SET-SHELL']
+    # orientation = p.datums[csys.id]
+    # p.MaterialOrientation(region=region, orientationType=SYSTEM, axis=AXIS_3, localCsys=orientation, fieldName='',
+    #                       additionalRotationType=ROTATION_NONE, angle=0.0, additionalRotationField='', stackDirection=STACK_3)
+    #
+    # p.SectionAssignment(region=p.sets['SET-SHELL'], sectionName='SECTION-SHELL', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+    #                     thicknessAssignment=FROM_SECTION)
+    # p.SectionAssignment(region=p.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+    #                     thicknessAssignment=FROM_SECTION)
+    # p.SectionAssignment(region=p.sets['SET-INSULATION-SHELL'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+    #                     thicknessAssignment=FROM_SECTION)
+    # p.SectionAssignment(region=p.sets['SET-INSULATION-GRAIN'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+    #                     thicknessAssignment=FROM_SECTION)
+    # p.SectionAssignment(region=p.sets['SET-GAP'], sectionName='SECTION-KINEMATIC', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+    #                     thicknessAssignment=FROM_SECTION)
+    # p.SectionAssignment(region=p.sets['SET-TIE'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+    #                     thicknessAssignment=FROM_SECTION)
+    #
+    # c = p.cells
+    # elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
+    # p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    # p.generateMesh()
 
     a = model.rootAssembly
     a.DatumCsysByDefault(CARTESIAN)
     a.Instance(name='PART-1-1', part=p, dependent=ON)
+    a.Instance(name='PART-1-2', part=p, dependent=ON)
+    a.Instance(name='PART-1-3', part=p, dependent=ON)
 
-    # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
-    # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
-    model.StaticStep(name='Step-1', previous='Initial', timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
+    a.rotate(instanceList=('PART-1-2',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=40.0)
+    a.rotate(instanceList=('PART-1-3',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=80.0)
 
-    model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
-    model.ZsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z0'], localCsys=None)
-    model.ZsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z1'], localCsys=None)
-    model.Pressure(name='Load-1', createStepName='Step-1', region=a.instances['PART-1-1'].surfaces['SURF-INNER'], distributionType=UNIFORM, field='',
-                   magnitude=10.8, amplitude='AMP-PRESSURE')
-    # model.Pressure(name='Load-2', createStepName='Step-1', region=a.instances['PART-1-1'].surfaces['SURF-Z0-PRESSURE'], distributionType=UNIFORM, field='',
+    # # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
+    # # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
+    # model.StaticStep(name='Step-1', previous='Initial', timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
+    #
+    # model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
+    # model.ZsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z0'], localCsys=None)
+    # model.ZsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z1'], localCsys=None)
+    # model.Pressure(name='Load-1', createStepName='Step-1', region=a.instances['PART-1-1'].surfaces['SURF-INNER'], distributionType=UNIFORM, field='',
     #                magnitude=10.8, amplitude='AMP-PRESSURE')
