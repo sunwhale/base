@@ -84,6 +84,47 @@ def mirror_y_axis(point):
     return [-point[0], point[1]]
 
 
+def line_intersection(p1, p2, p3, p4):
+    """
+    计算两条直线的交点
+
+    参数:
+    p1, p2: 第一条直线上的两个点，格式为(x, y)
+    p3, p4: 第二条直线上的两个点，格式为(x, y)
+
+    返回:
+    交点坐标(x, y)，如果两直线平行则返回None
+    """
+    # 计算第一条直线的斜率和截距
+    x1, y1 = p1
+    x2, y2 = p2
+
+    # 计算第二条直线的斜率和截距
+    x3, y3 = p3
+    x4, y4 = p4
+
+    # 计算分母 (为了判断是否平行)
+    denominator = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1)
+
+    # 如果分母为0，说明两直线平行或重合
+    if denominator == 0:
+        return None  # 无交点或无数交点
+
+    # 计算分子a和b
+    a = (x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)
+    b = (x2 - x1) * (y1 - y3) - (y2 - y1) * (x1 - x3)
+
+    # 计算参数u_a和u_b
+    u_a = a / denominator
+    u_b = b / denominator
+
+    # 计算交点坐标
+    x = x1 + u_a * (x2 - x1)
+    y = y1 + u_a * (y2 - y1)
+
+    return x, y
+
+
 def line_segment_circle_intersection(x1, y1, x2, y2, r):
     """
     计算线段 (x1,y1)-(x2,y2) 与圆心在原点、半径为 r 的圆的交点坐标
@@ -353,6 +394,33 @@ def create_sketch_1_block(model, sketch_name, geo_type, n, points):
     return s
 
 
+def create_sketch_1_block_front(model, sketch_name, n, points):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+
+    geom_list = []
+    geom_mirrored_list = []
+
+    x_p, y_p = line_intersection(points[1, 0], points[0, 1], points[1, -2], points[-4, -2])
+    geom_list.append(s.Line(point1=points[1, 0], point2=(x_p, y_p)))
+    geom_list.append(s.Line(point1=(x_p, y_p), point2=points[-4, -2]))
+
+    geom_mirrored_list.append(s.Line(point1=mirror_y_axis(points[1, 0]), point2=mirror_y_axis([x_p, y_p])))
+    geom_mirrored_list.append(s.Line(point1=mirror_y_axis([x_p, y_p]), point2=mirror_y_axis(points[-4, -2])))
+
+    s.radialPattern(geomList=geom_mirrored_list, vertexList=(), number=2, totalAngle=360.0 / n * 1, centerPoint=(0.0, 0.0))
+    s.delete(objectList=geom_mirrored_list)
+
+    theta = 2.0 * math.pi / n
+    x = mirror_y_axis(points[-4, -2])[0]
+    y = mirror_y_axis(points[-4, -2])[1]
+    x_p = x * math.cos(theta) - y * math.sin(theta)
+    y_p = x * math.sin(theta) + y * math.cos(theta)
+
+    s.ArcByCenterEnds(center=(0.0, 0.0), point1=points[-4, -2], point2=(x_p, y_p), direction=COUNTERCLOCKWISE)
+
+    return s
+
+
 def create_sketch_2(model, sketch_name, points):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200)
     for i in range(2, points.shape[0]):
@@ -478,7 +546,7 @@ def partition_part(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_t
     for i in range(0, n, 1):
         print(i)
         theta = i * 2 * math.pi / n
-        p = model.parts['PART-1']
+        p = model.parts['PART-BLOCK']
         swap_edge = p.edges.findAt((points[1, 1, 0], points[1, 1, 1], total_z_length / 2))
         partition_edges = []
         for line_key in line_keys:
@@ -543,6 +611,7 @@ def create_sets_common(set_name, part, n, layer_number, layer_height, layer_gap,
 
 def create_sets(part, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list):
     print(z_list)
+    p = part
 
     # SET-INSULATION-GRAIN
     cell_points = []
@@ -691,6 +760,7 @@ def create_sets(part, geo_type, n, layer_number, layer_height, layer_gap, faces,
 
 def create_sets_block(part, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list):
     print(z_list)
+    p = part
 
     # SET-INSULATION-GRAIN
     cell_points = []
@@ -734,16 +804,6 @@ def create_sets_block(part, geo_type, n, layer_number, layer_height, layer_gap, 
             cell_points.append([i, j, z])
 
     create_sets_common('SET-GRAIN', part, n, layer_number, layer_height, layer_gap, faces, z_list, cell_points)
-
-
-def create_mesh(part, element_size):
-    part.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
-    part.generateMesh()
-
-    elemType1 = mesh.ElemType(elemCode=C3D8T, elemLibrary=STANDARD)
-    elemType2 = mesh.ElemType(elemCode=C3D6, elemLibrary=STANDARD)
-    elemType3 = mesh.ElemType(elemCode=C3D4, elemLibrary=STANDARD)
-    p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
 
 
 if __name__ == "__main__":
@@ -802,41 +862,36 @@ if __name__ == "__main__":
 
     s4 = create_sketch_4(model, 'SKETCH-4', n, points)
 
-    p_block = create_part_block(model, s1b, 'PART-BLOCK', total_z_length)
+    s1bf = create_sketch_1_block_front(model, 'SKETCH-1-BLOCK-FRONT', n, points)
 
-    partition_part(model, p_block, s2, s3, geo_type, n, points, lines, z_list)
-
-    create_sets_block(p_block, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
-
-    p.SectionAssignment(region=p.sets['SET-SHELL'], sectionName='SECTION-SHELL', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-INSULATION-SHELL'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-INSULATION-GRAIN'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-GAP'], sectionName='SECTION-KINEMATIC', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-TIE'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                        thicknessAssignment=FROM_SECTION)
-
-    c = p.cells
-    elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
-    p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
-    p.generateMesh()
-
-    a = model.rootAssembly
-    a.DatumCsysByDefault(CARTESIAN)
-    a.Instance(name='PART-1-1', part=p, dependent=ON)
-    a.Instance(name='PART-1-2', part=p, dependent=ON)
-    a.Instance(name='PART-1-3', part=p, dependent=ON)
-
-    a.rotate(instanceList=('PART-1-2',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=40.0)
-    a.rotate(instanceList=('PART-1-3',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=80.0)
+    # p_block = create_part_block(model, s1b, 'PART-BLOCK', total_z_length)
+    #
+    # partition_part(model, p_block, s2, s3, geo_type, n, points, lines, z_list)
+    #
+    # create_sets_block(p_block, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
+    #
+    # p_block.SectionAssignment(region=p_block.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+    #                           thicknessAssignment=FROM_SECTION)
+    # p_block.SectionAssignment(region=p_block.sets['SET-INSULATION-GRAIN'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE,
+    #                           offsetField='',
+    #                           thicknessAssignment=FROM_SECTION)
+    #
+    # c = p_block.cells
+    # elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # p_block.setElementType(regions=regionToolset.Region(cells=p_block.cells), elemTypes=(elemType1, elemType2, elemType3))
+    # p_block.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    # p_block.generateMesh()
+    #
+    # a = model.rootAssembly
+    # a.DatumCsysByDefault(CARTESIAN)
+    # a.Instance(name='PART-BLOCK-1-1', part=p_block, dependent=ON)
+    # a.Instance(name='PART-BLOCK-1-2', part=p_block, dependent=ON)
+    # a.Instance(name='PART-BLOCK-1-3', part=p_block, dependent=ON)
+    #
+    # a.rotate(instanceList=('PART-BLOCK-1-2',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=40.0)
+    # a.rotate(instanceList=('PART-BLOCK-1-3',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=80.0)
 
     # # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
     # # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
