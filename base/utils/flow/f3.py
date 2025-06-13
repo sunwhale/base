@@ -346,7 +346,7 @@ def create_sketch_1(model, sketch_name, geo_type, n, points):
     return s
 
 
-def create_sketch_1_block(model, sketch_name, geo_type, n, points):
+def create_sketch_block(model, sketch_name, geo_type, n, points):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
 
     geom_list = []
@@ -394,7 +394,7 @@ def create_sketch_1_block(model, sketch_name, geo_type, n, points):
     return s
 
 
-def create_sketch_1_block_front(model, sketch_name, n, points):
+def create_sketch_block_front(model, sketch_name, n, points):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
 
     geom_list = []
@@ -417,6 +417,57 @@ def create_sketch_1_block_front(model, sketch_name, n, points):
     y_p = x * math.sin(theta) + y * math.cos(theta)
 
     s.ArcByCenterEnds(center=(0.0, 0.0), point1=points[-4, -2], point2=(x_p, y_p), direction=COUNTERCLOCKWISE)
+
+    return s
+
+
+def create_sketch_block_front_half(model, sketch_name, n, points):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+
+    x_p, y_p = line_intersection(points[1, 0], points[0, 1], points[1, -2], points[-4, -2])
+    s.Line(point1=points[1, 0], point2=(x_p, y_p))
+    s.Line(point1=(x_p, y_p), point2=points[-4, -2])
+
+    theta = 2.0 * math.pi / n / 2.0
+    x = mirror_y_axis(points[-4, -2])[0]
+    y = mirror_y_axis(points[-4, -2])[1]
+    x_p = x * math.cos(theta) - y * math.sin(theta)
+    y_p = x * math.sin(theta) + y * math.cos(theta)
+
+    s.ArcByCenterEnds(center=(0.0, 0.0), point1=points[-4, -2], point2=(x_p, y_p), direction=COUNTERCLOCKWISE)
+
+    s.Line(point1=(x_p, y_p), point2=points[1, 0])
+
+    return s
+
+
+def create_sketch_block_front_cut(model, sketch_name, n, points):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+
+    geom_list = []
+    geom_mirrored_list = []
+
+    geom_list.append(s.Line(point1=points[1, -2], point2=points[1, 2]))
+    geom_list.append(s.ArcByCenterEnds(center=points[0, 2], point1=points[1, 2], point2=points[1, 1], direction=COUNTERCLOCKWISE))
+    geom_list.append(s.Line(point1=points[1, 1], point2=points[0, 1]))
+    geom_list.append(s.Line(point1=points[1, 0], point2=points[0, 1]))
+
+    geom_list.append(s.Line(point1=points[1, -2], point2=[points[1, -2][0], points[1, 0][1]]))
+    geom_list.append(s.Line(point1=points[1, 0], point2=[points[1, -2][0], points[1, 0][1]]))
+
+    s.radialPattern(geomList=geom_mirrored_list, vertexList=(), number=2, totalAngle=360.0 / n * 1, centerPoint=(0.0, 0.0))
+    s.delete(objectList=geom_mirrored_list)
+
+    theta = 2.0 * math.pi / n
+    x = mirror_y_axis(points[-4, -2])[0]
+    y = mirror_y_axis(points[-4, -2])[1]
+    x_p = x * math.cos(theta) - y * math.sin(theta)
+    y_p = x * math.sin(theta) + y * math.cos(theta)
+
+    l = s.Line(point1=points[1, 0], point2=[points[1, -2][0], points[1, 0][1]])
+    s.setAsConstruction(objectList=(l,))
+    s.sketchOptions.setValues(constructionGeometry=ON)
+    s.assignCenterline(line=l)
 
     return s
 
@@ -482,9 +533,27 @@ def create_part(model, sketch, part_name, z_length):
     return p
 
 
-def create_part_block(model, sketch, part_name, z_length):
+def create_part_block(model, sketch, sketch_cut, part_name, z_length):
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     p.BaseSolidExtrude(sketch=sketch, depth=z_length)
+
+    d = p.datums
+
+    cut_depth = 183.418843
+
+    plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    edge = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
+    p.CutExtrude(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=sketch_cut, depth=cut_depth,
+                 flipExtrudeDirection=ON)
+
+    plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=cut_depth)
+    t = p.MakeSketchTransform(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s = model.ConstrainedSketch(name='__profile__', sheetSize=100.0, gridSpacing=100.0, transform=t)
+    p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+    s.retrieveSketch(sketch=sketch_cut)
+    p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0,
+                 flipRevolveDirection=ON)
+    del model.sketches['__profile__']
 
     return p
 
@@ -816,7 +885,7 @@ if __name__ == "__main__":
     zeta = beta * 2.0 + 1.5 * math.pi / 180.0
     r1 = 50.0
     r2 = 50.0
-    d2 = 600.0
+    d2 = 500.0
     radius_insulation_thickness = 3.0
     radius_gap = 4.0
     shell_insulation_thickness = 10.0
@@ -858,11 +927,15 @@ if __name__ == "__main__":
 
     s3 = create_sketch_3(model, 'SKETCH-3', n, points)
 
-    s1b = create_sketch_1_block(model, 'SKETCH-1-BLOCK', geo_type, n, points)
+    s_block = create_sketch_block(model, 'SKETCH-BLOCK', geo_type, n, points)
 
     s4 = create_sketch_4(model, 'SKETCH-4', n, points)
 
-    s1bf = create_sketch_1_block_front(model, 'SKETCH-1-BLOCK-FRONT', n, points)
+    s_block_front_half = create_sketch_block_front_half(model, 'SKETCH-BLOCK-FRONT-HALF', n, points)
+
+    s_block_front_cut = create_sketch_block_front_cut(model, 'SKETCH-BLOCK-FRONT-CUT', n, points)
+
+    p_block_front = create_part_block(model, s_block_front_half, s_block_front_cut, 'PART-BLOCK-FRONT', 1391.0)
 
     # p_block = create_part_block(model, s1b, 'PART-BLOCK', total_z_length)
     #
