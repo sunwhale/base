@@ -535,7 +535,7 @@ def create_part(model, sketch, part_name, z_length):
     return p
 
 
-def create_part_block_cut_1(model, part, sketch_cut, part_name):
+def create_part_block_cut_3(model, part, part_name, points):
     p = model.Part(name=part_name, objectToCopy=part)
     plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
     edge = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
@@ -543,11 +543,15 @@ def create_part_block_cut_1(model, part, sketch_cut, part_name):
     t = p.MakeSketchTransform(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s = model.ConstrainedSketch(name='__profile__', sheetSize=100.0, gridSpacing=100.0, transform=t)
 
-
     p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
-    s.Line(point1=(0.0, 843.1875), point2=(-708.2775, 404.73))
-    s.Line(point1=(-708.2775, 404.73), point2=(0.0, 404.729999994636))
-    s.Line(point1=(0.0, 404.729999994636), point2=(0.0, 843.1875))
+
+    p1 = (0.0, points[1, -1, 1] + 5.0)
+    p2 = (-points[1, -1, 1] + 5.0, 0)
+    p3 = (0.0, 0.0)
+
+    s.Line(point1=p1, point2=p2)
+    s.Line(point1=p2, point2=p3)
+    s.Line(point1=p3, point2=p1)
     l = s.ConstructionLine(point1=(0.0, 0.0), angle=0.0)
     s.assignCenterline(line=l)
     p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0, flipRevolveDirection=OFF)
@@ -555,7 +559,57 @@ def create_part_block_cut_1(model, part, sketch_cut, part_name):
     del model.sketches['__profile__']
 
     p.setValues(geometryRefinement=EXTRA_FINE)
-    session.viewports['Viewport: 1'].setValues(displayedObject=p)
+
+    return p
+
+
+def create_part_block_cut_2(model, part, part_name, radius):
+    p = model.Part(name=part_name, objectToCopy=part)
+    plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    edge = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
+    d = p.datums
+    t = p.MakeSketchTransform(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s = model.ConstrainedSketch(name='__profile__', sheetSize=100.0, gridSpacing=100.0, transform=t)
+    p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+    s.CircleByCenterPerimeter(center=(0.0, 0.0), point1=(0.0, radius))
+    p.CutExtrude(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, flipExtrudeDirection=ON)
+    s.unsetPrimaryObject()
+    del model.sketches['__profile__']
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
+
+
+def create_part_block_cut_1(model, part, part_name, radius, sketch_cut_outer):
+    p = model.Part(name=part_name, objectToCopy=part)
+    plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    edge = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
+    d = p.datums
+    t = p.MakeSketchTransform(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s = model.ConstrainedSketch(name='__profile__', sheetSize=100.0, gridSpacing=100.0, transform=t)
+    p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+    s.CircleByCenterPerimeter(center=(0.0, 0.0), point1=(0.0, radius))
+    p.CutExtrude(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, flipExtrudeDirection=ON)
+    s.unsetPrimaryObject()
+    del model.sketches['__profile__']
+
+    plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
+    t = p.MakeSketchTransform(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s = model.ConstrainedSketch(name='__profile__', sheetSize=100.0, gridSpacing=100.0, transform=t)
+    g = s.geometry
+    p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+    s.retrieveSketch(sketch=sketch_cut_outer)
+    s.move(vector=(0.0, 0.0), objectList=g.values())
+    l = s.ConstructionLine(point1=(0.0, 0.0), angle=0.0)
+    s.sketchOptions.setValues(constructionGeometry=ON)
+    s.assignCenterline(line=l)
+    p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0, flipRevolveDirection=OFF)
+    del model.sketches['__profile__']
+
+    # p.deleteFeatures(('Datum plane-1', 'Partition cell-5',))
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
 
@@ -960,23 +1014,24 @@ if __name__ == "__main__":
     geo_type = 'inner_polygon'
     part_type = 'block'
 
-    e = 905
+
     epsilon = 0.95
     n = 9
     beta = math.pi / n
-    zeta = beta * 2.0 + 1.5 * math.pi / 180.0
-    r1 = 50.0
+    zeta = beta * 2.0 + 3.0 * math.pi / 180.0
+    r1 = 35.0
     r2 = 50.0
-    d2 = 500.0
+    d2 = 513.8
     radius_insulation_thickness = 3.0
     radius_gap = 4.0
     shell_insulation_thickness = 10.0
     shell_thickness = 30.0
 
     d = (1767.5 - radius_insulation_thickness) * 2.0
+    e = 862.9 - radius_insulation_thickness
 
     theta_insulation_thickness = 3.0
-    theta_gap = 4.0
+    theta_gap = 9.0
 
     layer_height = 1229.0
     layer_insulation_thickness = 2.5
@@ -1028,6 +1083,9 @@ if __name__ == "__main__":
     acis = mdb.openAcis('SKETCH-BLOCK-FRONT-CUT-OUTER.sat', scaleFromFile=OFF)
     s_block_front_cut_outer = model.ConstrainedSketchFromGeometryFile(name='SKETCH-BLOCK-FRONT-CUT-OUTER', geometryFile=acis)
 
+    acis = mdb.openAcis('SKETCH-BLOCK-BEHIND-CUT-OUTER.sat', scaleFromFile=OFF)
+    s_block_behind_cut_outer = model.ConstrainedSketchFromGeometryFile(name='SKETCH-BLOCK-BEHIND-CUT-OUTER', geometryFile=acis)
+
     p_block_front = create_part_block_front(model, s_block_front_half, s_block_front_cut, s_block_front_cut_outer, 'PART-BLOCK-FRONT', first_layer_height)
 
     partition_part_front(model, p_block_front, s2, s3, geo_type, n, points, lines, z_list)
@@ -1040,9 +1098,15 @@ if __name__ == "__main__":
 
     # create_sets_block(p_block, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
 
-    p_block_behind_1 = create_part_block_cut_1(model, p_block, s1, 'PART-BLOCK-BEHIND-1')
+    p_block_behind_3 = create_part_block_cut_3(model, p_block, 'PART-BLOCK-BEHIND-3', points)
 
+    p_block_behind_2 = create_part_block_cut_2(model, p_block, 'PART-BLOCK-BEHIND-2', 905.0)
 
+    # p_block_0 = create_part(model, s_block, 'PART-BLOCK', block_z_length)
+    #
+    # p_block_behind_1 = create_part_block_cut_1(model, p_block_0, 'PART-BLOCK-BEHIND-1', 905.0, s_block_behind_cut_outer)
+
+    # partition_part(model, p_block_behind_1, s2, s3, geo_type, part_type, n, points, lines, z_list)
 
     # p_block.SectionAssignment(region=p_block.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
     #                           thicknessAssignment=FROM_SECTION)
