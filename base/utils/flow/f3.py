@@ -530,10 +530,12 @@ def create_part(model, sketch, part_name, z_length):
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     p.BaseSolidExtrude(sketch=sketch, depth=z_length)
 
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
     return p
 
 
-def create_part_block(model, sketch, sketch_cut, part_name, z_length):
+def create_part_block_front(model, sketch, sketch_cut, sketch_cut_outer, part_name, z_length):
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     p.BaseSolidExtrude(sketch=sketch, depth=z_length)
 
@@ -555,6 +557,21 @@ def create_part_block(model, sketch, sketch_cut, part_name, z_length):
                  flipRevolveDirection=ON)
     del model.sketches['__profile__']
 
+    plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
+    t = p.MakeSketchTransform(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s = model.ConstrainedSketch(name='__profile__', sheetSize=100.0, gridSpacing=100.0, transform=t)
+    g = s.geometry
+    p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+    s.retrieveSketch(sketch=sketch_cut_outer)
+    s.move(vector=(-1391.0, 0.0), objectList=g.values())
+    l = s.ConstructionLine(point1=(0.0, 0.0), angle=0.0)
+    s.sketchOptions.setValues(constructionGeometry=ON)
+    s.assignCenterline(line=l)
+    p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0, flipRevolveDirection=OFF)
+    del mdb.models['Model-1'].sketches['__profile__']
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
     return p
 
 
@@ -562,7 +579,47 @@ def create_part_shell(model, sketch, part_name, z_length):
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     p.BaseSolidExtrude(sketch=sketch, depth=z_length)
 
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
     return p
+
+
+def partition_part_front(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_type, n, points, lines, z_list):
+    z_0 = 0.0
+    part_type = 'block'
+    p = part
+    d = p.datums
+    datum_id = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS).id
+    # p.PartitionFaceBySketch(sketchUpEdge=p.datums[datum_id],
+    #                         faces=p.faces.getByBoundingBox(-points[-1, -1, 1], -points[-1, -1, 1], z_0, points[-1, -1, 1], points[-1, -1, 1], z_0),
+    #                         sketchOrientation=TOP, sketch=sketch_cut_latitude)
+    #
+    # p.PartitionFaceBySketch(sketchUpEdge=p.datums[datum_id],
+    #                         faces=p.faces.getByBoundingBox(-points[-1, -1, 1], -points[-1, -1, 1], z_0, points[-1, -1, 1], points[-1, -1, 1], z_0),
+    #                         sketchOrientation=TOP, sketch=sketch_cut_longitude)
+
+    f, e, d = p.faces, p.edges, p.datums
+    t = p.MakeSketchTransform(sketchPlane=f[13], sketchUpEdge=d[3], sketchPlaneSide=SIDE1, origin=(0.0, 0.0, 0.0))
+    s = mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=100.0, gridSpacing=100.0, transform=t)
+    g = s.geometry
+    p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+    s.offset(distance=points[-1, -2, 0] - points[-1, -3, 0], objectList=(g[2], g[5], g[6], g[7], g[8]), side=RIGHT)
+
+    f = p.faces
+    pickedFaces = f.getSequenceFromMask(mask=('[#2000 ]',), )
+    p.PartitionFaceBySketch(sketchUpEdge=d[3], faces=pickedFaces, sketch=s)
+    del mdb.models['Model-1'].sketches['__profile__']
+
+    c = p.cells
+    pickedCells = c.getSequenceFromMask(mask=('[#1 ]',), )
+    e = p.edges
+    pickedEdges = (e[0], e[1], e[2], e[3], e[4])
+    p.PartitionCellBySweepEdge(sweepPath=e[14], cells=pickedCells, edges=pickedEdges)
+
+    plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=points[-1, -3, 0])
+    p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+    plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[1])
+    p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
 
 
 def partition_part(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_type, n, points, lines, z_list):
@@ -877,7 +934,7 @@ def create_sets_block(part, geo_type, n, layer_number, layer_height, layer_gap, 
 
 if __name__ == "__main__":
     geo_type = 'inner_polygon'
-    d = 3600
+
     e = 905
     epsilon = 0.95
     n = 9
@@ -890,6 +947,8 @@ if __name__ == "__main__":
     radius_gap = 4.0
     shell_insulation_thickness = 10.0
     shell_thickness = 30.0
+
+    d = (1767.5 - radius_insulation_thickness) * 2.0
 
     theta_insulation_thickness = 3.0
     theta_gap = 4.0
@@ -935,12 +994,19 @@ if __name__ == "__main__":
 
     s_block_front_cut = create_sketch_block_front_cut(model, 'SKETCH-BLOCK-FRONT-CUT', n, points)
 
-    p_block_front = create_part_block(model, s_block_front_half, s_block_front_cut, 'PART-BLOCK-FRONT', 1391.0)
+    acis = mdb.openAcis('SKETCH-BLOCK-FRONT-CUT-OUTER.sat', scaleFromFile=OFF)
+    s_block_front_cut_outer = model.ConstrainedSketchFromGeometryFile(name='SKETCH-BLOCK-FRONT-CUT-OUTER', geometryFile=acis)
 
-    # p_block = create_part_block(model, s1b, 'PART-BLOCK', total_z_length)
-    #
+    p_block_front = create_part_block_front(model, s_block_front_half, s_block_front_cut, s_block_front_cut_outer, 'PART-BLOCK-FRONT', 1391.0)
+
+    partition_part_front(model, p_block_front, s2, s3, geo_type, n, points, lines, z_list)
+
+    p_block = create_part(model, s_block, 'PART-BLOCK', total_z_length)
+
+    session.viewports['Viewport: 1'].setValues(displayedObject=p_block_front)
+
     # partition_part(model, p_block, s2, s3, geo_type, n, points, lines, z_list)
-    #
+
     # create_sets_block(p_block, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
     #
     # p_block.SectionAssignment(region=p_block.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
