@@ -9,9 +9,9 @@ import numpy as np
 import regionToolset
 from abaqus import mdb
 from abaqusConstants import *
-from abaqusConstants import (CLOCKWISE, COUNTERCLOCKWISE, THREE_D, MIDDLE_SURFACE, FROM_SECTION, CYLINDRICAL,
-                             DEFORMABLE_BODY, STANDARD, C3D4, XAXIS, TOP, XYPLANE, C3D8T,
-                             C3D6, C3D8, STEP, ON, CARTESIAN)
+from abaqusConstants import (CLOCKWISE, COUNTERCLOCKWISE, THREE_D, MIDDLE_SURFACE, FROM_SECTION, CYLINDRICAL, EXTRA_FINE,
+                             DEFORMABLE_BODY, STANDARD, C3D4, XAXIS, YAXIS, ZAXIS, TOP, XYPLANE, YZPLANE, C3D8T, COPLANAR_EDGES,
+                             C3D6, C3D8, STEP, ON, OFF, CARTESIAN, SIDE1, RIGHT)
 from caeModules import mesh
 
 
@@ -535,6 +535,31 @@ def create_part(model, sketch, part_name, z_length):
     return p
 
 
+def create_part_block_cut_1(model, part, sketch_cut, part_name):
+    p = model.Part(name=part_name, objectToCopy=part)
+    plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
+    edge = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
+    d = p.datums
+    t = p.MakeSketchTransform(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s = model.ConstrainedSketch(name='__profile__', sheetSize=100.0, gridSpacing=100.0, transform=t)
+
+
+    p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+    s.Line(point1=(0.0, 843.1875), point2=(-708.2775, 404.73))
+    s.Line(point1=(-708.2775, 404.73), point2=(0.0, 404.729999994636))
+    s.Line(point1=(0.0, 404.729999994636), point2=(0.0, 843.1875))
+    l = s.ConstructionLine(point1=(0.0, 0.0), angle=0.0)
+    s.assignCenterline(line=l)
+    p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0, flipRevolveDirection=OFF)
+    s.unsetPrimaryObject()
+    del model.sketches['__profile__']
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+    session.viewports['Viewport: 1'].setValues(displayedObject=p)
+
+    return p
+
+
 def create_part_block_front(model, sketch, sketch_cut, sketch_cut_outer, part_name, z_length):
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     p.BaseSolidExtrude(sketch=sketch, depth=z_length)
@@ -568,7 +593,7 @@ def create_part_block_front(model, sketch, sketch_cut, sketch_cut_outer, part_na
     s.sketchOptions.setValues(constructionGeometry=ON)
     s.assignCenterline(line=l)
     p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0, flipRevolveDirection=OFF)
-    del mdb.models['Model-1'].sketches['__profile__']
+    del model.sketches['__profile__']
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -600,7 +625,7 @@ def partition_part_front(model, part, sketch_cut_latitude, sketch_cut_longitude,
 
     f, e, d = p.faces, p.edges, p.datums
     t = p.MakeSketchTransform(sketchPlane=f[13], sketchUpEdge=d[3], sketchPlaneSide=SIDE1, origin=(0.0, 0.0, 0.0))
-    s = mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=100.0, gridSpacing=100.0, transform=t)
+    s = model.ConstrainedSketch(name='__profile__', sheetSize=100.0, gridSpacing=100.0, transform=t)
     g = s.geometry
     p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
     s.offset(distance=points[-1, -2, 0] - points[-1, -3, 0], objectList=(g[2], g[5], g[6], g[7], g[8]), side=RIGHT)
@@ -608,7 +633,7 @@ def partition_part_front(model, part, sketch_cut_latitude, sketch_cut_longitude,
     f = p.faces
     pickedFaces = f.getSequenceFromMask(mask=('[#2000 ]',), )
     p.PartitionFaceBySketch(sketchUpEdge=d[3], faces=pickedFaces, sketch=s)
-    del mdb.models['Model-1'].sketches['__profile__']
+    del model.sketches['__profile__']
 
     c = p.cells
     pickedCells = c.getSequenceFromMask(mask=('[#1 ]',), )
@@ -1014,7 +1039,11 @@ if __name__ == "__main__":
     partition_part(model, p_block, s2, s3, geo_type, part_type, n, points, lines, z_list)
 
     # create_sets_block(p_block, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
-    #
+
+    p_block_behind_1 = create_part_block_cut_1(model, p_block, s1, 'PART-BLOCK-BEHIND-1')
+
+
+
     # p_block.SectionAssignment(region=p_block.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
     #                           thicknessAssignment=FROM_SECTION)
     # p_block.SectionAssignment(region=p_block.sets['SET-INSULATION-GRAIN'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE,
@@ -1029,29 +1058,24 @@ if __name__ == "__main__":
     # p_block.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
     # p_block.generateMesh()
 
-    model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_insulation_shell.inp')
-    p_insulation_shell = model.parts['PART-INSULATION-SHELL']
-
-    a = model.rootAssembly
-    a.DatumCsysByDefault(CARTESIAN)
-    # a.Instance(name='PART-BLOCK-1-1', part=p_block, dependent=ON)
-    # a.Instance(name='PART-BLOCK-1-2', part=p_block, dependent=ON)
-    # a.Instance(name='PART-BLOCK-1-3', part=p_block, dependent=ON)
-
-    a.Instance(name='PART-BLOCK-FRONT-1', part=p_block_front, dependent=ON)
+    # model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_insulation_shell.inp')
+    # p_insulation_shell = model.parts['PART-INSULATION-SHELL']
+    #
+    # a = model.rootAssembly
+    # a.DatumCsysByDefault(CARTESIAN)
+    #
+    # # a.Instance(name='PART-BLOCK-FRONT-1', part=p_block_front, dependent=ON)
+    #
     # a.Instance(name='PART-INSULATION-SHELL-1', part=p_insulation_shell, dependent=ON)
-
-    # a.rotate(instanceList=('PART-BLOCK-1-2',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=40.0)
-    # a.rotate(instanceList=('PART-BLOCK-1-3',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=80.0)
-
     # a.rotate(instanceList=('PART-INSULATION-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
-    a.translate(instanceList=('PART-BLOCK-FRONT-1',), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
-    for l in range(layer_number):
-        for i in range(n):
-            instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
-            a.Instance(name=instance_name, part=p_block, dependent=ON)
-            a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (l + 1) * (layer_gap + layer_height)))
-            a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+    # a.translate(instanceList=('PART-BLOCK-FRONT-1',), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
+    #
+    # for l in range(layer_number):
+    #     for i in range(n):
+    #         instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
+    #         a.Instance(name=instance_name, part=p_block, dependent=ON)
+    #         a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (l + 1) * (layer_gap + layer_height)))
+    #         a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
     # # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
     # # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
