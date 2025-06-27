@@ -1158,6 +1158,18 @@ if __name__ == "__main__":
     model.HomogeneousSolidSection(name='SECTION-KINEMATIC', material='MATERIAL-KINEMATIC', thickness=None)
     model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
 
+    # model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_insulation_shell.inp')
+    # p_insulation_shell = model.parts['PART-INSULATION-SHELL']
+
+    # model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_shell.inp')
+    # p_shell = model.parts['PART-SHELL']
+
+    mdb.ModelFromInputFile(name='PART-INSULATION-SHELL', inputFileName='F:/GitHub/base/base/utils/flow/part_insulation_shell.inp')
+    p_insulation_shell = mdb.models['Model-1'].Part('PART-INSULATION-SHELL', mdb.models['PART-INSULATION-SHELL'].parts['PART-INSULATION-SHELL'])
+
+    mdb.ModelFromInputFile(name='PART-SHELL', inputFileName='F:/GitHub/base/base/utils/flow/part_shell.inp')
+    p_shell = mdb.models['Model-1'].Part('PART-SHELL', mdb.models['PART-SHELL'].parts['PART-SHELL'])
+
     points, lines, faces = geometries(model, geo_type, d, e, epsilon, beta, zeta, r1, r2, d2, radius_insulation_thickness, radius_gap,
                                       shell_insulation_thickness,
                                       shell_thickness,
@@ -1215,6 +1227,14 @@ if __name__ == "__main__":
                               offsetField='',
                               thicknessAssignment=FROM_SECTION)
 
+    p_insulation_shell.SectionAssignment(region=p_insulation_shell.sets['ESET-ALL'], sectionName='SECTION-INSULATION',
+                                         offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+                                         thicknessAssignment=FROM_SECTION)
+
+    p_shell.SectionAssignment(region=p_shell.sets['ESET-ALL'], sectionName='SECTION-SHELL',
+                              offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+                              thicknessAssignment=FROM_SECTION)
+    
     c = p_block.cells
     elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
@@ -1222,18 +1242,6 @@ if __name__ == "__main__":
     p_block.setElementType(regions=regionToolset.Region(cells=p_block.cells), elemTypes=(elemType1, elemType2, elemType3))
     p_block.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
     p_block.generateMesh()
-
-    # model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_insulation_shell.inp')
-    # p_insulation_shell = model.parts['PART-INSULATION-SHELL']
-
-    # model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_shell.inp')
-    # p_shell = model.parts['PART-SHELL']
-
-    mdb.ModelFromInputFile(name='PART-INSULATION-SHELL', inputFileName='F:/GitHub/base/base/utils/flow/part_insulation_shell.inp')
-    p_insulation_shell = mdb.models['Model-1'].Part('PART-INSULATION-SHELL', mdb.models['PART-INSULATION-SHELL'].parts['PART-INSULATION-SHELL'])
-
-    mdb.ModelFromInputFile(name='PART-SHELL', inputFileName='F:/GitHub/base/base/utils/flow/part_shell.inp')
-    p_shell = mdb.models['Model-1'].Part('PART-SHELL', mdb.models['PART-SHELL'].parts['PART-SHELL'])
 
     a = model.rootAssembly
     a.DatumCsysByDefault(CARTESIAN)
