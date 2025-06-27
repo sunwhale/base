@@ -1011,7 +1011,7 @@ def create_sets(part, geo_type, n, layer_number, layer_height, layer_gap, faces,
 def create_sets_block(part, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list):
     print(z_list)
     p = part
-    m = 1
+    m = n
 
     # SET-INSULATION-GRAIN
     cell_points = []
@@ -1091,7 +1091,7 @@ def create_sets_block(part, geo_type, n, layer_number, layer_height, layer_gap, 
             y = -xm * math.sin(theta) + ym * math.cos(theta)
             faces_points.append([x, y, z])
 
-    create_surfaces_common('SURF-R1', part, n, layer_number, layer_height, layer_gap, faces, z_list, faces_points)
+    create_surfaces_common('SURF-OUTER', part, n, layer_number, layer_height, layer_gap, faces, z_list, faces_points)
 
     f1 = p.faces.getByBoundingCylinder(center1=(0, 0, 0), center2=(0, 0, z_list[-1]), radius=points[2, -1, 1] - 1.0)
     p.Surface(side1Faces=f1, name='SURF-INNER')
@@ -1241,17 +1241,17 @@ if __name__ == "__main__":
     a.Instance(name='PART-INSULATION-SHELL-1', part=p_insulation_shell, dependent=ON)
     a.rotate(instanceList=('PART-INSULATION-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
 
-    a.Instance(name='PART-SHELL-1', part=p_insulation_shell, dependent=ON)
+    a.Instance(name='PART-SHELL-1', part=p_shell, dependent=ON)
     a.rotate(instanceList=('PART-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
 
     m = n
     m = 1
 
-    for i in range(m):
-        instance_name = 'PART-BLOCK-FRONT-%s' % (i + 1)
-        a.Instance(name=instance_name, part=p_block_front, dependent=ON)
-        a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
-        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+    # for i in range(m):
+    #     instance_name = 'PART-BLOCK-FRONT-%s' % (i + 1)
+    #     a.Instance(name=instance_name, part=p_block_front, dependent=ON)
+    #     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
+    #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
     for l in range(1, layer_number):
         for i in range(m):
@@ -1260,12 +1260,12 @@ if __name__ == "__main__":
             a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (l + 1) * (layer_gap + layer_height)))
             a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-    for i in range(m):
-        instance_name = 'PART-BLOCK-BEHIND-3-%s' % (i + 1)
-        a.Instance(name=instance_name, part=p_block_behind_3, dependent=ON)
-        a.translate(instanceList=(instance_name,),
-                    vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 1) * (layer_gap + layer_height)))
-        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+    # for i in range(m):
+    #     instance_name = 'PART-BLOCK-BEHIND-3-%s' % (i + 1)
+    #     a.Instance(name=instance_name, part=p_block_behind_3, dependent=ON)
+    #     a.translate(instanceList=(instance_name,),
+    #                 vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 1) * (layer_gap + layer_height)))
+    #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
     # for i in range(m):
     #     instance_name = 'PART-BLOCK-BEHIND-2-%s' % (i + 1)
@@ -1274,12 +1274,27 @@ if __name__ == "__main__":
     #                 vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 2) * (layer_gap + layer_height)))
     #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-    for i in range(m):
-        instance_name = 'PART-BLOCK-BEHIND-1-%s' % (i + 1)
-        a.Instance(name=instance_name, part=p_block_behind_1, dependent=ON)
-        a.translate(instanceList=(instance_name,),
-                    vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 3) * (layer_gap + layer_height)))
-        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+    # for i in range(m):
+    #     instance_name = 'PART-BLOCK-BEHIND-1-%s' % (i + 1)
+    #     a.Instance(name=instance_name, part=p_block_behind_1, dependent=ON)
+    #     a.translate(instanceList=(instance_name,),
+    #                 vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 3) * (layer_gap + layer_height)))
+    #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+    model.Tie(name='CONSTRAINT-1',
+              main=a.instances['PART-INSULATION-SHELL-1'].surfaces['SURF-OUTER'],
+              secondary=a.instances['PART-SHELL-1'].surfaces['SURF-INNER'],
+              positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+
+    for l in range(1, layer_number):
+        for i in range(m):
+            name_1 = 'PART-INSULATION-SHELL-1'
+            name_2 = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
+            tie_name = 'CONSTRAINT-%s-%s' % (name_1, name_2)
+            model.Tie(name=tie_name,
+                      main=a.instances[name_1].surfaces['SURF-INNER'],
+                      secondary=a.instances[name_2].surfaces['SURF-OUTER'],
+                      positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
 
     # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
     # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
