@@ -535,7 +535,33 @@ def create_part(model, sketch, part_name, z_length):
     return p
 
 
-def create_part_block_cut_3(model, part, part_name, points):
+def create_part_front_2(model, part, part_name, shift, sketch_cut_outer):
+    p = model.Part(name=part_name, objectToCopy=part)
+
+    plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    edge = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
+    d = p.datums
+
+    plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
+    t = p.MakeSketchTransform(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s = model.ConstrainedSketch(name='__profile__', sheetSize=100.0, gridSpacing=100.0, transform=t)
+    g = s.geometry
+    p.projectReferencesOntoSketch(sketch=s, filter=COPLANAR_EDGES)
+    s.retrieveSketch(sketch=sketch_cut_outer)
+    s.move(vector=(-shift, 0.0), objectList=g.values())
+    l = s.ConstructionLine(point1=(0.0, 0.0), angle=0.0)
+    s.sketchOptions.setValues(constructionGeometry=ON)
+    s.assignCenterline(line=l)
+    p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0,
+                 flipRevolveDirection=OFF)
+    del model.sketches['__profile__']
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
+
+
+def create_part_block_behind_3(model, part, part_name, points):
     p = model.Part(name=part_name, objectToCopy=part)
     plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
     edge = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
@@ -554,7 +580,8 @@ def create_part_block_cut_3(model, part, part_name, points):
     s.Line(point1=p3, point2=p1)
     l = s.ConstructionLine(point1=(0.0, 0.0), angle=0.0)
     s.assignCenterline(line=l)
-    p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0, flipRevolveDirection=OFF)
+    p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0,
+                 flipRevolveDirection=OFF)
     s.unsetPrimaryObject()
     del model.sketches['__profile__']
 
@@ -563,7 +590,7 @@ def create_part_block_cut_3(model, part, part_name, points):
     return p
 
 
-def create_part_block_cut_2(model, part, part_name, radius):
+def create_part_block_behind_2(model, part, part_name, radius):
     p = model.Part(name=part_name, objectToCopy=part)
     plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     edge = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
@@ -581,7 +608,7 @@ def create_part_block_cut_2(model, part, part_name, radius):
     return p
 
 
-def create_part_block_cut_1(model, part, part_name, radius, sketch_cut_outer):
+def create_part_block_behind_1(model, part, part_name, radius, sketch_cut_outer):
     p = model.Part(name=part_name, objectToCopy=part)
     plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     edge = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
@@ -604,7 +631,8 @@ def create_part_block_cut_1(model, part, part_name, radius, sketch_cut_outer):
     l = s.ConstructionLine(point1=(0.0, 0.0), angle=0.0)
     s.sketchOptions.setValues(constructionGeometry=ON)
     s.assignCenterline(line=l)
-    p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0, flipRevolveDirection=OFF)
+    p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0,
+                 flipRevolveDirection=OFF)
     del model.sketches['__profile__']
 
     # p.deleteFeatures(('Datum plane-1', 'Partition cell-5',))
@@ -646,7 +674,8 @@ def create_part_block_front(model, sketch, sketch_cut, sketch_cut_outer, part_na
     l = s.ConstructionLine(point1=(0.0, 0.0), angle=0.0)
     s.sketchOptions.setValues(constructionGeometry=ON)
     s.assignCenterline(line=l)
-    p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0, flipRevolveDirection=OFF)
+    p.CutRevolve(sketchPlane=d[plane.id], sketchUpEdge=d[edge.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s, angle=90.0,
+                 flipRevolveDirection=OFF)
     del model.sketches['__profile__']
 
     p.setValues(geometryRefinement=EXTRA_FINE)
@@ -713,10 +742,18 @@ def partition_part(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_t
 
     swap_edge = p.edges.findAt((points[1, 1, 0], points[1, 1, 1], total_z_length / 2))
 
+    x = points[3, -2, 0]
+    y = points[3, -2, 1]
+
+    print(x, y)
+
+    swap_edge = p.edges.getByBoundingBox(x - 5.0, y - 5.0, 0.0, x + 5.0, y + 5.0, total_z_length)[1]
+
+    print(swap_edge)
+
     if part_type == 'block':
         cut_edges = (p.edges.findAt((points[2, 0, 0], points[2, 0, 1], z_0)),
-                     p.edges.findAt((points[3, 0, 0], points[3, 0, 1], z_0)),
-                     p.edges.findAt((points[4, 0, 0], points[4, 0, 1], z_0)))
+                     p.edges.findAt((points[3, 0, 0], points[3, 0, 1], z_0)))
     else:
         cut_edges = (p.edges.findAt((points[2, 0, 0], points[2, 0, 1], z_0)),
                      p.edges.findAt((points[3, 0, 0], points[3, 0, 1], z_0)),
@@ -724,11 +761,12 @@ def partition_part(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_t
                      p.edges.findAt((points[5, 0, 0], points[5, 0, 1], z_0)),
                      p.edges.findAt((points[6, 0, 0], points[6, 0, 1], z_0)))
 
-    p.PartitionCellBySweepEdge(sweepPath=swap_edge, cells=p.cells, edges=cut_edges)
+    # p.PartitionCellBySweepEdge(sweepPath=swap_edge, cells=p.cells, edges=cut_edges)
 
     p.PartitionFaceBySketch(sketchUpEdge=p.datums[datum_id],
                             faces=p.faces.getByBoundingBox(-points[-1, -1, 1], -points[-1, -1, 1], z_0, points[-1, -1, 1], points[-1, -1, 1], z_0),
                             sketchOrientation=TOP, sketch=sketch_cut_longitude)
+
 
     line_keys = []
     if geo_type == 'inner_polygon':
@@ -736,6 +774,10 @@ def partition_part(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_t
     else:
         line_keys += ['00-10', '10-01']
 
+    # if part_type == 'block':
+    #     line_keys += ['11-21', '21-31', '31-41']
+    #     line_keys += ['12-22', '22-32', '32-42']
+    #     line_keys += ['13-23', '23-33', '33-43']
     if part_type == 'block':
         line_keys += ['11-21', '21-31', '31-41']
         line_keys += ['12-22', '22-32', '32-42']
@@ -771,6 +813,7 @@ def partition_part(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_t
                 partition_edges.append(edge_sequence[0])
         if partition_edges:
             p.PartitionCellBySweepEdge(sweepPath=swap_edge, cells=p.cells, edges=partition_edges)
+            # p.PartitionCellByExtrudeEdge(line=p.datums[5], cells=p.cells, edges=partition_edges, sense=REVERSE)
 
     if part_type == 'block':
         x = d * math.cos(-(n - 1) * math.pi / n + math.pi / 2.0)
@@ -1014,7 +1057,6 @@ if __name__ == "__main__":
     geo_type = 'inner_polygon'
     part_type = 'block'
 
-
     epsilon = 0.95
     n = 9
     beta = math.pi / n
@@ -1094,19 +1136,21 @@ if __name__ == "__main__":
 
     p_block = create_part(model, s_block, 'PART-BLOCK', block_z_length)
 
-    # session.viewports['Viewport: 1'].setValues(displayedObject=p_block_front)
+    # p_block_front_2 = create_part_front_2(model, p_block, 'PART-BLOCK-FRONT-2', first_layer_height + layer_height + layer_gap, s_block_front_cut_outer)
 
     partition_part(model, p_block, s2, s3, geo_type, part_type, n, points, lines, z_list)
 
+    # partition_part(model, p_block_front_2, s2, s3, geo_type, part_type, n, points, lines, z_list)
+
     # create_sets_block(p_block, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
 
-    p_block_behind_3 = create_part_block_cut_3(model, p_block, 'PART-BLOCK-BEHIND-3', points)
+    p_block_behind_3 = create_part_block_behind_3(model, p_block, 'PART-BLOCK-BEHIND-3', points)
 
-    p_block_behind_2 = create_part_block_cut_2(model, p_block, 'PART-BLOCK-BEHIND-2', 905.0)
+    # p_block_behind_2 = create_part_block_behind_2(model, p_block, 'PART-BLOCK-BEHIND-2', 905.0)
 
     p_block_0 = create_part(model, s_block, 'PART-BLOCK-0', block_z_length)
 
-    p_block_behind_1 = create_part_block_cut_1(model, p_block_0, 'PART-BLOCK-BEHIND-1', 905.0, s_block_behind_cut_outer)
+    p_block_behind_1 = create_part_block_behind_1(model, p_block_0, 'PART-BLOCK-BEHIND-1', 905.0, s_block_behind_cut_outer)
 
     # partition_part(model, p_block_behind_1, s2, s3, geo_type, part_type, n, points, lines, z_list)
 
@@ -1127,16 +1171,19 @@ if __name__ == "__main__":
     model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_insulation_shell.inp')
     p_insulation_shell = model.parts['PART-INSULATION-SHELL']
 
+    model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_shell.inp')
+    p_shell = model.parts['PART-SHELL']
+
     a = model.rootAssembly
     a.DatumCsysByDefault(CARTESIAN)
 
-    # a.Instance(name='PART-BLOCK-FRONT-1', part=p_block_front, dependent=ON)
-
     # a.Instance(name='PART-INSULATION-SHELL-1', part=p_insulation_shell, dependent=ON)
     # a.rotate(instanceList=('PART-INSULATION-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
-    # a.translate(instanceList=('PART-BLOCK-FRONT-1',), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
+    #
+    # a.Instance(name='PART-SHELL-1', part=p_insulation_shell, dependent=ON)
+    # a.rotate(instanceList=('PART-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
 
-    n = 1
+    # n = 9
 
     for i in range(n):
         instance_name = 'PART-BLOCK-FRONT-%s' % (i + 1)
@@ -1144,7 +1191,7 @@ if __name__ == "__main__":
         a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
         a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-    for l in range(layer_number):
+    for l in range(1, layer_number):
         for i in range(n):
             instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
             a.Instance(name=instance_name, part=p_block, dependent=ON)
@@ -1154,19 +1201,22 @@ if __name__ == "__main__":
     for i in range(n):
         instance_name = 'PART-BLOCK-BEHIND-3-%s' % (i + 1)
         a.Instance(name=instance_name, part=p_block_behind_3, dependent=ON)
-        a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 1) * (layer_gap + layer_height)))
+        a.translate(instanceList=(instance_name,),
+                    vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 1) * (layer_gap + layer_height)))
         a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-    for i in range(n):
-        instance_name = 'PART-BLOCK-BEHIND-2-%s' % (i + 1)
-        a.Instance(name=instance_name, part=p_block_behind_2, dependent=ON)
-        a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 2) * (layer_gap + layer_height)))
-        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+    # for i in range(n):
+    #     instance_name = 'PART-BLOCK-BEHIND-2-%s' % (i + 1)
+    #     a.Instance(name=instance_name, part=p_block_behind_2, dependent=ON)
+    #     a.translate(instanceList=(instance_name,),
+    #                 vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 2) * (layer_gap + layer_height)))
+    #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
     for i in range(n):
         instance_name = 'PART-BLOCK-BEHIND-1-%s' % (i + 1)
         a.Instance(name=instance_name, part=p_block_behind_1, dependent=ON)
-        a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 3) * (layer_gap + layer_height)))
+        a.translate(instanceList=(instance_name,),
+                    vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 3) * (layer_gap + layer_height)))
         a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
     # # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
