@@ -1011,7 +1011,7 @@ def create_sets(part, geo_type, n, layer_number, layer_height, layer_gap, faces,
 def create_sets_block(part, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list):
     print(z_list)
     p = part
-    n = 1
+    m = 1
 
     # SET-INSULATION-GRAIN
     cell_points = []
@@ -1041,7 +1041,7 @@ def create_sets_block(part, geo_type, n, layer_number, layer_height, layer_gap, 
         for j in range(0, faces.shape[1] - 1):
             cell_points.append([i, j, z])
 
-    create_sets_common('SET-INSULATION-GRAIN', part, n, layer_number, layer_height, layer_gap, faces, z_list, cell_points)
+    create_sets_common('SET-INSULATION-GRAIN', part, m, layer_number, layer_height, layer_gap, faces, z_list, cell_points)
 
     # SET-GRAIN
     cell_points = []
@@ -1054,7 +1054,7 @@ def create_sets_block(part, geo_type, n, layer_number, layer_height, layer_gap, 
         for j in range(0, faces.shape[1] - 2):
             cell_points.append([i, j, z])
 
-    create_sets_common('SET-GRAIN', part, n, layer_number, layer_height, layer_gap, faces, z_list, cell_points)
+    create_sets_common('SET-GRAIN', part, m, layer_number, layer_height, layer_gap, faces, z_list, cell_points)
 
     faces_points = []
     for key in ['14-24', '24-34', '34-44']:
@@ -1062,14 +1062,33 @@ def create_sets_block(part, geo_type, n, layer_number, layer_height, layer_gap, 
             x = lines[key][2][0]
             y = lines[key][2][1]
             faces_points.append([x, y, z])
-
     create_surfaces_common('SURF-T0', part, n, layer_number, layer_height, layer_gap, faces, z_list, faces_points)
+
+    faces_points = []
+    theta = 1 * 2 * math.pi / n
+    for key in ['14-24', '24-34', '34-44']:
+        for z in [(z_list[0] + z_list[1]) / 2.0, (z_list[1] + z_list[2]) / 2.0, (z_list[2] + z_list[3]) / 2.0]:
+            xm = lines[key][2][0]
+            ym = lines[key][2][1]
+            x = -xm * math.cos(theta) - ym * math.sin(theta)
+            y = -xm * math.sin(theta) + ym * math.cos(theta)
+            faces_points.append([x, y, z])
+    create_surfaces_common('SURF-T1', part, n, layer_number, layer_height, layer_gap, faces, z_list, faces_points)
 
     faces_points = []
     for key in ['40-41', '41-42', '42-43']:
         for z in [(z_list[0] + z_list[1]) / 2.0, (z_list[1] + z_list[2]) / 2.0, (z_list[2] + z_list[3]) / 2.0]:
             x = lines[key][2][0]
             y = lines[key][2][1]
+            faces_points.append([x, y, z])
+
+    theta = 1 * 2 * math.pi / n
+    for key in ['40-41', '41-42', '42-43']:
+        for z in [(z_list[0] + z_list[1]) / 2.0, (z_list[1] + z_list[2]) / 2.0, (z_list[2] + z_list[3]) / 2.0]:
+            xm = lines[key][2][0]
+            ym = lines[key][2][1]
+            x = -xm * math.cos(theta) - ym * math.sin(theta)
+            y = -xm * math.sin(theta) + ym * math.cos(theta)
             faces_points.append([x, y, z])
 
     create_surfaces_common('SURF-R1', part, n, layer_number, layer_height, layer_gap, faces, z_list, faces_points)
