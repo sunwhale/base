@@ -1199,86 +1199,93 @@ if __name__ == "__main__":
 
     create_sets_block(p_block, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
 
-    # p_block_behind_3 = create_part_block_behind_3(model, p_block, 'PART-BLOCK-BEHIND-3', points)
+    p_block_behind_3 = create_part_block_behind_3(model, p_block, 'PART-BLOCK-BEHIND-3', points)
 
-    # p_block_behind_2 = create_part_block_behind_2(model, p_block, 'PART-BLOCK-BEHIND-2', 905.0)
+    p_block_behind_2 = create_part_block_behind_2(model, p_block, 'PART-BLOCK-BEHIND-2', 905.0)
 
-    # p_block_0 = create_part(model, s_block, 'PART-BLOCK-0', block_z_length)
-    #
-    # p_block_behind_1 = create_part_block_behind_1(model, p_block_0, 'PART-BLOCK-BEHIND-1', 905.0, s_block_behind_cut_outer)
+    p_block_0 = create_part(model, s_block, 'PART-BLOCK-0', block_z_length)
+
+    p_block_behind_1 = create_part_block_behind_1(model, p_block_0, 'PART-BLOCK-BEHIND-1', 905.0, s_block_behind_cut_outer)
 
     # partition_part(model, p_block_behind_1, s2, s3, geo_type, part_type, n, points, lines, z_list)
 
-    # p_block.SectionAssignment(region=p_block.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-    #                           thicknessAssignment=FROM_SECTION)
-    # p_block.SectionAssignment(region=p_block.sets['SET-INSULATION-GRAIN'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE,
-    #                           offsetField='',
-    #                           thicknessAssignment=FROM_SECTION)
-    #
-    # c = p_block.cells
-    # elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    # elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    # elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    # p_block.setElementType(regions=regionToolset.Region(cells=p_block.cells), elemTypes=(elemType1, elemType2, elemType3))
-    # p_block.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
-    # p_block.generateMesh()
+    p_block.SectionAssignment(region=p_block.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+                              thicknessAssignment=FROM_SECTION)
+    p_block.SectionAssignment(region=p_block.sets['SET-INSULATION-GRAIN'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE,
+                              offsetField='',
+                              thicknessAssignment=FROM_SECTION)
+
+    c = p_block.cells
+    elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    p_block.setElementType(regions=regionToolset.Region(cells=p_block.cells), elemTypes=(elemType1, elemType2, elemType3))
+    p_block.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    p_block.generateMesh()
 
     # model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_insulation_shell.inp')
     # p_insulation_shell = model.parts['PART-INSULATION-SHELL']
-    #
+
     # model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_shell.inp')
     # p_shell = model.parts['PART-SHELL']
-    #
-    # a = model.rootAssembly
-    # a.DatumCsysByDefault(CARTESIAN)
-    #
-    # # a.Instance(name='PART-INSULATION-SHELL-1', part=p_insulation_shell, dependent=ON)
-    # # a.rotate(instanceList=('PART-INSULATION-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
-    # #
-    # # a.Instance(name='PART-SHELL-1', part=p_insulation_shell, dependent=ON)
-    # # a.rotate(instanceList=('PART-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
-    #
-    # # n = 9
-    #
-    # for i in range(n):
-    #     instance_name = 'PART-BLOCK-FRONT-%s' % (i + 1)
-    #     a.Instance(name=instance_name, part=p_block_front, dependent=ON)
-    #     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
-    #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-    #
-    # for l in range(1, layer_number):
-    #     for i in range(n):
-    #         instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
-    #         a.Instance(name=instance_name, part=p_block, dependent=ON)
-    #         a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (l + 1) * (layer_gap + layer_height)))
-    #         a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-    #
-    # for i in range(n):
-    #     instance_name = 'PART-BLOCK-BEHIND-3-%s' % (i + 1)
-    #     a.Instance(name=instance_name, part=p_block_behind_3, dependent=ON)
+
+    mdb.ModelFromInputFile(name='PART-INSULATION-SHELL', inputFileName='F:/GitHub/base/base/utils/flow/part_insulation_shell.inp')
+    p_insulation_shell = mdb.models['Model-1'].Part('PART-INSULATION-SHELL', mdb.models['PART-INSULATION-SHELL'].parts['PART-INSULATION-SHELL'])
+
+    mdb.ModelFromInputFile(name='PART-SHELL', inputFileName='F:/GitHub/base/base/utils/flow/part_shell.inp')
+    p_shell = mdb.models['Model-1'].Part('PART-SHELL', mdb.models['PART-SHELL'].parts['PART-SHELL'])
+
+    a = model.rootAssembly
+    a.DatumCsysByDefault(CARTESIAN)
+
+    a.Instance(name='PART-INSULATION-SHELL-1', part=p_insulation_shell, dependent=ON)
+    a.rotate(instanceList=('PART-INSULATION-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
+
+    a.Instance(name='PART-SHELL-1', part=p_insulation_shell, dependent=ON)
+    a.rotate(instanceList=('PART-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
+
+    m = n
+    m = 1
+
+    for i in range(m):
+        instance_name = 'PART-BLOCK-FRONT-%s' % (i + 1)
+        a.Instance(name=instance_name, part=p_block_front, dependent=ON)
+        a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
+        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+    for l in range(1, layer_number):
+        for i in range(m):
+            instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
+            a.Instance(name=instance_name, part=p_block, dependent=ON)
+            a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (l + 1) * (layer_gap + layer_height)))
+            a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+    for i in range(m):
+        instance_name = 'PART-BLOCK-BEHIND-3-%s' % (i + 1)
+        a.Instance(name=instance_name, part=p_block_behind_3, dependent=ON)
+        a.translate(instanceList=(instance_name,),
+                    vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 1) * (layer_gap + layer_height)))
+        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+    # for i in range(m):
+    #     instance_name = 'PART-BLOCK-BEHIND-2-%s' % (i + 1)
+    #     a.Instance(name=instance_name, part=p_block_behind_2, dependent=ON)
     #     a.translate(instanceList=(instance_name,),
-    #                 vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 1) * (layer_gap + layer_height)))
-    #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-    #
-    # # for i in range(n):
-    # #     instance_name = 'PART-BLOCK-BEHIND-2-%s' % (i + 1)
-    # #     a.Instance(name=instance_name, part=p_block_behind_2, dependent=ON)
-    # #     a.translate(instanceList=(instance_name,),
-    # #                 vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 2) * (layer_gap + layer_height)))
-    # #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-    #
-    # for i in range(n):
-    #     instance_name = 'PART-BLOCK-BEHIND-1-%s' % (i + 1)
-    #     a.Instance(name=instance_name, part=p_block_behind_1, dependent=ON)
-    #     a.translate(instanceList=(instance_name,),
-    #                 vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 3) * (layer_gap + layer_height)))
+    #                 vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 2) * (layer_gap + layer_height)))
     #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-    # # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
-    # # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
-    # model.StaticStep(name='Step-1', previous='Initial', timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
-    #
-    # model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
+    for i in range(m):
+        instance_name = 'PART-BLOCK-BEHIND-1-%s' % (i + 1)
+        a.Instance(name=instance_name, part=p_block_behind_1, dependent=ON)
+        a.translate(instanceList=(instance_name,),
+                    vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 3) * (layer_gap + layer_height)))
+        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+    # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
+    # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
+    model.StaticStep(name='Step-1', previous='Initial', timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
+
+    model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
     # model.ZsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z0'], localCsys=None)
     # model.ZsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z1'], localCsys=None)
     # model.Pressure(name='Load-1', createStepName='Step-1', region=a.instances['PART-1-1'].surfaces['SURF-INNER'], distributionType=UNIFORM, field='',
