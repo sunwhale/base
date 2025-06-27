@@ -742,14 +742,9 @@ def partition_part(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_t
 
     swap_edge = p.edges.findAt((points[1, 1, 0], points[1, 1, 1], total_z_length / 2))
 
-    x = points[3, -2, 0]
-    y = points[3, -2, 1]
-
-    print(x, y)
-
-    swap_edge = p.edges.getByBoundingBox(x - 5.0, y - 5.0, 0.0, x + 5.0, y + 5.0, total_z_length)[1]
-
-    print(swap_edge)
+    # x = points[3, -2, 0]
+    # y = points[3, -2, 1]
+    # swap_edge = p.edges.getByBoundingBox(x - 5.0, y - 5.0, 0.0, x + 5.0, y + 5.0, total_z_length)[1]
 
     if part_type == 'block':
         cut_edges = (p.edges.findAt((points[2, 0, 0], points[2, 0, 1], z_0)),
@@ -761,7 +756,7 @@ def partition_part(model, part, sketch_cut_latitude, sketch_cut_longitude, geo_t
                      p.edges.findAt((points[5, 0, 0], points[5, 0, 1], z_0)),
                      p.edges.findAt((points[6, 0, 0], points[6, 0, 1], z_0)))
 
-    # p.PartitionCellBySweepEdge(sweepPath=swap_edge, cells=p.cells, edges=cut_edges)
+    p.PartitionCellBySweepEdge(sweepPath=swap_edge, cells=p.cells, edges=cut_edges)
 
     p.PartitionFaceBySketch(sketchUpEdge=p.datums[datum_id],
                             faces=p.faces.getByBoundingBox(-points[-1, -1, 1], -points[-1, -1, 1], z_0, points[-1, -1, 1], points[-1, -1, 1], z_0),
