@@ -223,7 +223,7 @@ def geometries(model, geo_type, d, e, epsilon, beta, zeta, r1, r2, d2, rt1, rt2,
     radius_list = [0.0 for _ in range(number_radius)]
     theta_list = [0.0 for _ in range(number_theta)]
 
-    radius_list[2] = d / 2.0 - e * 4.0 / 5.0
+    radius_list[2] = d / 2.0 - e * 0.9
     radius_list[3] = d / 2.0
     radius_list[4] = d / 2.0 + rt1
     radius_list[5] = d / 2.0 + rt1 + rt2
@@ -232,7 +232,7 @@ def geometries(model, geo_type, d, e, epsilon, beta, zeta, r1, r2, d2, rt1, rt2,
 
     theta_list[0] = math.pi / 2.0 + beta
     theta_list[1] = math.pi / 2.0 + beta / 2.0
-    theta_list[2] = math.pi / 2.0 + beta / 4.0
+    theta_list[2] = math.pi / 2.0 + beta / 5.0
     theta_list[-1] = math.pi / 2.0
 
     vertical_line_x_list = [-vt1 - vt2, -vt1]
@@ -1148,7 +1148,8 @@ if __name__ == "__main__":
 
     model = mdb.models['Model-1']
 
-    set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain.json'))
+    # set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain.json'))
+    set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
     set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
     set_material(model.Material(name='MATERIAL-KINEMATIC'), load_json('material_kinematic.json'))
     set_material(model.Material(name='MATERIAL-SHELL'), load_json('material_shell.json'))
@@ -1234,7 +1235,7 @@ if __name__ == "__main__":
     p_shell.SectionAssignment(region=p_shell.sets['ESET-ALL'], sectionName='SECTION-SHELL',
                               offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
                               thicknessAssignment=FROM_SECTION)
-    
+
     c = p_block.cells
     elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
