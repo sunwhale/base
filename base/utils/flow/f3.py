@@ -1262,7 +1262,7 @@ if __name__ == "__main__":
     #     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
     #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-    for l in range(1, layer_number):
+    for l in range(1, 2):
         for i in range(m):
             instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
             a.Instance(name=instance_name, part=p_block, dependent=ON)
@@ -1293,9 +1293,9 @@ if __name__ == "__main__":
     model.Tie(name='CONSTRAINT-1',
               main=a.instances['PART-INSULATION-SHELL-1'].surfaces['SURF-OUTER'],
               secondary=a.instances['PART-SHELL-1'].surfaces['SURF-INNER'],
-              positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+              positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=ON, thickness=ON)
 
-    for l in range(1, layer_number):
+    for l in range(1, 2):
         for i in range(m):
             name_1 = 'PART-INSULATION-SHELL-1'
             name_2 = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
@@ -1303,14 +1303,34 @@ if __name__ == "__main__":
             model.Tie(name=tie_name,
                       main=a.instances[name_1].surfaces['SURF-INNER'],
                       secondary=a.instances[name_2].surfaces['SURF-OUTER'],
-                      positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+                      positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=ON, thickness=ON)
 
     # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
     # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
     model.StaticStep(name='Step-1', previous='Initial', timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
 
     model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
+    model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=None, description='', expression='1.0+0.05*fabs (  Z  ) / 18200.0')
     # model.ZsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z0'], localCsys=None)
     # model.ZsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z1'], localCsys=None)
-    # model.Pressure(name='Load-1', createStepName='Step-1', region=a.instances['PART-1-1'].surfaces['SURF-INNER'], distributionType=UNIFORM, field='',
-    #                magnitude=10.8, amplitude='AMP-PRESSURE')
+
+    model.DisplacementBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-SHELL-1'].sets['NSET-OUTER'],
+                         u1=0.0, u2=0.0, u3=0.0, ur1=0.0, ur2=0.0, ur3=0.0,
+                         amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='',
+                         localCsys=None)
+
+    for l in range(1, 2):
+        for i in range(m):
+            for set_name in ['SURF-INNER', 'SURF-T0', 'SURF-T1', 'SURF-Z0', 'SURF-Z1']:
+                part_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
+                load_name = 'LOAD-%s-%s' % (part_name, set_name)
+                model.Pressure(name='Load-1', createStepName='Step-1', region=a.instances[part_name].surfaces[set_name], distributionType=FIELD,
+                               field='ANALYTICALFIELD-PRESSURE', magnitude=11.6, amplitude='AMP-PRESSURE')
+
+    mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
+            atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
+            memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
+            explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
+            modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
+            scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
+            multiprocessingMode=DEFAULT, numCpus=1, numGPUs=0)
