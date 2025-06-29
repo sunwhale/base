@@ -1147,16 +1147,17 @@ if __name__ == "__main__":
     shell_insulation_ref_z = 407.581146
 
     model = mdb.models['Model-1']
+    model.setValues(absoluteZero=-273.15)
 
     # set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain.json'))
     set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
     set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
-    set_material(model.Material(name='MATERIAL-KINEMATIC'), load_json('material_kinematic.json'))
+    # set_material(model.Material(name='MATERIAL-KINEMATIC'), load_json('material_kinematic.json'))
     set_material(model.Material(name='MATERIAL-SHELL'), load_json('material_shell.json'))
 
     model.HomogeneousSolidSection(name='SECTION-GRAIN', material='MATERIAL-GRAIN', thickness=None)
     model.HomogeneousSolidSection(name='SECTION-INSULATION', material='MATERIAL-INSULATION', thickness=None)
-    model.HomogeneousSolidSection(name='SECTION-KINEMATIC', material='MATERIAL-KINEMATIC', thickness=None)
+    # model.HomogeneousSolidSection(name='SECTION-KINEMATIC', material='MATERIAL-KINEMATIC', thickness=None)
     model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
 
     # model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_insulation_shell.inp')
@@ -1261,7 +1262,8 @@ if __name__ == "__main__":
     #     a.Instance(name=instance_name, part=p_block_front, dependent=ON)
     #     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
     #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-
+    layer_number = 2
+    m = 1
     for l in range(1, layer_number):
         for i in range(m):
             instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
@@ -1306,28 +1308,64 @@ if __name__ == "__main__":
                       positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=ON, thickness=ON)
 
     # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
-    model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON, timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
+    # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON, timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
     # model.StaticStep(name='Step-1', previous='Initial', nlgeom=ON, timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
+    model.HeatTransferStep(name='Step-1', previous='Initial', timePeriod=10.0, maxNumInc=1000000, initialInc=0.1, minInc=0.0001, maxInc=1.0, deltmx=100.0)
 
     model.fieldOutputRequests['F-Output-1'].setValues(frequency=1)
+    model.HistoryOutputRequest(name='H-Output-1', createStepName='Step-1', variables=('HTL',))
 
     model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
     model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=None, description='', expression='1.0+0.05*fabs (  Z  ) / 18200.0')
+    model.ExpressionField(name='ANALYTICALFIELD-FILM', localCsys=None, description='', expression='1.0+0.2*fabs (  Z  ) / 18200.0')
     # model.ZsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z0'], localCsys=None)
     # model.ZsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z1'], localCsys=None)
 
-    model.DisplacementBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-SHELL-1'].sets['NSET-OUTER'],
-                         u1=0.0, u2=0.0, u3=0.0, ur1=0.0, ur2=0.0, ur3=0.0,
-                         amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='',
-                         localCsys=None)
+    # model.DisplacementBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-SHELL-1'].sets['NSET-OUTER'],
+    #                      u1=0.0, u2=0.0, u3=0.0, ur1=0.0, ur2=0.0, ur3=0.0,
+    #                      amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='',
+    #                      localCsys=None)
+    #
+    # for l in range(1, layer_number):
+    #     for i in range(m):
+    #         for set_name in ['SURF-INNER', 'SURF-T0', 'SURF-T1', 'SURF-Z0', 'SURF-Z1']:
+    #             part_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
+    #             load_name = 'LOAD-%s-%s' % (part_name, set_name)
+    #             model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[part_name].surfaces[set_name], distributionType=FIELD,
+    #                            field='ANALYTICALFIELD-PRESSURE', magnitude=11.6, amplitude='AMP-PRESSURE')
 
     for l in range(1, layer_number):
         for i in range(m):
-            for set_name in ['SURF-INNER', 'SURF-T0', 'SURF-T1', 'SURF-Z0', 'SURF-Z1']:
+            for surf_name in ['SURF-INNER', 'SURF-T0', 'SURF-T1', 'SURF-Z0', 'SURF-Z1']:
                 part_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
-                load_name = 'LOAD-%s-%s' % (part_name, set_name)
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[part_name].surfaces[set_name], distributionType=FIELD,
-                               field='ANALYTICALFIELD-PRESSURE', magnitude=11.6, amplitude='AMP-PRESSURE')
+                int_name = 'INT-%s-%s' % (part_name, surf_name)
+                model.FilmCondition(name=int_name, createStepName='Step-1',
+                                    surface=a.instances[part_name].surfaces[surf_name], definition=FIELD, filmCoeff=200.0,
+                                    field='ANALYTICALFIELD-FILM', filmCoeffAmplitude='', sinkTemperature=2600.0, sinkAmplitude='',
+                                    sinkDistributionType=UNIFORM, sinkFieldName='')
+
+    for l in range(1, layer_number):
+        for i in range(m):
+            for set_name in ['SET-GRAIN', 'SET-INSULATION-GRAIN']:
+                part_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
+                field_name = 'PRE-%s-%s' % (part_name, set_name)
+                model.Field(name=field_name, createStepName='Step-1',
+                            region=a.instances[part_name].sets[set_name], distributionType=UNIFORM,
+                            crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, fieldVariableNum=1,
+                            magnitudes=(0.0,))
+
+    model.Temperature(name='Predefined Field-1',
+                      createStepName='Initial', region=a.instances['PART-SHELL-1'].sets['NSET-ALL'], distributionType=UNIFORM,
+                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(0.0,))
+
+    model.Temperature(name='Predefined Field-2',
+                      createStepName='Initial', region=a.instances['PART-INSULATION-SHELL-1'].sets['NSET-ALL'], distributionType=UNIFORM,
+                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(0.0,))
+
+    elemType1 = mesh.ElemType(elemCode=DC3D8, elemLibrary=STANDARD)
+    p_shell.setElementType(regions=(p_shell.elements,), elemTypes=(elemType1,))
+    p_insulation_shell.setElementType(regions=(p_insulation_shell.elements,), elemTypes=(elemType1,))
+    p_block.setElementType(regions=(p_block.cells,), elemTypes=(elemType1,))
 
     mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
             atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
