@@ -1254,7 +1254,7 @@ if __name__ == "__main__":
     a.rotate(instanceList=('PART-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
 
     m = n
-    m = 1
+    # m = 1
 
     # for i in range(m):
     #     instance_name = 'PART-BLOCK-FRONT-%s' % (i + 1)
@@ -1262,7 +1262,7 @@ if __name__ == "__main__":
     #     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
     #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-    for l in range(1, 2):
+    for l in range(1, layer_number):
         for i in range(m):
             instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
             a.Instance(name=instance_name, part=p_block, dependent=ON)
@@ -1295,7 +1295,7 @@ if __name__ == "__main__":
               secondary=a.instances['PART-SHELL-1'].surfaces['SURF-INNER'],
               positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=ON, thickness=ON)
 
-    for l in range(1, 2):
+    for l in range(1, layer_number):
         for i in range(m):
             name_1 = 'PART-INSULATION-SHELL-1'
             name_2 = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
@@ -1306,8 +1306,10 @@ if __name__ == "__main__":
                       positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=ON, thickness=ON)
 
     # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
-    # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON)
-    model.StaticStep(name='Step-1', previous='Initial', timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
+    model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON, timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
+    # model.StaticStep(name='Step-1', previous='Initial', nlgeom=ON, timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
+
+    model.fieldOutputRequests['F-Output-1'].setValues(frequency=1)
 
     model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
     model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=None, description='', expression='1.0+0.05*fabs (  Z  ) / 18200.0')
@@ -1319,12 +1321,12 @@ if __name__ == "__main__":
                          amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='',
                          localCsys=None)
 
-    for l in range(1, 2):
+    for l in range(1, layer_number):
         for i in range(m):
             for set_name in ['SURF-INNER', 'SURF-T0', 'SURF-T1', 'SURF-Z0', 'SURF-Z1']:
                 part_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
                 load_name = 'LOAD-%s-%s' % (part_name, set_name)
-                model.Pressure(name='Load-1', createStepName='Step-1', region=a.instances[part_name].surfaces[set_name], distributionType=FIELD,
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[part_name].surfaces[set_name], distributionType=FIELD,
                                field='ANALYTICALFIELD-PRESSURE', magnitude=11.6, amplitude='AMP-PRESSURE')
 
     mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
@@ -1334,3 +1336,5 @@ if __name__ == "__main__":
             modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
             scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
             multiprocessingMode=DEFAULT, numCpus=1, numGPUs=0)
+
+    mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
