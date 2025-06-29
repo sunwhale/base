@@ -6,6 +6,20 @@
             ]
         ]
     },
+    "Conductivity": {
+        "table": [
+            [
+                1.5
+            ]
+        ]
+    },
+    "SpecificHeat": {
+        "table": [
+            [
+                0.00084
+            ]
+        ]
+    },
     "Elastic": {
         "type": "ENGINEERING_CONSTANTS",
         "table": [
