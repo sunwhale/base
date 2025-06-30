@@ -1262,7 +1262,7 @@ if __name__ == "__main__":
     #     a.Instance(name=instance_name, part=p_block_front, dependent=ON)
     #     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
     #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-    layer_number = 2
+    # layer_number = 3
     m = 1
     for l in range(1, layer_number):
         for i in range(m):
@@ -1310,12 +1310,13 @@ if __name__ == "__main__":
     # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
     # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON, timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
     # model.StaticStep(name='Step-1', previous='Initial', nlgeom=ON, timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
-    model.HeatTransferStep(name='Step-1', previous='Initial', timePeriod=10.0, maxNumInc=1000000, initialInc=0.1, minInc=0.0001, maxInc=1.0, deltmx=100.0)
+    model.HeatTransferStep(name='Step-1', previous='Initial', timePeriod=70.0, maxNumInc=1000000, initialInc=0.1, minInc=1e-9, maxInc=1.0, deltmx=100.0)
 
-    model.fieldOutputRequests['F-Output-1'].setValues(frequency=1)
+    model.fieldOutputRequests['F-Output-1'].setValues(frequency=2)
     model.HistoryOutputRequest(name='H-Output-1', createStepName='Step-1', variables=('HTL',))
 
     model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
+    model.TabularAmplitude(name='AMP-TEMPERATURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 20.0), (20.0, 2000.0)))
     model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=None, description='', expression='1.0+0.05*fabs (  Z  ) / 18200.0')
     model.ExpressionField(name='ANALYTICALFIELD-FILM', localCsys=None, description='', expression='1.0+0.2*fabs (  Z  ) / 18200.0')
     # model.ZsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z0'], localCsys=None)
@@ -1340,8 +1341,8 @@ if __name__ == "__main__":
                 part_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
                 int_name = 'INT-%s-%s' % (part_name, surf_name)
                 model.FilmCondition(name=int_name, createStepName='Step-1',
-                                    surface=a.instances[part_name].surfaces[surf_name], definition=FIELD, filmCoeff=200.0,
-                                    field='ANALYTICALFIELD-FILM', filmCoeffAmplitude='', sinkTemperature=2600.0, sinkAmplitude='',
+                                    surface=a.instances[part_name].surfaces[surf_name], definition=FIELD, filmCoeff=100.0,
+                                    field='ANALYTICALFIELD-FILM', filmCoeffAmplitude='', sinkTemperature=1.0, sinkAmplitude='AMP-TEMPERATURE',
                                     sinkDistributionType=UNIFORM, sinkFieldName='')
 
     for l in range(1, layer_number):
@@ -1352,15 +1353,15 @@ if __name__ == "__main__":
                 model.Field(name=field_name, createStepName='Step-1',
                             region=a.instances[part_name].sets[set_name], distributionType=UNIFORM,
                             crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, fieldVariableNum=1,
-                            magnitudes=(0.0,))
+                            magnitudes=(20.0,))
 
     model.Temperature(name='Predefined Field-1',
                       createStepName='Initial', region=a.instances['PART-SHELL-1'].sets['NSET-ALL'], distributionType=UNIFORM,
-                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(0.0,))
+                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(20.0,))
 
     model.Temperature(name='Predefined Field-2',
                       createStepName='Initial', region=a.instances['PART-INSULATION-SHELL-1'].sets['NSET-ALL'], distributionType=UNIFORM,
-                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(0.0,))
+                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(20.0,))
 
     elemType1 = mesh.ElemType(elemCode=DC3D8, elemLibrary=STANDARD)
     p_shell.setElementType(regions=(p_shell.elements,), elemTypes=(elemType1,))
