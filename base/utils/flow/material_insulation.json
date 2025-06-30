@@ -9,14 +9,14 @@
     "Conductivity": {
         "table": [
             [
-                0.168
+                0.31
             ]
         ]
     },
     "SpecificHeat": {
         "table": [
             [
-                840000000
+                1842000000
             ]
         ]
     },
