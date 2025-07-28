@@ -310,7 +310,7 @@ def geometries(model, geo_type, d, e, epsilon, beta, zeta, r1, r2, d2, rt1, rt2,
     return points, lines, faces
 
 
-def create_sketch_1(model, sketch_name, geo_type, n, points):
+def create_sketch_section(model, sketch_name, geo_type, n, points):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
 
     geom_list = []
@@ -472,14 +472,14 @@ def create_sketch_block_front_cut(model, sketch_name, n, points):
     return s
 
 
-def create_sketch_2(model, sketch_name, points):
+def create_sketch_section_cut_radius(model, sketch_name, points):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200)
     for i in range(2, points.shape[0]):
         s.CircleByCenterPerimeter(center=(0.0, 0.0), point1=points[i, -1])
     return s
 
 
-def create_sketch_3(model, sketch_name, n, points):
+def create_sketch_section_cut_theta(model, sketch_name, n, points):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200)
 
     geom_list = []
@@ -1156,22 +1156,15 @@ if __name__ == "__main__":
     model = mdb.models['Model-1']
     model.setValues(absoluteZero=-273.15)
 
-    # set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain.json'))
     set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
     set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
-    # set_material(model.Material(name='MATERIAL-KINEMATIC'), load_json('material_kinematic.json'))
+    set_material(model.Material(name='MATERIAL-KINEMATIC'), load_json('material_kinematic.json'))
     set_material(model.Material(name='MATERIAL-SHELL'), load_json('material_shell.json'))
 
     model.HomogeneousSolidSection(name='SECTION-GRAIN', material='MATERIAL-GRAIN', thickness=None)
     model.HomogeneousSolidSection(name='SECTION-INSULATION', material='MATERIAL-INSULATION', thickness=None)
-    # model.HomogeneousSolidSection(name='SECTION-KINEMATIC', material='MATERIAL-KINEMATIC', thickness=None)
+    model.HomogeneousSolidSection(name='SECTION-KINEMATIC', material='MATERIAL-KINEMATIC', thickness=None)
     model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
-
-    # model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_insulation_shell.inp')
-    # p_insulation_shell = model.parts['PART-INSULATION-SHELL']
-
-    # model.PartFromInputFile(inputFileName='F:/Github/base/base/utils/flow/part_shell.inp')
-    # p_shell = model.parts['PART-SHELL']
 
     mdb.ModelFromInputFile(name='PART-INSULATION-SHELL', inputFileName='F:/GitHub/base/base/utils/flow/part_insulation_shell.inp')
     p_insulation_shell = mdb.models['Model-1'].Part('PART-INSULATION-SHELL', mdb.models['PART-INSULATION-SHELL'].parts['PART-INSULATION-SHELL'])
@@ -1184,15 +1177,15 @@ if __name__ == "__main__":
                                       shell_thickness,
                                       theta_gap, theta_insulation_thickness)
 
-    s1 = create_sketch_1(model, 'SKETCH-1', geo_type, n, points)
+    s_section = create_sketch_section(model, 'SKETCH-SECTION', geo_type, n, points)
 
-    s2 = create_sketch_2(model, 'SKETCH-2', points)
+    s_section_cut_radius = create_sketch_section_cut_radius(model, 'SKETCH-SECTION-CUT-RADIUS', points)
 
-    s3 = create_sketch_3(model, 'SKETCH-3', n, points)
+    s_section_cut_theta = create_sketch_section_cut_theta(model, 'SKETCH-SECTION-CUT-THETA', n, points)
+
+    s4 = create_sketch_4(model, 'SKETCH-SECTION-4', n, points)
 
     s_block = create_sketch_block(model, 'SKETCH-BLOCK', geo_type, n, points)
-
-    s4 = create_sketch_4(model, 'SKETCH-4', n, points)
 
     s_block_front_half = create_sketch_block_front_half(model, 'SKETCH-BLOCK-FRONT-HALF', n, points)
 
@@ -1204,64 +1197,64 @@ if __name__ == "__main__":
     acis = mdb.openAcis('SKETCH-BLOCK-BEHIND-CUT-OUTER.sat', scaleFromFile=OFF)
     s_block_behind_cut_outer = model.ConstrainedSketchFromGeometryFile(name='SKETCH-BLOCK-BEHIND-CUT-OUTER', geometryFile=acis)
 
-    p_block_front = create_part_block_front(model, s_block_front_half, s_block_front_cut, s_block_front_cut_outer, 'PART-BLOCK-FRONT', first_layer_height)
-
-    partition_part_front(model, p_block_front, s2, s3, geo_type, n, points, lines, z_list)
-
-    p_block_front.Mirror(mirrorPlane=p_block_front.faces[15], keepOriginal=ON)
-
-    p_block = create_part(model, s_block, 'PART-BLOCK', block_z_length)
-
-    p_block_front_2 = create_part_front_2(model, p_block, 'PART-BLOCK-FRONT-2', first_layer_height + layer_height + layer_gap, s_block_front_cut_outer)
+    # p_block_front = create_part_block_front(model, s_block_front_half, s_block_front_cut, s_block_front_cut_outer, 'PART-BLOCK-FRONT', first_layer_height)
+    #
+    # partition_part_front(model, p_block_front, s2, s3, geo_type, n, points, lines, z_list)
+    #
+    # p_block_front.Mirror(mirrorPlane=p_block_front.faces[15], keepOriginal=ON)
+    #
+    # p_block = create_part(model, s_block, 'PART-BLOCK', block_z_length)
+    #
+    # p_block_front_2 = create_part_front_2(model, p_block, 'PART-BLOCK-FRONT-2', first_layer_height + layer_height + layer_gap, s_block_front_cut_outer)
 
     # partition_part(model, p_block, s2, s3, geo_type, part_type, n, points, lines, z_list)
 
-    partition_part(model, p_block_front_2, s2, s3, geo_type, part_type, n, points, lines, z_list)
-
-    create_sets_block(p_block, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
-
-    p_block_behind_3 = create_part_block_behind_3(model, p_block, 'PART-BLOCK-BEHIND-3', points)
-
-    p_block_behind_2 = create_part_block_behind_2(model, p_block, 'PART-BLOCK-BEHIND-2', 905.0)
-
-    p_block_0 = create_part(model, s_block, 'PART-BLOCK-0', block_z_length)
-
-    p_block_behind_1 = create_part_block_behind_1(model, p_block_0, 'PART-BLOCK-BEHIND-1', 905.0, s_block_behind_cut_outer)
+    # partition_part(model, p_block_front_2, s2, s3, geo_type, part_type, n, points, lines, z_list)
+    #
+    # create_sets_block(p_block, geo_type, n, layer_number, layer_height, layer_gap, faces, z_list)
+    #
+    # p_block_behind_3 = create_part_block_behind_3(model, p_block, 'PART-BLOCK-BEHIND-3', points)
+    #
+    # p_block_behind_2 = create_part_block_behind_2(model, p_block, 'PART-BLOCK-BEHIND-2', 905.0)
+    #
+    # p_block_0 = create_part(model, s_block, 'PART-BLOCK-0', block_z_length)
+    #
+    # p_block_behind_1 = create_part_block_behind_1(model, p_block_0, 'PART-BLOCK-BEHIND-1', 905.0, s_block_behind_cut_outer)
 
     # partition_part(model, p_block_behind_1, s2, s3, geo_type, part_type, n, points, lines, z_list)
 
-    p_block.SectionAssignment(region=p_block.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                              thicknessAssignment=FROM_SECTION)
-    p_block.SectionAssignment(region=p_block.sets['SET-INSULATION-GRAIN'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE,
-                              offsetField='',
-                              thicknessAssignment=FROM_SECTION)
-
-    p_insulation_shell.SectionAssignment(region=p_insulation_shell.sets['ESET-ALL'], sectionName='SECTION-INSULATION',
-                                         offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                                         thicknessAssignment=FROM_SECTION)
-
-    p_shell.SectionAssignment(region=p_shell.sets['ESET-ALL'], sectionName='SECTION-SHELL',
-                              offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
-                              thicknessAssignment=FROM_SECTION)
-
-    c = p_block.cells
-    elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    p_block.setElementType(regions=regionToolset.Region(cells=p_block.cells), elemTypes=(elemType1, elemType2, elemType3))
-    p_block.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
-    p_block.generateMesh()
-
-    a = model.rootAssembly
-    a.DatumCsysByDefault(CARTESIAN)
-
-    a.Instance(name='PART-INSULATION-SHELL-1', part=p_insulation_shell, dependent=ON)
-    a.rotate(instanceList=('PART-INSULATION-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
-
-    a.Instance(name='PART-SHELL-1', part=p_shell, dependent=ON)
-    a.rotate(instanceList=('PART-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
-
-    m = n
+    # p_block.SectionAssignment(region=p_block.sets['SET-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+    #                           thicknessAssignment=FROM_SECTION)
+    # p_block.SectionAssignment(region=p_block.sets['SET-INSULATION-GRAIN'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE,
+    #                           offsetField='',
+    #                           thicknessAssignment=FROM_SECTION)
+    #
+    # p_insulation_shell.SectionAssignment(region=p_insulation_shell.sets['ESET-ALL'], sectionName='SECTION-INSULATION',
+    #                                      offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+    #                                      thicknessAssignment=FROM_SECTION)
+    #
+    # p_shell.SectionAssignment(region=p_shell.sets['ESET-ALL'], sectionName='SECTION-SHELL',
+    #                           offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='',
+    #                           thicknessAssignment=FROM_SECTION)
+    #
+    # c = p_block.cells
+    # elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    # p_block.setElementType(regions=regionToolset.Region(cells=p_block.cells), elemTypes=(elemType1, elemType2, elemType3))
+    # p_block.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    # p_block.generateMesh()
+    #
+    # a = model.rootAssembly
+    # a.DatumCsysByDefault(CARTESIAN)
+    #
+    # a.Instance(name='PART-INSULATION-SHELL-1', part=p_insulation_shell, dependent=ON)
+    # a.rotate(instanceList=('PART-INSULATION-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
+    #
+    # a.Instance(name='PART-SHELL-1', part=p_shell, dependent=ON)
+    # a.rotate(instanceList=('PART-SHELL-1',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=90.0)
+    #
+    # m = n
     # m = 1
 
     # for i in range(m):
@@ -1270,13 +1263,13 @@ if __name__ == "__main__":
     #     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height))
     #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
     # layer_number = 3
-    m = 1
-    for l in range(1, layer_number):
-        for i in range(m):
-            instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
-            a.Instance(name=instance_name, part=p_block, dependent=ON)
-            a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (l + 1) * (layer_gap + layer_height)))
-            a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+    # m = 1
+    # for l in range(1, layer_number):
+    #     for i in range(m):
+    #         instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
+    #         a.Instance(name=instance_name, part=p_block, dependent=ON)
+    #         a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (l + 1) * (layer_gap + layer_height)))
+    #         a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
     # for i in range(m):
     #     instance_name = 'PART-BLOCK-BEHIND-3-%s' % (i + 1)
@@ -1299,33 +1292,33 @@ if __name__ == "__main__":
     #                 vector=(0.0, 0.0, shell_insulation_ref_z - first_layer_height - (layer_number + 3) * (layer_gap + layer_height)))
     #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-    model.Tie(name='CONSTRAINT-1',
-              main=a.instances['PART-INSULATION-SHELL-1'].surfaces['SURF-OUTER'],
-              secondary=a.instances['PART-SHELL-1'].surfaces['SURF-INNER'],
-              positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=ON, thickness=ON)
-
-    for l in range(1, layer_number):
-        for i in range(m):
-            name_1 = 'PART-INSULATION-SHELL-1'
-            name_2 = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
-            tie_name = 'CONSTRAINT-%s-%s' % (name_1, name_2)
-            model.Tie(name=tie_name,
-                      main=a.instances[name_1].surfaces['SURF-INNER'],
-                      secondary=a.instances[name_2].surfaces['SURF-OUTER'],
-                      positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=ON, thickness=ON)
+    # model.Tie(name='CONSTRAINT-1',
+    #           main=a.instances['PART-INSULATION-SHELL-1'].surfaces['SURF-OUTER'],
+    #           secondary=a.instances['PART-SHELL-1'].surfaces['SURF-INNER'],
+    #           positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=ON, thickness=ON)
+    #
+    # for l in range(1, layer_number):
+    #     for i in range(m):
+    #         name_1 = 'PART-INSULATION-SHELL-1'
+    #         name_2 = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
+    #         tie_name = 'CONSTRAINT-%s-%s' % (name_1, name_2)
+    #         model.Tie(name=tie_name,
+    #                   main=a.instances[name_1].surfaces['SURF-INNER'],
+    #                   secondary=a.instances[name_2].surfaces['SURF-OUTER'],
+    #                   positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=ON, thickness=ON)
 
     # model.CoupledTempDisplacementStep(name='Step-1', previous='Initial', deltmx=10.0, nlgeom=ON)
     # model.ImplicitDynamicsStep(name='Step-1', previous='Initial', nlgeom=ON, timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
     # model.StaticStep(name='Step-1', previous='Initial', nlgeom=ON, timePeriod=1.0, maxNumInc=1000000, initialInc=0.2, minInc=2e-05, maxInc=0.2)
-    model.HeatTransferStep(name='Step-1', previous='Initial', timePeriod=70.0, maxNumInc=1000000, initialInc=0.1, minInc=1e-9, maxInc=1.0, deltmx=100.0)
-
-    model.fieldOutputRequests['F-Output-1'].setValues(frequency=2)
-    model.HistoryOutputRequest(name='H-Output-1', createStepName='Step-1', variables=('HTL',))
-
-    model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
-    model.TabularAmplitude(name='AMP-TEMPERATURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 20.0), (20.0, 2000.0)))
-    model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=None, description='', expression='1.0+0.05*fabs (  Z  ) / 18200.0')
-    model.ExpressionField(name='ANALYTICALFIELD-FILM', localCsys=None, description='', expression='1.0+0.2*fabs (  Z  ) / 18200.0')
+    # model.HeatTransferStep(name='Step-1', previous='Initial', timePeriod=70.0, maxNumInc=1000000, initialInc=0.1, minInc=1e-9, maxInc=1.0, deltmx=100.0)
+    #
+    # model.fieldOutputRequests['F-Output-1'].setValues(frequency=2)
+    # model.HistoryOutputRequest(name='H-Output-1', createStepName='Step-1', variables=('HTL',))
+    #
+    # model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
+    # model.TabularAmplitude(name='AMP-TEMPERATURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 20.0), (20.0, 2000.0)))
+    # model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=None, description='', expression='1.0+0.05*fabs (  Z  ) / 18200.0')
+    # model.ExpressionField(name='ANALYTICALFIELD-FILM', localCsys=None, description='', expression='1.0+0.2*fabs (  Z  ) / 18200.0')
     # model.ZsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z0'], localCsys=None)
     # model.ZsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-1-1'].sets['SET-Z1'], localCsys=None)
 
@@ -1342,45 +1335,45 @@ if __name__ == "__main__":
     #             model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[part_name].surfaces[set_name], distributionType=FIELD,
     #                            field='ANALYTICALFIELD-PRESSURE', magnitude=11.6, amplitude='AMP-PRESSURE')
 
-    for l in range(1, layer_number):
-        for i in range(m):
-            for surf_name in ['SURF-INNER', 'SURF-T0', 'SURF-T1', 'SURF-Z0', 'SURF-Z1']:
-                part_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
-                int_name = 'INT-%s-%s' % (part_name, surf_name)
-                model.FilmCondition(name=int_name, createStepName='Step-1',
-                                    surface=a.instances[part_name].surfaces[surf_name], definition=FIELD, filmCoeff=100.0,
-                                    field='ANALYTICALFIELD-FILM', filmCoeffAmplitude='', sinkTemperature=1.0, sinkAmplitude='AMP-TEMPERATURE',
-                                    sinkDistributionType=UNIFORM, sinkFieldName='')
-
-    for l in range(1, layer_number):
-        for i in range(m):
-            for set_name in ['SET-GRAIN', 'SET-INSULATION-GRAIN']:
-                part_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
-                field_name = 'PRE-%s-%s' % (part_name, set_name)
-                model.Field(name=field_name, createStepName='Step-1',
-                            region=a.instances[part_name].sets[set_name], distributionType=UNIFORM,
-                            crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, fieldVariableNum=1,
-                            magnitudes=(20.0,))
-
-    model.Temperature(name='Predefined Field-1',
-                      createStepName='Initial', region=a.instances['PART-SHELL-1'].sets['NSET-ALL'], distributionType=UNIFORM,
-                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(20.0,))
-
-    model.Temperature(name='Predefined Field-2',
-                      createStepName='Initial', region=a.instances['PART-INSULATION-SHELL-1'].sets['NSET-ALL'], distributionType=UNIFORM,
-                      crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(20.0,))
-
-    elemType1 = mesh.ElemType(elemCode=DC3D8, elemLibrary=STANDARD)
-    p_shell.setElementType(regions=(p_shell.elements,), elemTypes=(elemType1,))
-    p_insulation_shell.setElementType(regions=(p_insulation_shell.elements,), elemTypes=(elemType1,))
-    p_block.setElementType(regions=(p_block.cells,), elemTypes=(elemType1,))
-
-    mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
-            atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
-            memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
-            explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
-            modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
-            scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
-            multiprocessingMode=DEFAULT, numCpus=1, numGPUs=0)
-
-    mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
+    # for l in range(1, layer_number):
+    #     for i in range(m):
+    #         for surf_name in ['SURF-INNER', 'SURF-T0', 'SURF-T1', 'SURF-Z0', 'SURF-Z1']:
+    #             part_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
+    #             int_name = 'INT-%s-%s' % (part_name, surf_name)
+    #             model.FilmCondition(name=int_name, createStepName='Step-1',
+    #                                 surface=a.instances[part_name].surfaces[surf_name], definition=FIELD, filmCoeff=100.0,
+    #                                 field='ANALYTICALFIELD-FILM', filmCoeffAmplitude='', sinkTemperature=1.0, sinkAmplitude='AMP-TEMPERATURE',
+    #                                 sinkDistributionType=UNIFORM, sinkFieldName='')
+    #
+    # for l in range(1, layer_number):
+    #     for i in range(m):
+    #         for set_name in ['SET-GRAIN', 'SET-INSULATION-GRAIN']:
+    #             part_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
+    #             field_name = 'PRE-%s-%s' % (part_name, set_name)
+    #             model.Field(name=field_name, createStepName='Step-1',
+    #                         region=a.instances[part_name].sets[set_name], distributionType=UNIFORM,
+    #                         crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, fieldVariableNum=1,
+    #                         magnitudes=(20.0,))
+    #
+    # model.Temperature(name='Predefined Field-1',
+    #                   createStepName='Initial', region=a.instances['PART-SHELL-1'].sets['NSET-ALL'], distributionType=UNIFORM,
+    #                   crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(20.0,))
+    #
+    # model.Temperature(name='Predefined Field-2',
+    #                   createStepName='Initial', region=a.instances['PART-INSULATION-SHELL-1'].sets['NSET-ALL'], distributionType=UNIFORM,
+    #                   crossSectionDistribution=CONSTANT_THROUGH_THICKNESS, magnitudes=(20.0,))
+    #
+    # elemType1 = mesh.ElemType(elemCode=DC3D8, elemLibrary=STANDARD)
+    # p_shell.setElementType(regions=(p_shell.elements,), elemTypes=(elemType1,))
+    # p_insulation_shell.setElementType(regions=(p_insulation_shell.elements,), elemTypes=(elemType1,))
+    # p_block.setElementType(regions=(p_block.cells,), elemTypes=(elemType1,))
+    #
+    # mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
+    #         atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
+    #         memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
+    #         explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
+    #         modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
+    #         scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
+    #         multiprocessingMode=DEFAULT, numCpus=1, numGPUs=0)
+    #
+    # mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
