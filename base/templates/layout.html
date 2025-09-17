@@ -424,6 +424,34 @@
           {% endif %}
           {% endblock nav_virtual %}
 
+          {% block nav_optimize %}
+          {% if current_user.is_moderator or current_user.is_admin %}
+          <li class="nav-item" id="optimize">
+            <a href="#" class="nav-link">
+              <i class="nav-icon fas fa-calculator"></i>
+              <p>
+                优化
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{ url_for('optimize.manage_optimizes') }}" class="nav-link" id="manage_optimizes">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>优化管理</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('optimize.create_optimize') }}" class="nav-link" id="create_optimize">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>新建优化</p>
+                </a>
+              </li>
+            </ul>
+          </li>
+          {% endif %}
+          {% endblock nav_optimize %}
+
           {% block nav_monitor %}
           {% if current_user.is_moderator or current_user.is_admin %}
           <li class="nav-item" id="monitor">

@@ -1,0 +1,128 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}{{ optimize_id }}号优化{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='codemirror-5.65.16/lib/codemirror.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='codemirror-5.65.16/theme/monokai.css') }}">
+
+<style>
+  .CodeMirror {
+    height: 800px;
+  }
+</style>
+
+{% endblock css %}
+
+{% block pageheader %}优化信息{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主界面</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('optimize.manage_optimizes') }}">优化管理</a></li>
+<li class="breadcrumb-item active">优化信息</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-6">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ optimize_id }}号优化信息</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <h5 class="text-primary">优化信息</h5>
+                <ul class="list-unstyled">
+                  <li> 优化名称：{{ status['name'] }} </li>
+                  <li> 优化编号：{{ optimize_id }} </li>
+                  <li> 优化类型：{{ status['type'] }} </li>
+                  <li> 创建时间：{{ status['json_time'] }} </li>
+                  <li> 优化备注：</li>
+                  <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
+                  <p></p>
+                  <a class='btn btn-primary' href="{{ url_for('optimize.edit_optimize', optimize_id=optimize_id) }}"><strong>编辑信息</strong></a>
+                  {% if config.CLIENT %}
+                  <a href="{{ url_for('optimize.open_optimize', optimize_id=optimize_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
+                  {% endif %}
+                </ul>
+                <h5 class="text-primary">上传文件</h5>
+                <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+                  {{ form_upload.csrf_token }}
+                  <div class="form-group">
+                  {{ form_upload.submit }}{{ form_upload.filename }}
+                  </div>
+                </form>
+
+                <h5 class="text-primary">优化文件</h5>
+                <table class="table table-sm table-hover">
+                  <thead>
+                    <tr>
+                      <th width=40%>文件名</th>
+                      <th width=30%>修改日期</th>
+                      <th width=10%>大小</th>
+                      <th width=20%>操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for file in files %}
+                    <tr>
+                      <td> {{ file['name'] }} </td>
+                      <td> {{ file['time'] }} </td>
+                      <td> {{ file['size'] }} </td>
+                      <td> <a href="{{ url_for('optimize.get_optimize_file', optimize_id=optimize_id, filename=file['name']) }}" target="_blank">下载</a> | <a onclick="return confirm('确定删除文件？')" href="{{ url_for('optimize.delete_optimize_file', optimize_id=optimize_id, filename=file['name']) }}">删除</a> </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+          </div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ optimize_id }}号优化信息</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <a class='btn btn-primary' id="saveBtn"><strong>保 存</strong></a>
+                <a class='btn btn-primary' id="formatBtn"><strong>标准格式</strong></a>
+                <p></p>
+                <textarea id="code"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+{% endblock content %}
+
+{% block script %}
+<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+<script src="{{ url_for('static', filename='codemirror-5.65.16/lib/codemirror.js') }}"></script>
+<script src="{{ url_for('static', filename='codemirror-5.65.16/mode/javascript/javascript.js') }}"></script>
+
+<script type="text/javascript">
+
+  $(document).ready(function () {
+    $('#descript').attr('disabled', true)
+  });
+
+  document.getElementById('formatBtn').addEventListener('click', formatJson)
+
+  document.getElementById('optimize').className = 'nav-item menu-open'
+</script>
+{% endblock script %}

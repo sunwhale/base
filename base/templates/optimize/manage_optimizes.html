@@ -1,17 +1,17 @@
 {% extends 'layout.html' %}
 {% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
 
-{% block title %}流程管理{% endblock title %}
+{% block title %}优化管理{% endblock title %}
 
 {% block css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
 {% endblock css %}
 
-{% block pageheader %}流程管理{% endblock pageheader %}
+{% block pageheader %}优化管理{% endblock pageheader %}
 
 {% block level %}
 <li class="breadcrumb-item"><a href="/">主界面</a></li>
-<li class="breadcrumb-item active">流程管理</li>
+<li class="breadcrumb-item active">优化管理</li>
 {% endblock level %}
 
 {% block content %}
@@ -21,13 +21,13 @@
           <div class="col-12">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">流程列表</h3>
+                <h3 class="card-title">优化列表</h3>
               </div>
               <div class="card-body">
                 <table id="data" class="table table-bordered table-striped">
                   <thead>
                     <tr>
-                      <th width=50px>流程ID</th>
+                      <th width=50px>优化ID</th>
                       <th>名称</th>
                       <th width=150px>最新编辑时间</th>
                       <th width=150px>操作</th>
@@ -87,18 +87,18 @@
       "info": true,
       "autoWidth": false,
       "responsive": true,
-      "ajax": "{{ url_for('flow.flows_status') }}",
+      "ajax": "{{ url_for('optimize.optimizes_status') }}",
       "columns": [
-          { data: 'flow_id' },
+          { data: 'optimize_id' },
           { data: 'name' },
-          { data: 'flow_time' },
+          { data: 'json_time' },
           { data: 'operation' },
       ],
     });
   });
 
-  document.getElementById("flow").className = "nav-item menu-open"
-  document.getElementById("manage_flows").className = "nav-link active"
+  document.getElementById("optimize").className = "nav-item menu-open"
+  document.getElementById("manage_optimizes").className = "nav-link active"
 
 </script>
 {% endblock script %}

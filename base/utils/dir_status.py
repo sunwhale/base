@@ -306,6 +306,31 @@ def get_flow_status(path, flow_id):
     return status
 
 
+def get_optimize_status(path, optimize_id):
+    json_file = os.path.join(path, str(optimize_id), 'optimize.json')
+    msg_file = os.path.join(path, str(optimize_id), '.optimize_msg')
+    status = {}
+    if os.path.exists(msg_file):
+        status['optimize_id'] = optimize_id
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            status['name'] = message['name']
+            status['type'] = message['type']
+            status['json_file'] = json_file
+            status['json_time'] = file_time(json_file)
+            status[
+                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除材料?')\" href='%s'>删除</a>" % (
+                '../view_optimize/' + str(optimize_id), '../edit_optimize/' + str(optimize_id), '../delete_optimize/' + str(optimize_id))
+        except FileNotFoundError:
+            for key in ['title', 'md_time']:
+                status[key] = 'None'
+            status[
+                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除材料?')\" href='%s'>删除</a>" % (
+                '../view_optimize/' + str(optimize_id), '../edit_optimize/' + str(optimize_id), '../delete_optimize/' + str(optimize_id))
+    return status
+
+
 def get_sheet_status(path, sheet_id):
     sheet_file = os.path.join(path, str(sheet_id), 'sheet.json')
     msg_file = os.path.join(path, str(sheet_id), 'sheet.msg')
@@ -721,6 +746,20 @@ def flows_detail(path):
     flow_id_list = sub_dirs_int(path)
     for flow_id in flow_id_list:
         status = get_flow_status(path, flow_id)
+        data_list.append(status)
+
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def optimizes_detail(path):
+    data_list = []
+    optimize_id_list = sub_dirs_int(path)
+    for optimize_id in optimize_id_list:
+        status = get_optimize_status(path, optimize_id)
         data_list.append(status)
 
     data = {
