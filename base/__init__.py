@@ -16,6 +16,7 @@ from base.blueprints.experiment import experiment_bp
 from base.blueprints.flow import flow_bp
 from base.blueprints.main import main_bp
 from base.blueprints.material import material_bp
+from base.blueprints.optimize import optimize_bp
 from base.blueprints.packing import packing_bp
 from base.blueprints.pyfem import pyfem_bp
 from base.blueprints.queue import queue_bp
@@ -67,6 +68,7 @@ def register_blueprints(app):
     app.register_blueprint(experiment_bp, url_prefix='/experiment')
     app.register_blueprint(flow_bp, url_prefix='/flow')
     app.register_blueprint(material_bp, url_prefix='/material')
+    app.register_blueprint(optimize_bp, url_prefix='/optimize')
     app.register_blueprint(packing_bp, url_prefix='/packing')
     app.register_blueprint(pyfem_bp, url_prefix='/pyfem')
     app.register_blueprint(queue_bp, url_prefix='/queue')
