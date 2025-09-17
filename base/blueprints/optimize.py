@@ -74,7 +74,7 @@ def create_optimize():
 @optimize_bp.route('/edit_optimize/<int:optimize_id>', methods=['GET', 'POST'])
 @login_required
 def edit_optimize(optimize_id):
-    form = MaterialForm()
+    form = OptimizeForm()
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
     msg_file = os.path.join(optimize_path, '.optimize_msg')
@@ -123,6 +123,11 @@ def view_optimize(optimize_id):
         f.save(os.path.join(optimize_path, f.filename))
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
+
+    if request.method == 'POST':
+        data = request.form.to_dict()
+        print(data.keys())
+        print(data['name1'])
 
     if os.path.exists(optimize_path):
         status = get_optimize_status(optimizes_path, optimize_id)

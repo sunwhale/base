@@ -96,10 +96,38 @@
                 </div>
               </div>
               <div class="card-body">
-                <a class='btn btn-primary' id="saveBtn"><strong>保 存</strong></a>
-                <a class='btn btn-primary' id="formatBtn"><strong>标准格式</strong></a>
-                <p></p>
-                <textarea id="code"></textarea>
+                <form method="POST" id="form_queue" name="form_queue">
+                  {{ form_upload.csrf_token }}
+                  <input class="form-control" id="queue_value" name="queue_value"></input>
+                  <textarea class="form-control" id="queue_type" name="queue_type"></textarea>
+
+                  <table id="data" class="table table-bordered">
+                    <thead>
+                    <tr>
+                      <th width=20px><input type="checkbox" id="customCheck" class="checkAll"></th>
+                      <th>名称</th>
+                      <th>值</th>
+                    </tr>
+                    </thead>
+                    <tbody id="table_files_body">
+                    <tr>
+                      <th width=20px><input type="checkbox" id="customCheck1" class="checkAll"></th>
+                      <th>TAU1</th>
+                      <th><input class="form-control form-control-sm" id="name1" name="name1"></th>
+                    </tr>
+                    <tr>
+                      <th width=20px><input type="checkbox" id="customCheck2" class="checkAll"></th>
+                      <th>TAU2</th>
+                      <th><input class="form-control form-control-sm" id="name2" name="name2"></th>
+                    </tr>
+                    </tbody>
+                  </table>
+
+                  <button class="btn btn-success" type="submit" id="submit_queue_all">
+                    <i class="fa fa-upload"></i>
+                    <strong>提交至队列（求解+导出）</strong>
+                  </button>
+                </form>
               </div>
             </div>
           </div>
@@ -121,7 +149,11 @@
     $('#descript').attr('disabled', true)
   });
 
-  document.getElementById('formatBtn').addEventListener('click', formatJson)
+  $(document).ready(function () {
+    $('#submit_queue_all').on('click', function () {
+      console.log('submit_queue_all')
+    });
+  });
 
   document.getElementById('optimize').className = 'nav-item menu-open'
 </script>
