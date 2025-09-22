@@ -13,7 +13,7 @@ from markupsafe import Markup
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.optimize import UploadForm, OptimizeForm
+from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm
 from base.global_var import event_source
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Preproc import Preproc
@@ -117,22 +117,27 @@ def view_optimize(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
 
-    form_upload = UploadForm()
-    if form_upload.validate_on_submit():
-        f = form_upload.filename.data
+    upload_form = UploadForm()
+    if upload_form.submit.data and upload_form.validate():
+        f = upload_form.filename.data
         f.save(os.path.join(optimize_path, f.filename))
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
+    parameter_form = ParameterForm()
+    if parameter_form.submit.data and parameter_form.validate():
+        print(parameter_form.data)
+        return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
+
     if request.method == 'POST':
         data = request.form.to_dict()
-        print(data.keys())
-        print(data['name1'])
+        print(data)
+        # print(data['name1'])
 
     if os.path.exists(optimize_path):
         status = get_optimize_status(optimizes_path, optimize_id)
         files = files_in_dir(optimize_path)
-        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, form_upload=form_upload)
+        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, upload_form=upload_form, parameter_form=parameter_form)
     else:
         abort(404)
 

@@ -55,9 +55,9 @@
                 </ul>
                 <h5 class="text-primary">上传文件</h5>
                 <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
-                  {{ form_upload.csrf_token }}
+                  {{ upload_form.csrf_token }}
                   <div class="form-group">
-                  {{ form_upload.submit }}{{ form_upload.filename }}
+                  {{ upload_form.submit }}{{ upload_form.filename }}
                   </div>
                 </form>
 
@@ -96,34 +96,25 @@
                 </div>
               </div>
               <div class="card-body">
-                <form method="POST" id="form_queue" name="form_queue">
-                  {{ form_upload.csrf_token }}
-                  <input class="form-control" id="queue_value" name="queue_value"></input>
-                  <textarea class="form-control" id="queue_type" name="queue_type"></textarea>
-
-                  <table id="data" class="table table-bordered">
+                <div class="card-body">
+                <form action="" method="post" class="form" role="form">
+                  {{ render_form(parameter_form) }}
+                </form>
+                <form method="POST" id="form_paras" name="form_paras">
+                  {{ upload_form.csrf_token }}
+                  <table id="data" class="table table-bordered table-sm">
                     <thead>
                     <tr>
-                      <th width=20px><input type="checkbox" id="customCheck" class="checkAll"></th>
+                      <th>变量</th>
                       <th>名称</th>
                       <th>值</th>
                     </tr>
                     </thead>
-                    <tbody id="table_files_body">
-                    <tr>
-                      <th width=20px><input type="checkbox" id="customCheck1" class="checkAll"></th>
-                      <th>TAU1</th>
-                      <th><input class="form-control form-control-sm" id="name1" name="name1"></th>
-                    </tr>
-                    <tr>
-                      <th width=20px><input type="checkbox" id="customCheck2" class="checkAll"></th>
-                      <th>TAU2</th>
-                      <th><input class="form-control form-control-sm" id="name2" name="name2"></th>
-                    </tr>
+                    <tbody id="table_paras_body">
                     </tbody>
                   </table>
 
-                  <button class="btn btn-success" type="submit" id="submit_queue_all">
+                  <button class="btn btn-success" type="submit" id="submit_paras">
                     <i class="fa fa-upload"></i>
                     <strong>提交至队列（求解+导出）</strong>
                   </button>
@@ -148,6 +139,56 @@
   $(document).ready(function () {
     $('#descript').attr('disabled', true)
   });
+
+  function updateFiles(files) {
+    const tableBody = document.getElementById('table_paras_body');
+    tableBody.innerHTML = "";
+
+    files.forEach((row, index) => {
+      const tr = document.createElement('tr');
+      tr.style.verticalAlign = 'middle';
+      tr.style.textAlign = 'left';
+
+      const td1 = document.createElement('td');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = 'customCheckbox' + index;
+      checkbox.name = 'customCheckbox' + index;
+      checkbox.checked = true;
+      // checkbox.disabled = true;
+      td1.appendChild(checkbox);
+      tr.appendChild(td1);
+
+      const td2 = document.createElement('td');
+      td2.textContent = row['name'];
+      tr.appendChild(td2);
+
+      const td3 = document.createElement('td');
+      const valueInput = document.createElement('input');
+      valueInput.id = 'value' + index;
+      valueInput.name = 'value' + index;
+      valueInput.className = 'form-control form-control-sm';
+      valueInput.value = 98.5;
+      // valueInput.disabled = true;
+      td3.appendChild(valueInput);
+      tr.appendChild(td3);
+
+      tableBody.appendChild(tr);
+    });
+  }
+
+  function updateStatus() {
+    fetch("{{ url_for('abaqus.project_status', project_id=2) }}")
+      .then(response => response.json())
+      .then(data => {
+        updateFiles(data["files"])
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  }
+
+  updateStatus()
 
   $(document).ready(function () {
     $('#submit_queue_all').on('click', function () {
