@@ -139,7 +139,6 @@ def view_optimize(optimize_id):
     parameters_json_file = os.path.join(optimize_path, 'parameters.json')
 
     upload_form = UploadForm()
-    parameter_form = ParameterForm()
 
     if upload_form.submit.data and upload_form.validate():
         f = upload_form.filename.data
@@ -147,22 +146,16 @@ def view_optimize(optimize_id):
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
-    if parameter_form.submit.data and parameter_form.validate():
-        message = {'parameters': parameter_form.para.data}
-        print(parameter_form.para.data)
-        dump_json(parameters_json_file, message)
-        return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
-
     if request.method == 'POST':
         data = request.form.to_dict()
         print(data)
-        # print(data['name1'])
+        if os.path.exists(parameters_json_file):
+            dump_json(parameters_json_file, data)
 
     parameter_list = []
     if os.path.exists(parameters_json_file):
         try:
             message = load_json(parameters_json_file)
-            parameter_form.para.data = message['parameters']
             parameter_list = simple_parse(message['parameters'])
             print(parameter_list)
         except KeyError:
@@ -171,8 +164,8 @@ def view_optimize(optimize_id):
     if os.path.exists(optimize_path):
         status = get_optimize_status(optimizes_path, optimize_id)
         files = files_in_dir(optimize_path)
-        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, parameter_list=parameter_list,
-                               upload_form=upload_form, parameter_form=parameter_form)
+        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files,
+                               upload_form=upload_form)
     else:
         abort(404)
 
@@ -218,5 +211,17 @@ def optimize_status(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     if os.path.exists(optimizes_path):
         return get_optimize_status(optimizes_path, optimize_id)
+    else:
+        abort(404)
+
+
+@optimize_bp.route('/parameters_status/<int:optimize_id>', methods=['GET', 'POST'])
+@login_required
+def parameters_status(optimize_id):
+    optimizes_path = current_app.config['OPTIMIZE_PATH']
+    optimize_path = os.path.join(optimizes_path, str(optimize_id))
+    parameters_json_file = os.path.join(optimize_path, 'parameters.json')
+    if os.path.exists(parameters_json_file):
+        return load_json(parameters_json_file)
     else:
         abort(404)

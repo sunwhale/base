@@ -138,11 +138,11 @@
     $('#descript').attr('disabled', true)
   });
 
-  function updateParas(para) {
+  function updateParas(para_name, para_status) {
     const tableBody = document.getElementById('table_paras_body');
     tableBody.innerHTML = "";
 
-    para.forEach((row, index) => {
+    para_name.forEach((row, index) => {
       const tr = document.createElement('tr');
       tr.style.verticalAlign = 'middle';
       tr.style.textAlign = 'left';
@@ -150,10 +150,16 @@
       const td1 = document.createElement('td');
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
-      checkbox.id = 'customCheckbox' + index;
-      checkbox.name = 'customCheckbox' + index;
+      checkbox.id = 'check_' + row;
+      checkbox.name = 'check_' + row;
       checkbox.checked = true;
-      // checkbox.disabled = true;
+      if (para_status && checkbox && checkbox.id) {
+        if (checkbox.id in para_status) {
+          checkbox.checked = para_status[checkbox.id];
+        } else {
+          checkbox.checked = false;
+        }
+      }
       td1.appendChild(checkbox);
       tr.appendChild(td1);
 
@@ -163,11 +169,16 @@
 
       const td3 = document.createElement('td');
       const valueInput = document.createElement('input');
-      valueInput.id = 'value' + index;
-      valueInput.name = 'value' + index;
+      valueInput.id = 'value_' + row;
+      valueInput.name = 'value_' + row;
       valueInput.className = 'form-control form-control-sm';
-      valueInput.value = 98.5;
-      // valueInput.disabled = true;
+      if (para_status && valueInput && valueInput.id) {
+        if (valueInput.id in para_status) {
+          valueInput.value = para_status[valueInput.id];
+        } else {
+          valueInput.value = 0.0;
+        }
+      }
       td3.appendChild(valueInput);
       tr.appendChild(td3);
 
@@ -176,11 +187,17 @@
   }
 
   function updateStatus() {
-    fetch("{{ url_for('optimize.optimize_status', optimize_id=optimize_id) }}")
+    const url1 = "{{ url_for('optimize.optimize_status', optimize_id=optimize_id) }}";
+    const url2 = "{{ url_for('optimize.parameters_status', optimize_id=optimize_id) }}";
+    fetch(url1)
       .then(response => response.json())
-      .then(data => {
-        console.log(data)
-        updateParas(data["para"])
+      .then(data1 => {
+        return fetch(url2)
+        .then(response => response.json())
+        .then(data2 => {
+          // 处理两个请求的数据
+          updateParas(data1["para"], data2);
+        });
       })
       .catch(error => {
         console.error('Error:', error);
