@@ -30,6 +30,23 @@ from base.utils.tree import json_to_ztree, odb_json_to_ztree
 optimize_bp = Blueprint('optimize', __name__)
 
 
+def simple_parse(input_str):
+    """
+    简化的解析函数
+    """
+    if not isinstance(input_str, str) or not input_str.strip():
+        return []
+
+    # 分割并去除每个部分的首尾空格
+    parts = [part.strip() for part in input_str.split(',')]
+
+    # 检查所有部分是否都非空
+    if all(parts):  # all() 会检查列表中所有元素是否为真（非空）
+        return parts
+    else:
+        return []
+
+
 @optimize_bp.route('/optimizes_status/')
 @login_required
 def optimizes_status():
@@ -59,6 +76,7 @@ def create_optimize():
         message = {
             'name': form.name.data,
             'type': form.type.data,
+            'para': form.para.data,
             'descript': form.descript.data
         }
         msg_file = os.path.join(optimize_path, '.optimize_msg')
@@ -83,6 +101,7 @@ def edit_optimize(optimize_id):
         message = {
             'name': form.name.data,
             'type': form.type.data,
+            'para': form.para.data,
             'descript': form.descript.data
         }
         dump_json(msg_file, message)
@@ -91,6 +110,7 @@ def edit_optimize(optimize_id):
     message = load_json(msg_file)
     form.name.data = message['name']
     form.type.data = message['type']
+    form.para.data = message['para']
     form.descript.data = message['descript']
     return render_template('optimize/create_optimize.html', form=form)
 
@@ -116,17 +136,21 @@ def delete_optimize(optimize_id):
 def view_optimize(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
+    parameters_json_file = os.path.join(optimize_path, 'parameters.json')
 
     upload_form = UploadForm()
+    parameter_form = ParameterForm()
+
     if upload_form.submit.data and upload_form.validate():
         f = upload_form.filename.data
         f.save(os.path.join(optimize_path, f.filename))
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
-    parameter_form = ParameterForm()
     if parameter_form.submit.data and parameter_form.validate():
-        print(parameter_form.data)
+        message = {'parameters': parameter_form.para.data}
+        print(parameter_form.para.data)
+        dump_json(parameters_json_file, message)
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
     if request.method == 'POST':
@@ -134,10 +158,21 @@ def view_optimize(optimize_id):
         print(data)
         # print(data['name1'])
 
+    parameter_list = []
+    if os.path.exists(parameters_json_file):
+        try:
+            message = load_json(parameters_json_file)
+            parameter_form.para.data = message['parameters']
+            parameter_list = simple_parse(message['parameters'])
+            print(parameter_list)
+        except KeyError:
+            pass
+
     if os.path.exists(optimize_path):
         status = get_optimize_status(optimizes_path, optimize_id)
         files = files_in_dir(optimize_path)
-        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, upload_form=upload_form, parameter_form=parameter_form)
+        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, parameter_list=parameter_list,
+                               upload_form=upload_form, parameter_form=parameter_form)
     else:
         abort(404)
 
@@ -175,3 +210,13 @@ def delete_optimize_file(optimize_id, filename):
     else:
         flash('文件%s不存在。' % filename, 'warning')
     return redirect(url_for('.view_optimize', optimize_id=optimize_id))
+
+
+@optimize_bp.route('/optimize_status/<int:optimize_id>', methods=['GET', 'POST'])
+@login_required
+def optimize_status(optimize_id):
+    optimizes_path = current_app.config['OPTIMIZE_PATH']
+    if os.path.exists(optimizes_path):
+        return get_optimize_status(optimizes_path, optimize_id)
+    else:
+        abort(404)

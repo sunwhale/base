@@ -44,6 +44,7 @@
                   <li> 优化名称：{{ status['name'] }} </li>
                   <li> 优化编号：{{ optimize_id }} </li>
                   <li> 优化类型：{{ status['type'] }} </li>
+                  <li> 参数列表：{{ status['para'] }} </li>
                   <li> 创建时间：{{ status['json_time'] }} </li>
                   <li> 优化备注：</li>
                   <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
@@ -97,9 +98,6 @@
               </div>
               <div class="card-body">
                 <div class="card-body">
-                <form action="" method="post" class="form" role="form">
-                  {{ render_form(parameter_form) }}
-                </form>
                 <form method="POST" id="form_paras" name="form_paras">
                   {{ upload_form.csrf_token }}
                   <table id="data" class="table table-bordered table-sm">
@@ -116,7 +114,7 @@
 
                   <button class="btn btn-success" type="submit" id="submit_paras">
                     <i class="fa fa-upload"></i>
-                    <strong>提交至队列（求解+导出）</strong>
+                    <strong>提交</strong>
                   </button>
                 </form>
               </div>
@@ -140,11 +138,11 @@
     $('#descript').attr('disabled', true)
   });
 
-  function updateFiles(files) {
+  function updateParas(para) {
     const tableBody = document.getElementById('table_paras_body');
     tableBody.innerHTML = "";
 
-    files.forEach((row, index) => {
+    para.forEach((row, index) => {
       const tr = document.createElement('tr');
       tr.style.verticalAlign = 'middle';
       tr.style.textAlign = 'left';
@@ -160,7 +158,7 @@
       tr.appendChild(td1);
 
       const td2 = document.createElement('td');
-      td2.textContent = row['name'];
+      td2.textContent = row;
       tr.appendChild(td2);
 
       const td3 = document.createElement('td');
@@ -178,10 +176,11 @@
   }
 
   function updateStatus() {
-    fetch("{{ url_for('abaqus.project_status', project_id=2) }}")
+    fetch("{{ url_for('optimize.optimize_status', optimize_id=optimize_id) }}")
       .then(response => response.json())
       .then(data => {
-        updateFiles(data["files"])
+        console.log(data)
+        updateParas(data["para"])
       })
       .catch(error => {
         console.error('Error:', error);

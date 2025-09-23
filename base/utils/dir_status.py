@@ -317,6 +317,7 @@ def get_optimize_status(path, optimize_id):
                 message = json.load(f)
             status['name'] = message['name']
             status['type'] = message['type']
+            status['para'] = [item.strip() for item in message['para'].split(',')]
             status['json_file'] = json_file
             status['json_time'] = file_time(json_file)
             status[
