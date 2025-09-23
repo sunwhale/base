@@ -152,10 +152,18 @@
       checkbox.type = 'checkbox';
       checkbox.id = 'check_' + row;
       checkbox.name = 'check_' + row;
-      checkbox.checked = true;
+
+      // 添加复选框变化事件监听器
+      checkbox.addEventListener('change', function() {
+        const valueInput = document.getElementById('value_' + row);
+        if (valueInput) {
+          valueInput.disabled = !this.checked;
+        }
+      });
+
       if (para_status && checkbox && checkbox.id) {
         if (checkbox.id in para_status) {
-          checkbox.checked = para_status[checkbox.id];
+          checkbox.checked = true;
         } else {
           checkbox.checked = false;
         }
@@ -179,6 +187,7 @@
           valueInput.value = 0.0;
         }
       }
+      valueInput.disabled = !checkbox.checked;
       td3.appendChild(valueInput);
       tr.appendChild(td3);
 
