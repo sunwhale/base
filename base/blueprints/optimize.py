@@ -148,24 +148,15 @@ def view_optimize(optimize_id):
 
     if request.method == 'POST':
         data = request.form.to_dict()
-        print(data)
+        for item in data.items():
+            print(item)
         if os.path.exists(parameters_json_file):
             dump_json(parameters_json_file, data)
-
-    parameter_list = []
-    if os.path.exists(parameters_json_file):
-        try:
-            message = load_json(parameters_json_file)
-            parameter_list = simple_parse(message['parameters'])
-            print(parameter_list)
-        except KeyError:
-            pass
 
     if os.path.exists(optimize_path):
         status = get_optimize_status(optimizes_path, optimize_id)
         files = files_in_dir(optimize_path)
-        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files,
-                               upload_form=upload_form)
+        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, upload_form=upload_form)
     else:
         abort(404)
 
