@@ -121,6 +121,36 @@
             </div>
           </div>
         </div>
+          <div class="col-6">
+            <div class="card card-primary">
+              <div class="card-header">
+                <h3 class="card-title">{{ optimize_id }}号优化信息</h3>
+                <div class="card-tools">
+                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
+                    <i class="fas fa-minus"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="card-body">
+                <form method="POST" id="form_exps" name="form_paras">
+                  {{ upload_form.csrf_token }}
+                  <table id="exp" class="table table-bordered table-sm">
+                    <thead id="table_exps_head">
+                    </thead>
+                    <tbody id="table_exps_body">
+                    </tbody>
+                  </table>
+
+                  <button class="btn btn-success" type="submit" id="submit_exps">
+                    <i class="fa fa-upload"></i>
+                    <strong>提交</strong>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -154,7 +184,7 @@
       checkbox.name = 'check_' + row;
 
       // 添加复选框变化事件监听器
-      checkbox.addEventListener('change', function() {
+      checkbox.addEventListener('change', function () {
         const valueInput = document.getElementById('value_' + row);
         if (valueInput) {
           valueInput.readOnly = !this.checked;
@@ -195,6 +225,61 @@
     });
   }
 
+  function updateExps(exp_status) {
+    const excludedKeys = ['descript', 'operation', 'path', 'specimen_id', 'experiment_id', 'specimen_time', 'name'];
+
+    const tableHead = document.getElementById('table_exps_head');
+    tableHead.innerHTML = "";
+    const tr = document.createElement('tr');
+    const th1 = document.createElement('th');
+    th1.textContent = '选择';
+    tr.appendChild(th1);
+
+    const th2 = document.createElement('th');
+    th2.textContent = 'ID';
+    tr.appendChild(th2);
+
+    Object.keys(exp_status[0]).forEach(key => {
+      if (!excludedKeys.includes(key)) {
+        const th = document.createElement('th');
+        th.textContent = key;
+        tr.appendChild(th);
+        tableHead.appendChild(tr);
+      }
+    });
+
+    const tableBody = document.getElementById('table_exps_body');
+    tableBody.innerHTML = "";
+
+    exp_status.forEach((row, index) => {
+      const tr = document.createElement('tr');
+      tr.style.verticalAlign = 'middle';
+      tr.style.textAlign = 'left';
+
+      const td1 = document.createElement('td');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = 'check_' + row;
+      checkbox.name = 'check_' + row;
+      td1.appendChild(checkbox);
+      tr.appendChild(td1);
+
+      const td2 = document.createElement('td');
+      td2.textContent = row['specimen_id'];
+      tr.appendChild(td2);
+
+      Object.keys(row).forEach(key => {
+        if (!excludedKeys.includes(key)) {
+          const td = document.createElement('td');
+          td.textContent = row[key];
+          tr.appendChild(td);
+        }
+      });
+
+      tableBody.appendChild(tr);
+    });
+  }
+
   function updateStatus() {
     const url1 = "{{ url_for('optimize.optimize_status', optimize_id=optimize_id) }}";
     const url2 = "{{ url_for('optimize.parameters_status', optimize_id=optimize_id) }}";
@@ -202,11 +287,20 @@
       .then(response => response.json())
       .then(data1 => {
         return fetch(url2)
-        .then(response => response.json())
-        .then(data2 => {
-          // 处理两个请求的数据
-          updateParas(data1["para"], data2);
-        });
+          .then(response => response.json())
+          .then(data2 => {
+            // 处理两个请求的数据
+            updateParas(data1["para"], data2);
+          });
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    const url3 = "{{ url_for('experiment.experiment_specimens_status', experiment_id=6) }}";
+    fetch(url3)
+      .then(response => response.json())
+      .then(data3 => {
+        updateExps(data3["data"]);
       })
       .catch(error => {
         console.error('Error:', error);
