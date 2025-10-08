@@ -54,6 +54,40 @@
                   <a href="{{ url_for('optimize.open_optimize', optimize_id=optimize_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
                   {% endif %}
                 </ul>
+
+                <hr>
+                <h5 class="text-primary">参数设置</h5>
+                <form method="POST" id="form_paras" name="form_paras">
+                  {{ parameter_form.csrf_token }}
+                  <table id="data" class="table table-bordered table-sm">
+                    <thead>
+                    <tr>
+                      <th width="60px">变量</th>
+                      <th>名称</th>
+                      <th>值</th>
+                    </tr>
+                    </thead>
+                    <tbody id="table_paras_body">
+                    </tbody>
+                  </table>
+                  {{ render_field(parameter_form.submit) }}
+                </form>
+
+                <hr>
+                <h5 class="text-primary">实验文件</h5>
+                <form method="POST" id="form_exps" name="form_exps">
+                  {{ experiment_form.csrf_token }}
+                  {{ render_form_row([experiment_form.experiment_id]) }}
+                  <table id="exp" class="table table-bordered table-sm">
+                    <thead id="table_exps_head">
+                    </thead>
+                    <tbody id="table_exps_body">
+                    </tbody>
+                  </table>
+                  {{ render_field(experiment_form.submit) }}
+                </form>
+
+                <hr>
                 <h5 class="text-primary">上传文件</h5>
                 <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
                   {{ upload_form.csrf_token }}
@@ -86,10 +120,53 @@
           </div>
             </div>
           </div>
+<!--          <div class="col-4">-->
+<!--            <div class="card card-primary">-->
+<!--              <div class="card-header">-->
+<!--                <h3 class="card-title">{{ optimize_id }}号优化参数设置与实验选取</h3>-->
+<!--                <div class="card-tools">-->
+<!--                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">-->
+<!--                    <i class="fas fa-minus"></i>-->
+<!--                  </button>-->
+<!--                </div>-->
+<!--              </div>-->
+<!--              <div class="card-body">-->
+<!--                <h5 class="text-primary">参数设置</h5>-->
+<!--                <form method="POST" id="form_paras" name="form_paras">-->
+<!--                  {{ parameter_form.csrf_token }}-->
+<!--                  <table id="data" class="table table-bordered table-sm">-->
+<!--                    <thead>-->
+<!--                    <tr>-->
+<!--                      <th width="60px">变量</th>-->
+<!--                      <th>名称</th>-->
+<!--                      <th>值</th>-->
+<!--                    </tr>-->
+<!--                    </thead>-->
+<!--                    <tbody id="table_paras_body">-->
+<!--                    </tbody>-->
+<!--                  </table>-->
+<!--                  {{ render_field(parameter_form.submit) }}-->
+<!--                </form>-->
+<!--                <hr>-->
+<!--                <h5 class="text-primary">实验文件</h5>-->
+<!--                <form method="POST" id="form_exps" name="form_exps">-->
+<!--                  {{ experiment_form.csrf_token }}-->
+<!--                  {{ render_form_row([experiment_form.experiment_id]) }}-->
+<!--                  <table id="exp" class="table table-bordered table-sm">-->
+<!--                    <thead id="table_exps_head">-->
+<!--                    </thead>-->
+<!--                    <tbody id="table_exps_body">-->
+<!--                    </tbody>-->
+<!--                  </table>-->
+<!--                  {{ render_field(experiment_form.submit) }}-->
+<!--                </form>-->
+<!--              </div>-->
+<!--            </div>-->
+<!--          </div>-->
           <div class="col-6">
             <div class="card card-primary">
               <div class="card-header">
-                <h3 class="card-title">{{ optimize_id }}号优化信息</h3>
+                <h3 class="card-title">{{ optimize_id }}号优化过程</h3>
                 <div class="card-tools">
                   <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
                     <i class="fas fa-minus"></i>
@@ -97,35 +174,10 @@
                 </div>
               </div>
               <div class="card-body">
-                <h5 class="text-primary">参数设置</h5>
-                <form method="POST" id="form_paras" name="form_paras">
-                  {{ parameter_form.csrf_token }}
-                  <table id="data" class="table table-bordered table-sm">
-                    <thead>
-                    <tr>
-                      <th width="60px">变量</th>
-                      <th>名称</th>
-                      <th>值</th>
-                    </tr>
-                    </thead>
-                    <tbody id="table_paras_body">
-                    </tbody>
-                  </table>
-                  {{ render_field(parameter_form.submit) }}
-                </form>
-                <hr>
-                <h5 class="text-primary">实验文件</h5>
-                <form method="POST" id="form_exps" name="form_exps">
-                  {{ experiment_form.csrf_token }}
-                  {{ render_form_row([experiment_form.experiment_id]) }}
-                  <table id="exp" class="table table-bordered table-sm">
-                    <thead id="table_exps_head">
-                    </thead>
-                    <tbody id="table_exps_body">
-                    </tbody>
-                  </table>
-                  {{ render_field(experiment_form.submit) }}
-                </form>
+                <div class="col-6" style="border: 1px solid black">
+                  <h6 class="text">实验-模拟曲线</h6>
+                  <img id="fig" src="{{ url_for('optimize.get_optimize_file', optimize_id=optimize_id, filename='fig.png') }}" style="width: 100%; height: auto;" alt="描述文字">
+                </div>
               </div>
             </div>
           </div>
@@ -301,9 +353,15 @@
       .catch(error => {
         console.error('Error:', error);
       });
+
+    const img = document.getElementById('fig');
+    const src = img.src.split('?')[0]; // 移除可能存在的查询参数
+    img.src = src + '?t=' + new Date().getTime(); // 添加时间戳防止缓存
   }
 
   updateStatus()
+
+  setInterval(updateStatus, 4000);
 
   experimentSelect.addEventListener('change', function () {
     const experimentId = this.value.split('_')[0];

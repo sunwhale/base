@@ -163,6 +163,7 @@ def view_optimize(optimize_id):
 
     if experiment_form.submit.data and experiment_form.validate():
         data = request.form.to_dict()
+        data['EXPERIMENT_PATH'] = current_app.config['EXPERIMENT_PATH']
         if os.path.exists(experiments_json_file):
             dump_json(experiments_json_file, data)
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
