@@ -202,7 +202,7 @@
     });
   }
 
-  function updateExps(exp_status) {
+  function updateExps(exp_status, exp_json) {
     const excludedKeys = ['descript', 'operation', 'path', 'specimen_id', 'experiment_id', 'specimen_time', 'name'];
 
     const tableHead = document.getElementById('table_exps_head');
@@ -239,6 +239,15 @@
       checkbox.type = 'checkbox';
       checkbox.id = 'check_' + row['specimen_id'];
       checkbox.name = 'check_' + row['specimen_id'];
+
+      if (exp_json && checkbox && checkbox.id) {
+        if (checkbox.id in exp_json) {
+          checkbox.checked = true;
+        } else {
+          checkbox.checked = false;
+        }
+      }
+
       td1.appendChild(checkbox);
       tr.appendChild(td1);
 
@@ -278,11 +287,16 @@
     const baseExperimentUrl = "{{ url_for('experiment.experiment_specimens_status', experiment_id=0) }}";
     const experimentId = experimentSelect.value.split('_')[0];
     const url3 = baseExperimentUrl.slice(0, -1) + experimentId;
-    console.log(url3)
+    const url4 = "{{ url_for('optimize.experiments_status', optimize_id=optimize_id) }}";
     fetch(url3)
       .then(response => response.json())
       .then(data3 => {
-        updateExps(data3["data"]);
+        return fetch(url4)
+          .then(response => response.json())
+          .then(data4 => {
+            // 处理两个请求的数据
+            updateExps(data3["data"], data4);
+          });
       })
       .catch(error => {
         console.error('Error:', error);
@@ -294,11 +308,17 @@
   experimentSelect.addEventListener('change', function () {
     const experimentId = this.value.split('_')[0];
     const baseExperimentUrl = "{{ url_for('experiment.experiment_specimens_status', experiment_id=0) }}";
-    const url = baseExperimentUrl.slice(0, -1) + experimentId;
-    fetch(url)
+    const url3 = baseExperimentUrl.slice(0, -1) + experimentId;
+    const url4 = "{{ url_for('optimize.experiments_status', optimize_id=optimize_id) }}";
+    fetch(url3)
       .then(response => response.json())
       .then(data3 => {
-        updateExps(data3["data"]);
+        return fetch(url4)
+          .then(response => response.json())
+          .then(data4 => {
+            // 处理两个请求的数据
+            updateExps(data3["data"], data4);
+          });
       })
       .catch(error => {
         console.error('Error:', error);
