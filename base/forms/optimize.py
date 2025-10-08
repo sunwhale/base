@@ -40,8 +40,16 @@ class UploadForm(FlaskForm):
 
 
 class ParameterForm(FlaskForm):
-    para = StringField('参数名称')
+    submit = SubmitField('提交')
+
+
+class ExperimentForm(FlaskForm):
+    experiment_id = SelectField('实验项目编号', coerce=str)
     submit = SubmitField('保存')
+
+    def __init__(self, *args, **kwargs):
+        super(ExperimentForm, self).__init__(*args, **kwargs)
+        self.experiment_id.choices = ['']
 
 
 class OptimizeForm(FlaskForm):

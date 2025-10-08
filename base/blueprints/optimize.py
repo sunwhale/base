@@ -13,7 +13,7 @@ from markupsafe import Markup
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm
+from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm
 from base.global_var import event_source
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Preproc import Preproc
@@ -21,7 +21,7 @@ from base.utils.abaqus.Solver import Solver
 from base.utils.abaqus.add_phasefield_layer import add_phasefield_layer as add_phasefield_layer_abaqus
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status, get_optimize_status, project_jobs_detail,
-                                   optimizes_detail, materials_detail, projects_detail, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
+                                   optimizes_detail, experiments_detail, projects_detail, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
 from base.utils.events_new import update_events_new
 from base.utils.make_gif import make_gif
 from base.utils.read_prescan import read_prescan
@@ -83,6 +83,8 @@ def create_optimize():
         dump_json(msg_file, message)
         optimize_file = os.path.join(optimize_path, 'optimize.json')
         dump_json(optimize_file, {})
+        parameters_json_file = os.path.join(optimize_path, 'parameters.json')
+        dump_json(parameters_json_file, {})
         flash('项目创建成功。', 'success')
         return redirect(url_for('.view_optimize', optimize_id=optimize_id))
 
@@ -137,8 +139,19 @@ def view_optimize(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
     parameters_json_file = os.path.join(optimize_path, 'parameters.json')
+    _json_file = os.path.join(optimize_path, 'parameters.json')
 
     upload_form = UploadForm()
+    parameter_form = ParameterForm()
+    experiment_form = ExperimentForm()
+
+    experiments_path = current_app.config['EXPERIMENT_PATH']
+    experiment_dict = experiments_detail(experiments_path)
+    experiment_list = []
+    for experiment in experiment_dict['data']:
+        experiment_list.append('%s_%s' % (experiment['experiment_id'], experiment['name']))
+
+    experiment_form.experiment_id.choices = experiment_list
 
     if upload_form.submit.data and upload_form.validate():
         f = upload_form.filename.data
@@ -146,17 +159,25 @@ def view_optimize(optimize_id):
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
-    if request.method == 'POST':
+    if experiment_form.submit.data and experiment_form.validate():
         data = request.form.to_dict()
-        for item in data.items():
+        for item in data.keys():
+            print(item)
+        print(experiment_form.experiment_id.data)
+        return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
+
+    if parameter_form.submit.data and parameter_form.validate():
+        data = request.form.to_dict()
+        for item in data.keys():
             print(item)
         if os.path.exists(parameters_json_file):
             dump_json(parameters_json_file, data)
+        return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
     if os.path.exists(optimize_path):
         status = get_optimize_status(optimizes_path, optimize_id)
         files = files_in_dir(optimize_path)
-        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, upload_form=upload_form)
+        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, upload_form=upload_form, experiment_form=experiment_form, parameter_form=parameter_form)
     else:
         abort(404)
 

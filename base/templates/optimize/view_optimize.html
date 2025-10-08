@@ -97,13 +97,13 @@
                 </div>
               </div>
               <div class="card-body">
-                <div class="card-body">
+                <h5 class="text-primary">参数设置</h5>
                 <form method="POST" id="form_paras" name="form_paras">
-                  {{ upload_form.csrf_token }}
+                  {{ parameter_form.csrf_token }}
                   <table id="data" class="table table-bordered table-sm">
                     <thead>
                     <tr>
-                      <th>变量</th>
+                      <th width="60px">变量</th>
                       <th>名称</th>
                       <th>值</th>
                     </tr>
@@ -111,41 +111,20 @@
                     <tbody id="table_paras_body">
                     </tbody>
                   </table>
-
-                  <button class="btn btn-success" type="submit" id="submit_paras">
-                    <i class="fa fa-upload"></i>
-                    <strong>提交</strong>
-                  </button>
+                  {{ render_field(parameter_form.submit) }}
                 </form>
-              </div>
-            </div>
-          </div>
-        </div>
-          <div class="col-6">
-            <div class="card card-primary">
-              <div class="card-header">
-                <h3 class="card-title">{{ optimize_id }}号优化信息</h3>
-                <div class="card-tools">
-                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                    <i class="fas fa-minus"></i>
-                  </button>
-                </div>
-              </div>
-              <div class="card-body">
-                <div class="card-body">
-                <form method="POST" id="form_exps" name="form_paras">
-                  {{ upload_form.csrf_token }}
+                <hr>
+                <h5 class="text-primary">实验文件</h5>
+                <form method="POST" id="form_exps" name="form_exps">
+                  {{ experiment_form.csrf_token }}
+                  {{ render_form_row([experiment_form.experiment_id]) }}
                   <table id="exp" class="table table-bordered table-sm">
                     <thead id="table_exps_head">
                     </thead>
                     <tbody id="table_exps_body">
                     </tbody>
                   </table>
-
-                  <button class="btn btn-success" type="submit" id="submit_exps">
-                    <i class="fa fa-upload"></i>
-                    <strong>提交</strong>
-                  </button>
+                  {{ render_field(experiment_form.submit) }}
                 </form>
               </div>
             </div>
@@ -157,16 +136,14 @@
 {% endblock content %}
 
 {% block script %}
-<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables/jquery.dataTables.min.js') }}"></script>
-<script src="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
-<script src="{{ url_for('static', filename='codemirror-5.65.16/lib/codemirror.js') }}"></script>
-<script src="{{ url_for('static', filename='codemirror-5.65.16/mode/javascript/javascript.js') }}"></script>
 
 <script type="text/javascript">
 
   $(document).ready(function () {
     $('#descript').attr('disabled', true)
   });
+
+  const experimentSelect = document.getElementById('experiment_id');
 
   function updateParas(para_name, para_status) {
     const tableBody = document.getElementById('table_paras_body');
@@ -233,6 +210,7 @@
     const tr = document.createElement('tr');
     const th1 = document.createElement('th');
     th1.textContent = '选择';
+    th1.style.width = '60px';
     tr.appendChild(th1);
 
     const th2 = document.createElement('th');
@@ -259,8 +237,8 @@
       const td1 = document.createElement('td');
       const checkbox = document.createElement('input');
       checkbox.type = 'checkbox';
-      checkbox.id = 'check_' + row;
-      checkbox.name = 'check_' + row;
+      checkbox.id = 'check_' + row['specimen_id'];
+      checkbox.name = 'check_' + row['specimen_id'];
       td1.appendChild(checkbox);
       tr.appendChild(td1);
 
@@ -296,7 +274,11 @@
       .catch(error => {
         console.error('Error:', error);
       });
-    const url3 = "{{ url_for('experiment.experiment_specimens_status', experiment_id=6) }}";
+
+    const baseExperimentUrl = "{{ url_for('experiment.experiment_specimens_status', experiment_id=0) }}";
+    const experimentId = experimentSelect.value.split('_')[0];
+    const url3 = baseExperimentUrl.slice(0, -1) + experimentId;
+    console.log(url3)
     fetch(url3)
       .then(response => response.json())
       .then(data3 => {
@@ -308,6 +290,20 @@
   }
 
   updateStatus()
+
+  experimentSelect.addEventListener('change', function () {
+    const experimentId = this.value.split('_')[0];
+    const baseExperimentUrl = "{{ url_for('experiment.experiment_specimens_status', experiment_id=0) }}";
+    const url = baseExperimentUrl.slice(0, -1) + experimentId;
+    fetch(url)
+      .then(response => response.json())
+      .then(data3 => {
+        updateExps(data3["data"]);
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+  });
 
   $(document).ready(function () {
     $('#submit_queue_all').on('click', function () {
