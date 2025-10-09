@@ -211,6 +211,43 @@ def run_optimize(optimize_id):
         abort(404)
 
 
+@optimize_bp.route('/terminate_optimize/<int:optimize_id>')
+@login_required
+def terminate_optimize(optimize_id):
+    optimizes_path = current_app.config['OPTIMIZE_PATH']
+    optimize_path = os.path.join(optimizes_path, str(optimize_id))
+    if os.path.exists(optimize_path):
+        s = Solver(optimize_path)
+        s.read_msg()
+        with open(os.path.join(optimize_path, '.pid'), 'r', encoding='utf-8') as f:
+            pid = int(f.read())
+
+        if f'{optimize_id}' in current_app.config['OPTIMIZE_PROC_DICT']:
+            proc = current_app.config['OPTIMIZE_PROC_DICT'][f'{optimize_id}']
+        else:
+            pass
+
+        if current_app.config['IS_WIN']:
+            cmd = 'taskkill /t /f /pid {}'.format(pid)
+            print(cmd)
+            os.system(cmd)
+            with open(os.path.join(optimize_path, '.solver_status'), 'w', encoding='utf-8') as f:
+                f.write('Stopped')
+            with open(os.path.join(optimize_path, '{}.log'.format(s.job)), 'a', encoding='utf-8') as f:
+                f.write('EXITED')
+        else:
+            import signal
+            os.killpg(pid, signal.SIGTERM)
+            with open(os.path.join(optimize_path, '.solver_status'), 'w', encoding='utf-8') as f:
+                f.write('Stopped')
+            with open(os.path.join(optimize_path, '{}.log'.format(s.job)), 'a', encoding='utf-8') as f:
+                f.write('EXITED')
+
+        return redirect(request.referrer or url_for('.view_optimize', optimize_id=optimize_id))
+    else:
+        abort(404)
+
+
 @optimize_bp.route('/optimize_job_status/<int:optimize_id>', methods=['GET', 'POST'])
 @login_required
 def optimize_job_status(optimize_id):

@@ -63,7 +63,7 @@
                 <button id="calculateBtn" class="btn btn-secondary" disabled><strong>计 算</strong></button>
                 <a id="calculateLink" href="{{ url_for('optimize.run_optimize', optimize_id=optimize_id) }}" class="btn btn-success"><strong>计 算</strong></a>
                 <button id="terminateBtn" class="btn btn-secondary" disabled><strong>终 止</strong></button>
-                <a id="terminateLink" href="{{ url_for('optimize.run_optimize', optimize_id=optimize_id) }}" class="btn btn-danger"><strong>终 止</strong></a>
+                <a id="terminateLink" href="{{ url_for('optimize.terminate_optimize', optimize_id=optimize_id) }}" class="btn btn-danger"><strong>终 止</strong></a>
                 <button id="resetBtn" class="btn btn-secondary" disabled><strong>重 置</strong></button>
                 <a id="resetLink" href="{{ url_for('optimize.run_optimize', optimize_id=optimize_id) }}" class="btn btn-info"><strong>重 置</strong></a>
 
