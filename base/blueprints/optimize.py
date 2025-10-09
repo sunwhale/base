@@ -185,6 +185,7 @@ def view_optimize(optimize_id):
     else:
         abort(404)
 
+
 @optimize_bp.route('/run_optimize/<int:optimize_id>')
 @login_required
 def run_optimize(optimize_id):
@@ -192,20 +193,51 @@ def run_optimize(optimize_id):
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
     if os.path.exists(optimize_path):
         s = Solver(optimize_path)
-        # s.read_msg()
-        # s.clear()
-        # if s.check_files():
-        #     proc = s.run()
-        #     with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
-        #         f.write('Submitting')
-        #     with open(os.path.join(job_path, '.pid'), 'w', encoding='utf-8') as f:
-        #         f.write(f'{proc.pid}')
-        #     print(proc)
-        #     current_app.config['PYFEM_PROC_DICT'][f'{project_id}{job_id}'] = proc
-        #     print(current_app.config['PYFEM_PROC_DICT'])
-        # else:
-        #     flash('缺少必要的计算文件。', 'warning')
+        s.read_msg()
+        s.clear()
+        if s.check_files():
+            proc = s.run()
+            with open(os.path.join(optimize_path, '.solver_status'), 'w', encoding='utf-8') as f:
+                f.write('Submitting')
+            with open(os.path.join(optimize_path, '.pid'), 'w', encoding='utf-8') as f:
+                f.write(f'{proc.pid}')
+            print(proc)
+            current_app.config['OPTIMIZE_PROC_DICT'][f'{optimize_id}'] = proc
+            print(current_app.config['OPTIMIZE_PROC_DICT'])
+        else:
+            flash('缺少必要的计算文件。', 'warning')
         return redirect(request.referrer or url_for('.view_optimize', optimize_id=optimize_id))
+    else:
+        abort(404)
+
+
+@optimize_bp.route('/optimize_job_status/<int:optimize_id>', methods=['GET', 'POST'])
+@login_required
+def optimize_job_status(optimize_id):
+    optimizes_path = current_app.config['OPTIMIZE_PATH']
+    optimize_path = os.path.join(optimizes_path, str(optimize_id))
+    parameters_json_file = os.path.join(optimize_path, 'parameters.json')
+    experiments_json_file = os.path.join(optimize_path, 'experiments.json')
+    if os.path.exists(optimize_path):
+        s = Solver(optimize_path)
+        s.read_msg()
+        run_logs = s.get_run_log()
+        logs = s.get_log()
+        files = files_in_dir(optimize_path)
+        solver_status = s.solver_status()
+        parameters = load_json(parameters_json_file)
+        experiments = load_json(experiments_json_file)
+        optimize_status = get_optimize_status(optimizes_path, optimize_id)
+        status = {
+            'run_logs': run_logs,
+            'logs': logs[-50000:],
+            'files': files,
+            'solver_status': solver_status,
+            'parameters': parameters,
+            'experiments': experiments,
+            'optimize_status': optimize_status
+        }
+        return jsonify(status)
     else:
         abort(404)
 
