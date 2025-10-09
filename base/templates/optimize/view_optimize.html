@@ -147,7 +147,7 @@
                   <h6 class="text">实验-模拟曲线</h6>
                   <img id="fig" src="{{ url_for('optimize.get_optimize_file', optimize_id=optimize_id, filename='fig.png') }}" style="width: 100%; height: auto;" alt="描述文字">
                 </div>
-                <textarea id="textarea_run_log" class="form-control" style="height: 711.5px;">{{ run_logs }}</textarea>
+                <textarea id="textarea_log" class="form-control" style="height: 711.5px;"></textarea>
               </div>
             </div>
           </div>
@@ -182,6 +182,12 @@
   function updateRunLog(run_logs) {
     const textarea = document.getElementById('textarea_run_log');
     textarea.value = run_logs;
+    textarea.scrollTop = textarea.scrollHeight; // 滚动到最底部
+  }
+
+  function updateLog(logs) {
+    const textarea = document.getElementById('textarea_log');
+    textarea.value = logs;
     textarea.scrollTop = textarea.scrollHeight; // 滚动到最底部
   }
 
@@ -358,6 +364,7 @@
             updateFiles(data1["files"]);
             updateButtons(data1["solver_status"]);
             updateTextSolverStatus(data1["solver_status"]);
+            updateLog(data1['logs']);
             updateRunLog(data1['run_logs']);
           });
       })
