@@ -49,6 +49,7 @@ class BaseConfig:
     PACKING_MODELS_PATH = os.path.join(FILE_PATH, 'packing', 'models')
     PYFEM_PATH = os.path.join(FILE_PATH, 'pyfem')
     PYFEM_PROC_DICT = {}
+    OPTIMIZE_PROC_DICT = {}
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
