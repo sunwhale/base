@@ -17,8 +17,11 @@ import pandas as pd
 from numpy import ndarray
 from scipy.interpolate import interp1d
 from scipy.optimize import fmin
+from pyfem.Job import Job
+from pyfem.io.BaseIO import BaseIO
+from pyfem.database.ODB import ODB
 
-logger = logging.getLogger('log')
+logger = logging.getLogger('optimize')
 
 colors = [
     '#1f77b4',  # Tableau 蓝色
@@ -73,7 +76,7 @@ def load_json(file_path, encoding='utf-8'):
         return json.load(f)
 
 
-def set_logger(logger: Logger, abs_job_file: Path, level: int = logging.DEBUG) -> Optional[logging.Logger]:
+def set_logger(logger: Logger, abs_job_file: Path, level: int = logging.INFO) -> Optional[logging.Logger]:
     """
     设置 logging 模块的基础配置，并返回一个 logger 对象。
 
@@ -109,30 +112,6 @@ def set_logger(logger: Logger, abs_job_file: Path, level: int = logging.DEBUG) -
     logger.addHandler(console_handler)
 
     return logger
-
-
-def analytical_tensile_solution(parameters: dict, strain: ndarray, time: ndarray) -> tuple[ndarray, ndarray, ndarray]:
-    """
-    计算单调拉伸实验广义Maxwell模型的解析解
-    """
-    t = time
-    dt = np.diff(t)
-    strain_rate = np.diff(strain) / np.diff(t)
-    dt = np.concatenate((dt, dt[-1:]))
-    strain_rate = np.concatenate((strain_rate, strain_rate[-1:]))
-
-    h = []
-    for i in range(3):
-        h.append([0.0])
-        E_i = parameters[f'E{i + 1}']['value']
-        TAU_i = parameters[f'TAU{i + 1}']['value']
-        for j in range(1, len(dt)):
-            h[i].append(np.exp(-dt[j] / TAU_i) * h[i][j - 1] + TAU_i * E_i * (1.0 - np.exp(-dt[j] / TAU_i)) * strain_rate[j])
-
-    ha = np.array(h).transpose()
-    E_INF = parameters['EINF']['value']
-    stress = E_INF * strain + ha.sum(axis=1)
-    return strain, stress, time
 
 
 def get_elastic_module(strain: ndarray, stress: ndarray) -> tuple[float, float]:
@@ -300,6 +279,131 @@ def create_data_dict(time: ndarray, strain: ndarray, stress: ndarray) -> dict:
     return data
 
 
+def analytical_solution(parameters: dict, strain: ndarray, time: ndarray) -> tuple[ndarray, ndarray, ndarray]:
+    """
+    计算单调拉伸实验广义Maxwell模型的解析解
+    """
+    t = time
+    dt = np.diff(t)
+    strain_rate = np.diff(strain) / np.diff(t)
+    dt = np.concatenate((dt, dt[-1:]))
+    strain_rate = np.concatenate((strain_rate, strain_rate[-1:]))
+
+    h = []
+    for i in range(3):
+        h.append([0.0])
+        E_i = parameters[f'E{i + 1}']['value']
+        TAU_i = parameters[f'TAU{i + 1}']['value']
+        for j in range(1, len(dt)):
+            h[i].append(np.exp(-dt[j] / TAU_i) * h[i][j - 1] + TAU_i * E_i * (1.0 - np.exp(-dt[j] / TAU_i)) * strain_rate[j])
+
+    ha = np.array(h).transpose()
+    E_INF = parameters['EINF']['value']
+    stress = E_INF * strain + ha.sum(axis=1)
+    return strain, stress, time
+
+
+def pyfem_solution(parameters: dict, strain: ndarray, time: ndarray) -> tuple[ndarray, ndarray, ndarray]:
+    """
+    计算耦合相场断裂的广义Maxwell模型的有限元解
+    """
+
+    path = r'F:\Github\pyfem\examples\mechanical_phase\1element\hex8_visco'
+    job = Job(os.path.join(path, 'Job-1.toml'))
+
+    total_time = time[-1]
+    amplitude = [[time[i], strain[i]] for i in range(len(time))]
+
+    BaseIO.is_read_only = False
+
+    EINF = parameters['EINF']['value']
+    E1 = parameters['E1']['value']
+    E2 = parameters['E2']['value']
+    E3 = parameters['E3']['value']
+    TAU1 = parameters['TAU1']['value']
+    TAU2 = parameters['TAU2']['value']
+    TAU3 = parameters['TAU3']['value']
+    LC = parameters['LC']['value']
+    GC = parameters['GC']['value']
+    NU = 0.499
+
+    job.props.materials[0].data = [EINF, NU, E1, TAU1, E2, TAU2, E3, TAU3]
+    job.props.materials[1].data = [GC, LC]
+    job.props.solver.total_time = total_time
+    job.props.solver.max_dtime = total_time / 50.0
+    job.props.solver.initial_dtime = total_time / 50.0
+    job.props.amplitudes[0].data = amplitude
+    job.assembly.__init__(job.props)
+    job.run()
+
+    odb = ODB()
+    odb.load_hdf5(os.path.join(path, 'Job-1.hdf5'))
+
+    t = []
+    e11 = []
+    s11 = []
+    for frame in odb.steps['Step-1']['frames']:
+        t.append(frame['frameValue'])
+        e11.append(frame['fieldOutputs']['E11']['bulkDataBlocks'][0])
+        s11.append(frame['fieldOutputs']['S11']['bulkDataBlocks'][0])
+
+    return np.array(e11), np.array(s11), np.array(t)
+
+
+def pyfem_czm_solution(parameters: dict, strain: ndarray, time: ndarray) -> tuple[ndarray, ndarray, ndarray]:
+    """
+    计算耦合相场断裂的广义Maxwell模型的有限元解
+    """
+
+    path = r'F:\Github\pyfem\examples\mechanical_phase\1element\hex8_visco_czm'
+    job = Job(os.path.join(path, 'Job-1.toml'))
+
+    total_time = time[-1]
+    amplitude = [[time[i], strain[i]] for i in range(len(time))]
+
+    BaseIO.is_read_only = False
+
+    EINF = parameters['EINF']['value']
+    E1 = parameters['E1']['value']
+    E2 = parameters['E2']['value']
+    E3 = parameters['E3']['value']
+    TAU1 = parameters['TAU1']['value']
+    TAU2 = parameters['TAU2']['value']
+    TAU3 = parameters['TAU3']['value']
+    LC = parameters['LC']['value']
+    GC = parameters['GC']['value']
+    A1 = parameters['A1']['value']
+    A2 = parameters['A2']['value']
+    A3 = parameters['A3']['value']
+    P = parameters['P']['value']
+    XI = parameters['XI']['value']
+    C0 = parameters['C0']['value']
+    GTH = parameters['GTH']['value']
+    NU = 0.499
+
+    job.props.materials[0].data = [EINF, NU, E1, TAU1, E2, TAU2, E3, TAU3]
+    job.props.materials[1].data = [GC, LC, A1, A2, A3, P, XI, C0, GTH]
+    job.props.solver.total_time = total_time
+    job.props.solver.max_dtime = total_time / 50.0
+    job.props.solver.initial_dtime = total_time / 50.0
+    job.props.amplitudes[0].data = amplitude
+    job.assembly.__init__(job.props)
+    job.run()
+
+    odb = ODB()
+    odb.load_hdf5(os.path.join(path, 'Job-1.hdf5'))
+
+    t = []
+    e11 = []
+    s11 = []
+    for frame in odb.steps['Step-1']['frames']:
+        t.append(frame['frameValue'])
+        e11.append(frame['fieldOutputs']['E11']['bulkDataBlocks'][0])
+        s11.append(frame['fieldOutputs']['S11']['bulkDataBlocks'][0])
+
+    return np.array(e11), np.array(s11), np.array(t)
+
+
 class Optimize:
     """
     Optimize类。
@@ -311,7 +415,7 @@ class Optimize:
         self.is_clear = is_clear
         self.counter = 0
         self.last_plot_time = time.time()
-        self.max_iter = 10000
+        self.max_iter = 100
 
         self.msg_file = os.path.join(path, '.optimize_msg')
         self.parameters_json_file = os.path.join(path, 'parameters.json')
@@ -365,12 +469,13 @@ class Optimize:
         dump_json(self.parameters_json_file, parameters_dict)
 
     def preproc(self):
-        self.data = preproc_data(self.experiment_data, mode='strain_range', strain_start=0.000, strain_end=0.12, target_rows=100)
+        # self.data = preproc_data(self.experiment_data, mode='strain_range', strain_start=0.000, strain_end=0.12, target_rows=100)
+        self.data = preproc_data(self.experiment_data, mode='ultimate_stress', target_rows=50)
 
     def run(self):
         lock_file = Path(os.path.join(self.path, f'{self.job}.lck'))
-        if lock_file.exists():
-            exit(f'Error: The job is locked.\nIt may be running or terminated with exception.')
+        # if lock_file.exists():
+        #     exit(f'Error: The job is locked.\nIt may be running or terminated with exception.')
         lock_file.touch()
         logger.info('OPTIMIZE INITIATED')
         self.counter = 0
@@ -411,11 +516,15 @@ class Optimize:
             time_exp = data[key]['Time_s']
             strain_exp = data[key]['Strain']
             stress_exp = data[key]['Stress_MPa']
-            strain_sim, stress_sim, time_sim = analytical_tensile_solution(paras, strain_exp, time_exp)
+            # strain_sim, stress_sim, time_sim = analytical_solution(paras, strain_exp, time_exp)
+            # strain_sim, stress_sim, time_sim = pyfem_solution(paras, strain_exp, time_exp)
+            strain_sim, stress_sim, time_sim = pyfem_czm_solution(paras, strain_exp, time_exp)
             self.simulation_data[key] = {}
             self.simulation_data[key]['Time_s'] = time_sim
             self.simulation_data[key]['Strain'] = strain_sim
             self.simulation_data[key]['Stress_MPa'] = stress_sim
+            f_time_stress = data[key]['f_time_stress']
+            stress_exp = f_time_stress(time_sim)
             cost += np.sum(((stress_exp - stress_sim) / max(stress_exp)) ** 2, axis=0) / len(time_sim)
         return cost
 
@@ -423,10 +532,10 @@ class Optimize:
         fig, ax = plt.subplots(figsize=(8, 6))
         for i, key in enumerate(self.experiment_data.keys()):
             color = colors[i]
-            stress_exp = self.experiment_data[key]['Stress_MPa']
-            strain_exp = self.experiment_data[key]['Strain']
-            stress_sim = self.experiment_data[key]['Stress_MPa']
-            strain_sim = self.experiment_data[key]['Strain']
+            stress_exp = self.data[key]['Stress_MPa']
+            strain_exp = self.data[key]['Strain']
+            stress_sim = self.simulation_data[key]['Stress_MPa']
+            strain_sim = self.simulation_data[key]['Strain']
             ax.plot(strain_exp, stress_exp, marker='o', markerfacecolor='none', color=color, label=f'Exp. {key}', ls='')
             ax.plot(strain_sim, stress_sim, color=color)
 
