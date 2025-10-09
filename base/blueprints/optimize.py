@@ -15,11 +15,7 @@ from flask_login import current_user, login_required
 
 from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm
 from base.global_var import event_source
-from base.utils.abaqus.Postproc import Postproc
-from base.utils.abaqus.Preproc import Preproc
-from base.utils.abaqus.Solver import Solver
-from base.utils.abaqus.add_phasefield_layer import add_phasefield_layer as add_phasefield_layer_abaqus
-from base.utils.optimize import Solver
+from base.utils.optimize.Solver import Solver
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status, get_optimize_status, project_jobs_detail,
                                    optimizes_detail, experiments_detail, projects_detail, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
@@ -78,6 +74,7 @@ def create_optimize():
             'name': form.name.data,
             'type': form.type.data,
             'para': form.para.data,
+            'job': form.job.data,
             'descript': form.descript.data
         }
         msg_file = os.path.join(optimize_path, '.optimize_msg')
@@ -107,6 +104,7 @@ def edit_optimize(optimize_id):
             'name': form.name.data,
             'type': form.type.data,
             'para': form.para.data,
+            'job': form.job.data,
             'descript': form.descript.data
         }
         dump_json(msg_file, message)
@@ -116,6 +114,7 @@ def edit_optimize(optimize_id):
     form.name.data = message['name']
     form.type.data = message['type']
     form.para.data = message['para']
+    form.job.data = message['job']
     form.descript.data = message['descript']
     return render_template('optimize/create_optimize.html', form=form)
 
@@ -183,6 +182,30 @@ def view_optimize(optimize_id):
                 experiment_form.experiment_id.data = load_json(experiments_json_file)['experiment_id']
         return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, upload_form=upload_form,
                                experiment_form=experiment_form, parameter_form=parameter_form)
+    else:
+        abort(404)
+
+@optimize_bp.route('/run_optimize/<int:optimize_id>')
+@login_required
+def run_optimize(optimize_id):
+    optimizes_path = current_app.config['OPTIMIZE_PATH']
+    optimize_path = os.path.join(optimizes_path, str(optimize_id))
+    if os.path.exists(optimize_path):
+        s = Solver(optimize_path)
+        # s.read_msg()
+        # s.clear()
+        # if s.check_files():
+        #     proc = s.run()
+        #     with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
+        #         f.write('Submitting')
+        #     with open(os.path.join(job_path, '.pid'), 'w', encoding='utf-8') as f:
+        #         f.write(f'{proc.pid}')
+        #     print(proc)
+        #     current_app.config['PYFEM_PROC_DICT'][f'{project_id}{job_id}'] = proc
+        #     print(current_app.config['PYFEM_PROC_DICT'])
+        # else:
+        #     flash('缺少必要的计算文件。', 'warning')
+        return redirect(request.referrer or url_for('.view_optimize', optimize_id=optimize_id))
     else:
         abort(404)
 
