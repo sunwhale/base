@@ -140,14 +140,18 @@
                   <div>最后更新: <span id="lastUpdated">--</span></div>
                 </div>
 
-                <button id="controlBtn">开始自动更新</button>
+                <button id="controlBtn" class="btn btn-primary">开始自动更新</button>
 
                 <div class="log" id="log"></div>
+
+
+                <hr>
                 <div class="col-6" style="border: 1px solid black">
                   <h6 class="text">实验-模拟曲线</h6>
                   <img id="fig" src="{{ url_for('optimize.get_optimize_file', optimize_id=optimize_id, filename='fig.png') }}" style="width: 100%; height: auto;" alt="描述文字">
                 </div>
-                <textarea id="textarea_log" class="form-control" style="height: 711.5px;"></textarea>
+                <hr>
+                <textarea id="textarea_log" class="form-control" style="height: 800px;"></textarea>
               </div>
             </div>
           </div>
