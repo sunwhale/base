@@ -19,6 +19,7 @@ from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Preproc import Preproc
 from base.utils.abaqus.Solver import Solver
 from base.utils.abaqus.add_phasefield_layer import add_phasefield_layer as add_phasefield_layer_abaqus
+from base.utils.optimize import Solver
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status, get_optimize_status, project_jobs_detail,
                                    optimizes_detail, experiments_detail, projects_detail, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
@@ -170,8 +171,6 @@ def view_optimize(optimize_id):
 
     if parameter_form.submit.data and parameter_form.validate():
         data = request.form.to_dict()
-        for item in data.keys():
-            print(item)
         if os.path.exists(parameters_json_file):
             dump_json(parameters_json_file, data)
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
@@ -180,8 +179,10 @@ def view_optimize(optimize_id):
         status = get_optimize_status(optimizes_path, optimize_id)
         files = files_in_dir(optimize_path)
         if os.path.exists(experiments_json_file):
-            experiment_form.experiment_id.data = load_json(experiments_json_file)['experiment_id']
-        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, upload_form=upload_form, experiment_form=experiment_form, parameter_form=parameter_form)
+            if 'experiment_id' in load_json(experiments_json_file).keys():
+                experiment_form.experiment_id.data = load_json(experiments_json_file)['experiment_id']
+        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, upload_form=upload_form,
+                               experiment_form=experiment_form, parameter_form=parameter_form)
     else:
         abort(404)
 
