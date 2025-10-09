@@ -45,6 +45,7 @@
                   <li> 优化编号：{{ optimize_id }} </li>
                   <li> 优化类型：{{ status['type'] }} </li>
                   <li> 参数列表：{{ status['para'] }} </li>
+                  <li> 优化算例：{{ status['job'] }} </li>
                   <li> 创建时间：{{ status['json_time'] }} </li>
                   <li> 优化备注：</li>
                   <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
@@ -54,6 +55,17 @@
                   <a href="{{ url_for('optimize.open_optimize', optimize_id=optimize_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
                   {% endif %}
                 </ul>
+
+                <h5 class="text-primary">优化控制</h5>
+                <p class="mb-1" id="text_solver_status">{{ solver_status }}</p>
+                <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止优化过程，并通过<a href="javascript:location.reload();">刷新</a>页面获取算例状态。
+                </p>
+                <button id="calculateBtn" class="btn btn-secondary" disabled><strong>计 算</strong></button>
+                <a id="calculateLink" href="{{ url_for('optimize.run_optimize', optimize_id=optimize_id) }}" class="btn btn-success"><strong>计 算</strong></a>
+                <button id="terminateBtn" class="btn btn-secondary" disabled><strong>终 止</strong></button>
+                <a id="terminateLink" href="{{ url_for('optimize.run_optimize', optimize_id=optimize_id) }}" class="btn btn-danger"><strong>终 止</strong></a>
+                <button id="resetBtn" class="btn btn-secondary" disabled><strong>重 置</strong></button>
+                <a id="resetLink" href="{{ url_for('optimize.run_optimize', optimize_id=optimize_id) }}" class="btn btn-info"><strong>重 置</strong></a>
 
                 <hr>
                 <h5 class="text-primary">参数设置</h5>
@@ -120,49 +132,7 @@
           </div>
             </div>
           </div>
-<!--          <div class="col-4">-->
-<!--            <div class="card card-primary">-->
-<!--              <div class="card-header">-->
-<!--                <h3 class="card-title">{{ optimize_id }}号优化参数设置与实验选取</h3>-->
-<!--                <div class="card-tools">-->
-<!--                  <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">-->
-<!--                    <i class="fas fa-minus"></i>-->
-<!--                  </button>-->
-<!--                </div>-->
-<!--              </div>-->
-<!--              <div class="card-body">-->
-<!--                <h5 class="text-primary">参数设置</h5>-->
-<!--                <form method="POST" id="form_paras" name="form_paras">-->
-<!--                  {{ parameter_form.csrf_token }}-->
-<!--                  <table id="data" class="table table-bordered table-sm">-->
-<!--                    <thead>-->
-<!--                    <tr>-->
-<!--                      <th width="60px">变量</th>-->
-<!--                      <th>名称</th>-->
-<!--                      <th>值</th>-->
-<!--                    </tr>-->
-<!--                    </thead>-->
-<!--                    <tbody id="table_paras_body">-->
-<!--                    </tbody>-->
-<!--                  </table>-->
-<!--                  {{ render_field(parameter_form.submit) }}-->
-<!--                </form>-->
-<!--                <hr>-->
-<!--                <h5 class="text-primary">实验文件</h5>-->
-<!--                <form method="POST" id="form_exps" name="form_exps">-->
-<!--                  {{ experiment_form.csrf_token }}-->
-<!--                  {{ render_form_row([experiment_form.experiment_id]) }}-->
-<!--                  <table id="exp" class="table table-bordered table-sm">-->
-<!--                    <thead id="table_exps_head">-->
-<!--                    </thead>-->
-<!--                    <tbody id="table_exps_body">-->
-<!--                    </tbody>-->
-<!--                  </table>-->
-<!--                  {{ render_field(experiment_form.submit) }}-->
-<!--                </form>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </div>-->
+
           <div class="col-6">
             <div class="card card-primary">
               <div class="card-header">
