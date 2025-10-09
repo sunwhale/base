@@ -65,7 +65,7 @@
                 <button id="terminateBtn" class="btn btn-secondary" disabled><strong>终 止</strong></button>
                 <a id="terminateLink" href="{{ url_for('optimize.terminate_optimize', optimize_id=optimize_id) }}" class="btn btn-danger"><strong>终 止</strong></a>
                 <button id="resetBtn" class="btn btn-secondary" disabled><strong>重 置</strong></button>
-                <a id="resetLink" href="{{ url_for('optimize.run_optimize', optimize_id=optimize_id) }}" class="btn btn-info"><strong>重 置</strong></a>
+                <a id="resetLink" href="{{ url_for('optimize.reset_optimize', optimize_id=optimize_id) }}" class="btn btn-info"><strong>重 置</strong></a>
 
                 <hr>
                 <h5 class="text-primary">参数设置</h5>

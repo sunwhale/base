@@ -248,6 +248,23 @@ def terminate_optimize(optimize_id):
         abort(404)
 
 
+@optimize_bp.route('/reset_optimize/<int:optimize_id>')
+@login_required
+def reset_optimize(optimize_id):
+    optimizes_path = current_app.config['OPTIMIZE_PATH']
+    optimize_path = os.path.join(optimizes_path, str(optimize_id))
+    if os.path.exists(optimize_path):
+        s = Solver(optimize_path)
+        s.read_msg()
+        s.clear()
+        with open(os.path.join(optimize_path, '.solver_status'), 'w', encoding='utf-8') as f:
+            f.write('Setting')
+        flash('项目文件重置成功。', 'success')
+        return redirect(request.referrer or url_for('.view_optimize', optimize_id=optimize_id))
+    else:
+        abort(404)
+
+
 @optimize_bp.route('/optimize_job_status/<int:optimize_id>', methods=['GET', 'POST'])
 @login_required
 def optimize_job_status(optimize_id):
