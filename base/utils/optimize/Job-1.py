@@ -20,6 +20,42 @@ from scipy.optimize import fmin
 
 logger = logging.getLogger('log')
 
+colors = [
+    '#1f77b4',  # Tableau 蓝色
+    '#ff7f0e',  # Tableau 橙色
+    '#2ca02c',  # Tableau 绿色
+    '#d62728',  # Tableau 红色
+    '#9467bd',  # Tableau 紫色
+    '#8c564b',  # Tableau 棕色
+    '#e377c2',  # Tableau 粉色
+    '#7f7f7f',  # Tableau 灰色
+    '#bcbd22',  # Tableau 黄绿色
+    '#17becf',  # Tableau 浅蓝色
+    '#ff9898',  # 浅红色
+    '#98df8a'  # 浅绿色
+]
+
+colors += [
+    '#1f77b4', '#aec7e8',  # 蓝色系
+    '#ff7f0e', '#ffbb78',  # 橙色系
+    '#2ca02c', '#98df8a',  # 绿色系
+    '#d62728', '#ff9896',  # 红色系
+    '#9467bd', '#c5b0d5',  # 紫色系
+    '#8c564b', '#c49c94',  # 棕色系
+    '#e377c2', '#f7b6d2',  # 粉色系
+    '#7f7f7f', '#c7c7c7',  # 灰色系
+    '#bcbd22', '#dbdb8d',  # 黄绿色系
+    '#17becf', '#9edae5',  # 青色系
+    '#393b79', '#5254a3',  # 深蓝色系
+    '#637939', '#8ca252',  # 橄榄绿色系
+    '#843c39', '#ad494a',  # 深红色系
+    '#7b4173', '#a55194',  # 深紫色系
+    '#3182bd', '#6baed6',  # 天蓝色系
+    '#e6550d', '#fd8d3c',  # 深橙色系
+    '#31a354', '#74c476',  # 亮绿色系
+    '#756bb1', '#9e9ac8'  # 淡紫色系
+]
+
 
 def dump_json(file_path, data, encoding='utf-8'):
     """
@@ -274,6 +310,7 @@ class Optimize:
         self.job = job
         self.is_clear = is_clear
         self.counter = 0
+        self.last_plot_time = time.time()
         self.max_iter = 10000
 
         self.msg_file = os.path.join(path, '.optimize_msg')
@@ -283,6 +320,7 @@ class Optimize:
 
         self.parameters = {}
         self.experiment_data = {}
+        self.simulation_data = {}
         self.data = {}
         self.paras_0 = []
         self.load_settings()
@@ -338,7 +376,7 @@ class Optimize:
         self.counter = 0
         paras = fmin(self.func, self.paras_0, args=(self.data, self.parameters), maxiter=self.max_iter, ftol=1e-4, xtol=1e-4, disp=True)
         self.update_variable_parameters(paras, self.parameters)
-        self.plot(self.data, self.parameters)
+        self.plot_with_paras(self.data, self.parameters)
         logger.info('OPTIMIZE COMPLETED')
         lock_file.unlink()
 
@@ -355,11 +393,47 @@ class Optimize:
             punish += (max(0, -x[i])) ** 2
         y += 1e16 * punish
 
-        time.sleep(0.1)
         logger.info(f'迭代 {self.counter}: 总成本 = {y:.6f}, 真实成本 = {cost:.6f}, 惩罚项 = {punish:.2e}')
         self.write_parameters_json_file()
 
+        if time.time() - self.last_plot_time > 2.0:
+            self.plot_with_data()
+            self.last_plot_time = time.time()
+
         return y
+
+    def get_cost(self, data: dict, paras: dict):
+        """
+        计算实验值与预测值的误差
+        """
+        cost = 0.0
+        for key in data.keys():
+            time_exp = data[key]['Time_s']
+            strain_exp = data[key]['Strain']
+            stress_exp = data[key]['Stress_MPa']
+            strain_sim, stress_sim, time_sim = analytical_tensile_solution(paras, strain_exp, time_exp)
+            self.simulation_data[key] = {}
+            self.simulation_data[key]['Time_s'] = time_sim
+            self.simulation_data[key]['Strain'] = strain_sim
+            self.simulation_data[key]['Stress_MPa'] = stress_sim
+            cost += np.sum(((stress_exp - stress_sim) / max(stress_exp)) ** 2, axis=0) / len(time_sim)
+        return cost
+
+    def plot_with_data(self) -> None:
+        fig, ax = plt.subplots(figsize=(8, 6))
+        for i, key in enumerate(self.experiment_data.keys()):
+            color = colors[i]
+            stress_exp = self.experiment_data[key]['Stress_MPa']
+            strain_exp = self.experiment_data[key]['Strain']
+            stress_sim = self.experiment_data[key]['Stress_MPa']
+            strain_sim = self.experiment_data[key]['Strain']
+            ax.plot(strain_exp, stress_exp, marker='o', markerfacecolor='none', color=color, label=f'Exp. {key}', ls='')
+            ax.plot(strain_sim, stress_sim, color=color)
+
+        ax.legend(loc=0)
+        ax.grid(True, which='major', alpha=0.3)
+        plt.savefig('fig.png', dpi=150, transparent=True)
+        plt.close()
 
     @staticmethod
     def update_variable_parameters(x: list | tuple, parameters: dict) -> dict:
@@ -378,20 +452,6 @@ class Optimize:
         return parameters
 
     @staticmethod
-    def get_cost(data: dict, paras: dict):
-        """
-        计算实验值与预测值的误差
-        """
-        cost = 0.0
-        for key in data.keys():
-            time_exp = data[key]['Time_s']
-            strain_exp = data[key]['Strain']
-            stress_exp = data[key]['Stress_MPa']
-            strain_sim, stress_sim, time_sim = analytical_tensile_solution(paras, strain_exp, time_exp)
-            cost += np.sum(((stress_exp - stress_sim) / max(stress_exp)) ** 2, axis=0) / len(time_sim)
-        return cost
-
-    @staticmethod
     def create_data_dict(time: ndarray, strain: ndarray, stress: ndarray) -> dict:
         f_strain_stress = interp1d(strain, stress, kind='linear', fill_value='extrapolate')
         f_time_strain = interp1d(time, strain, kind='linear', fill_value='extrapolate')
@@ -405,16 +465,20 @@ class Optimize:
         return data
 
     @staticmethod
-    def plot(data: dict, paras: dict) -> None:
-        plt.figure()
-        for key in data.keys():
+    def plot_with_paras(data: dict, paras: dict) -> None:
+        fig, ax = plt.subplots(figsize=(8, 6))
+        for i, key in enumerate(data.keys()):
+            color = colors[i]
             time_exp = data[key]['Time_s']
             stress_exp = data[key]['Stress_MPa']
             strain_exp = data[key]['Strain']
-            plt.plot(strain_exp, stress_exp, marker='o')
             strain_sim, stress_sim, time_sim = analytical_tensile_solution(paras, strain_exp, time_exp)
-            plt.plot(strain_sim, stress_sim, color='red')
-        plt.savefig('fig.png')
+            ax.plot(strain_exp, stress_exp, marker='o', markerfacecolor='none', color=color, label=f'Exp. {key}', ls='')
+            ax.plot(strain_sim, stress_sim, color=color)
+
+        ax.legend(loc=0)
+        ax.grid(True, which='major', alpha=0.3)
+        plt.savefig('fig.png', dpi=150, transparent=True)
         plt.close()
 
 
