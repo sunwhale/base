@@ -56,6 +56,7 @@ class OptimizeForm(FlaskForm):
     name = StringField('优化名称', validators=[DataRequired(), Length(1, 62)])
     type = SelectField('优化类型', coerce=str)
     para = StringField('参数列表', validators=[DataRequired(message="字段不能为空"), comma_separated_validator])
+    job = StringField('优化算例', default='Job-1', validators=[DataRequired(), Length(1, 126)])
     descript = TextAreaField('优化备注', render_kw={'rows': 12})
     submit = SubmitField('提交')
 
