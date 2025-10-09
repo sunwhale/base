@@ -57,7 +57,7 @@
                 </ul>
 
                 <h5 class="text-primary">优化控制</h5>
-                <p class="mb-1" id="text_solver_status">{{ solver_status }}</p>
+                <p class="mb-1" id="text_solver_status"></p>
                 <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止优化过程，并通过<a href="javascript:location.reload();">刷新</a>页面获取算例状态。
                 </p>
                 <button id="calculateBtn" class="btn btn-secondary" disabled><strong>计 算</strong></button>
@@ -173,6 +173,17 @@
   // 状态和定时器变量
   let updateInterval = null;
   let isRunning = false;
+
+  function updateTextSolverStatus(solverStatus) {
+    const textSolverStatus = document.getElementById('text_solver_status');
+    textSolverStatus.innerText = '当前状态：' + solverStatus;
+  }
+
+  function updateRunLog(run_logs) {
+    const textarea = document.getElementById('textarea_run_log');
+    textarea.value = run_logs;
+    textarea.scrollTop = textarea.scrollHeight; // 滚动到最底部
+  }
 
   function updateFiles(files) {
     const tableBody = document.getElementById('table_files_body');
@@ -344,7 +355,10 @@
           .then(data2 => {
             updateParas(data1["optimize_status"]["para"], data1["parameters"]);
             updateExps(data2["data"], data1["experiments"]);
-            updateFiles(data1["files"])
+            updateFiles(data1["files"]);
+            updateButtons(data1["solver_status"]);
+            updateTextSolverStatus(data1["solver_status"]);
+            updateRunLog(data1['run_logs']);
           });
       })
       .catch(error => {
@@ -360,7 +374,38 @@
     lastUpdated.textContent = timeString;
   }
 
-  updateStatus()
+  function updateButtons(solverStatus) {
+    const calculateBtn = document.getElementById('calculateBtn');
+    const calculateLink = document.getElementById('calculateLink');
+    const terminateBtn = document.getElementById('terminateBtn');
+    const terminateLink = document.getElementById('terminateLink');
+    const resetBtn = document.getElementById('resetBtn');
+    const resetLink = document.getElementById('resetLink');
+
+    if (solverStatus === 'Submitting' || solverStatus === 'Running' || solverStatus === 'Pause' || solverStatus === 'Stopping') {
+      calculateBtn.style.display = 'inline-block';
+      calculateLink.style.display = 'none';
+    } else {
+      calculateBtn.style.display = 'none';
+      calculateLink.style.display = 'inline-block';
+    }
+
+    if (solverStatus === 'Running') {
+      terminateBtn.style.display = 'none';
+      terminateLink.style.display = 'inline-block';
+    } else {
+      terminateBtn.style.display = 'inline-block';
+      terminateLink.style.display = 'none';
+    }
+
+    if (solverStatus === 'Completed' || solverStatus === 'Stopped' || solverStatus === 'Setting') {
+      resetBtn.style.display = 'none';
+      resetLink.style.display = 'inline-block';
+    } else {
+      resetBtn.style.display = 'inline-block';
+      resetLink.style.display = 'none';
+    }
+  }
 
   experimentSelect.addEventListener('change', function () {
     const experimentId = this.value.split('_')[0];
@@ -433,6 +478,8 @@
 
   // 初始日志
   addLog('系统初始化完成');
+
+  updateStatus()
 
   document.getElementById('optimize').className = 'nav-item menu-open'
 </script>
