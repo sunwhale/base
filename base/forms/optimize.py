@@ -40,7 +40,7 @@ class UploadForm(FlaskForm):
 
 
 class ParameterForm(FlaskForm):
-    submit = SubmitField('提交')
+    submit = SubmitField('保存')
 
 
 class ExperimentForm(FlaskForm):
