@@ -57,7 +57,8 @@
                 </ul>
 
                 <h5 class="text-primary">优化控制</h5>
-                <p class="mb-1" id="text_solver_status"></p>
+                <span id="text_solver_status">--</span>（最后更新: <span id="lastUpdated">--</span>）
+                <div class="log" id="log"></div>
                 <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止优化过程，并通过<a href="javascript:location.reload();">刷新</a>页面获取算例状态。
                 </p>
                 <button id="calculateBtn" class="btn btn-secondary" disabled><strong>计 算</strong></button>
@@ -66,6 +67,8 @@
                 <a id="terminateLink" href="{{ url_for('optimize.terminate_optimize', optimize_id=optimize_id) }}" class="btn btn-danger"><strong>终 止</strong></a>
                 <button id="resetBtn" class="btn btn-secondary" disabled><strong>重 置</strong></button>
                 <a id="resetLink" href="{{ url_for('optimize.reset_optimize', optimize_id=optimize_id) }}" class="btn btn-info"><strong>重 置</strong></a>
+                <button id="controlBtn" class="btn btn-primary">开始自动更新</button>
+
 
                 <hr>
                 <h5 class="text-primary">参数设置</h5>
@@ -136,22 +139,44 @@
                 </div>
               </div>
               <div class="card-body">
-                <div class="status">
-                  <div>最后更新: <span id="lastUpdated">--</span></div>
-                </div>
-
-                <button id="controlBtn" class="btn btn-primary">开始自动更新</button>
-
-                <div class="log" id="log"></div>
+                <h5 class="text-primary">优化状态</h5>
 
 
                 <hr>
-                <div class="col-6" style="border: 1px solid black">
-                  <h6 class="text">实验-模拟曲线</h6>
-                  <img id="fig" src="{{ url_for('optimize.get_optimize_file', optimize_id=optimize_id, filename='fig.png') }}" style="width: 100%; height: auto;" alt="描述文字">
+                <div class="col-12">
+                  <h5 class="text-primary">实验-模拟曲线</h5>
+                  <div class="col-12" style="border: 1px solid black">
+                    <img id="fig" src="{{ url_for('optimize.get_optimize_file', optimize_id=optimize_id, filename='fig.png') }}" style="width: 100%; height: auto;" alt="描述文字">
+                  </div>
                 </div>
                 <hr>
-                <textarea id="textarea_log" class="form-control" style="height: 800px;"></textarea>
+                <div class="col-12">
+                  <!-- Custom Tabs -->
+                  <div class="card">
+                    <div class="card-header d-flex p-0">
+                      <h3 class="card-title p-3">日志</h3>
+                      <ul class="nav nav-pills ml-auto p-2">
+                        <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">求解日志 {{ status['job'] }}.log</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
+                      </ul>
+                    </div><!-- /.card-header -->
+                    <div class="card-body">
+                      <div class="tab-content">
+                        <!-- /.tab-pane -->
+                        <div class="tab-pane active" id="tab_1">
+                          <textarea id="textarea_log" class="form-control" style="height: 800.0px;"></textarea>
+                        </div>
+                        <!-- /.tab-pane -->
+                        <div class="tab-pane" id="tab_2">
+                          <textarea id="textarea_run_log" class="form-control" style="height: 800.0px;"></textarea>
+                        </div>
+                        <!-- /.tab-pane -->
+                      </div>
+                      <!-- /.tab-content -->
+                    </div><!-- /.card-body -->
+                  </div>
+                  <!-- ./card -->
+                </div>
               </div>
             </div>
           </div>
@@ -176,7 +201,7 @@
 
   // 状态和定时器变量
   let updateInterval = null;
-  let isRunning = false;
+  let isUpdate = true;
 
   function updateTextSolverStatus(solverStatus) {
     const textSolverStatus = document.getElementById('text_solver_status');
@@ -352,37 +377,42 @@
   }
 
   function updateStatus() {
-    const url1 = "{{ url_for('optimize.optimize_job_status', optimize_id=optimize_id) }}";
-    const baseExperimentUrl = "{{ url_for('experiment.experiment_specimens_status', experiment_id=0) }}";
-    const experimentId = experimentSelect.value.split('_')[0];
-    const url2 = baseExperimentUrl.slice(0, -1) + experimentId;
+    if (isUpdate === true) {
+      const url1 = "{{ url_for('optimize.optimize_job_status', optimize_id=optimize_id) }}";
+      const baseExperimentUrl = "{{ url_for('experiment.experiment_specimens_status', experiment_id=0) }}";
+      const experimentId = experimentSelect.value.split('_')[0];
+      const url2 = baseExperimentUrl.slice(0, -1) + experimentId;
 
-    fetch(url1)
-      .then(response => response.json())
-      .then(data1 => {
-        return fetch(url2)
-          .then(response => response.json())
-          .then(data2 => {
-            updateParas(data1["optimize_status"]["para"], data1["parameters"]);
-            updateExps(data2["data"], data1["experiments"]);
-            updateFiles(data1["files"]);
-            updateButtons(data1["solver_status"]);
-            updateTextSolverStatus(data1["solver_status"]);
-            updateLog(data1['logs']);
-            updateRunLog(data1['run_logs']);
-          });
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
+      fetch(url1)
+        .then(response => response.json())
+        .then(data1 => {
+          if (data1["solver_status"] === 'Stopped' || data1["solver_status"] === 'Completed') {
+            isUpdate = false;
+          }
+          return fetch(url2)
+            .then(response => response.json())
+            .then(data2 => {
+              updateParas(data1["optimize_status"]["para"], data1["parameters"]);
+              updateExps(data2["data"], data1["experiments"]);
+              updateFiles(data1["files"]);
+              updateButtons(data1["solver_status"]);
+              updateTextSolverStatus(data1["solver_status"]);
+              updateLog(data1['logs']);
+              updateRunLog(data1['run_logs']);
+            });
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
 
-    const img = document.getElementById('fig');
-    const src = img.src.split('?')[0]; // 移除可能存在的查询参数
-    img.src = src + '?t=' + new Date().getTime(); // 添加时间戳防止缓存
+      const img = document.getElementById('fig');
+      const src = img.src.split('?')[0]; // 移除可能存在的查询参数
+      img.src = src + '?t=' + new Date().getTime(); // 添加时间戳防止缓存
 
-    const now = new Date();
-    const timeString = now.toLocaleTimeString();
-    lastUpdated.textContent = timeString;
+      const now = new Date();
+      const timeString = now.toLocaleTimeString();
+      lastUpdated.textContent = timeString;
+    }
   }
 
   function updateButtons(solverStatus) {
@@ -457,10 +487,10 @@
 
   // 控制定时器
   function toggleInterval() {
-    if (isRunning) {
+    if (isUpdate) {
       // 停止定时器
       clearInterval(updateInterval);
-      isRunning = false;
+      isUpdate = false;
 
       // 更新UI
       controlBtn.textContent = '开始自动更新';
@@ -470,7 +500,7 @@
     } else {
       // 启动定时器
       updateInterval = setInterval(updateStatus, 4000);
-      isRunning = true;
+      isUpdate = true;
 
       // 更新UI
       controlBtn.textContent = '停止自动更新';
@@ -490,6 +520,7 @@
   addLog('系统初始化完成');
 
   updateStatus()
+  setInterval(updateStatus, 4000);
 
   document.getElementById('optimize').className = 'nav-item menu-open'
 </script>
