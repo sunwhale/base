@@ -285,27 +285,3 @@ def optimize_status(optimize_id):
         return get_optimize_status(optimizes_path, optimize_id)
     else:
         abort(404)
-
-
-@optimize_bp.route('/parameters_status/<int:optimize_id>', methods=['GET', 'POST'])
-@login_required
-def parameters_status(optimize_id):
-    optimizes_path = current_app.config['OPTIMIZE_PATH']
-    optimize_path = os.path.join(optimizes_path, str(optimize_id))
-    parameters_json_file = os.path.join(optimize_path, 'parameters.json')
-    if os.path.exists(parameters_json_file):
-        return load_json(parameters_json_file)
-    else:
-        abort(404)
-
-
-@optimize_bp.route('/experiments_status/<int:optimize_id>', methods=['GET', 'POST'])
-@login_required
-def experiments_status(optimize_id):
-    optimizes_path = current_app.config['OPTIMIZE_PATH']
-    optimize_path = os.path.join(optimizes_path, str(optimize_id))
-    experiments_json_file = os.path.join(optimize_path, 'experiments.json')
-    if os.path.exists(experiments_json_file):
-        return load_json(experiments_json_file)
-    else:
-        abort(404)
