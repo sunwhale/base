@@ -2,25 +2,10 @@
 """
 
 """
-import json
-import logging
-import os
-import time
-from logging import Logger
-from pathlib import Path
-from typing import Optional
 
-import colorlog
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-from get_simulation import get_simulation
 from numpy import ndarray
-from pyfem.Job import Job
-from pyfem.database.ODB import ODB
-from pyfem.io.BaseIO import BaseIO
 from scipy.interpolate import interp1d
-from scipy.optimize import fmin
 
 
 def get_elastic_module(strain: ndarray, stress: ndarray) -> tuple[float, float]:
@@ -59,12 +44,13 @@ def get_fracture_strain(strain: ndarray, stress: ndarray, slop_criteria: float) 
 
 
 def preproc_data(data: dict,
-                 mode: str = "default",
+                 mode: str = '基础预处理',
                  strain_shift: float = 0.0,
                  strain_start: float = 0.0,
-                 strain_end: float = 0.1,
+                 strain_end: float = 1.0,
+                 stress_start: float = 0.0,
+                 stress_end: float = 1.0,
                  threshold: float = 0.1,
-                 stress_limit: float = None,
                  target_rows: int = None,
                  fracture_slope_criteria: float = -50.0) -> dict:
     """
@@ -73,14 +59,16 @@ def preproc_data(data: dict,
     参数:
         data: 原始数据字典
         mode: 预处理模式，可选值:
-            - "default": 基础预处理（去重 + 应变平移）
-            - "elastic_limit": 截取弹性极限之前的部分
-            - "fracture_strain": 截取断裂应变之前的部分
-            - "ultimate_stress": 截取极限应力之前的部分
-            - "strain_range": 截取指定应变范围
+            - 'default': 基础预处理（去重 + 应变平移）
+            - 'elastic_limit': 截取弹性极限之前的部分
+            - 'fracture_strain': 截取断裂应变之前的部分
+            - 'ultimate_stress': 截取极限应力之前的部分
+            - 'strain_range': 截取指定应变范围
         strain_shift: 应变平移量
         strain_start: 应变范围起始值（用于strain_range模式）
         strain_end: 应变范围结束值（用于strain_range模式）
+        stress_start: 应变范围起始值（用于stress_range模式）
+        stress_end: 应变范围结束值（用于stress_range模式）
         threshold: 弹性极限判断阈值
         stress_limit: 应力限制值
         target_rows: 目标数据行数（用于数据缩减）
@@ -117,7 +105,7 @@ def preproc_data(data: dict,
 
         # 步骤3: 根据模式进行数据截取
         if len(strain) > 0:
-            if mode == "elastic_limit":
+            if mode == '截取弹性极限之前的部分':
                 try:
                     elastic_limit, E, shift = get_elastic_limit(strain, stress, strain_start, strain_end, threshold)
                     elastic_indices = strain < elastic_limit[0]
@@ -125,10 +113,10 @@ def preproc_data(data: dict,
                     strain = strain[elastic_indices]
                     stress = stress[elastic_indices]
                 except Exception as e:
-                    print(f"Warning: Elastic limit calculation failed for {key}: {e}")
+                    print(f'Warning: Elastic limit calculation failed for {key}: {e}')
                     # 如果计算失败，保持原数据
 
-            elif mode == "fracture_strain":
+            elif mode == '截取断裂应变之前的部分':
                 try:
                     fracture_strain, fracture_stress = get_fracture_strain(strain, stress, fracture_slope_criteria)
                     elastic_indices = strain < (fracture_strain - 0.05)
@@ -136,33 +124,32 @@ def preproc_data(data: dict,
                     strain = strain[elastic_indices]
                     stress = stress[elastic_indices]
                 except Exception as e:
-                    print(f"Warning: Fracture strain calculation failed for {key}: {e}")
+                    print(f'Warning: Fracture strain calculation failed for {key}: {e}')
 
-            elif mode == "ultimate_stress":
+            elif mode == '截取极限应力之前的部分':
                 try:
                     ultimate_stress_index = np.argmax(stress)
                     time = time[:ultimate_stress_index]
                     strain = strain[:ultimate_stress_index]
                     stress = stress[:ultimate_stress_index]
                 except Exception as e:
-                    print(f"Warning: Ultimate stress calculation failed for {key}: {e}")
+                    print(f'Warning: Ultimate stress calculation failed for {key}: {e}')
 
-            elif mode == "strain_range":
+            elif mode == '截取指定应变范围':
                 is_in_strain_range = (strain > strain_start) & (strain < strain_end)
                 if np.any(is_in_strain_range):
                     time = time[is_in_strain_range]
                     strain = strain[is_in_strain_range]
                     stress = stress[is_in_strain_range]
 
-        # 步骤4: 应力限制（如果指定了应力限制）
-        if stress_limit is not None and len(stress) > 0:
-            stress_indices = stress > stress_limit
-            if np.any(stress_indices):
-                time = time[stress_indices]
-                strain = strain[stress_indices]
-                stress = stress[stress_indices]
+            elif mode == '截取指定应力范围':
+                is_in_stress_range = (stress > stress_start) & (stress < stress_end)
+                if np.any(is_in_stress_range):
+                    time = time[is_in_stress_range]
+                    strain = strain[is_in_stress_range]
+                    stress = stress[is_in_stress_range]
 
-        # 步骤5: 数据缩减（如果指定了目标行数）
+        # 步骤4: 数据缩减（如果指定了目标行数）
         if target_rows is not None and len(time) > target_rows:
             total_rows = len(time)
             interval = total_rows // target_rows

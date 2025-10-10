@@ -14,12 +14,7 @@ import colorlog
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from numpy import ndarray
-from scipy.interpolate import interp1d
 from scipy.optimize import fmin
-from pyfem.Job import Job
-from pyfem.io.BaseIO import BaseIO
-from pyfem.database.ODB import ODB
 
 from get_simulation import get_simulation
 from preproc_data import preproc_data

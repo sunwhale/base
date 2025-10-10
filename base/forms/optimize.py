@@ -4,8 +4,8 @@
 """
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
-from wtforms import (SelectField, StringField, SubmitField, TextAreaField)
-from wtforms.validators import (DataRequired, ValidationError, Length)
+from wtforms import (SelectField, StringField, SubmitField, TextAreaField, FloatField)
+from wtforms.validators import (DataRequired, ValidationError, Length, NumberRange)
 
 
 def comma_separated_validator(form, field):
@@ -41,6 +41,23 @@ class UploadForm(FlaskForm):
 
 class ParameterForm(FlaskForm):
     submit = SubmitField('保存')
+
+
+class PreprocForm(FlaskForm):
+    mode = SelectField('预处理模式', coerce=str)
+    strain_shift = FloatField('应变平移量', default=0.0, validators=[DataRequired()])
+    strain_start = FloatField('应变范围起始值', default=0.0, validators=[DataRequired()])
+    strain_end = FloatField('应变范围结束值', default=1.0, validators=[DataRequired()])
+    stress_start = FloatField('应力范围起始值', default=0.0, validators=[DataRequired()])
+    stress_end = FloatField('应力范围结束值', default=1.0, validators=[DataRequired()])
+    threshold = FloatField('弹性极限判断阈值', default=0.1, validators=[DataRequired()])
+    target_rows = FloatField('目标数据行数（用于数据缩减）', default=0.0, validators=[DataRequired()])
+    fracture_slope_criteria = FloatField('断裂应变判断的斜率阈值', default=-50.0, validators=[DataRequired()])
+    submit = SubmitField('保存')
+
+    def __init__(self, *args, **kwargs):
+        super(PreprocForm, self).__init__(*args, **kwargs)
+        self.mode.choices = ['基础预处理', '截取弹性极限之前的部分', '截取断裂应变之前的部分', '截取极限应力之前的部分', '截取指定应变范围', '截取指定应力范围']
 
 
 class ExperimentForm(FlaskForm):

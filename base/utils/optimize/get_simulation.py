@@ -2,24 +2,13 @@
 """
 
 """
-import json
-import logging
 import os
-import time
-from logging import Logger
-from pathlib import Path
-from typing import Optional
 
-import colorlog
-import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from numpy import ndarray
 from pyfem.Job import Job
 from pyfem.database.ODB import ODB
 from pyfem.io.BaseIO import BaseIO
-from scipy.interpolate import interp1d
-from scipy.optimize import fmin
 
 
 def get_simulation(parameters: dict, strain: ndarray, time: ndarray) -> tuple[ndarray, ndarray, ndarray]:
