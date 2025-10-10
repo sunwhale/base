@@ -67,14 +67,6 @@ class Solver:
     def __init__(self, path, job='Job-1', is_clear=True):
         self.path = path
         self.job = job
-        # input_file = Path(filename)
-        # if input_file.is_absolute():
-        #     abs_input_file = input_file
-        # else:
-        #     abs_input_file = Path.cwd().joinpath(input_file).resolve()
-        # self.input_file: Path = input_file
-        # self.work_directory: Path = Path.cwd()
-        # self.abs_input_file: Path = abs_input_file
         self.is_clear = is_clear
 
     def read_msg(self):
@@ -112,6 +104,7 @@ class Solver:
         os.chdir(self.path)
         exts = [
             '*.log',
+            '*.lck'
         ]
         for ext in exts:
             remove_files(self.path, ext)
@@ -174,8 +167,8 @@ class Solver:
         elif 'INITIATED' in logs and solver_status != 'Stopping':
             solver_status = 'Running'
 
-        run_logs = self.get_log()
-        if 'Error' in run_logs or '找不到' in run_logs:
+        run_logs = self.get_run_log()
+        if 'Errno' in run_logs or 'Traceback' in run_logs:
             solver_status = 'Stopped'
 
         # 如果发生异常，则赋予默认值'Setting'
