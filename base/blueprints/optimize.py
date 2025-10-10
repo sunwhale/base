@@ -2,27 +2,18 @@
 """
 
 """
-import json
 import os
 import shutil
 import subprocess
-import time
 import uuid
-from markupsafe import Markup
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm
-from base.global_var import event_source
-from base.utils.optimize.Solver import Solver
+from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm, PreprocForm
 from base.utils.common import make_dir, dump_json, load_json
-from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status, get_optimize_status, project_jobs_detail,
-                                   optimizes_detail, experiments_detail, projects_detail, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
-from base.utils.events_new import update_events_new
-from base.utils.make_gif import make_gif
-from base.utils.read_prescan import read_prescan
-from base.utils.tree import json_to_ztree, odb_json_to_ztree
+from base.utils.dir_status import (create_id, files_in_dir, get_optimize_status, optimizes_detail, experiments_detail)
+from base.utils.optimize.Solver import Solver
 
 optimize_bp = Blueprint('optimize', __name__)
 
@@ -146,6 +137,7 @@ def view_optimize(optimize_id):
     upload_form = UploadForm()
     parameter_form = ParameterForm()
     experiment_form = ExperimentForm()
+    preproc_form = PreprocForm()
 
     experiments_path = current_app.config['EXPERIMENT_PATH']
     experiment_dict = experiments_detail(experiments_path)
@@ -180,8 +172,8 @@ def view_optimize(optimize_id):
         if os.path.exists(experiments_json_file):
             if 'experiment_id' in load_json(experiments_json_file).keys():
                 experiment_form.experiment_id.data = load_json(experiments_json_file)['experiment_id']
-        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, files=files, upload_form=upload_form,
-                               experiment_form=experiment_form, parameter_form=parameter_form)
+        return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, upload_form=upload_form,
+                               experiment_form=experiment_form, parameter_form=parameter_form, preproc_form=preproc_form)
     else:
         abort(404)
 
@@ -265,9 +257,9 @@ def reset_optimize(optimize_id):
         abort(404)
 
 
-@optimize_bp.route('/optimize_job_status/<int:optimize_id>', methods=['GET', 'POST'])
+@optimize_bp.route('/optimize_status/<int:optimize_id>', methods=['GET', 'POST'])
 @login_required
-def optimize_job_status(optimize_id):
+def optimize_status(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
     parameters_json_file = os.path.join(optimize_path, 'parameters.json')
@@ -329,13 +321,3 @@ def delete_optimize_file(optimize_id, filename):
     else:
         flash('文件%s不存在。' % filename, 'warning')
     return redirect(url_for('.view_optimize', optimize_id=optimize_id))
-
-
-@optimize_bp.route('/optimize_status/<int:optimize_id>', methods=['GET', 'POST'])
-@login_required
-def optimize_status(optimize_id):
-    optimizes_path = current_app.config['OPTIMIZE_PATH']
-    if os.path.exists(optimizes_path):
-        return get_optimize_status(optimizes_path, optimize_id)
-    else:
-        abort(404)

@@ -44,14 +44,15 @@ class ParameterForm(FlaskForm):
 
 
 class PreprocForm(FlaskForm):
-    mode = SelectField('预处理模式', coerce=str)
     strain_shift = FloatField('应变平移量', default=0.0, validators=[DataRequired()])
+    target_rows = FloatField('目标数据行数（用于数据缩减）', default=0.0, validators=[DataRequired()])
+
+    mode = SelectField('预处理模式', coerce=str)
     strain_start = FloatField('应变范围起始值', default=0.0, validators=[DataRequired()])
     strain_end = FloatField('应变范围结束值', default=1.0, validators=[DataRequired()])
     stress_start = FloatField('应力范围起始值', default=0.0, validators=[DataRequired()])
     stress_end = FloatField('应力范围结束值', default=1.0, validators=[DataRequired()])
     threshold = FloatField('弹性极限判断阈值', default=0.1, validators=[DataRequired()])
-    target_rows = FloatField('目标数据行数（用于数据缩减）', default=0.0, validators=[DataRequired()])
     fracture_slope_criteria = FloatField('断裂应变判断的斜率阈值', default=-50.0, validators=[DataRequired()])
     submit = SubmitField('保存')
 
