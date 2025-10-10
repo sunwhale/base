@@ -4,7 +4,7 @@
 """
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
-from wtforms import (SelectField, StringField, SubmitField, TextAreaField, FloatField, DecimalField)
+from wtforms import (SelectField, StringField, SubmitField, TextAreaField, FloatField, IntegerField)
 from wtforms.validators import (DataRequired, ValidationError, Length, NumberRange)
 
 
@@ -52,9 +52,9 @@ class ExperimentForm(FlaskForm):
         self.experiment_id.choices = ['']
 
 
-class PreprocDataForm(FlaskForm):
+class PreprocForm(FlaskForm):
     strain_shift = FloatField('应变平移量', default=0.0)
-    target_rows = FloatField('目标数据行数（用于数据缩减）', default=0.0)
+    target_rows = IntegerField('目标数据行数（用于数据缩减）', default=100, validators=[DataRequired(), NumberRange(1, 100000)])
     strain_start = FloatField('应变范围起始值', default=0.0)
     strain_end = FloatField('应变范围结束值', default=1.0)
     stress_start = FloatField('应力范围起始值', default=0.0)
@@ -65,7 +65,7 @@ class PreprocDataForm(FlaskForm):
     submit_preproc = SubmitField('保存预处理设置')
 
     def __init__(self, *args, **kwargs):
-        super(PreprocDataForm, self).__init__(*args, **kwargs)
+        super(PreprocForm, self).__init__(*args, **kwargs)
         self.preproc_mode.choices = ['基础预处理', '截取弹性极限之前的部分', '截取断裂应变之前的部分', '截取极限应力之前的部分', '截取指定应变范围', '截取指定应力范围']
 
 

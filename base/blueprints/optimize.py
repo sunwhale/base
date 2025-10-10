@@ -10,7 +10,7 @@ import uuid
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm, PreprocDataForm
+from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm, PreprocForm
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, get_optimize_status, optimizes_detail, experiments_detail)
 from base.utils.optimize.Solver import Solver
@@ -140,7 +140,7 @@ def view_optimize(optimize_id):
     upload_form = UploadForm()
     parameter_form = ParameterForm()
     experiment_form = ExperimentForm()
-    preproc_data_form = PreprocDataForm()
+    preproc_form = PreprocForm()
 
     experiments_path = current_app.config['EXPERIMENT_PATH']
     experiment_dict = experiments_detail(experiments_path)
@@ -163,17 +163,18 @@ def view_optimize(optimize_id):
             dump_json(experiments_json_file, data)
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
-    if preproc_data_form.submit_preproc.data and preproc_data_form.validate():
+    if preproc_form.submit_preproc.data and preproc_form.validate():
+        print('preproc_form')
         preproc_json = {
-            'strain_shift': preproc_data_form.strain_shift.data,
-            'target_rows': preproc_data_form.target_rows.data,
-            'preproc_mode': preproc_data_form.preproc_mode.data,
-            'strain_start': preproc_data_form.strain_start.data,
-            'strain_end': preproc_data_form.strain_end.data,
-            'stress_start': preproc_data_form.stress_start.data,
-            'stress_end': preproc_data_form.stress_end.data,
-            'threshold': preproc_data_form.threshold.data,
-            'fracture_slope_criteria': preproc_data_form.fracture_slope_criteria.data,
+            'strain_shift': preproc_form.strain_shift.data,
+            'target_rows': preproc_form.target_rows.data,
+            'preproc_mode': preproc_form.preproc_mode.data,
+            'strain_start': preproc_form.strain_start.data,
+            'strain_end': preproc_form.strain_end.data,
+            'stress_start': preproc_form.stress_start.data,
+            'stress_end': preproc_form.stress_end.data,
+            'threshold': preproc_form.threshold.data,
+            'fracture_slope_criteria': preproc_form.fracture_slope_criteria.data,
         }
         if os.path.exists(preproc_json_file):
             dump_json(preproc_json_file, preproc_json)
@@ -192,18 +193,19 @@ def view_optimize(optimize_id):
                 experiment_form.experiment_id.data = load_json(experiments_json_file)['experiment_id']
         try:
             preproc_json = load_json(preproc_json_file)
-            preproc_data_form.strain_shift.data = preproc_json['strain_shift']
-            preproc_data_form.preproc_mode.data = preproc_json['preproc_mode']
-            preproc_data_form.strain_start.data = preproc_json['strain_start']
-            preproc_data_form.strain_end.data = preproc_json['strain_end']
-            preproc_data_form.stress_start.data = preproc_json['stress_start']
-            preproc_data_form.stress_end.data = preproc_json['stress_end']
-            preproc_data_form.threshold.data = preproc_json['threshold']
-            preproc_data_form.fracture_slope_criteria.data = preproc_json['fracture_slope_criteria']
+            preproc_form.strain_shift.data = preproc_json['strain_shift']
+            preproc_form.target_rows.data = preproc_json['target_rows']
+            preproc_form.preproc_mode.data = preproc_json['preproc_mode']
+            preproc_form.strain_start.data = preproc_json['strain_start']
+            preproc_form.strain_end.data = preproc_json['strain_end']
+            preproc_form.stress_start.data = preproc_json['stress_start']
+            preproc_form.stress_end.data = preproc_json['stress_end']
+            preproc_form.threshold.data = preproc_json['threshold']
+            preproc_form.fracture_slope_criteria.data = preproc_json['fracture_slope_criteria']
         except:
             pass
         return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, upload_form=upload_form,
-                               experiment_form=experiment_form, parameter_form=parameter_form, preproc_data_form=preproc_data_form)
+                               experiment_form=experiment_form, parameter_form=parameter_form, preproc_form=preproc_form)
     else:
         abort(404)
 
