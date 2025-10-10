@@ -151,14 +151,12 @@ def view_optimize(optimize_id):
     experiment_form.experiment_id.choices = experiment_list
 
     if upload_form.submit_upload.data and upload_form.validate():
-        print('upload_form')
         f = upload_form.filename.data
         f.save(os.path.join(optimize_path, f.filename))
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
     if experiment_form.submit_experiment.data and experiment_form.validate():
-        print('experiment_form')
         data = request.form.to_dict()
         data['EXPERIMENT_PATH'] = current_app.config['EXPERIMENT_PATH']
         if os.path.exists(experiments_json_file):
@@ -166,7 +164,6 @@ def view_optimize(optimize_id):
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
     if preproc_data_form.submit_preproc.data and preproc_data_form.validate():
-        print('preproc_data_form')
         preproc_json = {
             'strain_shift': preproc_data_form.strain_shift.data,
             'target_rows': preproc_data_form.target_rows.data,
@@ -183,7 +180,6 @@ def view_optimize(optimize_id):
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
     if parameter_form.submit_parameter.data and parameter_form.validate():
-        print('parameter_form')
         data = request.form.to_dict()
         if os.path.exists(parameters_json_file):
             dump_json(parameters_json_file, data)
