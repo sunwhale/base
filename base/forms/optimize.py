@@ -43,24 +43,6 @@ class ParameterForm(FlaskForm):
     submit_parameter = SubmitField('保存参数设置')
 
 
-class PreprocDataForm(FlaskForm):
-    strain_shift = FloatField('应变平移量', default=0.0)
-    target_rows = FloatField('目标数据行数（用于数据缩减）', default=0.0)
-    # mode = SelectField('预处理模式', coerce=str)
-    strain_start = FloatField('应变范围起始值', default=0.0)
-    strain_end = FloatField('应变范围结束值', default=1.0)
-    stress_start = FloatField('应力范围起始值', default=0.0)
-    stress_end = FloatField('应力范围结束值', default=1.0)
-    threshold = FloatField('弹性极限判断阈值', default=0.1)
-    fracture_slope_criteria = FloatField('断裂应变判断的斜率阈值', default=-50.0)
-    submit_preproc = SubmitField('保存预处理设置')
-
-    # def __init__(self, *args, **kwargs):
-    #     super(PreprocDataForm, self).__init__(*args, **kwargs)
-    #     # self.mode.choices = ['基础预处理', '截取弹性极限之前的部分', '截取断裂应变之前的部分', '截取极限应力之前的部分', '截取指定应变范围', '截取指定应力范围']
-    #     self.mode.choices = ['Default']
-
-
 class ExperimentForm(FlaskForm):
     experiment_id = SelectField('实验项目编号', coerce=str)
     submit_experiment = SubmitField('保存实验设置')
@@ -68,6 +50,23 @@ class ExperimentForm(FlaskForm):
     def __init__(self, *args, **kwargs):
         super(ExperimentForm, self).__init__(*args, **kwargs)
         self.experiment_id.choices = ['']
+
+
+class PreprocDataForm(FlaskForm):
+    strain_shift = FloatField('应变平移量', default=0.0)
+    target_rows = FloatField('目标数据行数（用于数据缩减）', default=0.0)
+    strain_start = FloatField('应变范围起始值', default=0.0)
+    strain_end = FloatField('应变范围结束值', default=1.0)
+    stress_start = FloatField('应力范围起始值', default=0.0)
+    stress_end = FloatField('应力范围结束值', default=1.0)
+    threshold = FloatField('弹性极限判断阈值', default=0.1)
+    fracture_slope_criteria = FloatField('断裂应变判断的斜率阈值', default=-50.0)
+    preproc_mode = SelectField('预处理模式', coerce=str)
+    submit_preproc = SubmitField('保存预处理设置')
+
+    def __init__(self, *args, **kwargs):
+        super(PreprocDataForm, self).__init__(*args, **kwargs)
+        self.preproc_mode.choices = ['基础预处理', '截取弹性极限之前的部分', '截取断裂应变之前的部分', '截取极限应力之前的部分', '截取指定应变范围', '截取指定应力范围']
 
 
 class OptimizeForm(FlaskForm):

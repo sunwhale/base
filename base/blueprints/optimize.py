@@ -170,7 +170,7 @@ def view_optimize(optimize_id):
         preproc_json = {
             'strain_shift': preproc_data_form.strain_shift.data,
             'target_rows': preproc_data_form.target_rows.data,
-            # 'mode': preproc_data_form.mode.data,
+            'preproc_mode': preproc_data_form.preproc_mode.data,
             'strain_start': preproc_data_form.strain_start.data,
             'strain_end': preproc_data_form.strain_end.data,
             'stress_start': preproc_data_form.stress_start.data,
@@ -197,7 +197,7 @@ def view_optimize(optimize_id):
         try:
             preproc_json = load_json(preproc_json_file)
             preproc_data_form.strain_shift.data = preproc_json['strain_shift']
-            # preproc_data_form.mode.data = preproc_json['mode']
+            preproc_data_form.preproc_mode.data = preproc_json['preproc_mode']
             preproc_data_form.strain_start.data = preproc_json['strain_start']
             preproc_data_form.strain_end.data = preproc_json['strain_end']
             preproc_data_form.stress_start.data = preproc_json['stress_start']

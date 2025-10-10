@@ -105,7 +105,7 @@
                 <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
                   {{ preproc_data_form.csrf_token }}
                   {{ render_form_row([preproc_data_form.strain_shift, preproc_data_form.target_rows]) }}
-{#                  {{ render_field(preproc_data_form.mode) }}#}
+                  {{ render_field(preproc_data_form.preproc_mode) }}
                   {{ render_form_row([preproc_data_form.strain_start, preproc_data_form.strain_end]) }}
                   {{ render_form_row([preproc_data_form.stress_start, preproc_data_form.stress_end]) }}
                   {{ render_form_row([preproc_data_form.threshold, preproc_data_form.fracture_slope_criteria]) }}
