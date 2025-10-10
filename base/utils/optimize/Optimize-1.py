@@ -127,10 +127,12 @@ class Optimize:
         self.msg_file = os.path.join(path, '.optimize_msg')
         self.parameters_json_file = os.path.join(path, 'parameters.json')
         self.experiments_json_file = os.path.join(path, 'experiments.json')
+        self.preproc_json_file = os.path.join(path, 'preproc.json')
 
         self.parameters = {}
         self.experiment_data = {}
         self.simulation_data = {}
+        self.preproc_json = {}
         self.data = {}
         self.paras_0 = []
         self.job = ''
@@ -166,6 +168,9 @@ class Optimize:
                     csv_file = os.path.join(experiments_path, str(experiment_id), str(specimen_id), 'timed.csv')
                     self.experiment_data[specimen_id] = pd.read_csv(csv_file)
 
+        if os.path.exists(self.msg_file) and os.path.exists(self.preproc_json_file):
+            self.preproc_json = load_json(self.preproc_json_file)
+
         self.paras_0 = []
         for key in self.parameters.keys():
             if self.parameters[key]['type'] == 'variable':
@@ -180,8 +185,16 @@ class Optimize:
         dump_json(self.parameters_json_file, parameters_dict)
 
     def preproc(self):
-        self.data = preproc_data(self.experiment_data, mode='strain_range', strain_start=0.000, strain_end=0.12, target_rows=100)
-        # self.data = preproc_data(self.experiment_data, mode='ultimate_stress', target_rows=50)
+        self.data = preproc_data(data=self.experiment_data,
+                                 mode=self.preproc_json['preproc_mode'],
+                                 strain_shift=self.preproc_json['strain_shift'],
+                                 strain_start=self.preproc_json['strain_start'],
+                                 strain_end=self.preproc_json['strain_end'],
+                                 stress_start=self.preproc_json['stress_start'],
+                                 stress_end=self.preproc_json['stress_end'],
+                                 threshold=self.preproc_json['threshold'],
+                                 target_rows=self.preproc_json['target_rows'],
+                                 fracture_slope_criteria=self.preproc_json['fracture_slope_criteria'])
 
     def run(self):
         lock_file = Path(os.path.join(self.path, f'{self.job}.lck'))

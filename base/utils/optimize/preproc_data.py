@@ -51,7 +51,7 @@ def preproc_data(data: dict,
                  stress_start: float = 0.0,
                  stress_end: float = 1.0,
                  threshold: float = 0.1,
-                 target_rows: int = None,
+                 target_rows: int = 100,
                  fracture_slope_criteria: float = -50.0) -> dict:
     """
     对数据进行统一预处理

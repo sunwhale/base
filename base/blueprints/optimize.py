@@ -164,7 +164,6 @@ def view_optimize(optimize_id):
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
     if preproc_form.submit_preproc.data and preproc_form.validate():
-        print('preproc_form')
         preproc_json = {
             'strain_shift': preproc_form.strain_shift.data,
             'target_rows': preproc_form.target_rows.data,
