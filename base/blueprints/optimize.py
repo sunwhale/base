@@ -10,7 +10,7 @@ import uuid
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
 from flask_login import current_user, login_required
 
-from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm, PreprocForm
+from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm, PreprocDataForm
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, get_optimize_status, optimizes_detail, experiments_detail)
 from base.utils.optimize.Solver import Solver
@@ -76,6 +76,8 @@ def create_optimize():
         dump_json(parameters_json_file, {})
         experiments_json_file = os.path.join(optimize_path, 'experiments.json')
         dump_json(experiments_json_file, {})
+        preproc_json_file = os.path.join(optimize_path, 'preproc.json')
+        dump_json(preproc_json_file, {})
         flash('项目创建成功。', 'success')
         return redirect(url_for('.view_optimize', optimize_id=optimize_id))
 
@@ -133,11 +135,12 @@ def view_optimize(optimize_id):
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
     parameters_json_file = os.path.join(optimize_path, 'parameters.json')
     experiments_json_file = os.path.join(optimize_path, 'experiments.json')
+    preproc_json_file = os.path.join(optimize_path, 'preproc.json')
 
     upload_form = UploadForm()
     parameter_form = ParameterForm()
     experiment_form = ExperimentForm()
-    preproc_form = PreprocForm()
+    preproc_data_form = PreprocDataForm()
 
     experiments_path = current_app.config['EXPERIMENT_PATH']
     experiment_dict = experiments_detail(experiments_path)
@@ -147,20 +150,40 @@ def view_optimize(optimize_id):
 
     experiment_form.experiment_id.choices = experiment_list
 
-    if upload_form.submit.data and upload_form.validate():
+    if upload_form.submit_upload.data and upload_form.validate():
+        print('upload_form')
         f = upload_form.filename.data
         f.save(os.path.join(optimize_path, f.filename))
         flash('上传文件%s成功。' % f.filename, 'success')
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
-    if experiment_form.submit.data and experiment_form.validate():
+    if experiment_form.submit_experiment.data and experiment_form.validate():
+        print('experiment_form')
         data = request.form.to_dict()
         data['EXPERIMENT_PATH'] = current_app.config['EXPERIMENT_PATH']
         if os.path.exists(experiments_json_file):
             dump_json(experiments_json_file, data)
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
-    if parameter_form.submit.data and parameter_form.validate():
+    if preproc_data_form.submit_preproc.data and preproc_data_form.validate():
+        print('preproc_data_form')
+        preproc_json = {
+            'strain_shift': preproc_data_form.strain_shift.data,
+            'target_rows': preproc_data_form.target_rows.data,
+            # 'mode': preproc_data_form.mode.data,
+            'strain_start': preproc_data_form.strain_start.data,
+            'strain_end': preproc_data_form.strain_end.data,
+            'stress_start': preproc_data_form.stress_start.data,
+            'stress_end': preproc_data_form.stress_end.data,
+            'threshold': preproc_data_form.threshold.data,
+            'fracture_slope_criteria': preproc_data_form.fracture_slope_criteria.data,
+        }
+        if os.path.exists(preproc_json_file):
+            dump_json(preproc_json_file, preproc_json)
+        return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
+
+    if parameter_form.submit_parameter.data and parameter_form.validate():
+        print('parameter_form')
         data = request.form.to_dict()
         if os.path.exists(parameters_json_file):
             dump_json(parameters_json_file, data)
@@ -168,12 +191,23 @@ def view_optimize(optimize_id):
 
     if os.path.exists(optimize_path):
         status = get_optimize_status(optimizes_path, optimize_id)
-        files = files_in_dir(optimize_path)
         if os.path.exists(experiments_json_file):
             if 'experiment_id' in load_json(experiments_json_file).keys():
                 experiment_form.experiment_id.data = load_json(experiments_json_file)['experiment_id']
+        try:
+            preproc_json = load_json(preproc_json_file)
+            preproc_data_form.strain_shift.data = preproc_json['strain_shift']
+            # preproc_data_form.mode.data = preproc_json['mode']
+            preproc_data_form.strain_start.data = preproc_json['strain_start']
+            preproc_data_form.strain_end.data = preproc_json['strain_end']
+            preproc_data_form.stress_start.data = preproc_json['stress_start']
+            preproc_data_form.stress_end.data = preproc_json['stress_end']
+            preproc_data_form.threshold.data = preproc_json['threshold']
+            preproc_data_form.fracture_slope_criteria.data = preproc_json['fracture_slope_criteria']
+        except:
+            pass
         return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, upload_form=upload_form,
-                               experiment_form=experiment_form, parameter_form=parameter_form, preproc_form=preproc_form)
+                               experiment_form=experiment_form, parameter_form=parameter_form, preproc_data_form=preproc_data_form)
     else:
         abort(404)
 
