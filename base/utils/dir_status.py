@@ -316,7 +316,6 @@ def get_optimize_status(path, optimize_id):
             with open(msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
             status['name'] = message['name']
-            status['type'] = message['type']
             status['para'] = [item.strip() for item in message['para'].split(',')]
             status['job'] = message['job']
             status['json_file'] = json_file

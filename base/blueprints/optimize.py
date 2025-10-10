@@ -63,7 +63,6 @@ def create_optimize():
             f.write(str(uuid.uuid4()))
         message = {
             'name': form.name.data,
-            'type': form.type.data,
             'para': form.para.data,
             'job': form.job.data,
             'descript': form.descript.data
@@ -95,7 +94,6 @@ def edit_optimize(optimize_id):
     if form.validate_on_submit():
         message = {
             'name': form.name.data,
-            'type': form.type.data,
             'para': form.para.data,
             'job': form.job.data,
             'descript': form.descript.data
@@ -105,7 +103,6 @@ def edit_optimize(optimize_id):
 
     message = load_json(msg_file)
     form.name.data = message['name']
-    form.type.data = message['type']
     form.para.data = message['para']
     form.job.data = message['job']
     form.descript.data = message['descript']
