@@ -9,6 +9,9 @@ from numpy import ndarray
 from pyfem.Job import Job
 from pyfem.database.ODB import ODB
 from pyfem.io.BaseIO import BaseIO
+from Solver import Solver
+from Postproc import Postproc
+import time
 
 
 def get_simulation(parameters: dict, strain: ndarray, time: ndarray) -> tuple[ndarray, ndarray, ndarray]:
@@ -18,6 +21,8 @@ def get_simulation(parameters: dict, strain: ndarray, time: ndarray) -> tuple[nd
         strain_sim, stress_sim, time_sim = simulation_1(parameters, strain, time)
     elif int(parameters['MODE']['value']) == 2:
         strain_sim, stress_sim, time_sim = simulation_2(parameters, strain, time)
+    elif int(parameters['MODE']['value']) == 3:
+        strain_sim, stress_sim, time_sim = simulation_3(parameters, strain, time)
     else:
         raise KeyError
     return strain_sim, stress_sim, time_sim
@@ -146,3 +151,114 @@ def simulation_2(parameters: dict, strain: ndarray, time: ndarray) -> tuple[ndar
         s11.append(frame['fieldOutputs']['S11']['bulkDataBlocks'][0])
 
     return np.array(e11), np.array(s11), np.array(t)
+
+
+def simulation_3(parameters: dict, strain: ndarray, t: ndarray) -> tuple[ndarray, ndarray, ndarray]:
+    """
+    计算耦合相场断裂的广义Maxwell模型的有限元解
+    """
+    job_path = '/home/dell/www/base/files/abaqus/25/13'
+
+    total_time = t[-1]
+    total_strain = strain[-1]
+    amplitude = [[t[i], strain[i]] for i in range(len(t))]
+
+    gauge_length = 35.0
+    area = 25.0
+
+    s = Solver(job_path)
+    s.read_msg()
+    s.clear()
+    s.write_amplitude({'Amp-1': amplitude})
+    para_dict = s.parameters_to_dict()
+    for para in para_dict.keys():
+        if para in parameters:
+            para_dict[para] = parameters[para]['value']
+    para_dict['INTERVAL'] = total_time / 60.0
+    para_dict['TIME'] = total_time
+    para_dict['STRAIN'] = total_strain * gauge_length
+    s.save_parameters((s.dict_to_parameters(para_dict)))
+    s.run()
+    with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
+        f.write('Submitting')
+    is_run_completed = False
+    while not is_run_completed:
+        status = s.solver_status()
+        if status == 'Completed':
+            is_run_completed = True
+        elif status == 'Stopped':
+            break
+        else:
+            time.sleep(1)
+        print(status)
+
+    if is_run_completed:
+        p = Postproc(job_path)
+        p.read_msg()
+        p.odb_to_npz()
+        with open(os.path.join(job_path, '.odb_to_npz_status'), 'w', encoding='utf-8') as f:
+            f.write('Submitting')
+        is_odb_to_npz_done = False
+        while not is_odb_to_npz_done:
+            status = p.odb_to_npz_status()
+            if status == 'Done':
+                is_odb_to_npz_done = True
+            elif status == 'Error':
+                break
+            else:
+                time.sleep(1)
+            print(status)
+
+    npz_file = os.path.join(job_path, f'{s.job}.npz')
+    sim_data = load_region_data(npz_file, ['PART-1-1.SET-Y1'])
+    strain_fem = sim_data['PART-1-1.SET-Y1']['disp'] / gauge_length
+    stress_fem = sim_data['PART-1-1.SET-Y1']['force'] / area
+    time_sim = sim_data['PART-1-1.SET-Y1']['time']
+
+    return np.array(strain_fem), np.array(stress_fem), np.array(time_sim)
+
+
+def load_region_data(npz_file, regions):
+    npz = np.load(npz_file, allow_pickle=True, encoding='latin1')
+    data = npz['data'][()]
+    time = npz['time']
+
+    all_regions = data.keys()
+    odb_data = {}
+    out_data = {}
+
+    for r in regions:
+
+        odb_data[r] = {}
+        region_elementLabels = []
+        region_nodeLabels = []
+        for e in data[r]['elements']:
+            region_elementLabels.append(e['label'])
+        for n in data[r]['nodes']:
+            region_nodeLabels.append(n['label'])
+
+        odb_data[r]['region_elementLabels'] = region_elementLabels
+        odb_data[r]['region_nodeLabels'] = region_nodeLabels
+        odb_data[r]['position'] = data[r]['fieldOutputs']['S']['position']
+        odb_data[r]['regionType'] = data[r]['regionType']
+        odb_data[r]['fieldOutputs'] = {}
+
+        stress = np.array(data[r]['fieldOutputs']['S']['values'])
+        try:
+            strain = np.array(data[r]['fieldOutputs']['E']['values'])
+        except:
+            strain = np.array(data[r]['fieldOutputs']['LE']['values'])
+
+        u = np.array(data[r]['fieldOutputs']['U']['values'])
+        rf = np.array(data[r]['fieldOutputs']['RF']['values'])
+
+        out_data[r] = {}
+        out_data[r]['time'] = time
+        out_data[r]['disp'] = np.mean(u[:, :, 1], axis=1)
+        out_data[r]['force'] = np.sum(rf[:, :, 1], axis=1)
+
+    return out_data
+
+
+if __name__ == '__main__':
+    print(simulation_3({}, [0, 1], [0, 100]))

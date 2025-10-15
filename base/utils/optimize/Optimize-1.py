@@ -122,7 +122,7 @@ class Optimize:
         self.is_clear = is_clear
         self.counter = 0
         self.last_plot_time = time.time()
-        self.max_iter = 1
+        self.max_iter = 10
 
         self.msg_file = os.path.join(path, '.optimize_msg')
         self.parameters_json_file = os.path.join(path, 'parameters.json')
@@ -205,7 +205,7 @@ class Optimize:
         self.counter = 0
         paras = fmin(self.func, self.paras_0, args=(self.data, self.parameters), maxiter=self.max_iter, ftol=1e-4, xtol=1e-4, disp=True)
         self.update_variable_parameters(paras, self.parameters)
-        self.plot_with_paras(self.data, self.parameters)
+        self.plot_with_paras(self.data, self.parameters, self.path)
         logger.info('OPTIMIZE COMPLETED')
         lock_file.unlink()
 
@@ -251,6 +251,7 @@ class Optimize:
         return cost
 
     def plot_with_data(self) -> None:
+        fig_path = os.path.join(self.path, 'fig.png')
         fig, ax = plt.subplots(figsize=(8, 6))
         for i, key in enumerate(self.experiment_data.keys()):
             color = colors[i]
@@ -263,11 +264,12 @@ class Optimize:
 
         ax.legend(loc=0)
         ax.grid(True, which='major', alpha=0.3)
-        plt.savefig('fig.png', dpi=150, transparent=True)
+        plt.savefig(fig_path, dpi=150, transparent=True)
         plt.close()
 
     @staticmethod
-    def plot_with_paras(data: dict, paras: dict) -> None:
+    def plot_with_paras(data: dict, paras: dict, path: str) -> None:
+        fig_path = os.path.join(path, 'fig.png')
         fig, ax = plt.subplots(figsize=(8, 6))
         for i, key in enumerate(data.keys()):
             color = colors[i]
@@ -280,7 +282,7 @@ class Optimize:
 
         ax.legend(loc=0)
         ax.grid(True, which='major', alpha=0.3)
-        plt.savefig('fig.png', dpi=150, transparent=True)
+        plt.savefig(fig_path, dpi=150, transparent=True)
         plt.close()
 
     @staticmethod
