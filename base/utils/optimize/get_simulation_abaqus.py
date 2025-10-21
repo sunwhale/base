@@ -3,7 +3,11 @@
 
 """
 import os
+import sys
 import time
+
+BASE_PATH = '/home/dell/base'
+sys.path.insert(0, BASE_PATH)
 
 import numpy as np
 from numpy import ndarray
