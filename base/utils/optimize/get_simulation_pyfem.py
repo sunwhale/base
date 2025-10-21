@@ -4,17 +4,21 @@
 """
 import os
 import time
+import sys
+
+BASE_PATH = '/home/dell/base'
+sys.path.insert(0, BASE_PATH)
 
 import numpy as np
 from numpy import ndarray
 from pyfem.database.ODB import ODB
 
-from base.utils.pyfem.Solver import Solver
-
 try:
     import tomllib
 except ModuleNotFoundError:
     import tomli as tomllib
+
+from base.utils.pyfem.Solver import Solver
 
 
 def get_simulation(parameters: dict, strain: ndarray, t: ndarray, job_path: str) -> tuple[ndarray, ndarray, ndarray]:
@@ -32,7 +36,7 @@ def get_simulation(parameters: dict, strain: ndarray, t: ndarray, job_path: str)
     for para in para_dict.keys():
         if para in parameters:
             para_dict[para] = parameters[para]['value']
-    para_dict['INTERVAL'] = total_time / 100.0
+    para_dict['INTERVAL'] = total_time / 50.0
     para_dict['TIME'] = total_time
     para_dict['AMP1'] = amplitude
     s.save_parameters(para_dict)
