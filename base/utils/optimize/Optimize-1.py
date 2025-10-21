@@ -5,6 +5,7 @@
 import json
 import logging
 import os
+import threading
 import time
 from logging import Logger
 from pathlib import Path
@@ -14,10 +15,9 @@ import colorlog
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy.optimize import fmin
-
-from get_simulation import get_simulation
+from get_simulation_pyfem import get_simulation
 from preproc_data import preproc_data
+from scipy.optimize import fmin
 
 logger = logging.getLogger('optimize')
 
@@ -112,6 +112,20 @@ def set_logger(logger: Logger, abs_job_file: Path, level: int = logging.INFO) ->
     return logger
 
 
+class ReturnThread(threading.Thread):
+    def __init__(self, target, args=(), kwargs=None):
+        super().__init__()
+        if kwargs is None:
+            kwargs = {}
+        self.target = target
+        self.args = args
+        self.kwargs = kwargs
+        self.result = None
+
+    def run(self):
+        self.result = self.target(*self.args, **self.kwargs)
+
+
 class Optimize:
     """
     Optimize类。
@@ -122,12 +136,14 @@ class Optimize:
         self.is_clear = is_clear
         self.counter = 0
         self.last_plot_time = time.time()
-        self.max_iter = 10
+        self.max_iter = 1
 
         self.msg_file = os.path.join(path, '.optimize_msg')
         self.parameters_json_file = os.path.join(path, 'parameters.json')
         self.experiments_json_file = os.path.join(path, 'experiments.json')
         self.preproc_json_file = os.path.join(path, 'preproc.json')
+        self.pyfem_project_path = '/home/dell/www/base/files/pyfem/14'
+        self.abaqus_project_path = '/home/dell/www/base/files/abaqus/61'
 
         self.parameters = {}
         self.experiment_data = {}
@@ -205,7 +221,7 @@ class Optimize:
         self.counter = 0
         paras = fmin(self.func, self.paras_0, args=(self.data, self.parameters), maxiter=self.max_iter, ftol=1e-4, xtol=1e-4, disp=True)
         self.update_variable_parameters(paras, self.parameters)
-        self.plot_with_paras(self.data, self.parameters, self.path)
+        self.plot_with_data()
         logger.info('OPTIMIZE COMPLETED')
         lock_file.unlink()
 
@@ -222,7 +238,7 @@ class Optimize:
             punish += (max(0, -x[i])) ** 2
         y += 1e16 * punish
 
-        logger.info(f'迭代 {self.counter}: 总成本 = {y:.6f}, 真实成本 = {cost:.6f}, 惩罚项 = {punish:.2e}')
+        logger.info(f'迭代 {self.counter}: 总成本 = {y:.6f}')
         self.write_parameters_json_file()
 
         if time.time() - self.last_plot_time > 2.0:
@@ -236,11 +252,21 @@ class Optimize:
         计算实验值与预测值的误差
         """
         cost = 0.0
-        for key in data.keys():
+        threads = {}
+
+        for i, key in enumerate(data.keys()):
             time_exp = data[key]['Time_s']
             strain_exp = data[key]['Strain']
             stress_exp = data[key]['Stress_MPa']
-            strain_sim, stress_sim, time_sim = get_simulation(paras, strain_exp, time_exp)
+            job_path = os.path.join(self.abaqus_project_path, str(i + 1))
+            job_path = os.path.join(self.pyfem_project_path, str(i + 1))
+            threads[key] = ReturnThread(target=get_simulation, args=(paras, strain_exp, time_exp, job_path))
+            time.sleep(0.2)
+            threads[key].start()
+
+        for key in threads.keys():
+            threads[key].join()
+            strain_sim, stress_sim, time_sim = threads[key].result
             self.simulation_data[key] = {}
             self.simulation_data[key]['Time_s'] = time_sim
             self.simulation_data[key]['Strain'] = strain_sim
@@ -268,24 +294,6 @@ class Optimize:
         plt.close()
 
     @staticmethod
-    def plot_with_paras(data: dict, paras: dict, path: str) -> None:
-        fig_path = os.path.join(path, 'fig.png')
-        fig, ax = plt.subplots(figsize=(8, 6))
-        for i, key in enumerate(data.keys()):
-            color = colors[i]
-            time_exp = data[key]['Time_s']
-            stress_exp = data[key]['Stress_MPa']
-            strain_exp = data[key]['Strain']
-            strain_sim, stress_sim, time_sim = get_simulation(paras, strain_exp, time_exp)
-            ax.plot(strain_exp, stress_exp, marker='o', markerfacecolor='none', color=color, label=f'Exp. {key}', ls='')
-            ax.plot(strain_sim, stress_sim, color=color)
-
-        ax.legend(loc=0)
-        ax.grid(True, which='major', alpha=0.3)
-        plt.savefig(fig_path, dpi=150, transparent=True)
-        plt.close()
-
-    @staticmethod
     def update_variable_parameters(x: list | tuple, parameters: dict) -> dict:
         """
         更新参数字典中的变量参数值
@@ -304,4 +312,7 @@ class Optimize:
 
 if __name__ == '__main__':
     o = Optimize(Path(__file__).resolve().parent)
+    t0 = time.time()
     o.run()
+    t1 = time.time()
+    print(t1 - t0)
