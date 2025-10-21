@@ -280,6 +280,27 @@ class Solver:
                 para_dict[l[0]] = l[1]
         return para_dict.keys()
 
+    def parameters_to_dict(self):
+        para_file = os.path.join(self.path, 'parameters.inp')
+        if os.path.exists(para_file):
+            with open(para_file, 'r', encoding='utf-8') as f:
+                para = f.readlines()
+        else:
+            para = ''
+        para_dict = {}
+        for p in para:
+            if '=' in p:
+                l = p.strip().replace(' ', '').split('=')
+                para_dict[l[0]] = l[1]
+        return para_dict
+
+    @staticmethod
+    def dict_to_parameters(para_dict):
+        lines = ['*Parameter']
+        for key, value in para_dict.items():
+            line = f"{key} = {value}"
+            lines.append(line)
+
     def is_done(self):
         solver_status = self.solver_status()
         if solver_status == 'Stopped' or solver_status == 'Completed':
