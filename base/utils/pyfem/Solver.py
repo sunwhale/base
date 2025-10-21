@@ -11,8 +11,12 @@ import sys
 import threading
 
 import chardet
+import tomli_w
 
-from base.settings import ABAQUS
+try:
+    import tomllib  # type: ignore
+except ModuleNotFoundError:
+    import tomli as tomllib  # type: ignore
 
 WIN = sys.platform.startswith('win')
 
@@ -116,7 +120,7 @@ class Solver:
 
         """
         os.chdir(self.path)
-        self.preproc()
+        # self.preproc()
         if self.user == '':
             cmd = f'pyfem -i {self.job}.toml'
         else:
@@ -150,18 +154,6 @@ class Solver:
         os.chdir(self.path)
         os.killpg(pid, signal.SIGTERM)
 
-    def suspend(self):
-        os.chdir(self.path)
-        cmd = '%s suspend job=%s' % (ABAQUS, self.job)
-        proc = subprocess.Popen(cmd, shell=True)
-        return proc
-
-    def resume(self):
-        os.chdir(self.path)
-        cmd = '%s resume job=%s' % (ABAQUS, self.job)
-        proc = subprocess.Popen(cmd, shell=True)
-        return proc
-
     def get_sta(self):
         sta_file = os.path.join(self.path, '{}.sta'.format(self.job))
         if os.path.exists(sta_file):
@@ -187,7 +179,7 @@ class Solver:
         return logs
 
     def get_inp(self):
-        inp_file = os.path.join(self.path, '{}.inp'.format(self.job))
+        inp_file = os.path.join(self.path, '{}.toml'.format(self.job))
         if os.path.exists(inp_file):
             with open(inp_file, 'r') as f:
                 inp = f.read()
@@ -213,40 +205,28 @@ class Solver:
             logs = ''
         return logs
 
-    def save_parameters(self, para):
-        para_file = os.path.join(self.path, 'parameters.toml')
-        para = para.replace('\r', '')
-        with open(para_file, 'w', encoding='utf-8') as f:
-            f.write(para)
-
-    def parameters_to_json(self):
+    def parameters_to_dict(self):
         para_file = os.path.join(self.path, 'parameters.toml')
         if os.path.exists(para_file):
-            with open(para_file, 'r', encoding='utf-8') as f:
-                para = f.readlines()
+            with open(para_file, "rb") as f:
+                para_dict = tomllib.load(f)
         else:
-            para = ''
-        para_dict = {}
-        for p in para:
-            if '=' in p:
-                l = p.strip().replace(' ', '').split('=')
-                para_dict[l[0]] = l[1]
+            para_dict = {}
+        return para_dict
+
+    def save_parameters(self, para):
+        para_file = os.path.join(self.path, 'parameters.toml')
+        with open(para_file, "wb") as f:
+            tomli_w.dump(para, f)
+
+    def parameters_to_json(self):
+        para_dict = self.parameters_to_dict()
         para_json_file = os.path.join(self.path, 'parameters.json')
         with open(para_json_file, 'w', encoding='utf-8') as f:
             json.dump(para_dict, f, ensure_ascii=False)
 
     def parameter_keys(self):
-        para_file = os.path.join(self.path, 'parameters.toml')
-        if os.path.exists(para_file):
-            with open(para_file, 'r', encoding='utf-8') as f:
-                para = f.readlines()
-        else:
-            para = ''
-        para_dict = {}
-        for p in para:
-            if '=' in p:
-                l = p.strip().replace(' ', '').split('=')
-                para_dict[l[0]] = l[1]
+        para_dict = self.parameters_to_dict()
         return para_dict.keys()
 
     def is_done(self):
