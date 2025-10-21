@@ -10,7 +10,11 @@ import threading
 
 import chardet
 
-from base.settings import ABAQUS, ABAQUS_FORTRAN
+try:
+    from base.settings import ABAQUS, ABAQUS_FORTRAN
+except ImportError:
+    ABAQUS = 'abaqus'
+    ABAQUS_FORTRAN = 'abaqus'
 
 
 def files(curr_dir='.', ext='*.txt'):
@@ -300,6 +304,16 @@ class Solver:
         for key, value in para_dict.items():
             line = f"{key} = {value}"
             lines.append(line)
+
+    def write_amplitude(self, amplitude_dict):
+        amplitude_file_name = os.path.join(self.path, 'amplitude.inp')
+        f = open(amplitude_file_name, 'w')
+        for amplitude_name, amplitude_value in amplitude_dict.items():
+            f.writelines('*Amplitude, name=%s\n' % amplitude_name)
+            for amp in amplitude_value:
+                line = '%-20.10f,%-20.10f\n' % (amp[0], amp[1])
+                f.writelines(line)
+        f.close()
 
     def is_done(self):
         solver_status = self.solver_status()
