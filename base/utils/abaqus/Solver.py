@@ -399,4 +399,3 @@ if __name__ == '__main__':
     s = Solver(path='F:/Github/base/files/abaqus/5/1', job='Job-1', user='umat_cpfem_czm.for')
     s.clear()
     s.run()
-    

@@ -7,7 +7,10 @@ import os
 import subprocess
 import threading
 
-from base.settings import ABAQUS
+try:
+    from base.settings import ABAQUS
+except ImportError:
+    ABAQUS = 'abaqus'
 
 
 def is_number(s):
