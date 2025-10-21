@@ -5,6 +5,7 @@
 import json
 import logging
 import os
+import sys
 import threading
 import time
 from logging import Logger
@@ -15,9 +16,11 @@ import colorlog
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from get_simulation_pyfem import get_simulation
-from preproc_data import preproc_data
 from scipy.optimize import fmin
+
+BASE_PATH = '/home/dell/base'
+sys.path.insert(0, BASE_PATH)
+from base.utils.optimize.preproc_data import preproc_data
 
 logger = logging.getLogger('optimize')
 
@@ -136,13 +139,13 @@ class Optimize:
         self.is_clear = is_clear
         self.counter = 0
         self.last_plot_time = time.time()
-        self.max_iter = 1
+        self.max_iter = 1000
 
         self.msg_file = os.path.join(path, '.optimize_msg')
         self.parameters_json_file = os.path.join(path, 'parameters.json')
         self.experiments_json_file = os.path.join(path, 'experiments.json')
         self.preproc_json_file = os.path.join(path, 'preproc.json')
-        self.pyfem_project_path = '/home/dell/www/base/files/pyfem/14'
+        self.pyfem_project_path = '/home/dell/www/base/files/pyfem/15'
         self.abaqus_project_path = '/home/dell/www/base/files/abaqus/61'
 
         self.parameters = {}
@@ -153,6 +156,7 @@ class Optimize:
         self.paras_0 = []
         self.job = ''
         self.abs_job_file = Path()
+        self.get_simulation = None
         self.load_settings()
         self.preproc()
 
@@ -191,6 +195,20 @@ class Optimize:
         for key in self.parameters.keys():
             if self.parameters[key]['type'] == 'variable':
                 self.paras_0.append(self.parameters[key]['value'])
+
+        mode_mapping = {
+            0: 'get_simulation_analytical',
+            1: 'get_simulation_pyfem',
+            2: 'get_simulation_abaqus'
+        }
+
+        mode = int(self.parameters['MODE']['value'])
+        if mode in mode_mapping:
+            module_name = mode_mapping[mode]
+            module = __import__(module_name)
+            self.get_simulation = getattr(module, 'get_simulation')
+        else:
+            raise ValueError(f"Unsupported mode: {mode}")
 
     def write_parameters_json_file(self):
         parameters_dict = {}
@@ -253,15 +271,19 @@ class Optimize:
         """
         cost = 0.0
         threads = {}
-
         for i, key in enumerate(data.keys()):
             time_exp = data[key]['Time_s']
             strain_exp = data[key]['Strain']
             stress_exp = data[key]['Stress_MPa']
-            job_path = os.path.join(self.abaqus_project_path, str(i + 1))
-            job_path = os.path.join(self.pyfem_project_path, str(i + 1))
-            threads[key] = ReturnThread(target=get_simulation, args=(paras, strain_exp, time_exp, job_path))
-            time.sleep(0.2)
+            if int(self.parameters['MODE']['value']) == 0:
+                threads[key] = ReturnThread(target=self.get_simulation, args=(paras, strain_exp, time_exp))
+            elif int(self.parameters['MODE']['value']) == 1:
+                job_path = os.path.join(self.pyfem_project_path, str(i + 1))
+                threads[key] = ReturnThread(target=self.get_simulation, args=(paras, strain_exp, time_exp, job_path))
+            elif int(self.parameters['MODE']['value']) == 2:
+                job_path = os.path.join(self.abaqus_project_path, str(i + 1))
+                threads[key] = ReturnThread(target=self.get_simulation, args=(paras, strain_exp, time_exp, job_path))
+                time.sleep(0.2)
             threads[key].start()
 
         for key in threads.keys():
