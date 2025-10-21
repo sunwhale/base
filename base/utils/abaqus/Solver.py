@@ -120,7 +120,7 @@ class Solver:
         在使用 pywebview 在 python 命令行预览的时候会发生无法连接到 ifort 的错误，错误原因尚不明确，但在 flask run 和打包为 exe 执行的过程中没有发生该错误。
         """
         os.chdir(self.path)
-        self.preproc()
+        # self.preproc()
         if self.user == '':
             cmd = '%s job=%s cpus=%s ask=off' % (ABAQUS, self.job, self.cpus)
         else:
@@ -239,6 +239,38 @@ class Solver:
             para = ''
         return para
 
+    def parameters_to_dict(self):
+        para_file = os.path.join(self.path, 'parameters.inp')
+        if os.path.exists(para_file):
+            with open(para_file, 'r', encoding='utf-8') as f:
+                para = f.readlines()
+        else:
+            para = ''
+        para_dict = {}
+        for p in para:
+            if '=' in p:
+                l = p.strip().replace(' ', '').split('=')
+                para_dict[l[0]] = l[1]
+        return para_dict
+
+    @staticmethod
+    def dict_to_parameters(para_dict):
+        lines = ['*Parameter']
+        for key, value in para_dict.items():
+            line = f"{key} = {value}"
+            lines.append(line)
+        return '\n'.join(lines)
+
+    def write_amplitude(self, amplitude_dict):
+        amplitude_file_name = os.path.join(self.path, 'amplitude.inp')
+        f = open(amplitude_file_name, 'w')
+        for amplitude_name, amplitude_value in amplitude_dict.items():
+            f.writelines('*Amplitude, name=%s\n' % amplitude_name)
+            for amp in amplitude_value:
+                line = '%-20.10f,%-20.10f\n' % (amp[0], amp[1])
+                f.writelines(line)
+        f.close()
+
     def get_run_log(self):
         log_file = os.path.join(self.path, 'run.log')
         if os.path.exists(log_file):
@@ -283,37 +315,6 @@ class Solver:
                 l = p.strip().replace(' ', '').split('=')
                 para_dict[l[0]] = l[1]
         return para_dict.keys()
-
-    def parameters_to_dict(self):
-        para_file = os.path.join(self.path, 'parameters.inp')
-        if os.path.exists(para_file):
-            with open(para_file, 'r', encoding='utf-8') as f:
-                para = f.readlines()
-        else:
-            para = ''
-        para_dict = {}
-        for p in para:
-            if '=' in p:
-                l = p.strip().replace(' ', '').split('=')
-                para_dict[l[0]] = l[1]
-        return para_dict
-
-    @staticmethod
-    def dict_to_parameters(para_dict):
-        lines = ['*Parameter']
-        for key, value in para_dict.items():
-            line = f"{key} = {value}"
-            lines.append(line)
-
-    def write_amplitude(self, amplitude_dict):
-        amplitude_file_name = os.path.join(self.path, 'amplitude.inp')
-        f = open(amplitude_file_name, 'w')
-        for amplitude_name, amplitude_value in amplitude_dict.items():
-            f.writelines('*Amplitude, name=%s\n' % amplitude_name)
-            for amp in amplitude_value:
-                line = '%-20.10f,%-20.10f\n' % (amp[0], amp[1])
-                f.writelines(line)
-        f.close()
 
     def is_done(self):
         solver_status = self.solver_status()
@@ -398,3 +399,4 @@ if __name__ == '__main__':
     s = Solver(path='F:/Github/base/files/abaqus/5/1', job='Job-1', user='umat_cpfem_czm.for')
     s.clear()
     s.run()
+    
