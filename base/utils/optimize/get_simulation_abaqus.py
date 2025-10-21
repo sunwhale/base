@@ -8,8 +8,8 @@ import time
 import numpy as np
 from numpy import ndarray
 
-from Postproc import Postproc
-from Solver import Solver
+from base.utils.abaqus.Postproc import Postproc
+from base.utils.abaqus.Solver import Solver
 
 
 def get_simulation(parameters: dict, strain: ndarray, t: ndarray, job_path: str) -> tuple[ndarray, ndarray, ndarray]:
