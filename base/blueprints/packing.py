@@ -9,11 +9,12 @@ import threading
 import uuid
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, send_from_directory, url_for)
-from flask_login import current_user, login_required
+from flask_login import current_user
 from psic.create_mesh import create_mesh as psic_create_mesh
 from psic.create_submodel import create_submodel as psic_create_submodel
 from psic.packing_spheres_in_cube import create_model as psic_create_model
 
+from base.decorators import permission_required
 from base.forms.packing import (MeshForm, PackingForm, SubmodelForm, UploadForm, ABAQUSForm, ImportTemplateForm)
 from base.global_var import create_thread_id, exporting_threads
 from base.utils.common import make_dir, dump_json, load_json
@@ -24,7 +25,7 @@ packing_bp = Blueprint('packing', __name__)
 
 
 @packing_bp.route('/create_model/', methods=['GET', 'POST'])
-@login_required
+@permission_required('PACKING')
 def create_model():
     form = PackingForm()
     if form.validate_on_submit():
@@ -68,7 +69,7 @@ def create_model():
 
 
 @packing_bp.route('/create_submodel/<int:model_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('PACKING')
 def create_submodel(model_id):
     model_path = os.path.join(
         current_app.config['PACKING_MODELS_PATH'], str(model_id))
@@ -116,7 +117,7 @@ def create_submodel(model_id):
 
 
 @packing_bp.route('/create_mesh/<int:model_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('PACKING')
 def create_mesh(model_id):
     form = MeshForm()
     model_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(model_id))
@@ -186,7 +187,7 @@ def create_mesh(model_id):
 
 
 @packing_bp.route('/create_abaqus/<int:model_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('PACKING')
 def create_abaqus(model_id):
     model_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(model_id))
     submodels_path = os.path.join(model_path, 'submodels')
@@ -314,19 +315,19 @@ def create_abaqus(model_id):
 
 
 @packing_bp.route('/manage_models/')
-@login_required
+@permission_required('PACKING')
 def manage_models():
     return render_template('packing/manage_models.html')
 
 
 @packing_bp.route('/manage_submodels/<int:model_id>')
-@login_required
+@permission_required('PACKING')
 def manage_submodels(model_id):
     return render_template('packing/manage_submodels.html', model_id=model_id)
 
 
 @packing_bp.route('/models_status/')
-@login_required
+@permission_required('PACKING')
 def models_status():
     data = packing_models_detail(
         current_app.config['PACKING_MODELS_PATH'])
@@ -334,7 +335,7 @@ def models_status():
 
 
 @packing_bp.route('/submodels_status/<int:model_id>')
-@login_required
+@permission_required('PACKING')
 def submodels_status(model_id):
     submodels_path = os.path.join(
         current_app.config['PACKING_MODELS_PATH'], str(model_id), 'submodels')
@@ -343,7 +344,7 @@ def submodels_status(model_id):
 
 
 @packing_bp.route('/get_model/<int:model_id>/<path:filename>')
-@login_required
+@permission_required('PACKING')
 def get_model(model_id, filename):
     model_path = os.path.join(
         current_app.config['PACKING_MODELS_PATH'], str(model_id))
@@ -351,7 +352,7 @@ def get_model(model_id, filename):
 
 
 @packing_bp.route('/get_submodel/<int:model_id>/<int:submodel_id>/<path:filename>')
-@login_required
+@permission_required('PACKING')
 def get_submodel(model_id, submodel_id, filename):
     submodel_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(model_id), 'submodels',
                                  str(submodel_id))
@@ -359,21 +360,21 @@ def get_submodel(model_id, submodel_id, filename):
 
 
 @packing_bp.route('/get_mesh/<int:model_id>/<int:submodel_id>/<path:filename>')
-@login_required
+@permission_required('PACKING')
 def get_mesh(model_id, submodel_id, filename):
     mesh_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(model_id), 'meshes', str(submodel_id))
     return send_from_directory(mesh_path, filename)
 
 
 @packing_bp.route('/get_abaqus/<int:model_id>/<path:filename>')
-@login_required
+@permission_required('PACKING')
 def get_abaqus(model_id, filename):
     abaqus_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(model_id), 'abaqus')
     return send_from_directory(abaqus_path, filename)
 
 
 @packing_bp.route('/delete_abaqus_file/<int:model_id>/<path:filename>')
-@login_required
+@permission_required('PACKING')
 def delete_abaqus_file(model_id, filename):
     abaqus_path = os.path.join(current_app.config['PACKING_MODELS_PATH'], str(model_id), 'abaqus')
     file = os.path.join(abaqus_path, str(filename))
@@ -389,7 +390,7 @@ def delete_abaqus_file(model_id, filename):
 
 
 @packing_bp.route('/view_model/<int:model_id>')
-@login_required
+@permission_required('PACKING')
 def view_model(model_id):
     models_path = os.path.join(current_app.config['PACKING_MODELS_PATH'])
     if os.path.exists(os.path.join(models_path, str(model_id))):
@@ -400,7 +401,7 @@ def view_model(model_id):
 
 
 @packing_bp.route('/view_submodel/<int:model_id>/<int:submodel_id>')
-@login_required
+@permission_required('PACKING')
 def view_submodel(model_id, submodel_id):
     model_path = os.path.join(
         current_app.config['PACKING_MODELS_PATH'], str(model_id))
@@ -416,7 +417,7 @@ def view_submodel(model_id, submodel_id):
 
 
 @packing_bp.route('/delete_models/<int:model_id>')
-@login_required
+@permission_required('PACKING')
 def delete_models(model_id):
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该模型！', 'danger')
@@ -432,19 +433,19 @@ def delete_models(model_id):
 
 
 @packing_bp.route('/thread/<thread_id>')
-@login_required
+@permission_required('PACKING')
 def thread_id(thread_id):
     return jsonify(exporting_threads[thread_id])
 
 
 @packing_bp.route('/thread/')
-@login_required
+@permission_required('PACKING')
 def thread():
     return jsonify(exporting_threads)
 
 
 @packing_bp.route('/thread/clear/')
-@login_required
+@permission_required('PACKING')
 def thread_clear():
     thread_ids = list(exporting_threads.keys())
     for thread_id in thread_ids:
@@ -454,6 +455,6 @@ def thread_clear():
 
 
 @packing_bp.route('/status')
-@login_required
+@permission_required('PACKING')
 def status():
     return str(threading.active_count()) + str([t.current_thread() for t in threading.enumerate()])

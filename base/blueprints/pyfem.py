@@ -9,8 +9,9 @@ import time
 import uuid
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
-from flask_login import current_user, login_required
+from flask_login import current_user
 
+from base.decorators import permission_required
 from base.forms.pyfem import (JobForm, ParameterForm, ProjectForm, ImportTemplateForm, UploadForm)
 from base.global_var import event_source
 from base.utils.common import make_dir, dump_json, load_json
@@ -23,13 +24,13 @@ pyfem_bp = Blueprint('pyfem', __name__)
 
 
 @pyfem_bp.route('/manage_projects', methods=['GET', 'POST'])
-@login_required
+@permission_required('PYFEM')
 def manage_projects():
     return render_template('pyfem/manage_projects.html')
 
 
 @pyfem_bp.route('/create_project', methods=['GET', 'POST'])
-@login_required
+@permission_required('PYFEM')
 def create_project():
     form = ProjectForm()
 
@@ -57,14 +58,14 @@ def create_project():
 
 
 @pyfem_bp.route('/projects_status')
-@login_required
+@permission_required('PYFEM')
 def projects_status():
     data = projects_detail(current_app.config['PYFEM_PATH'])
     return jsonify(data)
 
 
 @pyfem_bp.route('/edit_project/<int:project_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('PYFEM')
 def edit_project(project_id):
     form = ProjectForm()
     pyfem_path = current_app.config['PYFEM_PATH']
@@ -92,7 +93,7 @@ def edit_project(project_id):
 
 
 @pyfem_bp.route('/delete_project/<int:project_id>')
-@login_required
+@permission_required('PYFEM')
 def delete_project(project_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     project_path = os.path.join(pyfem_path, str(project_id))
@@ -108,7 +109,7 @@ def delete_project(project_id):
 
 
 @pyfem_bp.route('/view_project/<int:project_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('PYFEM')
 def view_project(project_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     project_path = os.path.join(pyfem_path, str(project_id))
@@ -176,7 +177,7 @@ def view_project(project_id):
 
 
 @pyfem_bp.route('/open_project/<int:project_id>')
-@login_required
+@permission_required('PYFEM')
 def open_project(project_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     project_path = os.path.join(pyfem_path, str(project_id))
@@ -189,13 +190,13 @@ def open_project(project_id):
 
 
 @pyfem_bp.route('/get_project_file/<int:project_id>/<path:filename>')
-@login_required
+@permission_required('PYFEM')
 def get_project_file(project_id, filename):
     return send_from_directory(os.path.join(current_app.config['PYFEM_PATH'], str(project_id)), filename)
 
 
 @pyfem_bp.route('/delete_project_file/<int:project_id>/<path:filename>')
-@login_required
+@permission_required('PYFEM')
 def delete_project_file(project_id, filename):
     pyfem_path = current_app.config['PYFEM_PATH']
     file = os.path.join(pyfem_path, str(project_id), str(filename))
@@ -211,7 +212,7 @@ def delete_project_file(project_id, filename):
 
 
 @pyfem_bp.route('/synchronize_project_file/<int:project_id>/<path:filename>')
-@login_required
+@permission_required('PYFEM')
 def synchronize_project_file(project_id, filename):
     pyfem_path = current_app.config['PYFEM_PATH']
     project_path = os.path.join(pyfem_path, str(project_id))
@@ -226,7 +227,7 @@ def synchronize_project_file(project_id, filename):
 
 
 @pyfem_bp.route('/create_job/<int:project_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('PYFEM')
 def create_job(project_id):
     form = JobForm()
     pyfem_path = current_app.config['PYFEM_PATH']
@@ -260,7 +261,7 @@ def create_job(project_id):
 
 
 @pyfem_bp.route('/view_job/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('PYFEM')
 def view_job(project_id, job_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
@@ -288,7 +289,7 @@ def view_job(project_id, job_id):
 
 
 @pyfem_bp.route('/job_status/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('PYFEM')
 def job_status(project_id, job_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
@@ -315,7 +316,7 @@ def job_status(project_id, job_id):
 
 
 @pyfem_bp.route('/project_status/<int:project_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('PYFEM')
 def project_status(project_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     project_path = os.path.join(pyfem_path, str(project_id))
@@ -342,7 +343,7 @@ def project_jobs_status(project_id):
 
 
 @pyfem_bp.route('/edit_job/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('PYFEM')
 def edit_job(project_id, job_id):
     form = JobForm()
     pyfem_path = current_app.config['PYFEM_PATH']
@@ -368,7 +369,7 @@ def edit_job(project_id, job_id):
 
 
 @pyfem_bp.route('/delete_job/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('PYFEM')
 def delete_job(project_id, job_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
@@ -384,7 +385,7 @@ def delete_job(project_id, job_id):
 
 
 @pyfem_bp.route('/open_job/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('PYFEM')
 def open_job(project_id, job_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
@@ -397,7 +398,7 @@ def open_job(project_id, job_id):
 
 
 @pyfem_bp.route('/run_job/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('PYFEM')
 def run_job(project_id, job_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
@@ -422,7 +423,7 @@ def run_job(project_id, job_id):
 
 
 @pyfem_bp.route('/terminate_job/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('PYFEM')
 def terminate_job(project_id, job_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
@@ -459,7 +460,7 @@ def terminate_job(project_id, job_id):
 
 
 @pyfem_bp.route('/reset_job/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('PYFEM')
 def reset_job(project_id, job_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
@@ -476,7 +477,7 @@ def reset_job(project_id, job_id):
 
 
 @pyfem_bp.route('/join_job/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('PYFEM')
 def join_job(project_id, job_id):
     pyfem_path = current_app.config['PYFEM_PATH']
     job_path = os.path.join(pyfem_path, str(project_id), str(job_id))
@@ -505,13 +506,13 @@ def join_job(project_id, job_id):
 
 
 @pyfem_bp.route('/get_job_file/<int:project_id>/<int:job_id>/<path:filename>')
-@login_required
+@permission_required('PYFEM')
 def get_job_file(project_id, job_id, filename):
     return send_from_directory(os.path.join(current_app.config['PYFEM_PATH'], str(project_id), str(job_id)), filename)
 
 
 @pyfem_bp.route('/delete_job_file/<int:project_id>/<int:job_id>/<path:filename>')
-@login_required
+@permission_required('PYFEM')
 def delete_job_file(project_id, job_id, filename):
     pyfem_path = current_app.config['PYFEM_PATH']
     file = os.path.join(pyfem_path, str(project_id), str(job_id), str(filename))
