@@ -41,6 +41,7 @@ class BaseConfig:
     VIRTUAL_PATH = os.path.join(FILE_PATH, 'virtual')
     EXPERIMENT_PATH = os.path.join(FILE_PATH, 'experiment')
     OPTIMIZE_PATH = os.path.join(FILE_PATH, 'optimize')
+    OPTIMIZE_TEMPLATE_PATH = os.path.join(FILE_PATH, 'optimize_template')
     QUEUE_PATH = os.path.join(FILE_PATH, 'queue')
     EVENTS_NEW = os.path.join(FILE_PATH, 'queue', '.events_new')
     DOC_PATH = os.path.join(FILE_PATH, 'doc')

@@ -11,9 +11,10 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, rend
 from flask_login import current_user
 
 from base.decorators import permission_required
-from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm, PreprocForm
+from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm, PreprocForm, TemplateForm
 from base.utils.common import make_dir, dump_json, load_json
-from base.utils.dir_status import (create_id, files_in_dir, get_optimize_status, optimizes_detail, experiments_detail)
+from base.utils.dir_status import (create_id, files_in_dir, get_optimize_status, get_optimize_template_status, optimizes_detail, optimize_templates_detail,
+                                   experiments_detail)
 from base.utils.optimize.Solver import Solver
 
 optimize_bp = Blueprint('optimize', __name__)
@@ -350,3 +351,153 @@ def delete_optimize_file(optimize_id, filename):
     else:
         flash('文件%s不存在。' % filename, 'warning')
     return redirect(url_for('.view_optimize', optimize_id=optimize_id))
+
+
+@optimize_bp.route('/manage_templates', methods=['GET', 'POST'])
+@permission_required('OPTIMIZE')
+def manage_templates():
+    return render_template('optimize/manage_templates.html')
+
+
+@optimize_bp.route('/templates_status')
+@permission_required('OPTIMIZE')
+def templates_status():
+    data = optimize_templates_detail(current_app.config['OPTIMIZE_TEMPLATE_PATH'])
+    return jsonify(data)
+
+
+@optimize_bp.route('/template_status/<int:template_id>', methods=['GET', 'POST'])
+@permission_required('OPTIMIZE')
+def template_status(template_id):
+    templates_path = current_app.config['OPTIMIZE_TEMPLATE_PATH']
+    template_path = os.path.join(templates_path, str(template_id))
+    if os.path.exists(template_path):
+        files = files_in_dir(template_path)
+        status = {
+            'files': files,
+        }
+        return jsonify(status)
+    else:
+        abort(404)
+
+
+@optimize_bp.route('/create_template', methods=['GET', 'POST'])
+@permission_required('OPTIMIZE')
+def create_template():
+    form = TemplateForm()
+
+    if form.validate_on_submit():
+        templates_path = current_app.config['OPTIMIZE_TEMPLATE_PATH']
+        template_id = create_id(templates_path)
+        template_path = os.path.join(templates_path, str(template_id))
+        make_dir(template_path)
+        uuid_file = os.path.join(templates_path, str(template_id), '.uuid')
+        with open(uuid_file, 'w', encoding='utf-8') as f:
+            f.write(str(uuid.uuid4()))
+        message = {
+            'name': form.name.data,
+            'para': form.para.data,
+            'job': form.job.data,
+            'descript': form.descript.data
+        }
+        msg_file = os.path.join(template_path, '.template_msg')
+        dump_json(msg_file, message)
+        return redirect(url_for('.view_template', template_id=template_id))
+
+    return render_template('optimize/create_template.html', form=form)
+
+
+@optimize_bp.route('/view_template/<int:template_id>', methods=['GET', 'POST'])
+@permission_required('OPTIMIZE')
+def view_template(template_id):
+    templates_path = current_app.config['OPTIMIZE_TEMPLATE_PATH']
+    template_path = os.path.join(templates_path, str(template_id))
+    form = UploadForm()
+    if form.validate_on_submit():
+        f = form.filename.data
+        f.save(os.path.join(template_path, f.filename))
+        flash('上传文件%s成功。' % f.filename, 'success')
+        return redirect(url_for('optimize.view_template', template_id=template_id))
+    if os.path.exists(template_path):
+        status = get_optimize_template_status(templates_path, template_id)
+        files = files_in_dir(template_path)
+        return render_template('optimize/view_template.html', template_id=template_id, status=status, files=files, form=form)
+    else:
+        abort(404)
+
+
+@optimize_bp.route('/edit_template/<int:template_id>', methods=['GET', 'POST'])
+@permission_required('OPTIMIZE')
+def edit_template(template_id):
+    form = TemplateForm()
+    templates_path = current_app.config['OPTIMIZE_TEMPLATE_PATH']
+    template_path = os.path.join(templates_path, str(template_id))
+    msg_file = os.path.join(template_path, '.template_msg')
+
+    if form.validate_on_submit():
+        message = {
+            'name': form.name.data,
+            'para': form.para.data,
+            'job': form.job.data,
+            'descript': form.descript.data
+        }
+        dump_json(msg_file, message)
+        return redirect(url_for('.view_template', template_id=template_id))
+
+    message = load_json(msg_file)
+    form.name.data = message['name']
+    form.para.data = message['para']
+    form.job.data = message['job']
+    form.descript.data = message['descript']
+    return render_template('optimize/create_template.html', form=form)
+
+
+@optimize_bp.route('/delete_template/<int:template_id>')
+@permission_required('OPTIMIZE')
+def delete_template(template_id):
+    templates_path = current_app.config['OPTIMIZE_TEMPLATE_PATH']
+    template_path = os.path.join(templates_path, str(template_id))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该模版！', 'warning')
+        return redirect(url_for('.manage_templates'))
+    if os.path.exists(template_path):
+        shutil.rmtree(template_path)
+        flash('OPTIMIZE模版%s删除成功。' % template_id, 'success')
+    else:
+        flash('OPTIMIZE模版%s不存在。' % template_id, 'warning')
+    return redirect(url_for('.manage_templates'))
+
+
+@optimize_bp.route('/open_template/<int:template_id>')
+@permission_required('OPTIMIZE')
+def open_template(template_id):
+    templates_path = current_app.config['OPTIMIZE_TEMPLATE_PATH']
+    template_path = os.path.join(templates_path, str(template_id))
+    if os.path.exists(template_path):
+        cmd = 'explorer %s' % template_path
+        proc = subprocess.run(cmd)
+        return redirect(url_for('.view_template', template_id=template_id))
+    else:
+        abort(404)
+
+
+@optimize_bp.route('/get_template_file/<int:template_id>/<path:filename>')
+@permission_required('OPTIMIZE')
+def get_template_file(template_id, filename):
+    return send_from_directory(os.path.join(current_app.config['OPTIMIZE_TEMPLATE_PATH'], str(template_id)), filename)
+
+
+@optimize_bp.route('/delete_template_file/<int:template_id>/<path:filename>')
+@permission_required('OPTIMIZE')
+def delete_template_file(template_id, filename):
+    templates_path = current_app.config['OPTIMIZE_TEMPLATE_PATH']
+    file = os.path.join(templates_path, str(template_id), str(filename))
+    if not current_user.can('MODERATE'):
+        flash('您的权限不能删除该文件！', 'warning')
+        return redirect(url_for('.view_template', template_id=template_id))
+    if os.path.exists(file):
+        os.remove(file)
+        flash('文件%s删除成功。' % filename, 'success')
+    else:
+        flash('文件%s不存在。' % filename, 'warning')
+    return redirect(url_for('.view_template', template_id=template_id))
