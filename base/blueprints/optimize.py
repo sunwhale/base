@@ -11,7 +11,7 @@ from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, rend
 from flask_login import current_user
 
 from base.decorators import permission_required
-from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm, PreprocForm, TemplateForm
+from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm, PreprocForm, TemplateForm, ImportTemplateForm
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, get_optimize_status, get_optimize_template_status, optimizes_detail, optimize_templates_detail,
                                    experiments_detail)
@@ -140,14 +140,30 @@ def view_optimize(optimize_id):
     parameter_form = ParameterForm()
     experiment_form = ExperimentForm()
     preproc_form = PreprocForm()
+    import_template_form = ImportTemplateForm()
 
     experiments_path = current_app.config['EXPERIMENT_PATH']
     experiment_dict = experiments_detail(experiments_path)
     experiment_list = []
     for experiment in experiment_dict['data']:
         experiment_list.append('%s_%s' % (experiment['experiment_id'], experiment['name']))
-
     experiment_form.experiment_id.choices = experiment_list
+
+    templates_path = current_app.config['OPTIMIZE_TEMPLATE_PATH']
+    template_dict = optimize_templates_detail(templates_path)
+    template_list = []
+    for template in template_dict['data']:
+        template_list.append('%s_%s' % (template['template_id'], template['name']))
+    import_template_form.name.choices = template_list
+
+    if import_template_form.submit_import_template.data and import_template_form.validate():
+        template_id = int(import_template_form.name.data.split('_')[0])
+        template_path = os.path.join(templates_path, str(template_id))
+        files = files_in_dir(template_path)
+        for file in files:
+            shutil.copy(os.path.join(template_path, file['name']), os.path.join(optimize_path, file['name']))
+            flash('从模板导入文件%s成功。' % file['name'], 'success')
+        return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
     if upload_form.submit_upload.data and upload_form.validate():
         f = upload_form.filename.data
@@ -203,7 +219,8 @@ def view_optimize(optimize_id):
         except:
             pass
         return render_template('optimize/view_optimize.html', optimize_id=optimize_id, status=status, upload_form=upload_form,
-                               experiment_form=experiment_form, parameter_form=parameter_form, preproc_form=preproc_form)
+                               experiment_form=experiment_form, parameter_form=parameter_form, preproc_form=preproc_form,
+                               import_template_form=import_template_form)
     else:
         abort(404)
 

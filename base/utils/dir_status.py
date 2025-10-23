@@ -332,6 +332,35 @@ def get_optimize_status(path, optimize_id):
     return status
 
 
+def get_optimize_template_status(path, template_id):
+    msg_file = os.path.join(path, str(template_id), '.template_msg')
+    status = {}
+    if os.path.exists(msg_file):
+        status['template_id'] = template_id
+        try:
+            with open(msg_file, 'r', encoding='utf-8') as f:
+                message = json.load(f)
+            status['name'] = message['name']
+            status['para'] = [item.strip() for item in message['para'].split(',')]
+            status['job'] = message['job']
+            status['descript'] = message['descript']
+            status['template_time'] = file_time(msg_file)
+            if 'link' in message.keys():
+                status['link'] = message['link']
+            else:
+                status['link'] = 'None'
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模板?')\" href='%s'>删除</a>" % (
+                'view_template/' + str(template_id), 'edit_template/' + str(template_id),
+                'delete_template/' + str(template_id))
+        except (FileNotFoundError, KeyError):
+            for key in ['name', 'template_time', 'descript', 'job', 'user', 'cpus', 'link']:
+                status[key] = 'None'
+            status['operation'] = "<a href='%s'>进入</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除模板?')\" href='%s'>删除</a>" % (
+                'view_template/' + str(template_id), 'edit_template/' + str(template_id),
+                'delete_template/' + str(template_id))
+    return status
+
+
 def get_sheet_status(path, sheet_id):
     sheet_file = os.path.join(path, str(sheet_id), 'sheet.json')
     msg_file = os.path.join(path, str(sheet_id), 'sheet.msg')
@@ -761,6 +790,20 @@ def optimizes_detail(path):
     optimize_id_list = sub_dirs_int(path)
     for optimize_id in optimize_id_list:
         status = get_optimize_status(path, optimize_id)
+        data_list.append(status)
+
+    data = {
+        "data": data_list
+    }
+
+    return data
+
+
+def optimize_templates_detail(path):
+    data_list = []
+    template_id_list = sub_dirs_int(path)
+    for template_id in template_id_list:
+        status = get_optimize_template_status(path, template_id)
         data_list.append(status)
 
     data = {

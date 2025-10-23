@@ -80,3 +80,12 @@ class OptimizeForm(FlaskForm):
 
 class TemplateForm(OptimizeForm):
     pass
+
+
+class ImportTemplateForm(FlaskForm):
+    name = SelectField('选择模板', coerce=str)
+    submit_import_template = SubmitField('导入')
+
+    def __init__(self, *args, **kwargs):
+        super(ImportTemplateForm, self).__init__(*args, **kwargs)
+        self.name.choices = ['0_模板名称']
