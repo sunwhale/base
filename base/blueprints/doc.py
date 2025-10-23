@@ -9,8 +9,9 @@ import uuid
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request,
                    send_from_directory, url_for)
-from flask_login import current_user, login_required
+from flask_login import current_user
 
+from base.decorators import permission_required
 from base.extensions import csrf
 from base.utils.dir_status import create_id, docs_detail
 
@@ -18,7 +19,7 @@ doc_bp = Blueprint('doc', __name__)
 
 
 @doc_bp.route('/createmd', methods=['GET', 'POST'])
-@login_required
+@permission_required('DOC')
 def createmd():
     doc_id = create_id(current_app.config['DOC_PATH'])
     doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
@@ -32,7 +33,7 @@ def createmd():
 
 
 @doc_bp.route('/editmd/<int:doc_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('DOC')
 def editmd(doc_id):
     doc_path = os.path.join(current_app.config['DOC_PATH'], str(doc_id))
     md_file = os.path.join(doc_path, 'article.md')
@@ -82,7 +83,7 @@ def getmd(doc_id):
 
 @csrf.exempt
 @doc_bp.route('/upload/<int:doc_id>', methods=['POST'])
-@login_required
+@permission_required('DOC')
 def upload(doc_id):
     file = request.files.get('editormd-image-file')
     if not file:
@@ -107,20 +108,20 @@ def image(doc_id, filename):
 
 
 @doc_bp.route('/docs_status/')
-@login_required
+@permission_required('DOC')
 def docs_status():
     data = docs_detail(current_app.config['DOC_PATH'])
     return jsonify(data)
 
 
 @doc_bp.route('/manage_docs/')
-@login_required
+@permission_required('DOC')
 def manage_docs():
     return render_template('doc/manage_docs.html')
 
 
 @doc_bp.route('/deletemd/<int:doc_id>')
-@login_required
+@permission_required('DOC')
 def deletemd(doc_id):
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该文章！', 'warning')
