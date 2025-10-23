@@ -65,6 +65,8 @@ def create_optimize():
             f.write(str(uuid.uuid4()))
         message = {
             'name': form.name.data,
+            'type': form.type.data,
+            'project_id': form.project_id.data,
             'para': form.para.data,
             'job': form.job.data,
             'descript': form.descript.data
@@ -96,6 +98,8 @@ def edit_optimize(optimize_id):
     if form.validate_on_submit():
         message = {
             'name': form.name.data,
+            'type': form.type.data,
+            'project_id': form.project_id.data,
             'para': form.para.data,
             'job': form.job.data,
             'descript': form.descript.data
@@ -105,6 +109,8 @@ def edit_optimize(optimize_id):
 
     message = load_json(msg_file)
     form.name.data = message['name']
+    form.type.data = message['type']
+    form.project_id.data = message['project_id']
     form.para.data = message['para']
     form.job.data = message['job']
     form.descript.data = message['descript']
@@ -413,6 +419,8 @@ def create_template():
             f.write(str(uuid.uuid4()))
         message = {
             'name': form.name.data,
+            'type': form.type.data,
+            'project_id': form.project_id.data,
             'para': form.para.data,
             'job': form.job.data,
             'descript': form.descript.data
@@ -454,6 +462,8 @@ def edit_template(template_id):
     if form.validate_on_submit():
         message = {
             'name': form.name.data,
+            'type': form.type.data,
+            'project_id': form.project_id.data,
             'para': form.para.data,
             'job': form.job.data,
             'descript': form.descript.data
@@ -463,6 +473,8 @@ def edit_template(template_id):
 
     message = load_json(msg_file)
     form.name.data = message['name']
+    form.type.data = message['type']
+    form.project_id.data = message['project_id']
     form.para.data = message['para']
     form.job.data = message['job']
     form.descript.data = message['descript']

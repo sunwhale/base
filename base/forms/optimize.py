@@ -81,7 +81,7 @@ class OptimizeForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(OptimizeForm, self).__init__(*args, **kwargs)
-        self.type.choices = ['ABAQUS项目', '解析解', 'PYFEM项目']
+        self.type.choices = ['ABAQUS项目', 'PYFEM项目', '解析解']
 
 
 class TemplateForm(OptimizeForm):

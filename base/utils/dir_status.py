@@ -316,6 +316,8 @@ def get_optimize_status(path, optimize_id):
             with open(msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
             status['name'] = message['name']
+            status['type'] = message['type']
+            status['project_id'] = message['project_id']
             status['para'] = [item.strip() for item in message['para'].split(',')]
             status['job'] = message['job']
             status['json_file'] = json_file
@@ -341,6 +343,8 @@ def get_optimize_template_status(path, template_id):
             with open(msg_file, 'r', encoding='utf-8') as f:
                 message = json.load(f)
             status['name'] = message['name']
+            status['type'] = message['type']
+            status['project_id'] = message['project_id']
             status['para'] = [item.strip() for item in message['para'].split(',')]
             status['job'] = message['job']
             status['descript'] = message['descript']
