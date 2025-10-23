@@ -121,6 +121,8 @@
                   {{ upload_form.submit_upload }}{{ upload_form.filename }}
                   </div>
                 </form>
+
+                <hr>
                 <h5 class="text-primary">从模板导入文件</h5>
                 <form action="" method="post" class="form-horizontal" enctype="multipart/form-data" role="form">
                   {{ import_template_form.csrf_token() }}
@@ -133,6 +135,8 @@
                     </div>
                   </div>
                 </form>
+
+                <hr>
                 <h5 class="text-primary">优化文件</h5>
                 <table class="table table-sm table-hover">
                   <thead>
