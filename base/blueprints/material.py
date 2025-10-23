@@ -2,38 +2,39 @@
 """
 
 """
-import subprocess
 import os
 import shutil
+import subprocess
 import uuid
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request,
                    send_from_directory, url_for)
-from flask_login import current_user, login_required
+from flask_login import current_user
 
-from base.forms.material import MaterialForm, UploadForm, SpecimenForm, ParameterForm
+from base.decorators import permission_required
 from base.extensions import csrf
-from base.utils.dir_status import create_id, materials_detail, get_material_status, files_in_dir
+from base.forms.material import MaterialForm, UploadForm
 from base.utils.common import make_dir, dump_json, load_json
+from base.utils.dir_status import create_id, materials_detail, get_material_status, files_in_dir
 
 material_bp = Blueprint('material', __name__)
 
 
 @material_bp.route('/materials_status/')
-@login_required
+@permission_required('MATERIAL')
 def materials_status():
     data = materials_detail(current_app.config['MATERIAL_PATH'])
     return jsonify(data)
 
 
 @material_bp.route('/manage_materials/')
-@login_required
+@permission_required('MATERIAL')
 def manage_materials():
     return render_template('material/manage_materials.html')
 
 
 @material_bp.route('/create_material', methods=['GET', 'POST'])
-@login_required
+@permission_required('MATERIAL')
 def create_material():
     form = MaterialForm()
 
@@ -61,7 +62,7 @@ def create_material():
 
 
 @material_bp.route('/edit_material/<int:material_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('MATERIAL')
 def edit_material(material_id):
     form = MaterialForm()
     materials_path = current_app.config['MATERIAL_PATH']
@@ -85,7 +86,7 @@ def edit_material(material_id):
 
 
 @material_bp.route('/delete_material/<int:material_id>')
-@login_required
+@permission_required('MATERIAL')
 def delete_material(material_id):
     materials_path = current_app.config['MATERIAL_PATH']
     material_path = os.path.join(materials_path, str(material_id))
@@ -101,7 +102,7 @@ def delete_material(material_id):
 
 
 @material_bp.route('/view_material/<int:material_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('MATERIAL')
 def view_material(material_id):
     materials_path = current_app.config['MATERIAL_PATH']
     material_path = os.path.join(materials_path, str(material_id))
@@ -122,7 +123,7 @@ def view_material(material_id):
 
 
 @material_bp.route('/open_material/<int:material_id>')
-@login_required
+@permission_required('MATERIAL')
 def open_material(material_id):
     materials_path = current_app.config['MATERIAL_PATH']
     material_path = os.path.join(materials_path, str(material_id))
@@ -135,13 +136,13 @@ def open_material(material_id):
 
 
 @material_bp.route('/get_material_file/<int:material_id>/<path:filename>')
-@login_required
+@permission_required('MATERIAL')
 def get_material_file(material_id, filename):
     return send_from_directory(os.path.join(current_app.config['MATERIAL_PATH'], str(material_id)), filename)
 
 
 @material_bp.route('/delete_material_file/<int:material_id>/<path:filename>')
-@login_required
+@permission_required('MATERIAL')
 def delete_material_file(material_id, filename):
     materials_path = current_app.config['MATERIAL_PATH']
     file = os.path.join(materials_path, str(material_id), str(filename))
@@ -154,6 +155,7 @@ def delete_material_file(material_id, filename):
     else:
         flash('文件%s不存在。' % filename, 'warning')
     return redirect(url_for('.view_material', material_id=material_id))
+
 
 @csrf.exempt
 @material_bp.route('/code_save/<int:material_id>', methods=['POST'])
@@ -170,4 +172,3 @@ def code_save(material_id):
         return jsonify({'message': 'File saved successfully'})
     else:
         return jsonify({'error': 'Content not provided'}), 400
-
