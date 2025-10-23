@@ -10,7 +10,7 @@ import zipfile
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_file,
                    send_from_directory, url_for)
-from flask_login import current_user, login_required
+from flask_login import current_user
 
 from base.decorators import permission_required
 from base.forms.experiment import ExperimentForm, UploadForm, SpecimenForm, ParameterForm
@@ -23,20 +23,20 @@ experiment_bp = Blueprint('experiment', __name__)
 
 
 @experiment_bp.route('/manage_experiments', methods=['GET', 'POST'])
-@login_required
+@permission_required('EXPERIMENT')
 def manage_experiments():
     return render_template('experiment/manage_experiments.html')
 
 
 @experiment_bp.route('/experiments_status')
-@login_required
+@permission_required('EXPERIMENT')
 def experiments_status():
     data = experiments_detail(current_app.config['EXPERIMENT_PATH'])
     return jsonify(data)
 
 
 @experiment_bp.route('/create_experiment', methods=['GET', 'POST'])
-@login_required
+@permission_required('EXPERIMENT')
 def create_experiment():
     form = ExperimentForm()
 
@@ -68,7 +68,7 @@ def create_experiment():
 
 
 @experiment_bp.route('/edit_experiment/<int:experiment_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('EXPERIMENT')
 def edit_experiment(experiment_id):
     form = ExperimentForm()
     experiments_path = current_app.config['EXPERIMENT_PATH']
@@ -101,7 +101,7 @@ def edit_experiment(experiment_id):
 
 
 @experiment_bp.route('/delete_experiment/<int:experiment_id>')
-@login_required
+@permission_required('EXPERIMENT')
 def delete_experiment(experiment_id):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     experiment_path = os.path.join(experiments_path, str(experiment_id))
@@ -117,7 +117,7 @@ def delete_experiment(experiment_id):
 
 
 @experiment_bp.route('/view_experiment/<int:experiment_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('EXPERIMENT')
 def view_experiment(experiment_id):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     experiment_path = os.path.join(experiments_path, str(experiment_id))
@@ -161,7 +161,7 @@ def view_experiment(experiment_id):
 
 
 @experiment_bp.route('/open_experiment/<int:experiment_id>')
-@login_required
+@permission_required('EXPERIMENT')
 def open_experiment(experiment_id):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     experiment_path = os.path.join(experiments_path, str(experiment_id))
@@ -174,13 +174,13 @@ def open_experiment(experiment_id):
 
 
 @experiment_bp.route('/get_experiment_file/<int:experiment_id>/<path:filename>')
-@login_required
+@permission_required('EXPERIMENT')
 def get_experiment_file(experiment_id, filename):
     return send_from_directory(os.path.join(current_app.config['EXPERIMENT_PATH'], str(experiment_id)), filename)
 
 
 @experiment_bp.route('/delete_experiment_file/<int:experiment_id>/<path:filename>')
-@login_required
+@permission_required('EXPERIMENT')
 def delete_experiment_file(experiment_id, filename):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     file = os.path.join(experiments_path, str(experiment_id), str(filename))
@@ -196,7 +196,7 @@ def delete_experiment_file(experiment_id, filename):
 
 
 @experiment_bp.route('/create_specimen/<int:experiment_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('EXPERIMENT')
 def create_specimen(experiment_id):
     form = SpecimenForm()
     experiments_path = current_app.config['EXPERIMENT_PATH']
@@ -223,7 +223,7 @@ def create_specimen(experiment_id):
 
 
 @experiment_bp.route('/view_specimen/<int:experiment_id>/<int:specimen_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('EXPERIMENT')
 def view_specimen(experiment_id, specimen_id):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     specimen_path = os.path.join(experiments_path, str(experiment_id), str(specimen_id))
@@ -254,7 +254,7 @@ def view_specimen(experiment_id, specimen_id):
 
 
 @experiment_bp.route('/edit_specimen/<int:experiment_id>/<int:specimen_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('EXPERIMENT')
 def edit_specimen(experiment_id, specimen_id):
     form = SpecimenForm()
     experiments_path = current_app.config['EXPERIMENT_PATH']
@@ -275,7 +275,7 @@ def edit_specimen(experiment_id, specimen_id):
 
 
 @experiment_bp.route('/delete_specimen/<int:experiment_id>/<int:specimen_id>')
-@login_required
+@permission_required('EXPERIMENT')
 def delete_specimen(experiment_id, specimen_id):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     specimen_path = os.path.join(experiments_path, str(experiment_id), str(specimen_id))
@@ -291,14 +291,14 @@ def delete_specimen(experiment_id, specimen_id):
 
 
 @experiment_bp.route('/get_specimen_file/<int:experiment_id>/<int:specimen_id>/<path:filename>')
-@login_required
+@permission_required('EXPERIMENT')
 def get_specimen_file(experiment_id, specimen_id, filename):
     return send_from_directory(
         os.path.join(current_app.config['EXPERIMENT_PATH'], str(experiment_id), str(specimen_id)), filename)
 
 
 @experiment_bp.route('/delete_specimen_file/<int:experiment_id>/<int:specimen_id>/<path:filename>')
-@login_required
+@permission_required('EXPERIMENT')
 def delete_specimen_file(experiment_id, specimen_id, filename):
     experiments_path = current_app.config['EXPERIMENT_PATH']
     file = os.path.join(experiments_path, str(experiment_id), str(specimen_id), str(filename))
