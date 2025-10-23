@@ -36,6 +36,8 @@
                     <ul class="list-unstyled">
                       <li> 模版名称：{{ status['name'] }}</li>
                       <li> 模版编号：{{ template_id }}</li>
+                      <li> 仿真来源：{{ status['type'] }} </li>
+                      <li> 仿真项目ID：{{ status['project_id'] }} </li>
                       <li> 参数列表：{{ status['para'] }}</li>
                       <li> 优化算例：{{ status['job'] }}</li>
                       <li> 创建时间：{{ status['json_time'] }}</li>
