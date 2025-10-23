@@ -121,7 +121,7 @@
           {% endblock nav_node_number %}
 
           {% block nav_node %}
-          {% if current_user.is_moderator or current_user.is_admin %}
+          {% if current_user.can('NODE') %}
           <li class="nav-item" id="node">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-sitemap"></i>
@@ -149,7 +149,7 @@
           {% endblock nav_node %}
 
           {% block nav_packing %}
-          {% if current_user.is_moderator or current_user.is_admin %}
+          {% if current_user.can('PACKING') %}
           <li class="nav-item" id="packing">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-th"></i>
@@ -177,7 +177,7 @@
           {% endblock nav_packing %}
 
           {% block nav_doc %}
-          {% if current_user.is_authenticated %}
+          {% if current_user.can('DOC') %}
           <li class="nav-item" id="docs">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-copy"></i>
@@ -205,7 +205,7 @@
           {% endblock nav_doc %}
 
           {% block nav_sheet %}
-          {% if current_user.is_authenticated %}
+          {% if current_user.can('SHEET') %}
           <li class="nav-item" id="sheets">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-table"></i>
@@ -233,7 +233,7 @@
           {% endblock nav_sheet %}
 
           {% block nav_experiment %}
-          {% if current_user.is_authenticated %}
+          {% if current_user.can('EXPERIMENT') %}
           <li class="nav-item" id="experiment">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-microscope"></i>
@@ -261,7 +261,7 @@
           {% endblock nav_experiment %}
 
           {% block nav_abaqus %}
-          {% if current_user.is_moderator or current_user.is_admin %}
+          {% if current_user.can('ABAQUS') %}
           <li class="nav-item" id="abaqus">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-cubes"></i>
@@ -319,7 +319,7 @@
           {% endblock nav_abaqus %}
 
           {% block nav_material %}
-          {% if current_user.is_moderator or current_user.is_admin %}
+          {% if current_user.can('MATERIAL') %}
           <li class="nav-item" id="material">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-atom"></i>
@@ -347,7 +347,7 @@
           {% endblock nav_material %}
 
           {% block nav_flow %}
-          {% if current_user.is_moderator or current_user.is_admin %}
+          {% if current_user.can('FLOW') %}
           <li class="nav-item" id="flow">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-code-branch"></i>
@@ -369,7 +369,7 @@
           {% endblock nav_flow %}
 
           {% block nav_pyfem %}
-          {% if current_user.is_moderator or current_user.is_admin %}
+          {% if current_user.can('PYFEM') %}
           <li class="nav-item" id="pyfem">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-cube"></i>
@@ -397,7 +397,7 @@
           {% endblock nav_pyfem %}
 
           {% block nav_virtual %}
-          {% if current_user.is_moderator or current_user.is_admin %}
+          {% if current_user.can('VIRTUAL') %}
           <li class="nav-item" id="virtual">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-door-open"></i>
@@ -425,7 +425,7 @@
           {% endblock nav_virtual %}
 
           {% block nav_optimize %}
-          {% if current_user.is_moderator or current_user.is_admin %}
+          {% if current_user.can('OPTIMIZE') %}
           <li class="nav-item" id="optimize">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-calculator"></i>
@@ -453,7 +453,7 @@
           {% endblock nav_optimize %}
 
           {% block nav_monitor %}
-          {% if current_user.is_moderator or current_user.is_admin %}
+          {% if current_user.can('MONITOR') %}
           <li class="nav-item" id="monitor">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-tasks"></i>
@@ -499,7 +499,7 @@
           {% endblock nav_monitor %}
 
           {% block nav_others %}
-          {% if current_user.is_authenticated %}
+          {% if current_user.can('OTHERS') %}
           <li class="nav-item" id="others">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-wrench"></i>
