@@ -7,8 +7,9 @@ import os
 import shutil
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, url_for)
-from flask_login import current_user, login_required
+from flask_login import current_user
 
+from base.decorators import permission_required
 from base.extensions import csrf
 from base.utils.dir_status import create_id, sheets_detail
 
@@ -16,7 +17,7 @@ sheet_bp = Blueprint('sheet', __name__)
 
 
 @sheet_bp.route('/create_sheet', methods=['GET', 'POST'])
-@login_required
+@permission_required('SHEET')
 def create_sheet():
     sheet_id = create_id(current_app.config['SHEET_PATH'])
     sheet_path = os.path.join(current_app.config['SHEET_PATH'], str(sheet_id))
@@ -24,7 +25,7 @@ def create_sheet():
 
 
 @sheet_bp.route('/edit_sheet/<int:sheet_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('SHEET')
 def edit_sheet(sheet_id):
     sheet_path = os.path.join(current_app.config['SHEET_PATH'], str(sheet_id))
     sheet_file = os.path.join(sheet_path, 'sheet.json')
@@ -38,7 +39,7 @@ def edit_sheet(sheet_id):
 
 
 @sheet_bp.route('/view_sheet/<int:sheet_id>', methods=['GET'])
-@login_required
+@permission_required('SHEET')
 def view_sheet(sheet_id):
     sheet_path = os.path.join(current_app.config['SHEET_PATH'], str(sheet_id))
     sheet_file = os.path.join(sheet_path, 'sheet.json')
@@ -97,20 +98,20 @@ def read(sheet_id):
 
 
 @sheet_bp.route('/sheets_status/')
-@login_required
+@permission_required('SHEET')
 def sheets_status():
     data = sheets_detail(current_app.config['SHEET_PATH'])
     return jsonify(data)
 
 
 @sheet_bp.route('/manage_sheets/')
-@login_required
+@permission_required('SHEET')
 def manage_sheets():
     return render_template('sheet/manage_sheets.html')
 
 
 @sheet_bp.route('/delete_sheet/<int:sheet_id>')
-@login_required
+@permission_required('SHEET')
 def delete_sheet(sheet_id):
     if not current_user.can('MODERATE'):
         flash('您的权限不能删除该数据表格！', 'warning')
