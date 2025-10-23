@@ -5,21 +5,21 @@
 import os
 
 from flask import current_app, Blueprint, render_template, request, jsonify
-from flask_login import login_required
 
+from base.decorators import permission_required
 from base.extensions import csrf
 
 tools_bp = Blueprint('tools', __name__)
 
 
 @tools_bp.route('/links', methods=['GET'])
-@login_required
+@permission_required('TOOLS')
 def links():
     return render_template('tools/links.html')
 
 
 @tools_bp.route('/code', methods=['GET'])
-@login_required
+@permission_required('TOOLS')
 def code():
     return render_template('tools/code.html')
 

@@ -492,9 +492,9 @@
           {% endif %}
           {% endblock nav_resource %}
 
-          {% block nav_others %}
-          {% if current_user.can('OTHERS') %}
-          <li class="nav-item" id="others">
+          {% block nav_tools %}
+          {% if current_user.can('TOOLS') %}
+          <li class="nav-item" id="tools">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-wrench"></i>
               <p>
@@ -532,7 +532,7 @@
             </ul>
           </li>
           {% endif %}
-          {% endblock nav_others %}
+          {% endblock nav_tools %}
 
           {% block nav_admin %}
           {% if not config.CLIENT %}

@@ -7,8 +7,9 @@ import shutil
 import uuid
 
 from flask import (abort, Blueprint, current_app, flash, jsonify, redirect, render_template, url_for, send_from_directory, request)
-from flask_login import current_user, login_required
+from flask_login import current_user
 
+from base.decorators import permission_required
 from base.forms.virtual import (VirtualForm, ParameterForm)
 from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Solver import Solver
@@ -19,13 +20,13 @@ virtual_bp = Blueprint('virtual', __name__)
 
 
 @virtual_bp.route('/manage_virtuals', methods=['GET', 'POST'])
-@login_required
+@permission_required('VIRTUAL')
 def manage_virtuals():
     return render_template('virtual/manage_virtuals.html')
 
 
 @virtual_bp.route('/create_virtual', methods=['GET', 'POST'])
-@login_required
+@permission_required('VIRTUAL')
 def create_virtual():
     form = VirtualForm()
 
@@ -64,7 +65,7 @@ def create_virtual():
 
 
 @virtual_bp.route('/edit_virtual/<int:virtual_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('VIRTUAL')
 def edit_virtual(virtual_id):
     form = VirtualForm()
     virtuals_path = current_app.config['VIRTUAL_PATH']
@@ -94,7 +95,7 @@ def edit_virtual(virtual_id):
 
 
 @virtual_bp.route('/view_virtual/<int:virtual_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('VIRTUAL')
 def view_virtual(virtual_id):
     virtuals_path = current_app.config['VIRTUAL_PATH']
     virtual_path = os.path.join(virtuals_path, str(virtual_id))
@@ -128,7 +129,7 @@ def view_virtual(virtual_id):
 
 
 @virtual_bp.route('/delete_virtual/<int:virtual_id>')
-@login_required
+@permission_required('VIRTUAL')
 def delete_virtual(virtual_id):
     virtuals_path = current_app.config['VIRTUAL_PATH']
     virtual_path = os.path.join(virtuals_path, str(virtual_id))
@@ -144,20 +145,20 @@ def delete_virtual(virtual_id):
 
 
 @virtual_bp.route('/virtuals_status')
-@login_required
+@permission_required('VIRTUAL')
 def virtuals_status():
     data = virtuals_detail(current_app.config['VIRTUAL_PATH'])
     return jsonify(data)
 
 
 @virtual_bp.route('/get_virtual_file/<int:virtual_id>/<path:filename>')
-@login_required
+@permission_required('VIRTUAL')
 def get_virtual_file(virtual_id, filename):
     return send_from_directory(os.path.join(current_app.config['VIRTUAL_PATH'], str(virtual_id)), filename)
 
 
 @virtual_bp.route('/run_virtual/<int:virtual_id>')
-@login_required
+@permission_required('VIRTUAL')
 def run_virtual(virtual_id):
     virtuals_path = current_app.config['VIRTUAL_PATH']
     virtual_path = os.path.join(virtuals_path, str(virtual_id))
@@ -177,7 +178,7 @@ def run_virtual(virtual_id):
 
 
 @virtual_bp.route('/terminate_virtual/<int:virtual_id>')
-@login_required
+@permission_required('VIRTUAL')
 def terminate_virtual(virtual_id):
     virtuals_path = current_app.config['VIRTUAL_PATH']
     virtual_path = os.path.join(virtuals_path, str(virtual_id))
@@ -193,7 +194,7 @@ def terminate_virtual(virtual_id):
 
 
 @virtual_bp.route('/prescan_odb/<int:virtual_id>')
-@login_required
+@permission_required('VIRTUAL')
 def prescan_odb(virtual_id):
     virtuals_path = current_app.config['VIRTUAL_PATH']
     virtual_path = os.path.join(virtuals_path, str(virtual_id))
@@ -212,7 +213,7 @@ def prescan_odb(virtual_id):
 
 
 @virtual_bp.route('/odb_to_npz/<int:virtual_id>')
-@login_required
+@permission_required('VIRTUAL')
 def odb_to_npz(virtual_id):
     virtuals_path = current_app.config['VIRTUAL_PATH']
     virtual_path = os.path.join(virtuals_path, str(virtual_id))
@@ -233,7 +234,7 @@ def odb_to_npz(virtual_id):
 
 
 @virtual_bp.route('/print_figure/<int:virtual_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('VIRTUAL')
 def print_figure(virtual_id):
     virtuals_path = current_app.config['VIRTUAL_PATH']
     virtual_path = os.path.join(virtuals_path, str(virtual_id))

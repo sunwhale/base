@@ -9,8 +9,8 @@ import threading
 import requests
 from flask import (Blueprint, jsonify, abort, redirect, render_template, url_for, current_app, send_from_directory,
                    request)
-from flask_login import login_required
 
+from base.decorators import permission_required
 from base.global_var import sync_threads
 from base.utils.dir_status import (create_id, get_path_uuid, files_in_dir, calculate_checksum, sub_dirs)
 
@@ -76,7 +76,7 @@ def save_files(module, module_id, module_path_dict, resource_dict, status):
 
 
 @sync_bp.route('/', methods=['GET', 'POST'])
-@login_required
+@permission_required('RESOURCE')
 def index():
     if request.method == 'POST':
         data = request.form.to_dict()
