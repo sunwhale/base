@@ -145,8 +145,8 @@ class Optimize:
         self.parameters_json_file = os.path.join(path, 'parameters.json')
         self.experiments_json_file = os.path.join(path, 'experiments.json')
         self.preproc_json_file = os.path.join(path, 'preproc.json')
-        self.pyfem_project_path = '/home/dell/www/base/files/pyfem/15'
-        self.abaqus_project_path = '/home/dell/www/base/files/abaqus/61'
+        self.optimize_type = ''
+        self.project_path = ''
 
         self.parameters = {}
         self.experiment_data = {}
@@ -168,6 +168,10 @@ class Optimize:
             message = load_json(self.msg_file)
             self.job = message['job']
             self.abs_job_file = Path(os.path.join(self.path, f'{self.job}.py'))
+            self.optimize_type = message['type']
+            self.project_path = message['project_path']
+            if (self.optimize_type == 'ABAQUS项目' or self.optimize_type == 'PYFEM项目') and not os.path.exists(self.project_path):
+                raise NotImplementedError(f'{self.project_path} not exist')
 
             parameters_json = load_json(self.parameters_json_file)
             for p in [item.strip() for item in message['para'].split(',')]:
@@ -196,19 +200,18 @@ class Optimize:
             if self.parameters[key]['type'] == 'variable':
                 self.paras_0.append(self.parameters[key]['value'])
 
-        mode_mapping = {
-            0: 'get_simulation_analytical',
-            1: 'get_simulation_pyfem',
-            2: 'get_simulation_abaqus'
+        type_mapping = {
+            '解析解': 'get_simulation_analytical',
+            'PYFEM项目': 'get_simulation_pyfem',
+            'ABAQUS项目': 'get_simulation_abaqus'
         }
 
-        mode = int(self.parameters['MODE']['value'])
-        if mode in mode_mapping:
-            module_name = mode_mapping[mode]
+        if self.optimize_type in type_mapping:
+            module_name = type_mapping[self.optimize_type]
             module = __import__(module_name)
             self.get_simulation = getattr(module, 'get_simulation')
         else:
-            raise ValueError(f"Unsupported mode: {mode}")
+            raise ValueError(f"Unsupported optimize type: {self.optimize_type}")
 
     def write_parameters_json_file(self):
         parameters_dict = {}
@@ -275,13 +278,13 @@ class Optimize:
             time_exp = data[key]['Time_s']
             strain_exp = data[key]['Strain']
             stress_exp = data[key]['Stress_MPa']
-            if int(self.parameters['MODE']['value']) == 0:
+            if self.optimize_type == '解析解':
                 threads[key] = ReturnThread(target=self.get_simulation, args=(paras, strain_exp, time_exp))
-            elif int(self.parameters['MODE']['value']) == 1:
-                job_path = os.path.join(self.pyfem_project_path, str(i + 1))
+            elif self.optimize_type == 'PYFEM项目':
+                job_path = os.path.join(self.project_path, str(i + 1))
                 threads[key] = ReturnThread(target=self.get_simulation, args=(paras, strain_exp, time_exp, job_path))
-            elif int(self.parameters['MODE']['value']) == 2:
-                job_path = os.path.join(self.abaqus_project_path, str(i + 1))
+            elif self.optimize_type == 'ABAQUS项目':
+                job_path = os.path.join(self.project_path, str(i + 1))
                 threads[key] = ReturnThread(target=self.get_simulation, args=(paras, strain_exp, time_exp, job_path))
                 time.sleep(0.2)
             threads[key].start()
