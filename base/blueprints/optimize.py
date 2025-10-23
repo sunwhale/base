@@ -54,7 +54,8 @@ def manage_optimizes():
 @permission_required('OPTIMIZE')
 def create_optimize():
     form = OptimizeForm()
-
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    pyfem_path = current_app.config['PYFEM_PATH']
     if form.validate_on_submit():
         optimizes_path = current_app.config['OPTIMIZE_PATH']
         optimize_id = create_id(optimizes_path)
@@ -63,13 +64,20 @@ def create_optimize():
         uuid_file = os.path.join(optimize_path, '.uuid')
         with open(uuid_file, 'w', encoding='utf-8') as f:
             f.write(str(uuid.uuid4()))
+        if form.type.data == 'ABAQUS项目':
+            project_path = os.path.join(abaqus_path, str(form.project_id.data))
+        elif form.type.data == 'PYFEM项目':
+            project_path = os.path.join(pyfem_path, str(form.project_id.data))
+        else:
+            project_path = ''
         message = {
             'name': form.name.data,
             'type': form.type.data,
             'project_id': form.project_id.data,
             'para': form.para.data,
             'job': form.job.data,
-            'descript': form.descript.data
+            'descript': form.descript.data,
+            'project_path': project_path
         }
         msg_file = os.path.join(optimize_path, '.optimize_msg')
         dump_json(msg_file, message)
@@ -92,17 +100,26 @@ def create_optimize():
 def edit_optimize(optimize_id):
     form = OptimizeForm()
     optimizes_path = current_app.config['OPTIMIZE_PATH']
+    abaqus_path = current_app.config['ABAQUS_PATH']
+    pyfem_path = current_app.config['PYFEM_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
     msg_file = os.path.join(optimize_path, '.optimize_msg')
 
     if form.validate_on_submit():
+        if form.type.data == 'ABAQUS项目':
+            project_path = os.path.join(abaqus_path, str(form.project_id.data))
+        elif form.type.data == 'PYFEM项目':
+            project_path = os.path.join(pyfem_path, str(form.project_id.data))
+        else:
+            project_path = ''
         message = {
             'name': form.name.data,
             'type': form.type.data,
             'project_id': form.project_id.data,
             'para': form.para.data,
             'job': form.job.data,
-            'descript': form.descript.data
+            'descript': form.descript.data,
+            'project_path': project_path
         }
         dump_json(msg_file, message)
         return redirect(url_for('.view_optimize', optimize_id=optimize_id))
