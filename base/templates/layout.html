@@ -446,9 +446,9 @@
           {% endif %}
           {% endblock nav_optimize %}
 
-          {% block nav_monitor %}
-          {% if current_user.can('MONITOR') %}
-          <li class="nav-item" id="monitor">
+          {% block nav_resource %}
+          {% if current_user.can('RESOURCE') %}
+          <li class="nav-item" id="resource">
             <a href="#" class="nav-link">
               <i class="nav-icon fas fa-tasks"></i>
               <p>
@@ -490,7 +490,7 @@
             </ul>
           </li>
           {% endif %}
-          {% endblock nav_monitor %}
+          {% endblock nav_resource %}
 
           {% block nav_others %}
           {% if current_user.can('OTHERS') %}

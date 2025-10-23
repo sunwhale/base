@@ -33,9 +33,9 @@ class Role(db.Model):
     def init_role():
         roles_permissions_map = {
             'Locked': [],
-            'User': ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'VIRTUAL', 'OPTIMIZE', 'MONITOR', 'OTHERS'],
-            'Moderator': ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'VIRTUAL', 'OPTIMIZE', 'MONITOR', 'OTHERS', 'MODERATE'],
-            'Administrator': ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'VIRTUAL', 'OPTIMIZE', 'MONITOR', 'OTHERS', 'MODERATE', 'ADMINISTER']
+            'User': ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'VIRTUAL', 'OPTIMIZE', 'RESOURCE', 'OTHERS'],
+            'Moderator': ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'VIRTUAL', 'OPTIMIZE', 'RESOURCE', 'OTHERS', 'MODERATE'],
+            'Administrator': ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'VIRTUAL', 'OPTIMIZE', 'RESOURCE', 'OTHERS', 'MODERATE', 'ADMINISTER']
         }
 
         for role_name in roles_permissions_map:
