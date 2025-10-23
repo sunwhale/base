@@ -8,8 +8,9 @@ import subprocess
 import uuid
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
-from flask_login import current_user, login_required
+from flask_login import current_user
 
+from base.decorators import permission_required
 from base.forms.optimize import UploadForm, OptimizeForm, ParameterForm, ExperimentForm, PreprocForm
 from base.utils.common import make_dir, dump_json, load_json
 from base.utils.dir_status import (create_id, files_in_dir, get_optimize_status, optimizes_detail, experiments_detail)
@@ -36,20 +37,20 @@ def simple_parse(input_str):
 
 
 @optimize_bp.route('/optimizes_status/')
-@login_required
+@permission_required('OPTIMIZE')
 def optimizes_status():
     data = optimizes_detail(current_app.config['OPTIMIZE_PATH'])
     return jsonify(data)
 
 
 @optimize_bp.route('/manage_optimizes/')
-@login_required
+@permission_required('OPTIMIZE')
 def manage_optimizes():
     return render_template('optimize/manage_optimizes.html')
 
 
 @optimize_bp.route('/create_optimize', methods=['GET', 'POST'])
-@login_required
+@permission_required('OPTIMIZE')
 def create_optimize():
     form = OptimizeForm()
 
@@ -84,7 +85,7 @@ def create_optimize():
 
 
 @optimize_bp.route('/edit_optimize/<int:optimize_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('OPTIMIZE')
 def edit_optimize(optimize_id):
     form = OptimizeForm()
     optimizes_path = current_app.config['OPTIMIZE_PATH']
@@ -110,7 +111,7 @@ def edit_optimize(optimize_id):
 
 
 @optimize_bp.route('/delete_optimize/<int:optimize_id>')
-@login_required
+@permission_required('OPTIMIZE')
 def delete_optimize(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
@@ -126,7 +127,7 @@ def delete_optimize(optimize_id):
 
 
 @optimize_bp.route('/view_optimize/<int:optimize_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('OPTIMIZE')
 def view_optimize(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
@@ -207,7 +208,7 @@ def view_optimize(optimize_id):
 
 
 @optimize_bp.route('/run_optimize/<int:optimize_id>')
-@login_required
+@permission_required('OPTIMIZE')
 def run_optimize(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
@@ -232,7 +233,7 @@ def run_optimize(optimize_id):
 
 
 @optimize_bp.route('/terminate_optimize/<int:optimize_id>')
-@login_required
+@permission_required('OPTIMIZE')
 def terminate_optimize(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
@@ -269,7 +270,7 @@ def terminate_optimize(optimize_id):
 
 
 @optimize_bp.route('/reset_optimize/<int:optimize_id>')
-@login_required
+@permission_required('OPTIMIZE')
 def reset_optimize(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
@@ -286,7 +287,7 @@ def reset_optimize(optimize_id):
 
 
 @optimize_bp.route('/optimize_status/<int:optimize_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('OPTIMIZE')
 def optimize_status(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
@@ -317,7 +318,7 @@ def optimize_status(optimize_id):
 
 
 @optimize_bp.route('/open_optimize/<int:optimize_id>')
-@login_required
+@permission_required('OPTIMIZE')
 def open_optimize(optimize_id):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     optimize_path = os.path.join(optimizes_path, str(optimize_id))
@@ -330,13 +331,13 @@ def open_optimize(optimize_id):
 
 
 @optimize_bp.route('/get_optimize_file/<int:optimize_id>/<path:filename>')
-@login_required
+@permission_required('OPTIMIZE')
 def get_optimize_file(optimize_id, filename):
     return send_from_directory(os.path.join(current_app.config['OPTIMIZE_PATH'], str(optimize_id)), filename)
 
 
 @optimize_bp.route('/delete_optimize_file/<int:optimize_id>/<path:filename>')
-@login_required
+@permission_required('OPTIMIZE')
 def delete_optimize_file(optimize_id, filename):
     optimizes_path = current_app.config['OPTIMIZE_PATH']
     file = os.path.join(optimizes_path, str(optimize_id), str(filename))
