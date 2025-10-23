@@ -154,7 +154,7 @@
                 <div class="col-12">
                   <h5 class="text-primary">实验-模拟曲线</h5>
                   <div class="col-12" style="border: 1px solid black">
-                    <img id="fig" src="{{ url_for('optimize.get_optimize_file', optimize_id=optimize_id, filename='fig.png') }}" style="width: 100%; height: auto;" alt="描述文字">
+                    <img id="fig" src="{{ url_for('optimize.get_optimize_file', optimize_id=optimize_id, filename='fig.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
                   </div>
                 </div>
                 <hr>
