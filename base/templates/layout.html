@@ -441,6 +441,18 @@
                   <p>新建优化</p>
                 </a>
               </li>
+              <li class="nav-item">
+                <a href="{{ url_for('optimize.manage_templates') }}" class="nav-link" id="manage_optimize_templates">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>优化模版管理</p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{ url_for('optimize.create_template') }}" class="nav-link" id="create_optimize_template">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>新建优化模版</p>
+                </a>
+              </li>
             </ul>
           </li>
           {% endif %}
