@@ -397,16 +397,16 @@
           if (data1["solver_status"] === 'Setting' || data1["solver_status"] === 'Stopped' || data1["solver_status"] === 'Completed') {
             isUpdate = false;
           }
+          updateParas(data1["optimize_status"]["para"], data1["parameters"]);
+          updateFiles(data1["files"]);
+          updateButtons(data1["solver_status"]);
+          updateTextSolverStatus(data1["solver_status"]);
+          updateLog(data1['logs']);
+          updateRunLog(data1['run_logs']);
           return fetch(url2)
             .then(response => response.json())
             .then(data2 => {
-              updateParas(data1["optimize_status"]["para"], data1["parameters"]);
               updateExps(data2["data"], data1["experiments"]);
-              updateFiles(data1["files"]);
-              updateButtons(data1["solver_status"]);
-              updateTextSolverStatus(data1["solver_status"]);
-              updateLog(data1['logs']);
-              updateRunLog(data1['run_logs']);
             });
         })
         .catch(error => {
