@@ -2,7 +2,6 @@
 """
 
 """
-import json
 import os
 import shutil
 import subprocess
@@ -10,8 +9,9 @@ import time
 import uuid
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
-from flask_login import current_user, login_required
+from flask_login import current_user
 
+from base.decorators import permission_required
 from base.forms.abaqus import (JobForm, ParameterForm, ProjectForm, TemplateForm, ImportTemplateForm, UploadForm, FigureSettingFrom, OdbForm, PreprocForm,
                                InputFileUploadForm, PhasefieldForm)
 from base.global_var import event_source
@@ -31,13 +31,13 @@ abaqus_bp = Blueprint('abaqus', __name__)
 
 
 @abaqus_bp.route('/manage_projects', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def manage_projects():
     return render_template('abaqus/manage_projects.html')
 
 
 @abaqus_bp.route('/create_project', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def create_project():
     form = ProjectForm()
 
@@ -65,7 +65,7 @@ def create_project():
 
 
 @abaqus_bp.route('/create_job/<int:project_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def create_job(project_id):
     form = JobForm()
     abaqus_path = current_app.config['ABAQUS_PATH']
@@ -98,7 +98,7 @@ def create_job(project_id):
 
 
 @abaqus_bp.route('/edit_project/<int:project_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def edit_project(project_id):
     form = ProjectForm()
     abaqus_path = current_app.config['ABAQUS_PATH']
@@ -126,7 +126,7 @@ def edit_project(project_id):
 
 
 @abaqus_bp.route('/edit_job/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def edit_job(project_id, job_id):
     form = JobForm()
     abaqus_path = current_app.config['ABAQUS_PATH']
@@ -151,7 +151,7 @@ def edit_job(project_id, job_id):
 
 
 @abaqus_bp.route('/projects_status')
-@login_required
+@permission_required('ABAQUS')
 def projects_status():
     data = projects_detail(current_app.config['ABAQUS_PATH'])
     return jsonify(data)
@@ -170,7 +170,7 @@ def project_jobs_status(project_id):
 
 
 @abaqus_bp.route('/view_project/<int:project_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def view_project(project_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     project_path = os.path.join(abaqus_path, str(project_id))
@@ -284,7 +284,7 @@ def view_project(project_id):
 
 
 @abaqus_bp.route('/delete_project/<int:project_id>')
-@login_required
+@permission_required('ABAQUS')
 def delete_project(project_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     project_path = os.path.join(abaqus_path, str(project_id))
@@ -300,7 +300,7 @@ def delete_project(project_id):
 
 
 @abaqus_bp.route('/synchronize_project_file/<int:project_id>/<path:filename>')
-@login_required
+@permission_required('ABAQUS')
 def synchronize_project_file(project_id, filename):
     abaqus_path = current_app.config['ABAQUS_PATH']
     project_path = os.path.join(abaqus_path, str(project_id))
@@ -315,7 +315,7 @@ def synchronize_project_file(project_id, filename):
 
 
 @abaqus_bp.route('/delete_job/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('ABAQUS')
 def delete_job(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -331,7 +331,7 @@ def delete_job(project_id, job_id):
 
 
 @abaqus_bp.route('/delete_project_file/<int:project_id>/<path:filename>')
-@login_required
+@permission_required('ABAQUS')
 def delete_project_file(project_id, filename):
     abaqus_path = current_app.config['ABAQUS_PATH']
     file = os.path.join(abaqus_path, str(project_id), str(filename))
@@ -347,7 +347,7 @@ def delete_project_file(project_id, filename):
 
 
 @abaqus_bp.route('/delete_job_file/<int:project_id>/<int:job_id>/<path:filename>')
-@login_required
+@permission_required('ABAQUS')
 def delete_job_file(project_id, job_id, filename):
     abaqus_path = current_app.config['ABAQUS_PATH']
     file = os.path.join(abaqus_path, str(project_id),
@@ -364,7 +364,7 @@ def delete_job_file(project_id, job_id, filename):
 
 
 @abaqus_bp.route('/delete_job_subpath/<int:project_id>/<int:job_id>/<path:pathname>')
-@login_required
+@permission_required('ABAQUS')
 def delete_job_subpath(project_id, job_id, pathname):
     abaqus_path = current_app.config['ABAQUS_PATH']
     subpath = os.path.join(abaqus_path, str(project_id),
@@ -381,19 +381,19 @@ def delete_job_subpath(project_id, job_id, pathname):
 
 
 @abaqus_bp.route('/get_project_file/<int:project_id>/<path:filename>')
-@login_required
+@permission_required('ABAQUS')
 def get_project_file(project_id, filename):
     return send_from_directory(os.path.join(current_app.config['ABAQUS_PATH'], str(project_id)), filename)
 
 
 @abaqus_bp.route('/get_job_file/<int:project_id>/<int:job_id>/<path:filename>')
-@login_required
+@permission_required('ABAQUS')
 def get_job_file(project_id, job_id, filename):
     return send_from_directory(os.path.join(current_app.config['ABAQUS_PATH'], str(project_id), str(job_id)), filename)
 
 
 @abaqus_bp.route('/view_job/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def view_job(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -416,14 +416,14 @@ def view_job(project_id, job_id):
         # solver_status = s.solver_status()
         status = get_job_status(abaqus_path, project_id, job_id)
         solver_type = s.get_solver_type()
-        print('solver_type',solver_type)
+        print('solver_type', solver_type)
         return render_template('abaqus/view_job.html', project_id=project_id, job_id=job_id, status=status, form=form, solver_type=solver_type)
     else:
         abort(404)
 
 
 @abaqus_bp.route('/job_status/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def job_status(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -450,7 +450,7 @@ def job_status(project_id, job_id):
 
 
 @abaqus_bp.route('/project_status/<int:project_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def project_status(project_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     project_path = os.path.join(abaqus_path, str(project_id))
@@ -465,7 +465,7 @@ def project_status(project_id):
 
 
 @abaqus_bp.route('/template_status/<int:template_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def template_status(template_id):
     templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
     template_path = os.path.join(templates_path, str(template_id))
@@ -480,7 +480,7 @@ def template_status(template_id):
 
 
 @abaqus_bp.route('/run_job/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('ABAQUS')
 def run_job(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -500,7 +500,7 @@ def run_job(project_id, job_id):
 
 
 @abaqus_bp.route('/terminate_job/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('ABAQUS')
 def terminate_job(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -516,7 +516,7 @@ def terminate_job(project_id, job_id):
 
 
 @abaqus_bp.route('/open_job/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('ABAQUS')
 def open_job(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -529,7 +529,7 @@ def open_job(project_id, job_id):
 
 
 @abaqus_bp.route('/reset_job/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('ABAQUS')
 def reset_job(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -546,7 +546,7 @@ def reset_job(project_id, job_id):
 
 
 @abaqus_bp.route('/open_project/<int:project_id>')
-@login_required
+@permission_required('ABAQUS')
 def open_project(project_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     project_path = os.path.join(abaqus_path, str(project_id))
@@ -559,7 +559,7 @@ def open_project(project_id):
 
 
 @abaqus_bp.route('/prescan_odb/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('ABAQUS')
 def prescan_odb(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -578,7 +578,7 @@ def prescan_odb(project_id, job_id):
 
 
 @abaqus_bp.route('/odb_to_npz/<int:project_id>/<int:job_id>')
-@login_required
+@permission_required('ABAQUS')
 def odb_to_npz(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -599,7 +599,7 @@ def odb_to_npz(project_id, job_id):
 
 
 @abaqus_bp.route('/prescan_odb_data_origin/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def prescan_odb_data_origin(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -613,7 +613,7 @@ def prescan_odb_data_origin(project_id, job_id):
 
 
 @abaqus_bp.route('/prescan_odb_data/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def prescan_odb_data(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -628,7 +628,7 @@ def prescan_odb_data(project_id, job_id):
 
 
 @abaqus_bp.route('/odb_to_npz_data/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def odb_to_npz_data(project_id, job_id):
     import numpy as np
     abaqus_path = current_app.config['ABAQUS_PATH']
@@ -646,7 +646,7 @@ def odb_to_npz_data(project_id, job_id):
 
 
 @abaqus_bp.route('/print_figure/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def print_figure(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
@@ -845,20 +845,20 @@ def print_figure_gif(project_id, job_id, pathname):
 
 
 @abaqus_bp.route('/manage_templates', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def manage_templates():
     return render_template('abaqus/manage_templates.html')
 
 
 @abaqus_bp.route('/templates_status')
-@login_required
+@permission_required('ABAQUS')
 def templates_status():
     data = templates_detail(current_app.config['ABAQUS_TEMPLATE_PATH'])
     return jsonify(data)
 
 
 @abaqus_bp.route('/create_template', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def create_template():
     form = TemplateForm()
 
@@ -885,7 +885,7 @@ def create_template():
 
 
 @abaqus_bp.route('/view_template/<int:template_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def view_template(template_id):
     templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
     template_path = os.path.join(templates_path, str(template_id))
@@ -905,7 +905,7 @@ def view_template(template_id):
 
 
 @abaqus_bp.route('/edit_template/<int:template_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def edit_template(template_id):
     form = TemplateForm()
     templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
@@ -933,7 +933,7 @@ def edit_template(template_id):
 
 
 @abaqus_bp.route('/delete_template/<int:template_id>')
-@login_required
+@permission_required('ABAQUS')
 def delete_template(template_id):
     templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
     template_path = os.path.join(templates_path, str(template_id))
@@ -949,7 +949,7 @@ def delete_template(template_id):
 
 
 @abaqus_bp.route('/open_template/<int:template_id>')
-@login_required
+@permission_required('ABAQUS')
 def open_template(template_id):
     templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
     template_path = os.path.join(templates_path, str(template_id))
@@ -962,13 +962,13 @@ def open_template(template_id):
 
 
 @abaqus_bp.route('/get_template_file/<int:template_id>/<path:filename>')
-@login_required
+@permission_required('ABAQUS')
 def get_template_file(template_id, filename):
     return send_from_directory(os.path.join(current_app.config['ABAQUS_TEMPLATE_PATH'], str(template_id)), filename)
 
 
 @abaqus_bp.route('/delete_template_file/<int:template_id>/<path:filename>')
-@login_required
+@permission_required('ABAQUS')
 def delete_template_file(template_id, filename):
     templates_path = current_app.config['ABAQUS_TEMPLATE_PATH']
     file = os.path.join(templates_path, str(template_id), str(filename))
@@ -984,20 +984,20 @@ def delete_template_file(template_id, filename):
 
 
 @abaqus_bp.route('/manage_preprocs', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def manage_preprocs():
     return render_template('abaqus/manage_preprocs.html')
 
 
 @abaqus_bp.route('/preprocs_status')
-@login_required
+@permission_required('ABAQUS')
 def preprocs_status():
     data = preprocs_detail(current_app.config['ABAQUS_PRE_PATH'])
     return jsonify(data)
 
 
 @abaqus_bp.route('/create_preproc', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def create_preproc():
     form = PreprocForm()
 
@@ -1022,7 +1022,7 @@ def create_preproc():
 
 
 @abaqus_bp.route('/view_preproc/<int:preproc_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def view_preproc(preproc_id):
     preprocs_path = current_app.config['ABAQUS_PRE_PATH']
     preproc_path = os.path.join(preprocs_path, str(preproc_id))
@@ -1044,7 +1044,7 @@ def view_preproc(preproc_id):
 
 
 @abaqus_bp.route('/edit_preproc/<int:preproc_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def edit_preproc(preproc_id):
     form = PreprocForm()
     preprocs_path = current_app.config['ABAQUS_PRE_PATH']
@@ -1068,7 +1068,7 @@ def edit_preproc(preproc_id):
 
 
 @abaqus_bp.route('/delete_preproc/<int:preproc_id>')
-@login_required
+@permission_required('ABAQUS')
 def delete_preproc(preproc_id):
     preprocs_path = current_app.config['ABAQUS_PRE_PATH']
     preproc_path = os.path.join(preprocs_path, str(preproc_id))
@@ -1084,7 +1084,7 @@ def delete_preproc(preproc_id):
 
 
 @abaqus_bp.route('/open_preproc/<int:preproc_id>')
-@login_required
+@permission_required('ABAQUS')
 def open_preproc(preproc_id):
     preprocs_path = current_app.config['ABAQUS_PRE_PATH']
     preproc_path = os.path.join(preprocs_path, str(preproc_id))
@@ -1097,7 +1097,7 @@ def open_preproc(preproc_id):
 
 
 @abaqus_bp.route('/run_preproc/<int:preproc_id>')
-@login_required
+@permission_required('ABAQUS')
 def run_preproc(preproc_id):
     preprocs_path = current_app.config['ABAQUS_PRE_PATH']
     preproc_path = os.path.join(preprocs_path, str(preproc_id))
@@ -1117,7 +1117,7 @@ def run_preproc(preproc_id):
 
 
 @abaqus_bp.route('/preproc_status/<int:preproc_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def preproc_status(preproc_id):
     preprocs_path = current_app.config['ABAQUS_PRE_PATH']
     preproc_path = os.path.join(preprocs_path, str(preproc_id))
@@ -1140,13 +1140,13 @@ def preproc_status(preproc_id):
 
 
 @abaqus_bp.route('/get_preproc_file/<int:preproc_id>/<path:filename>')
-@login_required
+@permission_required('ABAQUS')
 def get_preproc_file(preproc_id, filename):
     return send_from_directory(os.path.join(current_app.config['ABAQUS_PRE_PATH'], str(preproc_id)), filename)
 
 
 @abaqus_bp.route('/delete_preproc_file/<int:preproc_id>/<path:filename>')
-@login_required
+@permission_required('ABAQUS')
 def delete_preproc_file(preproc_id, filename):
     preprocs_path = current_app.config['ABAQUS_PRE_PATH']
     file = os.path.join(preprocs_path, str(preproc_id), str(filename))
@@ -1162,7 +1162,7 @@ def delete_preproc_file(preproc_id, filename):
 
 
 @abaqus_bp.route('/postproc', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def postproc():
     abaqus_post_path = current_app.config['ABAQUS_POST_PATH']
     setting_file = os.path.join(abaqus_post_path, 'postproc.json')
@@ -1248,7 +1248,7 @@ def postproc():
 
 
 @abaqus_bp.route('/add_phasefield_layer', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def add_phasefield_layer():
     abaqus_inp_path = current_app.config['ABAQUS_INP_PATH']
 
@@ -1288,13 +1288,13 @@ def add_phasefield_layer():
 
 
 @abaqus_bp.route('/get_inp_file/<path:filename>')
-@login_required
+@permission_required('ABAQUS')
 def get_inp_file(filename):
     return send_from_directory(current_app.config['ABAQUS_INP_PATH'], filename)
 
 
 @abaqus_bp.route('/delete_inp_file/<path:filename>')
-@login_required
+@permission_required('ABAQUS')
 def delete_inp_file(filename):
     abaqus_inp_path = current_app.config['ABAQUS_INP_PATH']
     file = os.path.join(abaqus_inp_path, str(filename))
@@ -1310,7 +1310,7 @@ def delete_inp_file(filename):
 
 
 @abaqus_bp.route('/postproc_prescan_odb_data/<path:filename>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def postproc_prescan_odb_data(filename):
     if os.path.exists(filename):
         prescan_odb_dict = load_json(filename)
@@ -1322,7 +1322,7 @@ def postproc_prescan_odb_data(filename):
 
 
 @abaqus_bp.route('/upload_job_file/<int:project_id>/<int:job_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('ABAQUS')
 def upload_job_file(project_id, job_id):
     abaqus_path = current_app.config['ABAQUS_PATH']
     job_path = os.path.join(abaqus_path, str(project_id), str(job_id))
