@@ -5,46 +5,35 @@
 import json
 import os
 import shutil
-import subprocess
-import time
-import uuid
-from markupsafe import Markup
 
 from flask import (Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, send_from_directory, url_for)
-from flask_login import current_user, login_required
+from flask_login import current_user
+from markupsafe import Markup
 
+from base.decorators import permission_required
 from base.forms.flow import UploadForm, FlowForm, JobForm, F1From
-from base.global_var import event_source
-from base.utils.abaqus.Postproc import Postproc
 from base.utils.abaqus.Preproc import Preproc
-from base.utils.abaqus.Solver import Solver
-from base.utils.abaqus.add_phasefield_layer import add_phasefield_layer as add_phasefield_layer_abaqus
 from base.utils.common import make_dir, dump_json, load_json
-from base.utils.dir_status import (create_id, files_in_dir, subpaths_in_dir, get_job_status, get_project_status, get_template_status, project_jobs_detail,
-                                   flows_detail, materials_detail, projects_detail, preprocs_detail, sub_dirs_int, sub_dirs, file_time)
-from base.utils.events_new import update_events_new
-from base.utils.make_gif import make_gif
-from base.utils.read_prescan import read_prescan
-from base.utils.tree import json_to_ztree, odb_json_to_ztree
+from base.utils.dir_status import (create_id, files_in_dir, flows_detail, materials_detail, projects_detail, file_time)
 
 flow_bp = Blueprint('flow', __name__)
 
 
 @flow_bp.route('/flows_status/')
-@login_required
+@permission_required('FLOW')
 def flows_status():
     data = flows_detail(current_app.config['FLOW_PATH'])
     return jsonify(data)
 
 
 @flow_bp.route('/manage_flows/')
-@login_required
+@permission_required('FLOW')
 def manage_flows():
     return render_template('flow/manage_flows.html')
 
 
 @flow_bp.route('/edit_flow/<int:flow_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('FLOW')
 def edit_flow(flow_id):
     form = FlowForm()
     flows_path = current_app.config['FLOW_PATH']
@@ -66,13 +55,13 @@ def edit_flow(flow_id):
 
 
 @flow_bp.route('/get_flow_file/<int:flow_id>/<path:filename>')
-@login_required
+@permission_required('FLOW')
 def get_flow_file(flow_id, filename):
     return send_from_directory(os.path.join(current_app.config['FLOW_PATH'], str(flow_id)), filename)
 
 
 @flow_bp.route('/delete_flow_file/<int:flow_id>/<path:filename>')
-@login_required
+@permission_required('FLOW')
 def delete_flow_file(flow_id, filename):
     flow_path = current_app.config['FLOW_PATH']
     file = os.path.join(flow_path, str(flow_id), str(filename))
@@ -88,7 +77,7 @@ def delete_flow_file(flow_id, filename):
 
 
 @flow_bp.route('/run_preproc/<int:flow_id>')
-@login_required
+@permission_required('FLOW')
 def run_preproc(flow_id):
     flows_path = current_app.config['FLOW_PATH']
     flow_path = os.path.join(flows_path, str(flow_id))
@@ -108,7 +97,7 @@ def run_preproc(flow_id):
 
 
 @flow_bp.route('/1', methods=['GET', 'POST'])
-@login_required
+@permission_required('FLOW')
 def f1():
     flow_id = 1
     flows_path = current_app.config['FLOW_PATH']
@@ -343,7 +332,7 @@ def f1():
 
 
 @flow_bp.route('/flow_status/<int:flow_id>', methods=['GET', 'POST'])
-@login_required
+@permission_required('FLOW')
 def flow_status(flow_id):
     flows_path = current_app.config['FLOW_PATH']
     flow_path = os.path.join(flows_path, str(flow_id))
