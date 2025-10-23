@@ -18,9 +18,9 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import fmin
 
-BASE_PATH = '/home/dell/base'
-sys.path.insert(0, BASE_PATH)
-from base.utils.optimize.preproc_data import preproc_data
+UTILS_PATH = '/home/dell/base/base/utils/optimize'
+sys.path.insert(0, UTILS_PATH)
+from preproc_data import preproc_data
 
 logger = logging.getLogger('optimize')
 
@@ -139,7 +139,7 @@ class Optimize:
         self.is_clear = is_clear
         self.counter = 0
         self.last_plot_time = time.time()
-        self.max_iter = 1000
+        self.max_iter = 2
 
         self.msg_file = os.path.join(path, '.optimize_msg')
         self.parameters_json_file = os.path.join(path, 'parameters.json')
