@@ -18,7 +18,10 @@ try:
 except ModuleNotFoundError:
     import tomli as tomllib
 
-from base.utils.pyfem.Solver import Solver
+try:
+    from Solver import Solver
+except ModuleNotFoundError:
+    from base.utils.pyfem.Solver import Solver
 
 
 def get_simulation(parameters: dict, strain: ndarray, t: ndarray, job_path: str) -> tuple[ndarray, ndarray, ndarray]:

@@ -21,7 +21,11 @@ from scipy.optimize import fmin
 
 UTILS_PATH = '/home/dell/base'
 sys.path.insert(0, UTILS_PATH)
-from base.utils.optimize.preproc_data import preproc_data
+
+try:
+    from preproc_data import preproc_data
+except ModuleNotFoundError:
+    from base.utils.optimize.preproc_data import preproc_data
 
 logger = logging.getLogger('optimize')
 
