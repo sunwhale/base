@@ -37,23 +37,22 @@ def get_simulation(parameters: dict, strain: ndarray, t: ndarray, job_path: str)
             para_dict[para] = parameters[para]['value']
     para_dict['INTERVAL'] = total_time / 50.0
     para_dict['TIME'] = total_time
-    para_dict['STRAIN'] = total_strain * gauge_length
     s.save_parameters((s.dict_to_parameters(para_dict)))
     s.run()
     with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
         f.write('Submitting')
-    is_run_completed = False
-    while not is_run_completed:
+    is_run_finished = False
+    while not is_run_finished:
         status = s.solver_status()
         if status == 'Completed':
-            is_run_completed = True
+            is_run_finished = True
         elif status == 'Stopped':
-            break
+            is_run_finished = True
         else:
             time.sleep(0.5)
         print(status)
 
-    if is_run_completed:
+    if is_run_finished:
         p = Postproc(job_path)
         p.read_msg()
         p.odb_to_npz()
