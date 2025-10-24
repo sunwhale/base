@@ -18,9 +18,9 @@ import numpy as np
 import pandas as pd
 from scipy.optimize import fmin
 
-UTILS_PATH = '/home/dell/base/base/utils/optimize'
+UTILS_PATH = '/home/dell/base'
 sys.path.insert(0, UTILS_PATH)
-from preproc_data import preproc_data
+from base.utils.optimize.preproc_data import preproc_data
 
 logger = logging.getLogger('optimize')
 
