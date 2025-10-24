@@ -5,6 +5,7 @@
 import json
 import logging
 import os
+import shutil
 import sys
 import threading
 import time
@@ -61,6 +62,20 @@ colors += [
 ]
 
 
+def make_dir(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+
+def files_in_dir(path):
+    file_list = []
+    for filename in sorted(next(os.walk(path))[2]):
+        file = {}
+        file['name'] = filename
+        file_list.append(file)
+    return file_list
+
+
 def dump_json(file_path, data, encoding='utf-8'):
     """
     Write JSON data to file.
@@ -75,6 +90,21 @@ def load_json(file_path, encoding='utf-8'):
     """
     with open(file_path, 'r', encoding=encoding) as f:
         return json.load(f)
+
+
+def create_job(project_path, job_path):
+    make_dir(job_path)
+    message = {
+        'job': 'Job-1',
+        'user': '',
+        'cpus': 1,
+        'descript': ''
+    }
+    msg_file = os.path.join(job_path, '.job_msg')
+    dump_json(msg_file, message)
+    files = files_in_dir(project_path)
+    for file in files:
+        shutil.copy(os.path.join(project_path, file['name']), os.path.join(job_path, file['name']))
 
 
 def set_logger(logger: Logger, abs_job_file: Path, level: int = logging.INFO) -> Optional[logging.Logger]:
@@ -282,9 +312,13 @@ class Optimize:
                 threads[key] = ReturnThread(target=self.get_simulation, args=(paras, strain_exp, time_exp))
             elif self.optimize_type == 'PYFEM项目':
                 job_path = os.path.join(self.project_path, str(i + 1))
+                if not os.path.exists(job_path):
+                    create_job(self.project_path, job_path)
                 threads[key] = ReturnThread(target=self.get_simulation, args=(paras, strain_exp, time_exp, job_path))
             elif self.optimize_type == 'ABAQUS项目':
                 job_path = os.path.join(self.project_path, str(i + 1))
+                if not os.path.exists(job_path):
+                    create_job(self.project_path, job_path)
                 threads[key] = ReturnThread(target=self.get_simulation, args=(paras, strain_exp, time_exp, job_path))
                 time.sleep(0.2)
             threads[key].start()
