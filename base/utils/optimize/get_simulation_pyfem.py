@@ -43,13 +43,13 @@ def get_simulation(parameters: dict, strain: ndarray, t: ndarray, job_path: str)
     s.run()
     with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
         f.write('Submitting')
-    is_run_completed = False
-    while not is_run_completed:
+    is_run_finished = False
+    while not is_run_finished:
         status = s.solver_status()
         if status == 'Completed':
-            is_run_completed = True
+            is_run_finished = True
         elif status == 'Stopped':
-            break
+            is_run_finished = True
         else:
             time.sleep(0.5)
 
@@ -57,7 +57,7 @@ def get_simulation(parameters: dict, strain: ndarray, t: ndarray, job_path: str)
     e11 = []
     s11 = []
 
-    if is_run_completed:
+    if is_run_finished:
         odb = ODB()
         odb.load_hdf5(os.path.join(job_path, f'{s.job}.hdf5'))
         for frame in odb.steps['Step-1']['frames']:
