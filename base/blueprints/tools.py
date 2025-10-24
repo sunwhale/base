@@ -51,6 +51,14 @@ def code_save(url):
         info = url.split('abaqus/get_preproc_file/')[1].split('/')
         preproc_id, filename = info[0], info[1]
         filepath = os.path.join(current_app.config['ABAQUS_PRE_PATH'], str(preproc_id), filename)
+    elif 'optimize/get_optimize_file/' in url:
+        info = url.split('optimize/get_optimize_file/')[1].split('/')
+        optimize_id, filename = info[0], info[1]
+        filepath = os.path.join(current_app.config['OPTIMIZE_PATH'], str(optimize_id), filename)
+    elif 'optimize/get_template_file/' in url:
+        info = url.split('optimize/get_template_file/')[1].split('/')
+        template_id, filename = info[0], info[1]
+        filepath = os.path.join(current_app.config['OPTIMIZE_TEMPLATE_PATH'], str(template_id), filename)
     else:
         return jsonify({'error': 'File not founded'}), 400
 
