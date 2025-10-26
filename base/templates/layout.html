@@ -23,11 +23,30 @@
               max-width: 100%;
           }
       }
+      .scroll-progress {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 3px;
+          background: #e9ecef;
+          z-index: 9999;
+      }
+      .scroll-progress-bar {
+          height: 100%;
+          background: #007bff;
+          width: 0%;
+          transition: width 0.3s;
+      }
   </style>
   {% block css %}{% endblock css %}
   {% endblock head %}
 </head>
 <body class="hold-transition sidebar-mini">
+<!-- 滚动进度条 -->
+<div class="scroll-progress">
+  <div class="scroll-progress-bar" id="scrollProgress"></div>
+</div>
 <div class="wrapper">
   <!-- Navbar -->
   <nav class="main-header navbar navbar-expand navbar-white navbar-light">
@@ -682,6 +701,7 @@
   $(document).ready(function () {
     // 侧边栏状态存储键名
     const SIDEBAR_STATE_KEY = 'adminlte_sidebar_state';
+    const SCROLL_POSITION_KEY = 'adminlte_scroll_position';
 
     // 检查并应用存储的侧边栏状态
     function applyStoredSidebarState() {
@@ -714,7 +734,69 @@
       }, 100);
     });
     // 页面加载时应用存储的状态
+
+    // 恢复滚动位置
+    function restoreScrollPosition() {
+      const savedPosition = localStorage.getItem(SCROLL_POSITION_KEY);
+      if (savedPosition) {
+        // 使用setTimeout确保DOM完全加载
+        setTimeout(function () {
+          $(window).scrollTop(savedPosition);
+          updateScrollProgress();
+          updateFooterStatus();
+        }, 100);
+      }
+    }
+
+    // 更新滚动进度条
+    function updateScrollProgress() {
+      const windowHeight = $(window).height();
+      const documentHeight = $(document).height();
+      const scrollTop = $(window).scrollTop();
+      const scrollPercent = (scrollTop / (documentHeight - windowHeight)) * 100;
+
+      $('#scrollProgress').css('width', scrollPercent + '%');
+    }
+
+    // 更新页脚状态显示
+    function updateFooterStatus() {
+      const isCollapsed = $('body').hasClass('sidebar-collapse');
+      const scrollPosition = $(window).scrollTop();
+
+      $('#footerSidebarStatus').text(isCollapsed ? '折叠' : '展开');
+      $('#footerScrollPosition').text(scrollPosition);
+    }
+
+    // 监听滚动事件
+    $(window).on('scroll', function () {
+      // 使用防抖技术减少存储频率
+      clearTimeout($.data(this, 'scrollTimer'));
+      $.data(this, 'scrollTimer', setTimeout(function () {
+        const scrollPosition = $(window).scrollTop();
+        localStorage.setItem(SCROLL_POSITION_KEY, scrollPosition);
+
+        updateScrollProgress();
+        updateFooterStatus();
+      }, 250));
+    });
+
+    // 平滑滚动到锚点
+    $('a[href^="#"]').on('click', function (e) {
+      e.preventDefault();
+      const target = $(this.getAttribute('href'));
+      if (target.length) {
+        $('html, body').animate({
+          scrollTop: target.offset().top - 70
+        }, 500);
+      }
+    });
+
+    // 页面加载时应用存储的状态
     applyStoredSidebarState();
+    restoreScrollPosition();
+
+    // 初始化滚动进度条
+    updateScrollProgress();
   });
 </script>
 
