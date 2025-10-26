@@ -678,6 +678,46 @@
 </script>
 {% endfor %}
 
+<script>
+  $(document).ready(function () {
+    // 侧边栏状态存储键名
+    const SIDEBAR_STATE_KEY = 'adminlte_sidebar_state';
+
+    // 检查并应用存储的侧边栏状态
+    function applyStoredSidebarState() {
+      const storedState = localStorage.getItem(SIDEBAR_STATE_KEY);
+
+      if (storedState === 'collapsed') {
+        // 如果存储的状态是折叠，则折叠侧边栏
+        $('body').addClass('sidebar-collapse');
+      } else {
+        // 否则展开侧边栏
+        $('body').removeClass('sidebar-collapse');
+      }
+
+      // 触发resize事件，确保布局正确
+      $(window).trigger('resize');
+    }
+
+    // 监听侧边栏折叠/展开事件
+    $('[data-widget="pushmenu"]').on('click', function () {
+      // 延迟执行以确保类名已更新
+      setTimeout(function () {
+        const isCollapsed = $('body').hasClass('sidebar-collapse');
+
+        // 存储当前状态
+        if (isCollapsed) {
+          localStorage.setItem(SIDEBAR_STATE_KEY, 'collapsed');
+        } else {
+          localStorage.setItem(SIDEBAR_STATE_KEY, 'expanded');
+        }
+      }, 100);
+    });
+    // 页面加载时应用存储的状态
+    applyStoredSidebarState();
+  });
+</script>
+
 {% block script %}
 {% endblock script %}
 </body>
