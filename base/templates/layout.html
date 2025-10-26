@@ -651,7 +651,8 @@
     <!-- /.content -->
   </div>
   <!-- /.content-wrapper -->
-  <!-- /.content-wrapper -->
+  
+  <!-- 主底部 -->
   <footer class="main-footer">
     <strong>Jingyu Sun &copy; 2020-2025</strong>
     <div class="float-right d-none d-sm-inline-block">
@@ -778,17 +779,6 @@
         updateScrollProgress();
         updateFooterStatus();
       }, 250));
-    });
-
-    // 平滑滚动到锚点
-    $('a[href^="#"]').on('click', function (e) {
-      e.preventDefault();
-      const target = $(this.getAttribute('href'));
-      if (target.length) {
-        $('html, body').animate({
-          scrollTop: target.offset().top - 70
-        }, 500);
-      }
     });
 
     // 页面加载时应用存储的状态
