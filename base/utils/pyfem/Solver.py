@@ -216,8 +216,9 @@ class Solver:
 
     def save_parameters(self, para):
         para_file = os.path.join(self.path, 'parameters.toml')
+        para_dict = tomllib.loads(para)
         with open(para_file, "wb") as f:
-            tomli_w.dump(para, f)
+            tomli_w.dump(para_dict, f)
 
     def parameters_to_json(self):
         para_dict = self.parameters_to_dict()

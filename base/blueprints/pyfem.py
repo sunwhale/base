@@ -276,7 +276,7 @@ def view_job(project_id, job_id):
         if form.validate_on_submit():
             para = form.para.data
             s.save_parameters(para)
-            flash('parameters.inp保存成功。', 'success')
+            flash('parameters.toml保存成功。', 'success')
             return redirect(url_for('.view_job', project_id=project_id, job_id=job_id))
         form.para.data = para
         s.parameters_to_json()
