@@ -216,7 +216,10 @@ class Solver:
 
     def save_parameters(self, para):
         para_file = os.path.join(self.path, 'parameters.toml')
-        para_dict = tomllib.loads(para)
+        if isinstance(para, str):
+            para_dict = tomllib.loads(para)
+        else:
+            para_dict = para
         with open(para_file, "wb") as f:
             tomli_w.dump(para_dict, f)
 
