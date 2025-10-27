@@ -23,14 +23,9 @@
           <div class="col-6">
             <div class="column">
               <div class="col-12">
-                <div class="card card-primary">
+                <div class="card card-primary" data-card-id="card-1">
                   <div class="card-header">
                     <h3 class="card-title">{{ project_id }}号ABAQUS项目：{{ job_id }}号算例</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                        <i class="fas fa-minus"></i>
-                      </button>
-                    </div>
                   </div>
                   <div class="card-body">
                     <div class="row">
@@ -74,12 +69,9 @@
                 </div>
               </div>
               <div class="col-12">
-                <div class="card card-primary">
+                <div class="card card-primary" data-card-id="card-2">
                   <div class="card-header">
                     <h3 class="card-title">参数文件</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
-                    </div>
                   </div>
                   <div class="card-body">
                     <div class="row">
@@ -95,12 +87,9 @@
                 </div>
               </div>
               <div class="col-12">
-                <div class="card card-primary">
+                <div class="card card-primary" data-card-id="card-3">
                   <div class="card-header">
                     <h3 class="card-title">文件列表</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
-                    </div>
                   </div>
                   <div class="card-body">
                     <div class="row">
@@ -128,16 +117,16 @@
             <div class="column">
               <div class="col-12">
                 <!-- Custom Tabs -->
-                <div class="card">
-                  <div class="card-header d-flex p-0">
-                    <h3 class="card-title p-3">求解状态</h3>
+                <div class="card card-primary" data-card-id="card-4">
+                  <div class="card-header">
+                    <h3 class="card-title">求解状态</h3>
+                  </div>
+                  <div class="card-body">
                     <ul class="nav nav-pills ml-auto p-2">
                       <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">状态文件 {{ status['job'] }}.sta</a></li>
                       <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
                       <li class="nav-item"><a class="nav-link" href="#tab_3" data-toggle="tab">求解日志 {{ status['job'] }}.log</a></li>
                     </ul>
-                  </div><!-- /.card-header -->
-                  <div class="card-body">
                     <div class="tab-content">
                       <div class="tab-pane active" id="tab_1">
                         <div class="card-body table-responsive p-0" style="height: 711.5px;">
@@ -192,12 +181,9 @@
                 <!-- ./card -->
               </div>
               <div class="col-12">
-                <div class="card card-primary">
+                <div class="card card-primary" data-card-id="card-5">
                   <div class="card-header">
                     <h3 class="card-title">后处理</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-minus"></i></button>
-                    </div>
                   </div>
                   <div class="card-body">
                     <div class="row">
