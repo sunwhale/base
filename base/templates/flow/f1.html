@@ -22,14 +22,9 @@
           <div class="col-6">
             <div class="column">
               <div class="col-12">
-                <div class="card card-primary">
+                <div class="card card-primary" data-card-id="card-1">
                   <div class="card-header">
                     <h3 class="card-title">{{ flow_id }}号流程信息</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                        <i class="fas fa-minus"></i>
-                      </button>
-                    </div>
                   </div>
                   <div class="card-body">
                     <div class="row">
@@ -59,14 +54,9 @@
                 </div>
               </div>
               <div class="col-12">
-                <div class="card card-info">
+                <div class="card card-primary" data-card-id="card-2">
                   <div class="card-header">
                     <h3 class="card-title">新建/重写ABAQUS作业</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse" title="Collapse">
-                        <i class="fas fa-minus"></i>
-                      </button>
-                    </div>
                   </div>
                   <div class="card-body">
                     <form action="" method="post" class="form" role="form">
@@ -108,14 +98,9 @@
               <form action="" method="post" class="form" role="form">
                 {{ form.csrf_token() }}
                 <div class="col-12">
-                  <div class="card card-info">
+                  <div class="card card-primary" data-card-id="card-3">
                     <div class="card-header">
                       <h3 class="card-title">铣刀零件参数</h3>
-                      <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                          <i class="fas fa-minus"></i>
-                        </button>
-                      </div>
                     </div>
                     <div class="card-body">
                       <div class="row">
@@ -139,14 +124,9 @@
                   </div>
                 </div>
                 <div class="col-12">
-                  <div class="card card-info">
+                  <div class="card card-primary" data-card-id="card-4">
                     <div class="card-header">
                       <h3 class="card-title">平板零件参数</h3>
-                      <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                          <i class="fas fa-minus"></i>
-                        </button>
-                      </div>
                     </div>
                     <div class="card-body">
                       <div class="row">
@@ -159,14 +139,9 @@
                   </div>
                 </div>
                 <div class="col-12">
-                  <div class="card card-info">
+                  <div class="card card-primary" data-card-id="card-5">
                     <div class="card-header">
                       <h3 class="card-title">初始条件</h3>
-                      <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                          <i class="fas fa-minus"></i>
-                        </button>
-                      </div>
                     </div>
                     <div class="card-body">
                       <div class="row">
@@ -181,14 +156,9 @@
                   </div>
                 </div>
                 <div class="col-12">
-                  <div class="card card-info">
+                  <div class="card card-primary" data-card-id="card-6">
                     <div class="card-header">
                       <h3 class="card-title">边界条件</h3>
-                      <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                          <i class="fas fa-minus"></i>
-                        </button>
-                      </div>
                     </div>
                     <div class="card-body">
                       <div class="row">
@@ -211,14 +181,9 @@
                   </div>
                 </div>
                 <div class="col-12">
-                  <div class="card card-info">
+                  <div class="card card-primary" data-card-id="card-7">
                     <div class="card-header">
                       <h3 class="card-title">材料设置</h3>
-                      <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                          <i class="fas fa-minus"></i>
-                        </button>
-                      </div>
                     </div>
                     <div class="card-body">
                       <div class="row">
@@ -241,14 +206,9 @@
                   </div>
                 </div>
                 <div class="col-12">
-                  <div class="card card-info">
+                  <div class="card card-primary" data-card-id="card-8">
                     <div class="card-header">
                       <h3 class="card-title">求解控制</h3>
-                      <div class="card-tools">
-                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                          <i class="fas fa-minus"></i>
-                        </button>
-                      </div>
                     </div>
                     <div class="card-body">
                       <div class="row">
@@ -269,15 +229,15 @@
           <div class="col-6">
             <div class="column">
               <div class="col-12">
-                <div class="card">
-                  <div class="card-header d-flex p-0">
-                    <h3 class="card-title p-3">前处理状态</h3>
+                <div class="card card-primary" data-card-id="card-9">
+                  <div class="card-header">
+                    <h3 class="card-title">求解状态</h3>
+                  </div>
+                  <div class="card-body">
                     <ul class="nav nav-pills ml-auto p-2">
                       <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">前处理日志 abaqus.rpy</a></li>
                       <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
                     </ul>
-                  </div>
-                  <div class="card-body">
                     <div class="tab-content">
                       <div class="tab-pane active" id="tab_1">
                         <textarea id="textarea_log" class="form-control" style="height: 370.0px;"></textarea>
@@ -290,14 +250,9 @@
                 </div>
               </div>
               <div class="col-12">
-                <div class="card card-primary">
+                <div class="card card-primary" data-card-id="card-10">
                   <div class="card-header">
                     <h3 class="card-title">模型预览</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                        <i class="fas fa-minus"></i>
-                      </button>
-                    </div>
                   </div>
                   <div class="card-body">
                     <a id="updateFigures" href="#" class="btn btn-success" onclick="refreshImages(); return false;"><strong>刷新图片</strong></a>
@@ -335,12 +290,9 @@
                 </div>
               </div>
               <div class="col-12">
-                <div class="card card-primary collapsed-card">
+                <div class="card card-primary" data-card-id="card-11">
                   <div class="card-header">
                     <h3 class="card-title">文件列表</h3>
-                    <div class="card-tools">
-                      <button type="button" class="btn btn-tool" data-card-widget="collapse"><i class="fas fa-plus"></i></button>
-                    </div>
                   </div>
                   <div class="card-body">
                     <div class="row">
