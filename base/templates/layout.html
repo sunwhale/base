@@ -38,6 +38,25 @@
           width: 0%;
           transition: width 0.3s;
       }
+      /* 卡片折叠样式 */
+      .card-header {
+          cursor: pointer;
+          position: relative;
+          padding-right: 40px;
+      }
+      .card-header:after {
+          content: '\f068';
+          font-family: 'Font Awesome 5 Free';
+          font-weight: 900;
+          position: absolute;
+          right: 15px;
+          top: 50%;
+          transform: translateY(-50%);
+          transition: transform 0.3s;
+      }
+      .card-header.collapsed:after {
+          content: '\f067';
+      }
   </style>
   {% block css %}{% endblock css %}
   {% endblock head %}
@@ -678,6 +697,8 @@
 <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/4.6.1/js/bootstrap.bundle.min.js"></script>
 <!-- AdminLTE App -->
 <script src="https://cdn.bootcdn.net/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+<!-- Base -->
+<script src="{{ url_for('static', filename='layout.js') }}"></script>
 {% else %}
 <!-- jQuery -->
 <script src="{{ url_for('static', filename='AdminLTE/plugins/jquery/jquery.min.js') }}"></script>
@@ -687,6 +708,8 @@
 <script src="{{ url_for('static', filename='AdminLTE/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <!-- AdminLTE App -->
 <script src="{{ url_for('static', filename='AdminLTE/dist/js/adminlte.min.js') }}"></script>
+<!-- Base -->
+<script src="{{ url_for('static', filename='layout.js') }}"></script>
 {% endif %}
 
 {% for message in get_flashed_messages(with_categories=True) %}
@@ -697,98 +720,6 @@
   })
 </script>
 {% endfor %}
-
-<script>
-  $(document).ready(function () {
-    // 侧边栏状态存储键名
-    const SIDEBAR_STATE_KEY = 'adminlte_sidebar_state';
-    const SCROLL_POSITION_KEY = 'adminlte_scroll_position';
-
-    // 检查并应用存储的侧边栏状态
-    function applyStoredSidebarState() {
-      const storedState = localStorage.getItem(SIDEBAR_STATE_KEY);
-
-      if (storedState === 'collapsed') {
-        // 如果存储的状态是折叠，则折叠侧边栏
-        $('body').addClass('sidebar-collapse');
-      } else {
-        // 否则展开侧边栏
-        $('body').removeClass('sidebar-collapse');
-      }
-
-      // 触发resize事件，确保布局正确
-      $(window).trigger('resize');
-    }
-
-    // 监听侧边栏折叠/展开事件
-    $('[data-widget="pushmenu"]').on('click', function () {
-      // 延迟执行以确保类名已更新
-      setTimeout(function () {
-        const isCollapsed = $('body').hasClass('sidebar-collapse');
-
-        // 存储当前状态
-        if (isCollapsed) {
-          localStorage.setItem(SIDEBAR_STATE_KEY, 'collapsed');
-        } else {
-          localStorage.setItem(SIDEBAR_STATE_KEY, 'expanded');
-        }
-      }, 100);
-    });
-    // 页面加载时应用存储的状态
-
-    // 恢复滚动位置
-    function restoreScrollPosition() {
-      const savedPosition = localStorage.getItem(SCROLL_POSITION_KEY);
-      if (savedPosition) {
-        // 使用setTimeout确保DOM完全加载
-        setTimeout(function () {
-          $(window).scrollTop(savedPosition);
-          updateScrollProgress();
-          updateFooterStatus();
-        }, 100);
-      }
-    }
-
-    // 更新滚动进度条
-    function updateScrollProgress() {
-      const windowHeight = $(window).height();
-      const documentHeight = $(document).height();
-      const scrollTop = $(window).scrollTop();
-      const scrollPercent = (scrollTop / (documentHeight - windowHeight)) * 100;
-
-      $('#scrollProgress').css('width', scrollPercent + '%');
-    }
-
-    // 更新页脚状态显示
-    function updateFooterStatus() {
-      const isCollapsed = $('body').hasClass('sidebar-collapse');
-      const scrollPosition = $(window).scrollTop();
-
-      $('#footerSidebarStatus').text(isCollapsed ? '折叠' : '展开');
-      $('#footerScrollPosition').text(scrollPosition);
-    }
-
-    // 监听滚动事件
-    $(window).on('scroll', function () {
-      // 使用防抖技术减少存储频率
-      clearTimeout($.data(this, 'scrollTimer'));
-      $.data(this, 'scrollTimer', setTimeout(function () {
-        const scrollPosition = $(window).scrollTop();
-        localStorage.setItem(SCROLL_POSITION_KEY, scrollPosition);
-
-        updateScrollProgress();
-        updateFooterStatus();
-      }, 250));
-    });
-
-    // 页面加载时应用存储的状态
-    applyStoredSidebarState();
-    restoreScrollPosition();
-
-    // 初始化滚动进度条
-    updateScrollProgress();
-  });
-</script>
 
 {% block script %}
 {% endblock script %}
