@@ -31,11 +31,18 @@ class Role(db.Model):
 
     @staticmethod
     def init_role():
+        # roles_permission_list = ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'VIRTUAL', 'OPTIMIZE', 'RESOURCE',
+        #                          'TOOLS']
+
+        roles_permission_list = ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'OPTIMIZE', 'RESOURCE', 'TOOLS']
+
+        # roles_permission_list = ['DOC', 'EXPERIMENT', 'ABAQUS', 'PYFEM', 'OPTIMIZE']
+
         roles_permissions_map = {
             'Locked': [],
-            'User': ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'VIRTUAL', 'OPTIMIZE', 'RESOURCE', 'TOOLS'],
-            'Moderator': ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'VIRTUAL', 'OPTIMIZE', 'RESOURCE', 'TOOLS', 'MODERATE'],
-            'Administrator': ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'VIRTUAL', 'OPTIMIZE', 'RESOURCE', 'TOOLS', 'MODERATE', 'ADMINISTER']
+            'User': roles_permission_list,
+            'Moderator': roles_permission_list + ['MODERATE'],
+            'Administrator': roles_permission_list + ['MODERATE', 'ADMINISTER']
         }
 
         for role_name in roles_permissions_map:
