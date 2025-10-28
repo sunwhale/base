@@ -29,168 +29,190 @@
       <div class="container-fluid">
         <div class="row">
           <div class="col-6">
-            <div class="card card-primary" data-card-id="card-1">
-              <div class="card-header">
-                <h3 class="card-title">{{ optimize_id }}号优化信息</h3>
+            <div class="column">
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-1">
+                  <div class="card-header">
+                    <h3 class="card-title">{{ optimize_id }}号优化信息</h3>
+                  </div>
+                  <div class="card-body">
+                    <h5 class="text-primary">优化信息</h5>
+                    <ul class="list-unstyled">
+                      <li> 优化名称：{{ status['name'] }}</li>
+                      <li> 优化编号：{{ optimize_id }}</li>
+                      <li> 仿真来源：{{ status['type'] }}</li>
+                      <li> 仿真项目ID：{{ status['project_id'] }}</li>
+                      <li> 参数列表：{{ status['para'] }}</li>
+                      <li> 优化算例：{{ status['job'] }}</li>
+                      <li> 创建时间：{{ status['json_time'] }}</li>
+                      <li> 优化备注：</li>
+                      <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
+                      <p></p>
+                      <a class='btn btn-primary' href="{{ url_for('optimize.edit_optimize', optimize_id=optimize_id) }}"><strong>编辑信息</strong></a>
+                      {% if config.CLIENT %}
+                      <a href="{{ url_for('optimize.open_optimize', optimize_id=optimize_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
+                      {% endif %}
+                    </ul>
+
+                    <h5 class="text-primary">优化控制</h5>
+                    <span id="text_solver_status">--</span>（最后更新: <span id="lastUpdated">--</span>）
+                    <div class="log" id="log"></div>
+                    <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止优化过程，并通过<a href="javascript:location.reload();">刷新</a>页面获取算例状态。
+                    </p>
+                    <button id="calculateBtn" class="btn btn-secondary" disabled><strong>计 算</strong></button>
+                    <a id="calculateLink" href="{{ url_for('optimize.run_optimize', optimize_id=optimize_id) }}" class="btn btn-success"><strong>计 算</strong></a>
+                    <button id="terminateBtn" class="btn btn-secondary" disabled><strong>终 止</strong></button>
+                    <a id="terminateLink" href="{{ url_for('optimize.terminate_optimize', optimize_id=optimize_id) }}" class="btn btn-danger"><strong>终
+                      止</strong></a>
+                    <button id="resetBtn" class="btn btn-secondary" disabled><strong>重 置</strong></button>
+                    <a id="resetLink" href="{{ url_for('optimize.reset_optimize', optimize_id=optimize_id) }}" class="btn btn-info"><strong>重 置</strong></a>
+                  </div>
+                </div>
               </div>
-              <div class="card-body">
-                <h5 class="text-primary">优化信息</h5>
-                <ul class="list-unstyled">
-                  <li> 优化名称：{{ status['name'] }} </li>
-                  <li> 优化编号：{{ optimize_id }} </li>
-                  <li> 仿真来源：{{ status['type'] }} </li>
-                  <li> 仿真项目ID：{{ status['project_id'] }} </li>
-                  <li> 参数列表：{{ status['para'] }} </li>
-                  <li> 优化算例：{{ status['job'] }} </li>
-                  <li> 创建时间：{{ status['json_time'] }} </li>
-                  <li> 优化备注：</li>
-                  <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
-                  <p></p>
-                  <a class='btn btn-primary' href="{{ url_for('optimize.edit_optimize', optimize_id=optimize_id) }}"><strong>编辑信息</strong></a>
-                  {% if config.CLIENT %}
-                  <a href="{{ url_for('optimize.open_optimize', optimize_id=optimize_id) }}" class="btn btn-primary"><strong>在资源管理器中打开</strong></a>
-                  {% endif %}
-                </ul>
-
-                <h5 class="text-primary">优化控制</h5>
-                <span id="text_solver_status">--</span>（最后更新: <span id="lastUpdated">--</span>）
-                <div class="log" id="log"></div>
-                <p class="mb-1">您可以通过点击下面的按钮开始、暂停或终止优化过程，并通过<a href="javascript:location.reload();">刷新</a>页面获取算例状态。
-                </p>
-                <button id="calculateBtn" class="btn btn-secondary" disabled><strong>计 算</strong></button>
-                <a id="calculateLink" href="{{ url_for('optimize.run_optimize', optimize_id=optimize_id) }}" class="btn btn-success"><strong>计 算</strong></a>
-                <button id="terminateBtn" class="btn btn-secondary" disabled><strong>终 止</strong></button>
-                <a id="terminateLink" href="{{ url_for('optimize.terminate_optimize', optimize_id=optimize_id) }}" class="btn btn-danger"><strong>终 止</strong></a>
-                <button id="resetBtn" class="btn btn-secondary" disabled><strong>重 置</strong></button>
-                <a id="resetLink" href="{{ url_for('optimize.reset_optimize', optimize_id=optimize_id) }}" class="btn btn-info"><strong>重 置</strong></a>
-
-                <hr>
-                <h5 class="text-primary">参数设置</h5>
-                <form method="POST" id="form_paras" name="form_paras">
-                  {{ parameter_form.csrf_token }}
-                  <table id="data" class="table table-bordered table-sm">
-                    <thead>
-                    <tr>
-                      <th width="60px">变量</th>
-                      <th>名称</th>
-                      <th>值</th>
-                    </tr>
-                    </thead>
-                    <tbody id="table_paras_body">
-                    </tbody>
-                  </table>
-                  {{ render_field(parameter_form.submit_parameter) }}
-                </form>
-
-                <hr>
-                <h5 class="text-primary">实验文件</h5>
-                <form method="POST" id="form_exps" name="form_exps">
-                  {{ experiment_form.csrf_token }}
-                  {{ render_form_row([experiment_form.experiment_id]) }}
-                  <table id="exp" class="table table-bordered table-sm">
-                    <thead id="table_exps_head">
-                    </thead>
-                    <tbody id="table_exps_body">
-                    </tbody>
-                  </table>
-                  {{ render_field(experiment_form.submit_experiment) }}
-                </form>
-
-                <hr>
-              <h5 class="text-primary">实验数据预处理</h5>
-                <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
-                  {{ preproc_form.csrf_token }}
-                  {{ render_form_row([preproc_form.strain_shift, preproc_form.target_rows]) }}
-                  {{ render_field(preproc_form.preproc_mode) }}
-                  {{ render_form_row([preproc_form.strain_start, preproc_form.strain_end]) }}
-                  {{ render_form_row([preproc_form.stress_start, preproc_form.stress_end]) }}
-                  {{ render_form_row([preproc_form.threshold, preproc_form.fracture_slope_criteria]) }}
-                  {{ render_field(preproc_form.submit_preproc) }}
-                </form>
-
-                <hr>
-                <h5 class="text-primary">上传文件</h5>
-                <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
-                  {{ upload_form.csrf_token }}
-                  <div class="form-group">
-                  {{ upload_form.submit_upload }}{{ upload_form.filename }}
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-2">
+                  <div class="card-header">
+                    <h3 class="card-title">参数设置</h3>
                   </div>
-                </form>
-
-                <hr>
-                <h5 class="text-primary">从模板导入文件</h5>
-                <form action="" method="post" class="form-horizontal" enctype="multipart/form-data" role="form">
-                  {{ import_template_form.csrf_token() }}
-                  <div class="form-row">
-                    <div class="col-10">
-                      {{ import_template_form.name(class_="form-control") }}
-                    </div>
-                    <div class="col-2">
-                      {{ import_template_form.submit_import_template(class_="btn btn-primary") }}
-                    </div>
+                  <div class="card-body">
+                    <form method="POST" id="form_paras" name="form_paras">
+                      {{ parameter_form.csrf_token }}
+                      <table id="data" class="table table-bordered table-sm">
+                        <thead>
+                        <tr>
+                          <th width="60px">变量</th>
+                          <th>名称</th>
+                          <th>值</th>
+                        </tr>
+                        </thead>
+                        <tbody id="table_paras_body">
+                        </tbody>
+                      </table>
+                      {{ render_field(parameter_form.submit_parameter) }}
+                    </form>
                   </div>
-                </form>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-3">
+                  <div class="card-header">
+                    <h3 class="card-title">实验文件</h3>
+                  </div>
+                  <div class="card-body">
+                    <form method="POST" id="form_exps" name="form_exps">
+                      {{ experiment_form.csrf_token }}
+                      {{ render_form_row([experiment_form.experiment_id]) }}
+                      <table id="exp" class="table table-bordered table-sm">
+                        <thead id="table_exps_head">
+                        </thead>
+                        <tbody id="table_exps_body">
+                        </tbody>
+                      </table>
+                      {{ render_field(experiment_form.submit_experiment) }}
+                    </form>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-4">
+                  <div class="card-header">
+                    <h3 class="card-title">实验数据预处理</h3>
+                  </div>
+                  <div class="card-body">
+                    <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+                      {{ preproc_form.csrf_token }}
+                      {{ render_form_row([preproc_form.strain_shift, preproc_form.target_rows]) }}
+                      {{ render_field(preproc_form.preproc_mode) }}
+                      {{ render_form_row([preproc_form.strain_start, preproc_form.strain_end]) }}
+                      {{ render_form_row([preproc_form.stress_start, preproc_form.stress_end]) }}
+                      {{ render_form_row([preproc_form.threshold, preproc_form.fracture_slope_criteria]) }}
+                      {{ render_field(preproc_form.submit_preproc) }}
+                    </form>
+                  </div>
+                </div>
+              </div>
 
-                <hr>
-                <h5 class="text-primary">优化文件</h5>
-                <table class="table table-sm table-hover">
-                  <thead>
-                  <tr>
-                    <th width=40%>文件名</th>
-                    <th width=30%>修改日期</th>
-                    <th width=10%>大小</th>
-                    <th width=20%>操作</th>
-                  </tr>
-                  </thead>
-                  <tbody id="table_files_body">
-                  </tbody>
-                </table>
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-5">
+                  <div class="card-header">
+                    <h3 class="card-title">文件管理</h3>
+                  </div>
+                  <div class="card-body">
+                    <h5 class="text-primary">上传文件</h5>
+                    <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+                      {{ upload_form.csrf_token }}
+                      <div class="form-group">
+                        {{ upload_form.submit_upload }}{{ upload_form.filename }}
+                      </div>
+                    </form>
+
+                    <hr>
+                    <h5 class="text-primary">从模板导入文件</h5>
+                    <form action="" method="post" class="form-horizontal" enctype="multipart/form-data" role="form">
+                      {{ import_template_form.csrf_token() }}
+                      <div class="form-row">
+                        <div class="col-10">
+                          {{ import_template_form.name(class_="form-control") }}
+                        </div>
+                        <div class="col-2">
+                          {{ import_template_form.submit_import_template(class_="btn btn-primary") }}
+                        </div>
+                      </div>
+                    </form>
+
+                    <hr>
+                    <h5 class="text-primary">优化文件</h5>
+                    <table class="table table-sm table-hover">
+                      <thead>
+                      <tr>
+                        <th width=40%>文件名</th>
+                        <th width=30%>修改日期</th>
+                        <th width=10%>大小</th>
+                        <th width=20%>操作</th>
+                      </tr>
+                      </thead>
+                      <tbody id="table_files_body">
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-
           <div class="col-6">
-            <div class="card card-primary" data-card-id="card-2">
-              <div class="card-header">
-                <h3 class="card-title">{{ optimize_id }}号优化过程</h3>
-              </div>
-              <div class="card-body">
-                <h5 class="text-primary">优化状态</h5>
-
-                <hr>
-                <div class="col-12">
-                  <h5 class="text-primary">实验-模拟曲线</h5>
-                  <div class="col-12" style="border: 1px solid black">
-                    <img id="fig" src="{{ url_for('optimize.get_optimize_file', optimize_id=optimize_id, filename='fig.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+            <div class="column">
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-7">
+                  <div class="card-header">
+                    <h3 class="card-title">实验-模拟曲线</h3>
+                  </div>
+                  <div class="card-body">
+                    <div class="col-12" style="border: 1px solid black">
+                      <img id="fig" src="{{ url_for('optimize.get_optimize_file', optimize_id=optimize_id, filename='fig.png') }}"
+                           style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                    </div>
                   </div>
                 </div>
-                <hr>
-                <div class="col-12">
-                  <!-- Custom Tabs -->
-                  <div class="card">
-                    <div class="card-header d-flex p-0">
-                      <h3 class="card-title p-3">日志</h3>
-                      <ul class="nav nav-pills ml-auto p-2">
-                        <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">求解日志 {{ status['job'] }}.log</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
-                      </ul>
-                    </div><!-- /.card-header -->
-                    <div class="card-body">
-                      <div class="tab-content">
-                        <!-- /.tab-pane -->
-                        <div class="tab-pane active" id="tab_1">
-                          <textarea id="textarea_log" class="form-control" style="height: 800.0px;"></textarea>
-                        </div>
-                        <!-- /.tab-pane -->
-                        <div class="tab-pane" id="tab_2">
-                          <textarea id="textarea_run_log" class="form-control" style="height: 800.0px;"></textarea>
-                        </div>
-                        <!-- /.tab-pane -->
-                      </div>
-                      <!-- /.tab-content -->
-                    </div><!-- /.card-body -->
+              </div>
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-7">
+                  <div class="card-header">
+                    <h3 class="card-title">优化日志</h3>
                   </div>
-                  <!-- ./card -->
+                  <div class="card-body">
+                    <ul class="nav nav-pills ml-auto p-2">
+                      <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">求解日志 {{ status['job'] }}.log</a></li>
+                      <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
+                    </ul>
+                    <div class="tab-content">
+                      <div class="tab-pane active" id="tab_1">
+                        <textarea id="textarea_log" class="form-control" style="height: 800.0px;"></textarea>
+                      </div>
+                      <div class="tab-pane" id="tab_2">
+                        <textarea id="textarea_run_log" class="form-control" style="height: 800.0px;"></textarea>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
