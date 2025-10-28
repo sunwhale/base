@@ -77,18 +77,20 @@
                     </form>
 
                     <h5 class="text-primary">项目文件</h5>
-                    <table class="table table-sm table-hover">
-                      <thead>
+                    <div class="table-responsive">
+                      <table class="table table-sm table-hover">
+                        <thead>
                         <tr>
                           <th width=40%>文件名</th>
                           <th width=30%>修改日期</th>
                           <th width=10%>大小</th>
                           <th width=20%>操作</th>
                         </tr>
-                      </thead>
-                      <tbody id="table_files_body">
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody id="table_files_body">
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -125,26 +127,28 @@
                   <textarea class="form-control" id="queue_value" name="queue_value"></textarea>
                   <textarea class="form-control" id="queue_type" name="queue_type"></textarea>
                   <p></p>
-                  <table id="data" class="table table-bordered table-striped">
-                    <thead>
-                      <tr>
-                        <th width=20px><input type="checkbox" id="customCheck" class="checkAll"></th>
-                        <th width=20px>ID</th>
-                        {% for parameter in parameters %}
-                        <th>{{ parameter }}</th>
-                        {% endfor %}
-                        <th>inp 时间</th>
-                        <th>inp 大小</th>
-                        <th>odb 时间</th>
-                        <th>odb 大小</th>
-                        <th>npz 时间</th>
-                        <th>npz 大小</th>
-                        <th>求解状态</th>
-                        <th>同步</th>
-                        <th width=150px>操作</th>
-                      </tr>
-                    </thead>
-                  </table>
+                  <div class="table-responsive">
+                    <table id="data" class="table table-bordered table-striped">
+                      <thead>
+                        <tr>
+                          <th width=20px><input type="checkbox" id="customCheck" class="checkAll"></th>
+                          <th width=20px>ID</th>
+                          {% for parameter in parameters %}
+                          <th>{{ parameter }}</th>
+                          {% endfor %}
+                          <th>inp 时间</th>
+                          <th>inp 大小</th>
+                          <th>odb 时间</th>
+                          <th>odb 大小</th>
+                          <th>npz 时间</th>
+                          <th>npz 大小</th>
+                          <th>求解状态</th>
+                          <th>同步</th>
+                          <th width=150px>操作</th>
+                        </tr>
+                      </thead>
+                    </table>
+                  </div>
                 </form>
               </div>
             </div>
