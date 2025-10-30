@@ -199,6 +199,7 @@ def view_optimize(optimize_id):
         data['EXPERIMENT_PATH'] = current_app.config['EXPERIMENT_PATH']
         if os.path.exists(experiments_json_file):
             dump_json(experiments_json_file, data)
+            flash('实验文件设置成功。', 'success')
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
     if preproc_form.submit_preproc.data and preproc_form.validate():
@@ -215,12 +216,14 @@ def view_optimize(optimize_id):
         }
         if os.path.exists(preproc_json_file):
             dump_json(preproc_json_file, preproc_json)
+            flash('实验数据预处理设置成功。', 'success')
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
     if parameter_form.submit_parameter.data and parameter_form.validate():
         data = request.form.to_dict()
         if os.path.exists(parameters_json_file):
             dump_json(parameters_json_file, data)
+            flash('参数设置成功。', 'success')
         return redirect(url_for('optimize.view_optimize', optimize_id=optimize_id))
 
     if os.path.exists(optimize_path):
