@@ -96,12 +96,12 @@ def load_json(file_path, encoding='utf-8'):
         return json.load(f)
 
 
-def create_job(project_path, job_path):
+def create_job(project_path, job_path, job, user, cpus):
     make_dir(job_path)
     message = {
-        'job': 'Job-1',
-        'user': '',
-        'cpus': 1,
+        'job': job,
+        'user': user,
+        'cpus': cpus,
         'descript': ''
     }
     msg_file = os.path.join(job_path, '.job_msg')
@@ -181,6 +181,9 @@ class Optimize:
         self.preproc_json_file = os.path.join(path, 'preproc.json')
         self.optimize_type = ''
         self.project_path = ''
+        self.project_job = ''
+        self.project_user = ''
+        self.project_cpus = ''
 
         self.parameters = {}
         self.experiment_data = {}
@@ -206,6 +209,11 @@ class Optimize:
             self.project_path = message['project_path']
             if (self.optimize_type == 'ABAQUS项目' or self.optimize_type == 'PYFEM项目') and not os.path.exists(self.project_path):
                 raise NotImplementedError(f'{self.project_path} not exist')
+            else:
+                project_message = load_json(os.path.join(self.project_path, '.project_msg'))
+                self.project_job = project_message['job']
+                self.project_user = project_message['user']
+                self.project_cpus = project_message['cpus']
 
             parameters_json = load_json(self.parameters_json_file)
             for p in [item.strip() for item in message['para'].split(',')]:
@@ -317,12 +325,12 @@ class Optimize:
             elif self.optimize_type == 'PYFEM项目':
                 job_path = os.path.join(self.project_path, str(i + 1))
                 if not os.path.exists(job_path):
-                    create_job(self.project_path, job_path)
+                    create_job(self.project_path, job_path, self.project_job, self.project_user, self.project_cpus)
                 threads[key] = ReturnThread(target=self.get_simulation, args=(paras, strain_exp, time_exp, job_path))
             elif self.optimize_type == 'ABAQUS项目':
                 job_path = os.path.join(self.project_path, str(i + 1))
                 if not os.path.exists(job_path):
-                    create_job(self.project_path, job_path)
+                    create_job(self.project_path, job_path, self.project_job, self.project_user, self.project_cpus)
                 threads[key] = ReturnThread(target=self.get_simulation, args=(paras, strain_exp, time_exp, job_path))
                 time.sleep(0.2)
             threads[key].start()
