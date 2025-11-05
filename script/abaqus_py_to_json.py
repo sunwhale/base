@@ -105,29 +105,49 @@ def dump_json(file_path, data, encoding='utf-8'):
 
 
 # 测试代码
+# input_code = """
+# Density(table=((4.44e-09,),))
+# Elastic(temperatureDependency=ON, table=((112000.0, 0.34, 20.0),))
+# Expansion(table=((9.4e-06, 100.0),), zero=20.0, temperatureDependency=ON)
+# InelasticHeatFraction()
+# Plastic(hardening=JOHNSON_COOK, scaleStress=None, table=((875.0, 793.0, 0.385, 0.71, 1560.0, 20.0),))
+# plastic.RateDependent(type=JOHNSON_COOK, table=((1.0, 0.1), ))
+# Conductivity(temperatureDependency=ON, table=((6.8, 20.0),))
+# SpecificHeat(temperatureDependency=ON, table=((565000000.0, 20.0),))
+# JohnsonCookDamageInitiation(table=((-0.09, 0.27, -0.48, 0.014, 3.87, 1560.0, 20.0, 1.0),))
+# johnsonCookDamageInitiation.DamageEvolution(type=DISPLACEMENT, table=((1.0,),))
+# """
+# input_code = """
+# Density(table=((1.485e-08,),))
+# Elastic(table=((640000.0, 0.22),))
+# Expansion(table=((4.7e-06,),))
+# InelasticHeatFraction()
+# Conductivity(table=((79.6,),))
+# SpecificHeat(table=((176000000.0,),))
+# """
+# input_code = """
+# TangentialBehavior(formulation=PENALTY, directionality=ISOTROPIC, slipRateDependency=OFF, pressureDependency=OFF, temperatureDependency=OFF, dependencies=0, table=((0.4,),), shearStressLimit=None, maximumElasticSlip=FRACTION, fraction=0.005, elasticSlipStiffness=None)
+# NormalBehavior(pressureOverclosure=HARD, allowSeparation=ON, constraintEnforcementMethod=DEFAULT)
+# HeatGeneration(conversionFraction=1.0, secondaryFraction=0.5)
+# """
+# 九院
+# input_code = """
+# Density(table=((1.8e-09, ), ))
+# Viscoelastic(domain=TIME, time=PRONY, table=((3.5626, 889.458, 0.0015), (1.9001, 474.4, 0.0334), (1.489, 371.75, 0.7342), (0.6154, 153.641667, 16.1529), (0.7216, 180.15, 355.3628)))
+# """
+# input_code = """
+# Density(table=((1e-09, ), ))
+# Viscoelastic(domain=TIME, time=PRONY, table=((0.78109, 49.69185, 0.009746), (0.171674, 49.69185, 0.062089), (0.042971, 49.69185, 0.473872)))
+# """
+# input_code = """
+# Density(table=((1.1e-09, ), ))
+# Elastic(table=((30.0, 0.495), ))
+# Expansion(table=((8.6e-05, ), ))
+# """
 input_code = """
-Density(table=((4.44e-09,),))
-Elastic(temperatureDependency=ON, table=((112000.0, 0.34, 20.0),))
-Expansion(table=((9.4e-06, 100.0),), zero=20.0, temperatureDependency=ON)
-InelasticHeatFraction()
-Plastic(hardening=JOHNSON_COOK, scaleStress=None, table=((875.0, 793.0, 0.385, 0.71, 1560.0, 20.0),))
-Conductivity(temperatureDependency=ON, table=((6.8, 20.0),))
-SpecificHeat(temperatureDependency=ON, table=((565000000.0, 20.0),))
-JohnsonCookDamageInitiation(table=((-0.09, 0.27, -0.48, 0.014, 3.87, 1560.0, 20.0, 1.0),))
-johnsonCookDamageInitiation.DamageEvolution(type=DISPLACEMENT, table=((1.0,),))
-"""
-input_code = """
-Density(table=((1.485e-08,),))
-Elastic(table=((640000.0, 0.22),))
-Expansion(table=((4.7e-06,),))
-InelasticHeatFraction()
-Conductivity(table=((79.6,),))
-SpecificHeat(table=((176000000.0,),))
-"""
-input_code = """
-TangentialBehavior(formulation=PENALTY, directionality=ISOTROPIC, slipRateDependency=OFF, pressureDependency=OFF, temperatureDependency=OFF, dependencies=0, table=((0.4,),), shearStressLimit=None, maximumElasticSlip=FRACTION, fraction=0.005, elasticSlipStiffness=None)
-NormalBehavior(pressureOverclosure=HARD, allowSeparation=ON, constraintEnforcementMethod=DEFAULT)
-HeatGeneration(conversionFraction=1.0, secondaryFraction=0.5)
+Density(table=((1.6e-09, ), ))
+Elastic(type=ENGINEERING_CONSTANTS, table=((134000.0, 9650.0, 9650.0, 0.28, 0.02, 0.34, 6500.0, 3400.0, 6500.0), ))
+Expansion(table=((1.1e-06, ), ))
 """
 material_dict = parse_material_code(input_code)
 dump_json('material.json', material_dict)
