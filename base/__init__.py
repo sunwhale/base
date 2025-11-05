@@ -29,7 +29,7 @@ from base.extensions import bootstrap, csrf, db, login_manager, mail, moment
 from base.models import Role
 from base.settings import config
 
-__version__ = '0.1.8'
+__version__ = '0.1.9'
 
 
 def create_app(config_name=None):
