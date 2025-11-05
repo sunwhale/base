@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "BaseServer"
-#define MyAppVersion "0.1.7"
+#define MyAppVersion "0.1.9"
 #define MyAppPublisher "Sun Jingyu"
 #define MyAppURL "https://www.sunjingyu.com/"
 #define MyAppExeName "BaseServer.exe"
@@ -26,7 +26,7 @@ InfoAfterFile=F:\GitHub\base\install\information.txt
 ;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=F:\GitHub\base\install
-OutputBaseFilename=BaseServer-setup-{#MyAppVersion}
+OutputBaseFilename=BaseServer-{#MyAppVersion}-win-x86-64
 SetupIconFile=F:\GitHub\base\install\logo_delta.ico
 Compression=lzma
 SolidCompression=yes
@@ -40,7 +40,21 @@ Name: "chinesesimplified"; MessagesFile: "compiler:Languages\ChineseSimplified.i
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Registry]
-Root: HKLM; Subkey: "SOFTWARE\Classes\.js"; ValueType: string; ValueName: "Content Type"; ValueData: "application/javascript"; Flags: uninsdeletevalue;
+Root: HKLM; Subkey: "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"; ValueType: expandsz; ValueName: "Path"; ValueData: "{olddata};{app}"; Check: NeedsUpdatePath
+Root: HKCR; Subkey: "BaseServer"; ValueType: string; ValueName: ""; ValueData: "URL:pyguiProtocol"
+Root: HKCR; Subkey: "BaseServer\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\BaseServer.exe"" ""%1"""
+
+[Code]
+function NeedsUpdatePath: Boolean;
+var
+  Path: string;
+begin
+  // 获取当前的Path环境变量值
+  Path := GetEnv('Path');
+  
+  // 检查是否已经包含了安装目录
+  Result := Pos(ExpandConstant('{app}'), Path) = 0;
+end;
 
 [Files]
 Source: "F:\GitHub\base\output\BaseServer\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
