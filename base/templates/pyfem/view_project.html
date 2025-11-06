@@ -125,13 +125,14 @@
                   <textarea class="form-control" id="queue_value" name="queue_value"></textarea>
                   <textarea class="form-control" id="queue_type" name="queue_type"></textarea>
                   <p></p>
-                  <table id="data" class="table table-bordered table-striped">
-                    <thead>
+                  <div class="table-responsive">
+                    <table id="data" class="table table-bordered table-striped">
+                      <thead>
                       <tr>
                         <th width=20px><input type="checkbox" id="customCheck" class="checkAll"></th>
                         <th width=20px>ID</th>
                         {% for parameter in parameters %}
-                        <th>{{ parameter }}</th>
+                          <th>{{ parameter }}</th>
                         {% endfor %}
                         <th>toml 时间</th>
                         <th>vtu 时间</th>
@@ -141,8 +142,9 @@
                         <th>同步</th>
                         <th width=180px>操作</th>
                       </tr>
-                    </thead>
-                  </table>
+                      </thead>
+                    </table>
+                  </div>
                 </form>
               </div>
             </div>

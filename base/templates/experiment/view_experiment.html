@@ -103,20 +103,22 @@
                   <textarea class="form-control" id="queue_value" name="queue_value"></textarea>
                   <textarea class="form-control" id="queue_type" name="queue_type"></textarea>
                   <p></p>
-                  <table id="data" class="table table-bordered table-striped">
-                    <thead>
+                  <div class="table-responsive">
+                    <table id="data" class="table table-bordered table-striped">
+                      <thead>
                       <tr>
                         <th width=20px><input type="checkbox" id="customCheck" class="checkAll"></th>
                         <th width=20px>ID</th>
                         {% for parameter in parameters %}
-                        <th>{{ parameter }}</th>
+                          <th>{{ parameter }}</th>
                         {% endfor %}
                         <th>试件名称</th>
                         <th>录入时间</th>
                         <th width=150px>操作</th>
                       </tr>
-                    </thead>
-                  </table>
+                      </thead>
+                    </table>
+                  </div>
                 </form>
               </div>
             </div>
@@ -195,29 +197,10 @@
       var text = document.getElementById('hide_para_text');
       var icon = document.getElementById('hide_para_icon');
       if (column.visible()) {
-        text.innerHTML = '隐藏模型参数列'
+        text.innerHTML = '隐藏实验参数列'
         icon.setAttribute('class','fa fa-eye-slash')
       } else {
-        text.innerHTML = '显示模型参数列'
-        icon.setAttribute('class','fa fa-eye')
-      }
-    }
-  });
-
-  $('#hide_solver').on('click', function (e) {
-    var table = $('#data').DataTable()
-    e.preventDefault();
-    // Toggle the visibility
-    for (var i={{ parameters|length }}+2; i<{{ parameters|length }}+8; i++) {
-      var column = table.column(i);
-      column.visible( ! column.visible() );
-      var text = document.getElementById('hide_solver_text');
-      var icon = document.getElementById('hide_solver_icon');
-      if (column.visible()) {
-        text.innerHTML = '隐藏求解文件列'
-        icon.setAttribute('class','fa fa-eye-slash')
-      } else {
-        text.innerHTML = '显示求解文件列'
+        text.innerHTML = '显示实验参数列'
         icon.setAttribute('class','fa fa-eye')
       }
     }

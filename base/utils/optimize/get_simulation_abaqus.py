@@ -42,6 +42,7 @@ def get_simulation(parameters: dict, strain: ndarray, t: ndarray, job_path: str)
     para_dict['INTERVAL'] = total_time / 50.0
     para_dict['TIME'] = total_time
     s.save_parameters((s.dict_to_parameters(para_dict)))
+    s.parameters_to_json()
     s.run()
     with open(os.path.join(job_path, '.solver_status'), 'w', encoding='utf-8') as f:
         f.write('Submitting')
