@@ -320,6 +320,7 @@ def get_optimize_status(path, optimize_id):
             status['project_id'] = message['project_id']
             status['para'] = [item.strip() for item in message['para'].split(',')]
             status['job'] = message['job']
+            status['maxiter'] = message['maxiter']
             status['json_file'] = json_file
             status['json_time'] = file_time(json_file)
             status[
@@ -347,6 +348,7 @@ def get_optimize_template_status(path, template_id):
             status['project_id'] = message['project_id']
             status['para'] = [item.strip() for item in message['para'].split(',')]
             status['job'] = message['job']
+            status['maxiter'] = message['maxiter']
             status['descript'] = message['descript']
             status['template_time'] = file_time(msg_file)
             if 'link' in message.keys():

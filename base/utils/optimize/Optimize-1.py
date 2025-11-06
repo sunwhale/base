@@ -176,7 +176,7 @@ class Optimize:
         self.is_clear = is_clear
         self.counter = 0
         self.last_plot_time = time.time()
-        self.max_iter = 100
+        self.maxiter = 100
 
         self.msg_file = os.path.join(path, '.optimize_msg')
         self.parameters_json_file = os.path.join(path, 'parameters.json')
@@ -210,7 +210,7 @@ class Optimize:
             self.abs_job_file = Path(os.path.join(self.path, f'{self.job}.py'))
             self.optimize_type = message['type']
             self.project_path = message['project_path']
-            self.max_iter = int(message['max_iter'])
+            self.maxiter = int(message['maxiter'])
             if self.optimize_type == '解析解':
                 pass
             elif (self.optimize_type == 'ABAQUS项目' or self.optimize_type == 'PYFEM项目') and os.path.exists(self.project_path):
@@ -288,7 +288,7 @@ class Optimize:
         lock_file.touch()
         logger.info('OPTIMIZE INITIATED')
         self.counter = 0
-        paras = fmin(self.func, self.paras_0, args=(self.data, self.parameters), maxiter=self.max_iter, ftol=1e-4, xtol=1e-4, disp=True)
+        paras = fmin(self.func, self.paras_0, args=(self.data, self.parameters), maxiter=self.maxiter, ftol=1e-4, xtol=1e-4, disp=True)
         self.update_variable_parameters(paras, self.parameters)
         self.plot_with_data()
         logger.info('OPTIMIZE COMPLETED')
