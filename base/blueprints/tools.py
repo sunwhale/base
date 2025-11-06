@@ -19,7 +19,7 @@ def links():
 
 
 @tools_bp.route('/code', methods=['GET'])
-@permission_required('TOOLS')
+@permission_required('CODE')
 def code():
     return render_template('tools/code.html')
 
