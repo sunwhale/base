@@ -323,13 +323,13 @@ def get_optimize_status(path, optimize_id):
             status['json_file'] = json_file
             status['json_time'] = file_time(json_file)
             status[
-                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除材料?')\" href='%s'>删除</a>" % (
+                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除优化?')\" href='%s'>删除</a>" % (
                 '../view_optimize/' + str(optimize_id), '../edit_optimize/' + str(optimize_id), '../delete_optimize/' + str(optimize_id))
         except FileNotFoundError:
             for key in ['title', 'md_time']:
                 status[key] = 'None'
             status[
-                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除材料?')\" href='%s'>删除</a>" % (
+                'operation'] = "<a href='%s'>查看</a> | <a href='%s'>编辑</a> | <a onclick=\"return confirm('确定删除优化?')\" href='%s'>删除</a>" % (
                 '../view_optimize/' + str(optimize_id), '../edit_optimize/' + str(optimize_id), '../delete_optimize/' + str(optimize_id))
     return status
 
