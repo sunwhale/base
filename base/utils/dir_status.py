@@ -633,6 +633,7 @@ def get_job_status(path, project_id, job_id):
         toml_file = os.path.join(path, str(project_id), str(job_id), '%s.toml' % job_name)
         pvd_file = os.path.join(path, str(project_id), str(job_id), '%s.pvd' % job_name)
         vtu_file = os.path.join(path, str(project_id), str(job_id), '%s-1.vtu' % job_name)
+        hdf5_file = os.path.join(path, str(project_id), str(job_id), '%s.hdf5' % job_name)
         status['job'] = message['job']
         status['user'] = message['user']
         status['cpus'] = message['cpus']
@@ -649,6 +650,8 @@ def get_job_status(path, project_id, job_id):
         status['pvd_size'] = file_size(pvd_file)
         status['vtu_time'] = file_time(vtu_file)
         status['vtu_size'] = file_size(vtu_file)
+        status['hdf5_time'] = file_time(hdf5_file)
+        status['hdf5_size'] = file_size(hdf5_file)
         status['npz_time'] = file_time(npz_file)
         status['npz_size'] = file_size(npz_file)
         status['solver_status'] = solver_status

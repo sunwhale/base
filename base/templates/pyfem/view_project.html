@@ -135,9 +135,8 @@
                           <th>{{ parameter }}</th>
                         {% endfor %}
                         <th>toml 时间</th>
-                        <th>vtu 时间</th>
-                        <th>vtu 大小</th>
-                        <th>pvd 时间</th>
+                        <th>hdf5 时间</th>
+                        <th>hdf5 大小</th>
                         <th>求解状态</th>
                         <th>同步</th>
                         <th width=180px>操作</th>
@@ -207,9 +206,8 @@
         { data: '{{ parameter }}' },
         {% endfor %}
         { data: 'inp_time' },
-        { data: 'vtu_time' },
-        { data: 'vtu_size' },
-        { data: 'pvd_time' },
+        { data: 'hdf5_time' },
+        { data: 'hdf5_size' },
         { data: 'solver_status' },
         { data: 'sync' },
         { data: 'operation_pyfem' },
