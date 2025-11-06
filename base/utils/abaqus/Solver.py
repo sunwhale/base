@@ -110,7 +110,7 @@ class Solver:
         return proc
 
     def run(self):
-        """
+        r"""
         可以使用以下的连续执行过程定义命令：
         cmd = "\"C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Auxiliary\\Build\\vcvarsall.bat\" x86 amd64 && "
         cmd += "\"C:\\Program Files (x86)\\IntelSWTools\\compilers_and_libraries_2020.1.216\\windows\\bin\\ifortvars.bat\" intel64 vs2019 && "
