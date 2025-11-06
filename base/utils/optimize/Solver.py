@@ -125,8 +125,18 @@ class Solver:
     def get_log(self):
         log_file = os.path.join(self.path, '{}.log'.format(self.job))
         if os.path.exists(log_file):
-            with open(log_file, 'r', encoding='utf-8') as f:
-                logs = f.read()
+            encodings = ['utf-8', 'gbk', 'gb2312', 'gb18030', 'big5', 'latin-1']
+            for encoding in encodings:
+                try:
+                    with open(log_file, 'r', encoding=encoding) as f:
+                        logs = f.read()
+                    break  # 如果成功读取，跳出循环
+                except UnicodeDecodeError:
+                    continue
+            else:
+                # 所有编码都失败，使用errors='replace'
+                with open(log_file, 'r', encoding='utf-8', errors='replace') as f:
+                    logs = f.read()
         else:
             logs = ''
         return logs
