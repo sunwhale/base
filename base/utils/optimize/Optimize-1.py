@@ -15,6 +15,7 @@ from typing import Optional
 
 import colorlog
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
@@ -175,7 +176,7 @@ class Optimize:
         self.is_clear = is_clear
         self.counter = 0
         self.last_plot_time = time.time()
-        self.max_iter = 2
+        self.max_iter = 100
 
         self.msg_file = os.path.join(path, '.optimize_msg')
         self.parameters_json_file = os.path.join(path, 'parameters.json')
@@ -209,13 +210,16 @@ class Optimize:
             self.abs_job_file = Path(os.path.join(self.path, f'{self.job}.py'))
             self.optimize_type = message['type']
             self.project_path = message['project_path']
-            if (self.optimize_type == 'ABAQUS项目' or self.optimize_type == 'PYFEM项目') and not os.path.exists(self.project_path):
-                raise NotImplementedError(f'{self.project_path} not exist')
-            else:
+            self.max_iter = int(message['max_iter'])
+            if self.optimize_type == '解析解':
+                pass
+            elif (self.optimize_type == 'ABAQUS项目' or self.optimize_type == 'PYFEM项目') and os.path.exists(self.project_path):
                 project_message = load_json(os.path.join(self.project_path, '.project_msg'))
                 self.project_job = project_message['job']
                 self.project_user = project_message['user']
                 self.project_cpus = project_message['cpus']
+            else:
+                raise NotImplementedError(f'{self.project_path} not exist')
 
             parameters_json = load_json(self.parameters_json_file)
             for p in [item.strip() for item in message['para'].split(',')]:

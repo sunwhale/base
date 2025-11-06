@@ -76,6 +76,7 @@ class OptimizeForm(FlaskForm):
     project_id = IntegerField('仿真项目ID', default=0)
     para = StringField('参数列表', validators=[DataRequired(message="字段不能为空"), comma_separated_validator])
     job = StringField('优化算例', default='Optimize-1', validators=[DataRequired(), Length(1, 126)])
+    maxiter = IntegerField('最大迭代次数', default=100)
     descript = TextAreaField('优化备注', render_kw={'rows': 12})
     submit_experiment = SubmitField('提交')
 

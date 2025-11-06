@@ -76,6 +76,7 @@ def create_optimize():
             'project_id': form.project_id.data,
             'para': form.para.data,
             'job': form.job.data,
+            'maxiter': form.maxiter.data,
             'descript': form.descript.data,
             'project_path': project_path
         }
@@ -118,6 +119,7 @@ def edit_optimize(optimize_id):
             'project_id': form.project_id.data,
             'para': form.para.data,
             'job': form.job.data,
+            'maxiter': form.maxiter.data,
             'descript': form.descript.data,
             'project_path': project_path
         }
@@ -130,6 +132,7 @@ def edit_optimize(optimize_id):
     form.project_id.data = message['project_id']
     form.para.data = message['para']
     form.job.data = message['job']
+    form.maxiter.data = message['maxiter']
     form.descript.data = message['descript']
     return render_template('optimize/create_optimize.html', form=form)
 
@@ -443,6 +446,7 @@ def create_template():
             'project_id': form.project_id.data,
             'para': form.para.data,
             'job': form.job.data,
+            'maxiter': form.maxiter.data,
             'descript': form.descript.data
         }
         msg_file = os.path.join(template_path, '.template_msg')
@@ -486,6 +490,7 @@ def edit_template(template_id):
             'project_id': form.project_id.data,
             'para': form.para.data,
             'job': form.job.data,
+            'maxiter': form.maxiter.data,
             'descript': form.descript.data
         }
         dump_json(msg_file, message)
@@ -497,6 +502,7 @@ def edit_template(template_id):
     form.project_id.data = message['project_id']
     form.para.data = message['para']
     form.job.data = message['job']
+    form.maxiter.data = message['maxiter']
     form.descript.data = message['descript']
     return render_template('optimize/create_template.html', form=form)
 

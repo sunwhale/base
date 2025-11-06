@@ -34,7 +34,7 @@ class Role(db.Model):
         # roles_permission_list = ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'VIRTUAL', 'OPTIMIZE', 'RESOURCE',
         #                          'TOOLS']
 
-        roles_permission_list = ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'OPTIMIZE', 'RESOURCE', 'TOOLS']
+        roles_permission_list = ['NODE', 'PACKING', 'DOC', 'SHEET', 'EXPERIMENT', 'ABAQUS', 'MATERIAL', 'FLOW', 'PYFEM', 'OPTIMIZE', 'RESOURCE', 'TOOLS', 'CODE']
 
         # roles_permission_list = ['DOC', 'EXPERIMENT', 'ABAQUS', 'PYFEM', 'OPTIMIZE']
 
