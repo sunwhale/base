@@ -978,7 +978,7 @@ def plot_geometries(points, lines, faces):
                         textcoords="offset points",
                         xytext=(5, 5),  # 文本偏移量，避免与点重叠
                         ha='left',
-                        fontsize=16,
+                        fontsize=8,
                         color='red')
 
     ax.plot(points.reshape(-1, 2)[:, 0], points.reshape(-1, 2)[:, 1], ls='', marker='o', color='red')
@@ -989,14 +989,25 @@ def plot_geometries(points, lines, faces):
     plt.show()
 
 
+# def create_sketch_block(model, sketch_name, points):
+#     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+#     center = (0, 0)
+#     geom_list = []
+#     geom_list.append(s.Line(point1=points[0, 0], point2=points[2, 0]))
+#     geom_list.append(s.ArcByCenterEnds(center=center, point1=points[2, 0], point2=points[2, 2], direction=COUNTERCLOCKWISE))
+#     geom_list.append(s.Line(point1=points[2, 2], point2=points[0, 2]))
+#     geom_list.append(s.Line(point1=points[0, 2], point2=points[0, 0]))
+#     return s
+
+
 def create_sketch_block(model, sketch_name, points):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = (0, 0)
     geom_list = []
-    geom_list.append(s.Line(point1=points[0, 0], point2=points[2, 0]))
-    geom_list.append(s.ArcByCenterEnds(center=center, point1=points[2, 0], point2=points[2, 2], direction=COUNTERCLOCKWISE))
-    geom_list.append(s.Line(point1=points[2, 2], point2=points[0, 2]))
-    geom_list.append(s.Line(point1=points[0, 2], point2=points[0, 0]))
+    geom_list.append(s.Line(point1=points[0, 0], point2=points[3, 0]))
+    geom_list.append(s.ArcByCenterEnds(center=center, point1=points[3, 0], point2=points[3, 3], direction=COUNTERCLOCKWISE))
+    geom_list.append(s.Line(point1=points[3, 3], point2=points[0, 3]))
+    geom_list.append(s.Line(point1=points[0, 3], point2=points[0, 0]))
     return s
 
 
@@ -1550,7 +1561,8 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     x0 = dimension['x0']
     length_up = dimension['length_up']
     width = dimension['width']
-    angle = dimension['angle']
+    angle_demolding_1 = dimension['angle_demolding_1']
+    angle_demolding_2 = dimension['angle_demolding_2']
     fillet_radius = dimension['fillet_radius']
     a = dimension['a']
     b = dimension['b']
@@ -1784,15 +1796,21 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
     s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0)
     center = (0, 0)
     geom_list = []
-    geom_list.append(s_block_partition.Line(point1=points[0, 1], point2=points[2, 1]))
-    geom_list.append(s_block_partition.ArcByCenterEnds(center=center, point1=points[1, 0], point2=points[1, 2], direction=COUNTERCLOCKWISE))
+    # geom_list.append(s_block_partition.Line(point1=points[0, 1], point2=points[2, 1]))
+    # geom_list.append(s_block_partition.ArcByCenterEnds(center=center, point1=points[1, 0], point2=points[1, 2], direction=COUNTERCLOCKWISE))
 
+    geom_list.append(s_block_partition.Line(point1=points[0, 1], point2=points[3, 1]))
+    geom_list.append(s_block_partition.Line(point1=points[0, 2], point2=points[3, 2]))
+    geom_list.append(s_block_partition.ArcByCenterEnds(center=center, point1=points[1, 0], point2=points[1, 3], direction=COUNTERCLOCKWISE))
+    geom_list.append(s_block_partition.ArcByCenterEnds(center=center, point1=points[2, 0], point2=points[2, 3], direction=COUNTERCLOCKWISE))
+
+    # Partition
     faces = p.faces.getByBoundingBox(0, 0, 0, pen, pen, tol)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=faces, sketchOrientation=BOTTOM, sketch=s_block_partition)
 
     partition_edges = []
-    line_keys = ['10-11', '11-12']
-    # line_keys = ['10-11', '11-12', '12-13', '20-21', '21-22', '22-23']
+    # line_keys = ['10-11', '11-12']
+    line_keys = ['10-11', '11-12', '12-13', '20-21', '21-22', '22-23']
     for line_key in line_keys:
         line_middle_point = lines[line_key][3]
         x, y = line_middle_point
@@ -1802,8 +1820,8 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
 
     partition_edges = []
-    line_keys = ['01-11', '11-21']
-    # line_keys = ['01-11', '11-21', '21-31', '02-12', '12-22', '22-32']
+    # line_keys = ['01-11', '11-21']
+    line_keys = ['01-11', '11-21', '21-31', '02-12', '12-22', '22-32']
     for line_key in line_keys:
         line_middle_point = lines[line_key][3]
         x, y = line_middle_point
@@ -2024,7 +2042,7 @@ if __name__ == "__main__":
         'x0': x0,
         'length_up': 1039.2,
         'width': 100.0,
-        'angle_demolding_1': 5.0,
+        'angle_demolding_1': 0.0,
         'angle_demolding_2': 10.0,
         'fillet_radius': 50.0,
         'a': 50.0,
@@ -2032,11 +2050,11 @@ if __name__ == "__main__":
         'size': '1'
     }
 
-    points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
-    # points, lines, faces = geometries(d, x0, beta, [0, 150], [0, 50, 50])
+    points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
+    # points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 50, 50])
 
     if not ABAQUS_ENV:
-        # plot_geometries(points, lines, faces)
+        plot_geometries(points, lines, faces)
         # print(z_list)
         # p0 = (1600, 700)
         # theta0_deg = -90
@@ -2046,20 +2064,15 @@ if __name__ == "__main__":
         # result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
         # plot_three_arcs(result, p0, p3)
         # p = Plane((0, 0, 0), (1, 0, 0), (0, 1, 0))
-        p = [x0 + 100, 50]
-
-        l1 = Line2D(p, 0.1)
-        l2 = Line2D([x0, 0.0], (x0, 1.0))
-        print(l1.get_intersection(l2))
 
     if ABAQUS_ENV:
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
-        # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, block_dimension)
-        p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
 
+        p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
+        # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, block_dimension)
         # p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, block_dimension)
 
         # a = model.rootAssembly
@@ -2070,7 +2083,7 @@ if __name__ == "__main__":
         # for l in range(1, block_number):
         #     for i in range(m):
         #         instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
-        #         a.Instance(name=instance_name, part=p_block, dependent=ON)
+        #         a.Instance(name=instance_name, part=p_block_b, dependent=ON)
         #         a.translate(instanceList=(instance_name,),
         #                     vector=(0.0, 0.0, shell_insulation_ref_z - first_block_height - (l + 1) * (block_gap + block_length)))
         #         a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
