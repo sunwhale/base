@@ -1124,62 +1124,10 @@ def create_part_block_a(model, part_name, points, lines, faces, dimension):
             partition_edges.append(edge_sequence[0])
     p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
 
-    cut_edges = (
-        p.edges.findAt((l2.pointOn[1], width / 2.0, l2.pointOn[0])),
-        p.edges.findAt((l3.pointOn[1], width / 2.0, l3.pointOn[0])),
-        p.edges.findAt((arc.pointOn[1], width / 2.0, arc.pointOn[0]))
-    )
-    p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
-
-    edge = p.edges.findAt((l3.pointOn[1], width / 2.0, l3.pointOn[0]))
-    point = p.vertices.findAt((l3.getVertices()[0].coords[1], width / 2.0, l3.getVertices()[0].coords[0]))
-    p.PartitionCellByPlaneNormalToEdge(edge=edge, point=point, cells=p.cells)
-
-    edge = p.edges.findAt((l2.pointOn[1], width / 2.0, l2.pointOn[0]))
-    point = p.vertices.findAt((l2.getVertices()[1].coords[1], width / 2.0, l2.getVertices()[1].coords[0]))
-    p.PartitionCellByPlaneNormalToEdge(edge=edge, point=point, cells=p.cells.getByBoundingBox(0, 0, l3.pointOn[0], pen, pen, pen))
-
     xy_plane_z = {}
     for i in range(1, len(z_list) - 1):
         xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
-
-    # Mirror
-    if size == '1':
-        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
-        p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-    elif size == '1/2':
-        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-    elif size == '1/4':
-        pass
-    else:
-        raise NotImplementedError('Unsupported size {}'.format(size))
-
-    # cells = p.cells.getByBoundingBox(0, width / 2.0 + 1.0, 0, pen, pen, pen)
-    # cells += p.cells.getByBoundingBox(0, 0, z_list[1], pen, pen, length / 2.0)
-    # cells += p.cells.getByBoundingBox(points[1, 2, 0], 0, 0, pen, pen, pen)
-    #
-    # cell_volumes = []
-    # for cell in cells:
-    #     cell_volume = cell.getSize()
-    #     cell_volumes.append(cell_volume)
-    #
-    # cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    # for cell_id in range(len(p.cells)):
-    #     cell_size = p.cells[cell_id].getSize()
-    #     if min_difference(cell_size, cell_volumes) < tol:
-    #         cells += p.cells[cell_id:cell_id + 1]
-    # p.Set(cells=cells, name='SET-CELL-INSULATION')
-    #
-    # cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    # for cell_id in range(len(p.cells)):
-    #     cell_size = p.cells[cell_id].getSize()
-    #     if min_difference(cell_size, cell_volumes) > tol:
-    #         cells += p.cells[cell_id:cell_id + 1]
-    # p.Set(cells=cells, name='SET-CELL-GRAIN')
 
     def get_same_volume_cells(p, cells):
         cell_volumes = []
@@ -1193,6 +1141,15 @@ def create_part_block_a(model, part_name, points, lines, faces, dimension):
                 cells += p.cells[cell_id:cell_id + 1]
         return cells
 
+    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for rtz in [
+        [0, 0, 0]
+    ]:
+        cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
+    cells = get_same_volume_cells(p, cells)
+    p.Set(cells=cells, name='SET-CELL-GRAIN')
+
+    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
         [1, 0, 0],
         [1, 1, 0],
@@ -1238,6 +1195,48 @@ def create_part_block_a(model, part_name, points, lines, faces, dimension):
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
     p.Set(cells=cells, name='SET-CELL-GLUE-B')
+
+    cut_edges = (
+        p.edges.findAt((l2.pointOn[1], width / 2.0, l2.pointOn[0])),
+        p.edges.findAt((l3.pointOn[1], width / 2.0, l3.pointOn[0])),
+        p.edges.findAt((arc.pointOn[1], width / 2.0, arc.pointOn[0]))
+    )
+    p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
+
+    edge = p.edges.findAt((l3.pointOn[1], width / 2.0, l3.pointOn[0]))
+    point = p.vertices.findAt((l3.getVertices()[0].coords[1], width / 2.0, l3.getVertices()[0].coords[0]))
+    p.PartitionCellByPlaneNormalToEdge(edge=edge, point=point, cells=p.cells)
+
+    edge = p.edges.findAt((l2.pointOn[1], width / 2.0, l2.pointOn[0]))
+    point = p.vertices.findAt((l2.getVertices()[1].coords[1], width / 2.0, l2.getVertices()[1].coords[0]))
+    p.PartitionCellByPlaneNormalToEdge(edge=edge, point=point, cells=p.cells.getByBoundingBox(0, 0, l3.pointOn[0], pen, pen, pen))
+
+    # Mirror
+    if size == '1':
+        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
+        p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    elif size == '1/2':
+        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    elif size == '1/4':
+        pass
+    else:
+        raise NotImplementedError('Unsupported size {}'.format(size))
+
+    for set_name in ['SET-CELL-GLUE-A', 'SET-CELL-GLUE-B', 'SET-CELL-GRAIN', 'SET-CELL-INSULATION']:
+        cells = p.sets[set_name].cells
+        cell_volumes = []
+        for cell in cells:
+            cell_volume = cell.getSize()
+            cell_volumes.append(cell_volume)
+        cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+        for cell_id in range(len(p.cells)):
+            cell_size = p.cells[cell_id].getSize()
+            if min_difference(cell_size, cell_volumes) < tol:
+                cells += p.cells[cell_id:cell_id + 1]
+        p.Set(cells=cells, name=set_name)
 
     p1 = (points[0, 0][0], points[0, 0][1], 0.0)
     p2 = (points[0, 1][0], points[0, 1][1], 0.0)
@@ -2212,7 +2211,7 @@ if __name__ == "__main__":
         'fillet_radius': 50.0,
         'a': 50.0,
         'b': 25.0,
-        'size': '1/4',
+        'size': '1/2',
         'index_r': 3,
         'index_t': 3
     }
