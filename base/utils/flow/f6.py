@@ -1005,6 +1005,23 @@ def create_sketch_block(model, sketch_name, points, index_r, index_t):
     return s
 
 
+def get_same_volume_cells(p, cells):
+    cell_volumes = []
+    for cell in cells:
+        cell_volume = cell.getSize()
+        cell_volumes.append(cell_volume)
+
+    if cell_volumes != []:
+        cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+        for cell_id in range(len(p.cells)):
+            cell_size = p.cells[cell_id].getSize()
+            if min_difference(cell_size, cell_volumes) < 1e-6:
+                cells += p.cells[cell_id:cell_id + 1]
+        return cells
+    else:
+        return None
+
+
 def create_part_block_a(model, part_name, points, lines, faces, dimension):
     z_list = dimension['z_list']
     deep = dimension['deep']
@@ -1129,25 +1146,17 @@ def create_part_block_a(model, part_name, points, lines, faces, dimension):
         xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
 
-    def get_same_volume_cells(p, cells):
-        cell_volumes = []
-        for cell in cells:
-            cell_volume = cell.getSize()
-            cell_volumes.append(cell_volume)
-        cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-        for cell_id in range(len(p.cells)):
-            cell_size = p.cells[cell_id].getSize()
-            if min_difference(cell_size, cell_volumes) < tol:
-                cells += p.cells[cell_id:cell_id + 1]
-        return cells
-
+    set_names = []
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
         [0, 0, 0]
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
-    p.Set(cells=cells, name='SET-CELL-GRAIN')
+    if cells is not None:
+        set_name = 'SET-CELL-GRAIN'
+        p.Set(cells=cells, name=set_name)
+        set_names.append(set_name)
 
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
@@ -1161,7 +1170,10 @@ def create_part_block_a(model, part_name, points, lines, faces, dimension):
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
-    p.Set(cells=cells, name='SET-CELL-INSULATION')
+    if cells is not None:
+        set_name = 'SET-CELL-INSULATION'
+        p.Set(cells=cells, name=set_name)
+        set_names.append(set_name)
 
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
@@ -1178,7 +1190,10 @@ def create_part_block_a(model, part_name, points, lines, faces, dimension):
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
-    p.Set(cells=cells, name='SET-CELL-GLUE-A')
+    if cells is not None:
+        set_name = 'SET-CELL-GLUE-A'
+        p.Set(cells=cells, name=set_name)
+        set_names.append(set_name)
 
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
@@ -1194,7 +1209,10 @@ def create_part_block_a(model, part_name, points, lines, faces, dimension):
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
-    p.Set(cells=cells, name='SET-CELL-GLUE-B')
+    if cells is not None:
+        set_name = 'SET-CELL-GLUE-B'
+        p.Set(cells=cells, name=set_name)
+        set_names.append(set_name)
 
     cut_edges = (
         p.edges.findAt((l2.pointOn[1], width / 2.0, l2.pointOn[0])),
@@ -1225,7 +1243,8 @@ def create_part_block_a(model, part_name, points, lines, faces, dimension):
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
 
-    for set_name in ['SET-CELL-GLUE-A', 'SET-CELL-GLUE-B', 'SET-CELL-GRAIN', 'SET-CELL-INSULATION']:
+    # 根据Set中cells的体积，将镜像后同体积的cells归类到其对应的Set中
+    for set_name in set_names:
         cells = p.sets[set_name].cells
         cell_volumes = []
         for cell in cells:
@@ -1966,51 +1985,19 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
 
-    # cells = p.cells.getByBoundingBox(0, width / 2.0 + 1.0, 0, pen, pen, pen)
-    # cells += p.cells.getByBoundingBox(0, 0, length / 2.0 - z_list[1], pen, pen, length / 2.0)
-    # cells += p.cells.getByBoundingBox(points[1, 2, 0], 0, 0, pen, pen, pen)
-    #
-    # cell_volumes = []
-    # for cell in cells:
-    #     cell_volume = cell.getSize()
-    #     cell_volumes.append(cell_volume)
-    #
-    # cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    # for cell_id in range(len(p.cells)):
-    #     cell_size = p.cells[cell_id].getSize()
-    #     if min_difference(cell_size, cell_volumes) < tol:
-    #         cells += p.cells[cell_id:cell_id + 1]
-    # p.Set(cells=cells, name='SET-CELL-INSULATION')
-    #
-    # cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    # for cell_id in range(len(p.cells)):
-    #     cell_size = p.cells[cell_id].getSize()
-    #     if min_difference(cell_size, cell_volumes) > tol:
-    #         cells += p.cells[cell_id:cell_id + 1]
-    # p.Set(cells=cells, name='SET-CELL-GRAIN')
-
-    def get_same_volume_cells(p, cells):
-        cell_volumes = []
-        for cell in cells:
-            cell_volume = cell.getSize()
-            cell_volumes.append(cell_volume)
-        cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-        for cell_id in range(len(p.cells)):
-            cell_size = p.cells[cell_id].getSize()
-            if min_difference(cell_size, cell_volumes) < tol:
-                cells += p.cells[cell_id:cell_id + 1]
-        return cells
-
+    set_names = []
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
         [0, 0, 0]
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
-    p.Set(cells=cells, name='SET-CELL-GRAIN')
+    if cells is not None:
+        set_name = 'SET-CELL-GRAIN'
+        p.Set(cells=cells, name=set_name)
+        set_names.append(set_name)
 
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-
     for rtz in [
         [1, 0, 0],
         [1, 1, 0],
@@ -2022,7 +2009,10 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
-    p.Set(cells=cells, name='SET-CELL-INSULATION')
+    if cells is not None:
+        set_name = 'SET-CELL-INSULATION'
+        p.Set(cells=cells, name=set_name)
+        set_names.append(set_name)
 
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
@@ -2039,7 +2029,10 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
-    p.Set(cells=cells, name='SET-CELL-GLUE-A')
+    if cells is not None:
+        set_name = 'SET-CELL-GLUE-A'
+        p.Set(cells=cells, name=set_name)
+        set_names.append(set_name)
 
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
@@ -2055,7 +2048,10 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
-    p.Set(cells=cells, name='SET-CELL-GLUE-B')
+    if cells is not None:
+        set_name = 'SET-CELL-GLUE-B'
+        p.Set(cells=cells, name=set_name)
+        set_names.append(set_name)
 
     p1 = (points[0, 0][0], points[0, 0][1], 0.0)
     p2 = (points[0, 1][0], points[0, 1][1], 0.0)
@@ -2212,8 +2208,8 @@ if __name__ == "__main__":
         'a': 50.0,
         'b': 25.0,
         'size': '1/2',
-        'index_r': 3,
-        'index_t': 3
+        'index_r': 2,
+        'index_t': 2
     }
 
     points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
@@ -2248,8 +2244,8 @@ if __name__ == "__main__":
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
-        p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
-        # p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
+        # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
+        p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
         # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, block_dimension)
         # p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, block_dimension)
 
