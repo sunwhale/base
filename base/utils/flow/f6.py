@@ -1782,6 +1782,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     index_t = dimension['index_t']
 
     r_front = 460.0
+    length_front = 1200.0
 
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
@@ -1803,6 +1804,9 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
     z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
     d = p.datums
+
+    # 头部药块额外拉伸
+    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block, depth=length_front, flipExtrudeDirection=ON)
 
     # # SKETCH-BLOCK-PARTITION
     # s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0)
@@ -1835,20 +1839,6 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     #         partition_edges.append(edge_sequence[0])
     # p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
 
-    # Mirror
-    if size == '1':
-        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
-        p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-    elif size == '1/2':
-        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-    elif size == '1/4':
-        pass
-    else:
-        raise NotImplementedError('Unsupported size {}'.format(size))
-
     # SKETCH-CUT
     s_cut = model.ConstrainedSketch(name='SKETCH-CUT', sheetSize=200.0)
     x1 = 400.0
@@ -1865,37 +1855,24 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     s_cut.Line(point1=center, point2=p2)
     s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
     s_cut.Line(point1=p4, point2=center)
-    s_cut.ConstructionLine(point1=(x0 + deep - r_front, -pen), point2=(x0 + deep - r_front, pen))
+    center_line = s_cut.ConstructionLine(point1=(x0 + deep - r_front, -pen), point2=(x0 + deep - r_front, pen))
     geom_list = []
     for g in s_cut.geometry.values():
         geom_list.append(g)
     s_cut.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
+    s_cut.assignCenterline(line=center_line)
 
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
 
-    xy_plane_z1 = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[1])
-
-    t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[1]))
-    s_block_extrude = model.ConstrainedSketch(name='SKETCH-BLOCK-EXTRUDE', sheetSize=4000, gridSpacing=100, transform=t)
-    s_block_extrude.retrieveSketch(sketch=s_block)
-    p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_extrude, depth=1000.0, flipExtrudeDirection=OFF)
-    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z1.id], cells=p.cells)
-
-    t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[1]))
-    s_cut_front = model.ConstrainedSketch(name='__profile__', sheetSize=4000, gridSpacing=100, transform=t)
-    p.projectReferencesOntoSketch(sketch=s_cut_front, filter=COPLANAR_EDGES)
-    s_cut_front.retrieveSketch(sketch=s_cut)
-    s_cut_front.sketchOptions.setValues(constructionGeometry=ON)
-    s_cut_front.assignCenterline(line=s_cut_front.geometry[24])
-    p.CutRevolve(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut_front, angle=90.0, flipRevolveDirection=ON)
-    del model.sketches['__profile__']
+    # 旋转切割头部燃道
+    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
 
     # t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     # s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=200.0, transform=t)
-    # p0 = (1600, 700)
+    # p0 = (1600 + 100, 700)
     # theta0_deg = -90
-    # p3 = (640, 1764.5)
+    # p3 = (640 + 100, 1764.5)
     # theta3_deg = 0.0
     # r1, r2, r3 = 600, 1600, 800
     #
@@ -1927,8 +1904,18 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     # center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(1000.0, 0.0))
     # s_block_cut_revolve.assignCenterline(line=center_line)
     #
-    # p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0,
-    #              flipRevolveDirection=ON)
+    # p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+
+    # Mirror
+    if size == '1':
+        p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    elif size == '1/2':
+        pass
+    elif size == '1/4':
+        pass
+    else:
+        raise NotImplementedError('Unsupported size {}'.format(size))
 
     # create_block_surface_common(p, points, dimension)
     #
@@ -2203,7 +2190,7 @@ if __name__ == "__main__":
         model.setValues(absoluteZero=-273.15)
 
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
-        # p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
+        p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
         # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, block_dimension)
         p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, block_dimension)
 
