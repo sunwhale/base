@@ -1705,7 +1705,7 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
     p2 = [x0 + deep + b, 0.0]
     e1 = s_cut.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
     l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
-    l2 = Line2D([0.0, 0.0], [0.0, 1.0])
+    l2 = Line2D([x0, 0.0], [x0, 1.0])
     p3 = l1.get_intersection(l2)
     p4 = [p3[0], 0.0]
     s_cut.Line(point1=p1, point2=p3)
@@ -1765,6 +1765,7 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
 
     return p
 
+
 def create_part_block_front_b(model, part_name, points, lines, faces, dimension):
     z_list = dimension['z_list']
     deep = dimension['deep']
@@ -1779,6 +1780,9 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     size = dimension['size']
     index_r = dimension['index_r']
     index_t = dimension['index_t']
+
+    r_front = 460.0
+
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
     pen = 1e4
@@ -1853,7 +1857,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     p2 = [x0 + deep + b, 0.0]
     e1 = s_cut.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
     l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
-    l2 = Line2D([0.0, 0.0], [0.0, 1.0])
+    l2 = Line2D([x0, 0.0], [x0, 1.0])
     p3 = l1.get_intersection(l2)
     p4 = [p3[0], 0.0]
     s_cut.Line(point1=p1, point2=p3)
@@ -1861,6 +1865,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     s_cut.Line(point1=center, point2=p2)
     s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
     s_cut.Line(point1=p4, point2=center)
+    s_cut.ConstructionLine(point1=(x0 + deep - r_front, -pen), point2=(x0 + deep - r_front, pen))
     geom_list = []
     for g in s_cut.geometry.values():
         geom_list.append(g)
@@ -1877,44 +1882,44 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_extrude, depth=1000.0, flipExtrudeDirection=OFF)
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z1.id], cells=p.cells)
 
-    t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=200.0, transform=t)
-    p0 = (1600, 700)
-    theta0_deg = -90
-    p3 = (640, 1764.5)
-    theta3_deg = 0.0
-    r1, r2, r3 = 600, 1600, 800
-
-    result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
-
-    p1 = result['p1']
-    p2 = result['p2']
-    c1 = result['c1']
-    c2 = result['c2']
-    c3 = result['c3']
-    delta1 = result['delta1']
-    delta2 = result['delta2']
-    delta3 = result['delta3']
-
-    def get_direction(delta):
-        if delta > 0:
-            return COUNTERCLOCKWISE
-        else:
-            return CLOCKWISE
-
-    s_block_cut_revolve.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
-    s_block_cut_revolve.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
-    s_block_cut_revolve.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
-    s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
-    s_block_cut_revolve.Line(point1=(p0[0], 1), point2=(pen, 1))
-    s_block_cut_revolve.Line(point1=(pen, 1), point2=(pen, pen))
-    s_block_cut_revolve.Line(point1=(pen, pen), point2=(p3[0], pen))
-    s_block_cut_revolve.Line(point1=(p3[0], pen), point2=p3)
-    center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(1000.0, 0.0))
-    s_block_cut_revolve.assignCenterline(line=center_line)
-
-    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0,
-                 flipRevolveDirection=ON)
+    # t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    # s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=200.0, transform=t)
+    # p0 = (1600, 700)
+    # theta0_deg = -90
+    # p3 = (640, 1764.5)
+    # theta3_deg = 0.0
+    # r1, r2, r3 = 600, 1600, 800
+    #
+    # result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
+    #
+    # p1 = result['p1']
+    # p2 = result['p2']
+    # c1 = result['c1']
+    # c2 = result['c2']
+    # c3 = result['c3']
+    # delta1 = result['delta1']
+    # delta2 = result['delta2']
+    # delta3 = result['delta3']
+    #
+    # def get_direction(delta):
+    #     if delta > 0:
+    #         return COUNTERCLOCKWISE
+    #     else:
+    #         return CLOCKWISE
+    #
+    # s_block_cut_revolve.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
+    # s_block_cut_revolve.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
+    # s_block_cut_revolve.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
+    # s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
+    # s_block_cut_revolve.Line(point1=(p0[0], 1), point2=(pen, 1))
+    # s_block_cut_revolve.Line(point1=(pen, 1), point2=(pen, pen))
+    # s_block_cut_revolve.Line(point1=(pen, pen), point2=(p3[0], pen))
+    # s_block_cut_revolve.Line(point1=(p3[0], pen), point2=p3)
+    # center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(1000.0, 0.0))
+    # s_block_cut_revolve.assignCenterline(line=center_line)
+    #
+    # p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0,
+    #              flipRevolveDirection=ON)
 
     # create_block_surface_common(p, points, dimension)
     #
@@ -1934,6 +1939,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
+
 
 def create_block_sets_common(p, faces, dimension):
     z_list = dimension['z_list']
@@ -2145,7 +2151,7 @@ if __name__ == "__main__":
         'x0': x0,
         'length_up': 1039.2,
         'width': 100.0,
-        'angle_demolding_1': 5.0,
+        'angle_demolding_1': 1.5,
         'angle_demolding_2': 10.0,
         'fillet_radius': 50.0,
         'a': 50.0,
