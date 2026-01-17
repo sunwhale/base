@@ -1882,6 +1882,15 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_extrude, depth=1000.0, flipExtrudeDirection=OFF)
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z1.id], cells=p.cells)
 
+    t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[1]))
+    s_cut_front = model.ConstrainedSketch(name='__profile__', sheetSize=4000, gridSpacing=100, transform=t)
+    p.projectReferencesOntoSketch(sketch=s_cut_front, filter=COPLANAR_EDGES)
+    s_cut_front.retrieveSketch(sketch=s_cut)
+    s_cut_front.sketchOptions.setValues(constructionGeometry=ON)
+    s_cut_front.assignCenterline(line=s_cut_front.geometry[24])
+    p.CutRevolve(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut_front, angle=90.0, flipRevolveDirection=ON)
+    del model.sketches['__profile__']
+
     # t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     # s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=200.0, transform=t)
     # p0 = (1600, 700)
