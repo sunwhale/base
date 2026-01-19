@@ -1915,8 +1915,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
             partition_edges.append(edge_sequence[0])
     p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
 
-    for i in range(1, len(z_list) - 1):
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
+
 
     # SKETCH-CUT
     s_cut = model.ConstrainedSketch(name='SKETCH-CUT', sheetSize=200.0)
@@ -1946,6 +1945,16 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     # 旋转切割头部燃道
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
+
+    pickedEdges = (p.edges[8], p.edges[42])
+    p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=pickedEdges, sense=REVERSE)
+
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+
+    for i in range(1, len(z_list) - 1):
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
+
+    xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=10.0)
 
     # # Mirror
     # if size == '1':
