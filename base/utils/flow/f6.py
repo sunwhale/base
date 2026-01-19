@@ -1943,22 +1943,26 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=4000.0, transform=t)
-    s_block_cut_revolve.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
-    s_block_cut_revolve.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
-    s_block_cut_revolve.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
-    s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
-    s_block_cut_revolve.Line(point1=p3, point2=p4)
     geom_list = []
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
-    geom_list.append(s_block_cut_revolve_shift.Line(point1=p0, point2=(p0[0], 1)))
+    geom_list.append(s_block_cut_revolve_shift.Line(point1=p0, point2=(p0[0], x0)))
     geom_list.append(s_block_cut_revolve_shift.Line(point1=p3, point2=p4))
     for i in range(1, index_r):
         s_block_cut_revolve_shift.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=RIGHT)
 
     p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, tol, pen)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_block_cut_revolve_shift)
+
+    partition_edges = []
+    for g in s_block_cut_revolve_shift.geometry.values():
+        z, x = g.pointOn
+        edge_sequence = p.edges.findAt((x, 0.0, z))
+        if edge_sequence is not None:
+            partition_edges.append(edge_sequence)
+
+    p.PartitionCellBySweepEdge(sweepPath=p.edges[21], cells=p.cells, edges=partition_edges)
 
     # t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     # s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=200.0)
@@ -2006,21 +2010,21 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     #     pass
     # else:
     #     raise NotImplementedError('Unsupported size {}'.format(size))
+
+    # create_block_surface_common(p, points, dimension)
     #
-    # # create_block_surface_common(p, points, dimension)
-    # #
-    # # p_faces = p.faces.getByBoundingBox(0, 0, 0, x0 + deep + b, width / 2.0, length_up / 2.0 + b / math.cos(degrees_to_radians(angle_demolding_2)))
-    # # face_areas = []
-    # # for face in p_faces:
-    # #     face_area = face.getSize()
-    # #     face_areas.append(face_area)
-    # # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    # # for face_id in range(len(p.faces)):
-    # #     face_size = p.faces[face_id].getSize()
-    # #     if min_difference(face_size, face_areas) < tol:
-    # #         p_faces += p.faces[face_id:face_id + 1]
-    # # if p_faces:
-    # #     p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+    # p_faces = p.faces.getByBoundingBox(0, 0, 0, x0 + deep + b, width / 2.0, length_up / 2.0 + b / math.cos(degrees_to_radians(angle_demolding_2)))
+    # face_areas = []
+    # for face in p_faces:
+    #     face_area = face.getSize()
+    #     face_areas.append(face_area)
+    # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    # for face_id in range(len(p.faces)):
+    #     face_size = p.faces[face_id].getSize()
+    #     if min_difference(face_size, face_areas) < tol:
+    #         p_faces += p.faces[face_id:face_id + 1]
+    # if p_faces:
+    #     p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -2248,8 +2252,8 @@ if __name__ == "__main__":
         'index_t': 3
     }
 
-    # points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
-    points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 50, 50])
+    points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
+    # points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 50, 50])
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
