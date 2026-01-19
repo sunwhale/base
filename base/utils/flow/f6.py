@@ -1962,7 +1962,10 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
         if edge_sequence is not None:
             partition_edges.append(edge_sequence)
 
-    p.PartitionCellBySweepEdge(sweepPath=p.edges[21], cells=p.cells, edges=partition_edges)
+    # 基于p4点所在的半径拾取sweep_edge
+    x, y = polar_to_cartesian(p4[1], tol)
+    sweep_edge = p.edges.findAt((x, y, z_list[-1]))
+    p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     # s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=200.0)
