@@ -1782,7 +1782,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     index_t = dimension['index_t']
 
     r_front = 460.0
-    length_front = 1200.0
+    length_front = 1500.0
 
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
@@ -1902,8 +1902,9 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
         else:
             return CLOCKWISE
 
+    # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=200.0, transform=t)
+    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=4000.0, transform=t)
     p0 = (-1207.5, 794)
     theta0_deg = 90
     p3 = (-350, 1762.5)
@@ -1939,45 +1940,25 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
 
-    # s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=4000.0)
-    # p0 = (-1207.5, 794)
-    # theta0_deg = 90
-    # p3 = (-350, 1764.5)
-    # theta3_deg = 0.0
-    # r1, r2, r3 = 929.4, 1524, 655.2
-    # theta_in_deg = 0.24
-    #
-    # result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
-    # l1 = Line2D(p3, np.tan(degrees_to_radians(theta_in_deg)))
-    # l2 = Line2D((pen, 0.0), (pen, 1.0))
-    # p4 = l1.get_intersection(l2)
-    #
-    # p1 = result['p1']
-    # p2 = result['p2']
-    # c1 = result['c1']
-    # c2 = result['c2']
-    # c3 = result['c3']
-    # delta1 = result['delta1']
-    # delta2 = result['delta2']
-    # delta3 = result['delta3']
-    #
-    # def get_direction(delta):
-    #     if delta > 0:
-    #         return COUNTERCLOCKWISE
-    #     else:
-    #         return CLOCKWISE
-    #
-    # geom_list = []
-    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
-    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
-    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
-    #
-    # geom_list.append(s_block_cut_revolve_shift.Line(point1=p0, point2=(p0[0], 1)))
-    # geom_list.append(s_block_cut_revolve_shift.Line(point1=p3, point2=p4))
-    #
-    # s_block_cut_revolve_shift.offset(distance=50.0, objectList=geom_list, side=RIGHT)
-    #
-    # s_block_cut_revolve_shift.setPrimaryObject(option=STANDALONE)
+    # 草图切割环向面
+    t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=4000.0, transform=t)
+    s_block_cut_revolve.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
+    s_block_cut_revolve.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
+    s_block_cut_revolve.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
+    s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
+    s_block_cut_revolve.Line(point1=p3, point2=p4)
+    geom_list = []
+    geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
+    geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
+    geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
+    geom_list.append(s_block_cut_revolve_shift.Line(point1=p0, point2=(p0[0], 1)))
+    geom_list.append(s_block_cut_revolve_shift.Line(point1=p3, point2=p4))
+    s_block_cut_revolve_shift.offset(distance=3.0, objectList=geom_list, side=RIGHT)
+    s_block_cut_revolve_shift.offset(distance=6.0, objectList=geom_list, side=RIGHT)
+
+    p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, tol, pen)
+    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_block_cut_revolve_shift)
 
     # t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     # s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=200.0)
