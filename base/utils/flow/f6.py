@@ -1022,6 +1022,13 @@ def get_same_volume_cells(p, cells):
         return None
 
 
+def get_direction(delta):
+    if delta > 0:
+        return COUNTERCLOCKWISE
+    else:
+        return CLOCKWISE
+
+
 def create_part_block_a(model, part_name, points, lines, faces, dimension):
     z_list = dimension['z_list']
     deep = dimension['deep']
@@ -1808,100 +1815,6 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     # 头部药块额外拉伸
     p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block, depth=length_front, flipExtrudeDirection=ON)
 
-    # SKETCH-BLOCK-PARTITION
-    xy_plane_z = {}
-    for i in range(1, len(z_list)):
-        xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
-
-    # # SKETCH-BLOCK-PARTITION
-    # t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z[len(z_list) - 1].id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[-1]))
-    # s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0, transform=t)
-    # center = (0, 0)
-    # geom_list = []
-    # # 拾取被切割平面上的线段，同一个theta
-    # for i in range(1, index_t):
-    #     geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
-    # # 拾取被切割平面上的线段，同一个r
-    # for i in range(1, index_r):
-    #     geom_list.append(s_block_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
-    #
-    # # Partition
-    # p_faces = p.faces.getByBoundingBox(0, 0, 0, pen, pen, pen)
-    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
-
-    # execfile('/home/dell/base/base/utils/flow/f6.py', __main__.__dict__)
-
-    # # 拾取被切割平面上的线段，同一个r
-    # partition_edges = []
-    # line_keys = []
-    # for i in range(1, index_r):
-    #     for j in range(0, index_t):
-    #         line_key = '%s%s-%s%s' % (i, j, i, j + 1)
-    #         line_keys.append(line_key)
-    #
-    # for line_key in line_keys:
-    #     line_middle_point = lines[line_key][3]
-    #     x, y = line_middle_point
-    #     edge_sequence = p.edges.findAt(((x, y, z_list[-1]),))
-    #     if len(edge_sequence) > 0:
-    #         partition_edges.append(edge_sequence[0])
-    # p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
-
-    # # 拾取被切割平面上的线段，同一个theta
-    # partition_edges = []
-    # line_keys = []
-    #
-    # for j in range(1, index_t):
-    #     for i in range(0, index_r):
-    #         line_key = '%s%s-%s%s' % (i, j, i + 1, j)
-    #         line_keys.append(line_key)
-    #
-    # for line_key in line_keys:
-    #     line_middle_point = lines[line_key][3]
-    #     x, y = line_middle_point
-    #     edge_sequence = p.edges.findAt(((x, y, z_list[-1]),))
-    #     if len(edge_sequence) > 0:
-    #         partition_edges.append(edge_sequence[0])
-    # p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
-
-    # for i in range(1, len(z_list) - 1):
-    #     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
-
-    # SKETCH-CUT
-    s_cut = model.ConstrainedSketch(name='SKETCH-CUT', sheetSize=200.0)
-    x1 = 400.0
-    center = [x0 + deep, 0.0]
-    p1 = [x0 + deep, -a]
-    p2 = [x0 + deep + b, 0.0]
-    e1 = s_cut.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
-    l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
-    l2 = Line2D([x0, 0.0], [x0, 1.0])
-    p3 = l1.get_intersection(l2)
-    p4 = [p3[0], 0.0]
-    s_cut.Line(point1=p1, point2=p3)
-    s_cut.Line(point1=p3, point2=p4)
-    s_cut.Line(point1=center, point2=p2)
-    s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
-    s_cut.Line(point1=p4, point2=center)
-    center_line = s_cut.ConstructionLine(point1=(x0 + deep - r_front, -pen), point2=(x0 + deep - r_front, pen))
-    geom_list = []
-    for g in s_cut.geometry.values():
-        geom_list.append(g)
-    s_cut.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
-    s_cut.assignCenterline(line=center_line)
-
-    # CutExtrude
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
-
-    # 旋转切割头部燃道
-    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
-
-    def get_direction(delta):
-        if delta > 0:
-            return COUNTERCLOCKWISE
-        else:
-            return CLOCKWISE
-
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=4000.0, transform=t)
@@ -1967,41 +1880,73 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
-    # t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    # s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=200.0)
-    # p0 = (-1207.5, 794)
-    # theta0_deg = 90
-    # p3 = (-350, 1764.5)
-    # theta3_deg = 0.0
-    # r1, r2, r3 = 929.4, 1524, 655.2
-    #
-    # result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
-    #
-    # p1 = result['p1']
-    # p2 = result['p2']
-    # c1 = result['c1']
-    # c2 = result['c2']
-    # c3 = result['c3']
-    # delta1 = result['delta1']
-    # delta2 = result['delta2']
-    # delta3 = result['delta3']
-    #
-    # def get_direction(delta):
-    #     if delta > 0:
-    #         return COUNTERCLOCKWISE
-    #     else:
-    #         return CLOCKWISE
-    #
-    # geom_list = []
-    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
-    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
-    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
-    # geom_list.append(s_block_cut_revolve_shift.Line(point1=p0, point2=(p0[0], 1)))
-    #
-    # s_block_cut_revolve_shift.offset(distance=50.0, objectList=geom_list, side=RIGHT)
-    #
-    # s_block_cut_revolve_shift.setPrimaryObject(option=STANDALONE)
-    # session.viewports['Viewport: 1'].view.setValues(session.views['Top'])
+    # SKETCH-BLOCK-PARTITION
+    xy_plane_z = {}
+    for i in range(1, len(z_list)):
+        xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
+
+    # SKETCH-BLOCK-PARTITION
+    t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z[len(z_list) - 1].id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[-1]))
+    s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0, transform=t)
+    center = (0, 0)
+    geom_list = []
+    # 拾取被切割平面上的线段，同一个theta
+    for i in range(1, index_t):
+        geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
+
+    # Partition
+    p_faces = p.faces.getByBoundingBox(0, 0, tol, pen, pen, pen)
+    p.Set(faces=p_faces, name='face')
+    p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
+
+    # 拾取被切割平面上的线段，同一个theta
+    partition_edges = []
+    line_keys = []
+
+    for j in range(1, index_t):
+        for i in range(0, index_r):
+            line_key = '%s%s-%s%s' % (i, j, i + 1, j)
+            line_keys.append(line_key)
+
+    for line_key in line_keys:
+        line_middle_point = lines[line_key][3]
+        x, y = line_middle_point
+        edge_sequence = p.edges.findAt(((x, y, z_list[-1]),))
+        if len(edge_sequence) > 0:
+            partition_edges.append(edge_sequence[0])
+    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
+
+    for i in range(1, len(z_list) - 1):
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
+
+    # SKETCH-CUT
+    s_cut = model.ConstrainedSketch(name='SKETCH-CUT', sheetSize=200.0)
+    x1 = 400.0
+    center = [x0 + deep, 0.0]
+    p1 = [x0 + deep, -a]
+    p2 = [x0 + deep + b, 0.0]
+    e1 = s_cut.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
+    l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
+    l2 = Line2D([x0, 0.0], [x0, 1.0])
+    p3 = l1.get_intersection(l2)
+    p4 = [p3[0], 0.0]
+    s_cut.Line(point1=p1, point2=p3)
+    s_cut.Line(point1=p3, point2=p4)
+    s_cut.Line(point1=center, point2=p2)
+    s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
+    s_cut.Line(point1=p4, point2=center)
+    center_line = s_cut.ConstructionLine(point1=(x0 + deep - r_front, -pen), point2=(x0 + deep - r_front, pen))
+    geom_list = []
+    for g in s_cut.geometry.values():
+        geom_list.append(g)
+    s_cut.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
+    s_cut.assignCenterline(line=center_line)
+
+    # CutExtrude
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
+
+    # 旋转切割头部燃道
+    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
 
     # # Mirror
     # if size == '1':
