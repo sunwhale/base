@@ -1914,7 +1914,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
     l1 = Line2D(p3, np.tan(degrees_to_radians(theta_in_deg)))
-    l2 = Line2D((pen, 0.0), (pen, 1.0))
+    l2 = Line2D((z_list[-1], 0.0), (z_list[-1], 1.0))
     p4 = l1.get_intersection(l2)
 
     p1 = result['p1']
@@ -1954,8 +1954,8 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
     geom_list.append(s_block_cut_revolve_shift.Line(point1=p0, point2=(p0[0], 1)))
     geom_list.append(s_block_cut_revolve_shift.Line(point1=p3, point2=p4))
-    s_block_cut_revolve_shift.offset(distance=3.0, objectList=geom_list, side=RIGHT)
-    s_block_cut_revolve_shift.offset(distance=6.0, objectList=geom_list, side=RIGHT)
+    for i in range(1, index_r):
+        s_block_cut_revolve_shift.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=RIGHT)
 
     p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, tol, pen)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_block_cut_revolve_shift)
@@ -2248,11 +2248,12 @@ if __name__ == "__main__":
         'index_t': 3
     }
 
-    points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
-    # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
+    # points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
+    points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 50, 50])
 
     if not ABAQUS_ENV:
-        # plot_geometries(points, lines, faces)
+        points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
+        plot_geometries(points, lines, faces)
 
         print(faces)
         print(points.shape)
@@ -2268,13 +2269,13 @@ if __name__ == "__main__":
         # plot_three_arcs(result, p0, p3)
         # p = Plane((0, 0, 0), (1, 0, 0), (0, 1, 0))
 
-        p0 = (0.0, 794)
-        theta0_deg = 90
-        p3 = (857.6, 1762.5)
-        theta3_deg = 0.0
-        r1, r2, r3 = 850, 1524, 655.2
-        result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
-        plot_three_arcs(result, p0, p3)
+        # p0 = (0.0, 794)
+        # theta0_deg = 90
+        # p3 = (857.6, 1762.5)
+        # theta3_deg = 0.0
+        # r1, r2, r3 = 850, 1524, 655.2
+        # result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
+        # plot_three_arcs(result, p0, p3)
 
     if ABAQUS_ENV:
         model = mdb.models['Model-1']
