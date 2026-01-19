@@ -1813,98 +1813,179 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     for i in range(1, len(z_list)):
         xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
 
-    t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z[len(z_list) - 1].id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[-1]))
-
-    # SKETCH-BLOCK-PARTITION
-    s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0, transform=t)
-    center = (0, 0)
-    geom_list = []
-    # 拾取被切割平面上的线段，同一个theta
-    for i in range(1, index_t):
-        geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
-    # 拾取被切割平面上的线段，同一个r
-    for i in range(1, index_r):
-        geom_list.append(s_block_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
-
-    # Partition
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, pen, pen, pen)
-    p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
+    # # SKETCH-BLOCK-PARTITION
+    # t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z[len(z_list) - 1].id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[-1]))
+    # s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0, transform=t)
+    # center = (0, 0)
+    # geom_list = []
+    # # 拾取被切割平面上的线段，同一个theta
+    # for i in range(1, index_t):
+    #     geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
+    # # 拾取被切割平面上的线段，同一个r
+    # for i in range(1, index_r):
+    #     geom_list.append(s_block_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
+    #
+    # # Partition
+    # p_faces = p.faces.getByBoundingBox(0, 0, 0, pen, pen, pen)
+    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
 
     # execfile('/home/dell/base/base/utils/flow/f6.py', __main__.__dict__)
 
-    # 拾取被切割平面上的线段，同一个r
-    partition_edges = []
-    line_keys = []
-    for i in range(1, index_r):
-        for j in range(0, index_t):
-            line_key = '%s%s-%s%s' % (i, j, i, j + 1)
-            line_keys.append(line_key)
-
-    for line_key in line_keys:
-        line_middle_point = lines[line_key][3]
-        x, y = line_middle_point
-        edge_sequence = p.edges.findAt(((x, y, z_list[-1]),))
-        if len(edge_sequence) > 0:
-            partition_edges.append(edge_sequence[0])
-    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
-
-    # 拾取被切割平面上的线段，同一个theta
-    partition_edges = []
-    line_keys = []
-
-    for j in range(1, index_t):
-        for i in range(0, index_r):
-            line_key = '%s%s-%s%s' % (i, j, i + 1, j)
-            line_keys.append(line_key)
-
-    for line_key in line_keys:
-        line_middle_point = lines[line_key][3]
-        x, y = line_middle_point
-        edge_sequence = p.edges.findAt(((x, y, z_list[-1]),))
-        if len(edge_sequence) > 0:
-            partition_edges.append(edge_sequence[0])
-    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
-
-    for i in range(1, len(z_list) - 1):
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
-
-    # # SKETCH-CUT
-    # s_cut = model.ConstrainedSketch(name='SKETCH-CUT', sheetSize=200.0)
-    # x1 = 400.0
-    # center = [x0 + deep, 0.0]
-    # p1 = [x0 + deep, -a]
-    # p2 = [x0 + deep + b, 0.0]
-    # e1 = s_cut.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
-    # l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
-    # l2 = Line2D([x0, 0.0], [x0, 1.0])
-    # p3 = l1.get_intersection(l2)
-    # p4 = [p3[0], 0.0]
-    # s_cut.Line(point1=p1, point2=p3)
-    # s_cut.Line(point1=p3, point2=p4)
-    # s_cut.Line(point1=center, point2=p2)
-    # s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
-    # s_cut.Line(point1=p4, point2=center)
-    # center_line = s_cut.ConstructionLine(point1=(x0 + deep - r_front, -pen), point2=(x0 + deep - r_front, pen))
-    # geom_list = []
-    # for g in s_cut.geometry.values():
-    #     geom_list.append(g)
-    # s_cut.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
-    # s_cut.assignCenterline(line=center_line)
+    # # 拾取被切割平面上的线段，同一个r
+    # partition_edges = []
+    # line_keys = []
+    # for i in range(1, index_r):
+    #     for j in range(0, index_t):
+    #         line_key = '%s%s-%s%s' % (i, j, i, j + 1)
+    #         line_keys.append(line_key)
     #
-    # # CutExtrude
-    # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
-    #
-    # # 旋转切割头部燃道
-    # p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
+    # for line_key in line_keys:
+    #     line_middle_point = lines[line_key][3]
+    #     x, y = line_middle_point
+    #     edge_sequence = p.edges.findAt(((x, y, z_list[-1]),))
+    #     if len(edge_sequence) > 0:
+    #         partition_edges.append(edge_sequence[0])
+    # p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
 
-    # t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    # s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=200.0, transform=t)
-    # p0 = (-1207.5, 700)
+    # # 拾取被切割平面上的线段，同一个theta
+    # partition_edges = []
+    # line_keys = []
+    #
+    # for j in range(1, index_t):
+    #     for i in range(0, index_r):
+    #         line_key = '%s%s-%s%s' % (i, j, i + 1, j)
+    #         line_keys.append(line_key)
+    #
+    # for line_key in line_keys:
+    #     line_middle_point = lines[line_key][3]
+    #     x, y = line_middle_point
+    #     edge_sequence = p.edges.findAt(((x, y, z_list[-1]),))
+    #     if len(edge_sequence) > 0:
+    #         partition_edges.append(edge_sequence[0])
+    # p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
+
+    # for i in range(1, len(z_list) - 1):
+    #     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
+
+    # SKETCH-CUT
+    s_cut = model.ConstrainedSketch(name='SKETCH-CUT', sheetSize=200.0)
+    x1 = 400.0
+    center = [x0 + deep, 0.0]
+    p1 = [x0 + deep, -a]
+    p2 = [x0 + deep + b, 0.0]
+    e1 = s_cut.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
+    l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
+    l2 = Line2D([x0, 0.0], [x0, 1.0])
+    p3 = l1.get_intersection(l2)
+    p4 = [p3[0], 0.0]
+    s_cut.Line(point1=p1, point2=p3)
+    s_cut.Line(point1=p3, point2=p4)
+    s_cut.Line(point1=center, point2=p2)
+    s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
+    s_cut.Line(point1=p4, point2=center)
+    center_line = s_cut.ConstructionLine(point1=(x0 + deep - r_front, -pen), point2=(x0 + deep - r_front, pen))
+    geom_list = []
+    for g in s_cut.geometry.values():
+        geom_list.append(g)
+    s_cut.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
+    s_cut.assignCenterline(line=center_line)
+
+    # CutExtrude
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
+
+    # 旋转切割头部燃道
+    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
+
+    def get_direction(delta):
+        if delta > 0:
+            return COUNTERCLOCKWISE
+        else:
+            return CLOCKWISE
+
+    t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=200.0, transform=t)
+    p0 = (-1207.5, 794)
+    theta0_deg = 90
+    p3 = (-350, 1762.5)
+    theta3_deg = 0.0
+    r1, r2, r3 = 929.4, 1524, 655.2
+    theta_in_deg = 0.16
+
+    result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
+    l1 = Line2D(p3, np.tan(degrees_to_radians(theta_in_deg)))
+    l2 = Line2D((pen, 0.0), (pen, 1.0))
+    p4 = l1.get_intersection(l2)
+
+    p1 = result['p1']
+    p2 = result['p2']
+    c1 = result['c1']
+    c2 = result['c2']
+    c3 = result['c3']
+    delta1 = result['delta1']
+    delta2 = result['delta2']
+    delta3 = result['delta3']
+
+    s_block_cut_revolve.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
+    s_block_cut_revolve.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
+    s_block_cut_revolve.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
+    s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
+    s_block_cut_revolve.Line(point1=(p0[0], 1), point2=(-pen, 1))
+    s_block_cut_revolve.Line(point1=(-pen, 1), point2=(-pen, pen))
+    s_block_cut_revolve.Line(point1=(-pen, pen), point2=(p4[0], pen))
+    s_block_cut_revolve.Line(point1=(p4[0], pen), point2=p4)
+    s_block_cut_revolve.Line(point1=p3, point2=p4)
+    center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
+    s_block_cut_revolve.assignCenterline(line=center_line)
+
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+
+    # s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=4000.0)
+    # p0 = (-1207.5, 794)
     # theta0_deg = 90
-    # # p3 = (-350, 1762.5)
     # p3 = (-350, 1764.5)
     # theta3_deg = 0.0
-    # r1, r2, r3 = 800, 1600, 800
+    # r1, r2, r3 = 929.4, 1524, 655.2
+    # theta_in_deg = 0.24
+    #
+    # result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
+    # l1 = Line2D(p3, np.tan(degrees_to_radians(theta_in_deg)))
+    # l2 = Line2D((pen, 0.0), (pen, 1.0))
+    # p4 = l1.get_intersection(l2)
+    #
+    # p1 = result['p1']
+    # p2 = result['p2']
+    # c1 = result['c1']
+    # c2 = result['c2']
+    # c3 = result['c3']
+    # delta1 = result['delta1']
+    # delta2 = result['delta2']
+    # delta3 = result['delta3']
+    #
+    # def get_direction(delta):
+    #     if delta > 0:
+    #         return COUNTERCLOCKWISE
+    #     else:
+    #         return CLOCKWISE
+    #
+    # geom_list = []
+    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
+    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
+    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
+    #
+    # geom_list.append(s_block_cut_revolve_shift.Line(point1=p0, point2=(p0[0], 1)))
+    # geom_list.append(s_block_cut_revolve_shift.Line(point1=p3, point2=p4))
+    #
+    # s_block_cut_revolve_shift.offset(distance=50.0, objectList=geom_list, side=RIGHT)
+    #
+    # s_block_cut_revolve_shift.setPrimaryObject(option=STANDALONE)
+
+    # t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    # s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=200.0)
+    # p0 = (-1207.5, 794)
+    # theta0_deg = 90
+    # p3 = (-350, 1764.5)
+    # theta3_deg = 0.0
+    # r1, r2, r3 = 929.4, 1524, 655.2
     #
     # result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
     #
@@ -1923,44 +2004,42 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     #     else:
     #         return CLOCKWISE
     #
-    # s_block_cut_revolve.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
-    # s_block_cut_revolve.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
-    # s_block_cut_revolve.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
-    # s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
-    # s_block_cut_revolve.Line(point1=(p0[0], 1), point2=(-pen, 1))
-    # s_block_cut_revolve.Line(point1=(-pen, 1), point2=(-pen, pen))
-    # s_block_cut_revolve.Line(point1=(-pen, pen), point2=(p3[0], pen))
-    # s_block_cut_revolve.Line(point1=(p3[0], pen), point2=p3)
-    # center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
-    # s_block_cut_revolve.assignCenterline(line=center_line)
+    # geom_list = []
+    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
+    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
+    # geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
+    # geom_list.append(s_block_cut_revolve_shift.Line(point1=p0, point2=(p0[0], 1)))
     #
-    # p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
-
-    # Mirror
-    if size == '1':
-        p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-    elif size == '1/2':
-        pass
-    elif size == '1/4':
-        pass
-    else:
-        raise NotImplementedError('Unsupported size {}'.format(size))
-
-    # create_block_surface_common(p, points, dimension)
+    # s_block_cut_revolve_shift.offset(distance=50.0, objectList=geom_list, side=RIGHT)
     #
-    # p_faces = p.faces.getByBoundingBox(0, 0, 0, x0 + deep + b, width / 2.0, length_up / 2.0 + b / math.cos(degrees_to_radians(angle_demolding_2)))
-    # face_areas = []
-    # for face in p_faces:
-    #     face_area = face.getSize()
-    #     face_areas.append(face_area)
-    # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    # for face_id in range(len(p.faces)):
-    #     face_size = p.faces[face_id].getSize()
-    #     if min_difference(face_size, face_areas) < tol:
-    #         p_faces += p.faces[face_id:face_id + 1]
-    # if p_faces:
-    #     p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+    # s_block_cut_revolve_shift.setPrimaryObject(option=STANDALONE)
+    # session.viewports['Viewport: 1'].view.setValues(session.views['Top'])
+
+    # # Mirror
+    # if size == '1':
+    #     p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
+    #     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    # elif size == '1/2':
+    #     pass
+    # elif size == '1/4':
+    #     pass
+    # else:
+    #     raise NotImplementedError('Unsupported size {}'.format(size))
+    #
+    # # create_block_surface_common(p, points, dimension)
+    # #
+    # # p_faces = p.faces.getByBoundingBox(0, 0, 0, x0 + deep + b, width / 2.0, length_up / 2.0 + b / math.cos(degrees_to_radians(angle_demolding_2)))
+    # # face_areas = []
+    # # for face in p_faces:
+    # #     face_area = face.getSize()
+    # #     face_areas.append(face_area)
+    # # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    # # for face_id in range(len(p.faces)):
+    # #     face_size = p.faces[face_id].getSize()
+    # #     if min_difference(face_size, face_areas) < tol:
+    # #         p_faces += p.faces[face_id:face_id + 1]
+    # # if p_faces:
+    # #     p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -2208,11 +2287,11 @@ if __name__ == "__main__":
         # plot_three_arcs(result, p0, p3)
         # p = Plane((0, 0, 0), (1, 0, 0), (0, 1, 0))
 
-        p0 = (-1600, 700)
+        p0 = (0.0, 794)
         theta0_deg = 90
-        p3 = (-614.5, 1764.5)
+        p3 = (857.6, 1762.5)
         theta3_deg = 0.0
-        r1, r2, r3 = 800, 1600, 800
+        r1, r2, r3 = 850, 1524, 655.2
         result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
         plot_three_arcs(result, p0, p3)
 
