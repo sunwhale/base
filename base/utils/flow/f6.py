@@ -1880,7 +1880,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
-    # SKETCH-BLOCK-PARTITION
+    # 建立不同z的xy_plane
     xy_plane_z = {}
     for i in range(1, len(z_list)):
         xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
@@ -1888,7 +1888,6 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     # SKETCH-BLOCK-PARTITION
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z[len(z_list) - 1].id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[-1]))
     s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0, transform=t)
-    center = (0, 0)
     geom_list = []
     # 拾取被切割平面上的线段，同一个theta
     for i in range(1, index_t):
