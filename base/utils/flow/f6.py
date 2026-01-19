@@ -1868,43 +1868,44 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     # 旋转切割头部燃道
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
 
-    # t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    # s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=200.0, transform=t)
-    # p0 = (1600 + 100, 700)
-    # theta0_deg = -90
-    # p3 = (640 + 100, 1764.5)
-    # theta3_deg = 0.0
-    # r1, r2, r3 = 600, 1600, 800
-    #
-    # result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
-    #
-    # p1 = result['p1']
-    # p2 = result['p2']
-    # c1 = result['c1']
-    # c2 = result['c2']
-    # c3 = result['c3']
-    # delta1 = result['delta1']
-    # delta2 = result['delta2']
-    # delta3 = result['delta3']
-    #
-    # def get_direction(delta):
-    #     if delta > 0:
-    #         return COUNTERCLOCKWISE
-    #     else:
-    #         return CLOCKWISE
-    #
-    # s_block_cut_revolve.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
-    # s_block_cut_revolve.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
-    # s_block_cut_revolve.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
-    # s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
-    # s_block_cut_revolve.Line(point1=(p0[0], 1), point2=(pen, 1))
-    # s_block_cut_revolve.Line(point1=(pen, 1), point2=(pen, pen))
-    # s_block_cut_revolve.Line(point1=(pen, pen), point2=(p3[0], pen))
-    # s_block_cut_revolve.Line(point1=(p3[0], pen), point2=p3)
-    # center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(1000.0, 0.0))
-    # s_block_cut_revolve.assignCenterline(line=center_line)
-    #
-    # p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+    t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=200.0, transform=t)
+    p0 = (-1207.5, 700)
+    theta0_deg = 90
+    # p3 = (-350, 1762.5)
+    p3 = (-350, 1764.5)
+    theta3_deg = 0.0
+    r1, r2, r3 = 800, 1600, 800
+
+    result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
+
+    p1 = result['p1']
+    p2 = result['p2']
+    c1 = result['c1']
+    c2 = result['c2']
+    c3 = result['c3']
+    delta1 = result['delta1']
+    delta2 = result['delta2']
+    delta3 = result['delta3']
+
+    def get_direction(delta):
+        if delta > 0:
+            return COUNTERCLOCKWISE
+        else:
+            return CLOCKWISE
+
+    s_block_cut_revolve.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
+    s_block_cut_revolve.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
+    s_block_cut_revolve.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
+    s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
+    s_block_cut_revolve.Line(point1=(p0[0], 1), point2=(-pen, 1))
+    s_block_cut_revolve.Line(point1=(-pen, 1), point2=(-pen, pen))
+    s_block_cut_revolve.Line(point1=(-pen, pen), point2=(p3[0], pen))
+    s_block_cut_revolve.Line(point1=(p3[0], pen), point2=p3)
+    center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
+    s_block_cut_revolve.assignCenterline(line=center_line)
+
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
 
     # Mirror
     if size == '1':
@@ -2142,7 +2143,8 @@ if __name__ == "__main__":
     shell_insulation_ref_z = 407.581146
 
     block_dimension = {
-        'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
+        # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
+        'z_list': [0, 183.4, 183.4 + 3.0],
         'deep': 380.0,
         'x0': x0,
         'length_up': 1039.2,
@@ -2177,20 +2179,20 @@ if __name__ == "__main__":
         # plot_three_arcs(result, p0, p3)
         # p = Plane((0, 0, 0), (1, 0, 0), (0, 1, 0))
 
-        # p0 = (-1600, 700)
-        # theta0_deg = 90
-        # p3 = (-614.5, 1764.5)
-        # theta3_deg = 0.0
-        # r1, r2, r3 = 800, 1600, 800
-        # result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
-        # plot_three_arcs(result, p0, p3)
+        p0 = (-1600, 700)
+        theta0_deg = 90
+        p3 = (-614.5, 1764.5)
+        theta3_deg = 0.0
+        r1, r2, r3 = 800, 1600, 800
+        result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
+        plot_three_arcs(result, p0, p3)
 
     if ABAQUS_ENV:
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
-        p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
+        # p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
         # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, block_dimension)
         p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, block_dimension)
 
