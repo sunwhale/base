@@ -1956,6 +1956,8 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=10.0)
 
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
+
     # # Mirror
     # if size == '1':
     #     p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
