@@ -1857,7 +1857,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=4000.0, transform=t)
     geom_list = []
-    geom_list.append(s_block_cut_revolve_shift.Line(point1=p0, point2=(p0[0], x0)))
+    geom_list.append(s_block_cut_revolve_shift.Line(point1=(p0[0], x0), point2=p0))
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
@@ -1866,7 +1866,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
         s_block_cut_revolve_shift.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=RIGHT)
 
     g = s_block_cut_revolve_shift.geometry
-    for i in range(3, 7):
+    for i in [3, 4, 5, 6]:
         pa = g[i].getVertices()[0].coords
         pb = g[i + 5].getVertices()[0].coords
         pc = g[i + 10].getVertices()[0].coords
@@ -1876,31 +1876,30 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, tol, pen)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_block_cut_revolve_shift)
 
-    for g in s_block_cut_revolve_shift.geometry.values():
-        print(g)
+    # 基于p4点所在的半径拾取sweep_edge
+    x, y = polar_to_cartesian(p4[1], tol)
+    sweep_edge = p.edges.findAt((x, y, z_list[-1]))
 
+    # 拾取主体弧线
     partition_edges = []
     for g in s_block_cut_revolve_shift.geometry.values()[2:15]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
             partition_edges.append(edge_sequence)
+    p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # 基于p4点所在的半径拾取sweep_edge
     x, y = polar_to_cartesian(p4[1], tol)
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
-    p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
-
+    
+    # 拾取分段连线
     partition_edges = []
     for g in s_block_cut_revolve_shift.geometry.values()[15:]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
             partition_edges.append(edge_sequence)
-
-    # 基于p4点所在的半径拾取sweep_edge
-    x, y = polar_to_cartesian(p4[1], tol)
-    sweep_edge = p.edges.findAt((x, y, z_list[-1]))
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # 建立不同z的xy_plane
@@ -2231,8 +2230,8 @@ if __name__ == "__main__":
         'index_t': 3
     }
 
-    points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
-    # points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 50, 50])
+    # points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
+    points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 50, 50])
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
