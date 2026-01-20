@@ -1907,35 +1907,35 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     for i in range(1, len(z_list)):
         xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
 
-    # # SKETCH-BLOCK-PARTITION
-    # t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z[len(z_list) - 1].id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[-1]))
-    # s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0, transform=t)
-    # geom_list = []
-    # # 拾取被切割平面上的线段，同一个theta
-    # for i in range(1, index_t):
-    #     geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
-    #
-    # # Partition
-    # p_faces = p.faces.getByBoundingBox(0, 0, tol, pen, pen, pen)
-    # p.Set(faces=p_faces, name='face')
-    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
-    #
-    # # 拾取被切割平面上的线段，同一个theta
-    # partition_edges = []
-    # line_keys = []
-    #
-    # for j in range(1, index_t):
-    #     for i in range(0, index_r):
-    #         line_key = '%s%s-%s%s' % (i, j, i + 1, j)
-    #         line_keys.append(line_key)
-    #
-    # for line_key in line_keys:
-    #     line_middle_point = lines[line_key][3]
-    #     x, y = line_middle_point
-    #     edge_sequence = p.edges.findAt(((x, y, z_list[-1]),))
-    #     if len(edge_sequence) > 0:
-    #         partition_edges.append(edge_sequence[0])
-    # p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
+    # SKETCH-BLOCK-PARTITION
+    t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z[len(z_list) - 1].id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[-1]))
+    s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0, transform=t)
+    geom_list = []
+    # 拾取被切割平面上的线段，同一个theta
+    for i in range(1, index_t):
+        geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
+
+    # Partition
+    p_faces = p.faces.getByBoundingBox(0, 0, tol, pen, pen, pen)
+    p.Set(faces=p_faces, name='face')
+    p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
+
+    # 拾取被切割平面上的线段，同一个theta
+    partition_edges = []
+    line_keys = []
+
+    for j in range(1, index_t):
+        for i in range(0, index_r):
+            line_key = '%s%s-%s%s' % (i, j, i + 1, j)
+            line_keys.append(line_key)
+
+    for line_key in line_keys:
+        line_middle_point = lines[line_key][3]
+        x, y = line_middle_point
+        edge_sequence = p.edges.findAt(((x, y, z_list[-1]),))
+        if len(edge_sequence) > 0:
+            partition_edges.append(edge_sequence[0])
+    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
 
     # SKETCH-CUT
     s_cut = model.ConstrainedSketch(name='SKETCH-CUT', sheetSize=200.0)
@@ -1966,17 +1966,16 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     # 旋转切割头部燃道
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
 
-    # pickedEdges = (p.edges[8], p.edges[42])
-    # p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=pickedEdges, sense=REVERSE)
+    pickedEdges = (p.edges[8], p.edges[42])
+    p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=pickedEdges, sense=REVERSE)
 
-    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-    #
-    # for i in range(1, len(z_list) - 1):
-    #     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
-    #
-    # xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=10.0)
-    #
-    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+
+    for i in range(1, len(z_list) - 1):
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
+
+    xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=10.0)
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
 
     # # Mirror
     # if size == '1':
@@ -2215,7 +2214,7 @@ if __name__ == "__main__":
 
     block_dimension = {
         # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
-        'z_list': [0, 183.4, 183.4 + 3.0],
+        'z_list': [0, 183.4, 183.4 + 3.0, 183.4 + 11.0],
         'deep': 380.0,
         'x0': x0,
         'length_up': 1039.2,
@@ -2230,8 +2229,8 @@ if __name__ == "__main__":
         'index_t': 3
     }
 
-    # points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
-    points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 50, 50])
+    points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
+    # points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 50, 50])
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
