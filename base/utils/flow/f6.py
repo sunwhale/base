@@ -2275,11 +2275,11 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for pa in faces_xz_plane[1]:
         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
-
-    center = (pa[0], 0.0, 0.0)
-    plane_1 = Plane(center, (0.0, 0.0, 1.0))
-    c = Circle3D(center, abs(pa[1]), plane_1)
-    print(c.get_equation_description())
+        center = (pa[0], 0.0, 0.0)
+        plane_1 = Plane(center, (0.0, 0.0, 1.0))
+        c = Circle3D(center, abs(pa[1]), plane_1)
+        
+        print(c.get_equation_description())
 
     p.Set(cells=cells, name='SET-1')
 
