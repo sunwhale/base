@@ -339,6 +339,9 @@ class Plane:
         elif len(args) == 3:
             # 三个点
             self._from_three_points(args[0], args[1], args[2])
+        elif len(args) == 2:
+            # 点+法向量
+            self._from_point_and_normal(args[0], args[1])
         else:
             raise ValueError('请输入平面方程系数(A,B,C,D)或三个点')
 
@@ -350,6 +353,13 @@ class Plane:
 
         self.A, self.B, self.C = normal
         self.D = -np.dot(normal, p1)
+        self.normalize()
+
+    def _from_point_and_normal(self, point, normal_vector):
+        """从点和法向量计算平面方程"""
+        self.A, self.B, self.C = normal_vector
+        # D = - (A*x0 + B*y0 + C*z0)
+        self.D = -(self.A * point[0] + self.B * point[1] + self.C * point[2])
         self.normalize()
 
     def normalize(self):
@@ -637,7 +647,7 @@ class Circle3D:
 
     def get_equation_description(self):
         """获取圆的描述"""
-        return f"圆心: {self.center}, 半径: {self.radius}, 平面: {self.plane.get_equation()}"
+        return "Center: {0}, Radius: {1}, Plane: {2}".format(self.center, self.radius, self.plane.get_equation())
 
 
 class Cylinder:
@@ -2266,6 +2276,11 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     for pa in faces_xz_plane[1]:
         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
 
+    center = (pa[0], 0.0, 0.0)
+    plane_1 = Plane(center, (0.0, 0.0, 1.0))
+    c = Circle3D(center, abs(pa[1]), plane_1)
+    print(c.get_equation_description())
+
     p.Set(cells=cells, name='SET-1')
 
     # def is_cell_in_set(cell, p_set):
@@ -2562,64 +2577,6 @@ if __name__ == "__main__":
         # r1, r2, r3 = 850, 1524, 655.2
         # result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
         # plot_three_arcs(result, p0, p3)
-
-        # 示例1: 创建平面和圆，计算交点
-        print("示例1: 平面与圆相交于两点")
-        # 创建平面 z=0
-        plane1 = Plane(0, 0, 1, 0)
-
-        # 创建圆：圆心在(0,0,0)，半径1，在平面z=0上
-        circle_plane = Plane(0, 0, 1, 0)  # z=0平面
-        circle1 = Circle3D([0, 0, 0], 1.0, circle_plane)
-
-        # 计算交点
-        intersections = plane1.intersection_with_circle(circle1)
-        print(f"平面: {plane1.get_equation()}")
-        print(f"圆: {circle1.get_equation_description()}")
-        print(f"交点: {intersections}")
-        print()
-
-        # 示例2: 平面与圆相切
-        print("示例2: 平面与圆相切")
-        # 创建平面 x=1
-        plane2 = Plane(1, 0, 0, -1)  # x-1=0 即 x=1
-
-        intersections2 = plane2.intersection_with_circle(circle1)
-        print(f"平面: {plane2.get_equation()}")
-        print(f"交点: {intersections2}")
-        print()
-
-        # 示例3: 平面与圆不相交
-        print("示例3: 平面与圆不相交")
-        # 创建平面 x=2
-        plane3 = Plane(1, 0, 0, -2)  # x-2=0 即 x=2
-
-        intersections3 = plane3.intersection_with_circle(circle1)
-        print(f"平面: {plane3.get_equation()}")
-        print(f"交点: {intersections3}")
-        print()
-
-        # 示例4: 倾斜平面与圆相交
-        print("示例4: 倾斜平面与圆相交")
-        # 创建倾斜平面 y = x
-        plane4 = Plane(1, -1, 0, 0)  # x - y = 0 即 y=x
-
-        intersections4 = plane4.intersection_with_circle(circle1)
-        print(f"平面: {plane4.get_equation()}")
-        print(f"交点: {intersections4}")
-        print()
-
-        # 示例5: 圆在倾斜平面上
-        print("示例5: 圆在倾斜平面上")
-        # 创建倾斜平面 z = x
-        tilt_plane = Plane(1, 0, -1, 0)  # x - z = 0 即 z=x
-        circle2 = Circle3D([0, 0, 0], 1.0, tilt_plane)
-
-        # 与水平面 z=0 相交
-        intersections5 = plane1.intersection_with_circle(circle2)
-        print(f"平面: {plane1.get_equation()}")
-        print(f"圆所在平面: {tilt_plane.get_equation()}")
-        print(f"交点: {intersections5}")
 
     if ABAQUS_ENV:
         model = mdb.models['Model-1']
