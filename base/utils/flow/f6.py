@@ -1892,7 +1892,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     # 基于p4点所在的半径拾取sweep_edge
     x, y = polar_to_cartesian(p4[1], tol)
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
-    
+
     # 拾取分段连线
     partition_edges = []
     for g in s_block_cut_revolve_shift.geometry.values()[15:]:
@@ -1966,27 +1966,32 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     # 旋转切割头部燃道
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
 
-    pickedEdges = (p.edges[8], p.edges[42])
-    p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=pickedEdges, sense=REVERSE)
-
-    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-
     for i in range(1, len(z_list) - 1):
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
+
+    # Mirror
+    if size == '1':
+        p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
+        # p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    elif size == '1/2':
+        pass
+    elif size == '1/4':
+        pass
+    else:
+        raise NotImplementedError('Unsupported size {}'.format(size))
+
+    set_names = create_block_sets_common(p, faces, dimension)
 
     xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=10.0)
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
 
-    # # Mirror
-    # if size == '1':
-    #     p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
-    #     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-    # elif size == '1/2':
-    #     pass
-    # elif size == '1/4':
-    #     pass
-    # else:
-    #     raise NotImplementedError('Unsupported size {}'.format(size))
+    # xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=-10.0)
+    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
+
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+
+    # pickedEdges = (p.edges[8], p.edges[42])
+    # p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=pickedEdges, sense=REVERSE)
 
     # create_block_surface_common(p, points, dimension)
     #
