@@ -350,6 +350,16 @@ class Plane:
 
         self.A, self.B, self.C = normal
         self.D = -np.dot(normal, p1)
+        self.normalize()
+
+    def normalize(self):
+        """归一化平面方程，使法向量为单位向量"""
+        norm = np.sqrt(self.A ** 2 + self.B ** 2 + self.C ** 2)
+        if norm > 0:
+            self.A /= norm
+            self.B /= norm
+            self.C /= norm
+            self.D /= norm
 
     def distance_to_point(self, point):
         """计算点到平面的距离"""
@@ -365,6 +375,269 @@ class Plane:
     def get_equation(self):
         """获取平面方程字符串"""
         return '%sx + %sy + %sz + %s = 0' % (self.A, self.B, self.C, self.D)
+
+    def project_point(self, point):
+        """投影点到平面上"""
+        x, y, z = point
+        d = self.A * x + self.B * y + self.C * z + self.D
+        return [
+            x - self.A * d,
+            y - self.B * d,
+            z - self.C * d
+        ]
+
+    def get_normal(self):
+        """获取单位法向量"""
+        return np.array([self.A, self.B, self.C])
+
+    def intersection_with_circle(self, circle, tolerance=1e-6):
+        """
+        计算平面与圆形曲线的交点
+
+        参数:
+            circle: Circle对象，圆形曲线
+            tolerance: 容差
+
+        返回:
+            交点列表，可能包含0、1或2个点，或者无穷多个点（圆在平面上）
+        """
+        # 1. 检查圆所在平面与当前平面的关系
+        circle_plane = circle.plane
+        plane_intersection = self._plane_intersection(circle_plane, tolerance)
+
+        if plane_intersection is None:
+            # 两平面平行或重合
+            if self._are_planes_parallel(circle_plane, tolerance):
+                # 检查是否重合
+                if self._are_planes_coincident(circle_plane, tolerance):
+                    # 圆在平面上，需要检查圆是否在当前平面上
+                    if self.is_point_on_plane(circle.center, tolerance):
+                        # 圆完全在当前平面上，返回无穷多个点
+                        return "infinite"  # 或返回圆的参数方程
+                    else:
+                        # 两平面重合但圆不在当前平面上（可能偏移）
+                        return []
+                else:
+                    # 两平面平行但不重合，无交点
+                    return []
+
+        # 2. 两平面相交于一条直线
+        line_point, line_direction = plane_intersection
+
+        # 3. 计算直线与圆的交点（在圆所在平面内）
+        intersections = self._line_circle_intersection_in_plane(
+            line_point, line_direction, circle, circle_plane, tolerance
+        )
+
+        return intersections
+
+    def _plane_intersection(self, other_plane, tolerance=1e-6):
+        """
+        计算两平面交线
+
+        返回:
+            (point, direction) 或 None（如果平面平行）
+        """
+        # 检查两平面是否平行
+        if self._are_planes_parallel(other_plane, tolerance):
+            return None
+
+        # 计算交线方向（两平面法向量的叉积）
+        n1 = np.array([self.A, self.B, self.C])
+        n2 = np.array([other_plane.A, other_plane.B, other_plane.C])
+        direction = np.cross(n1, n2)
+        direction = direction / np.linalg.norm(direction)  # 归一化
+
+        # 找一个同时满足两个平面方程的点
+        # 解方程组：n1·p + d1 = 0, n2·p + d2 = 0
+        # 固定一个变量（如z=0），解另外两个变量
+        A = np.array([
+            [self.A, self.B],
+            [other_plane.A, other_plane.B]
+        ])
+
+        # 检查矩阵是否可逆
+        if abs(np.linalg.det(A)) > tolerance:
+            b = np.array([-self.D, -other_plane.D])
+            xy = np.linalg.solve(A, b)
+            point = np.array([xy[0], xy[1], 0])
+        else:
+            # 尝试固定y=0
+            A = np.array([
+                [self.A, self.C],
+                [other_plane.A, other_plane.C]
+            ])
+            if abs(np.linalg.det(A)) > tolerance:
+                b = np.array([-self.D, -other_plane.D])
+                xz = np.linalg.solve(A, b)
+                point = np.array([xz[0], 0, xz[1]])
+            else:
+                # 固定x=0
+                A = np.array([
+                    [self.B, self.C],
+                    [other_plane.B, other_plane.C]
+                ])
+                b = np.array([-self.D, -other_plane.D])
+                yz = np.linalg.solve(A, b)
+                point = np.array([0, yz[0], yz[1]])
+
+        return point, direction
+
+    def _are_planes_parallel(self, other_plane, tolerance=1e-6):
+        """判断两平面是否平行"""
+        n1 = np.array([self.A, self.B, self.C])
+        n2 = np.array([other_plane.A, other_plane.B, other_plane.C])
+
+        # 检查法向量是否平行
+        cross = np.cross(n1, n2)
+        return np.linalg.norm(cross) < tolerance
+
+    def _are_planes_coincident(self, other_plane, tolerance=1e-6):
+        """判断两平面是否重合"""
+        if not self._are_planes_parallel(other_plane, tolerance):
+            return False
+
+        # 检查原点距离是否相同
+        dist1 = self.distance_to_point([0, 0, 0])
+        dist2 = other_plane.distance_to_point([0, 0, 0])
+
+        return abs(dist1 - dist2) < tolerance
+
+    def _line_circle_intersection_in_plane(self, line_point, line_direction,
+                                           circle, circle_plane, tolerance=1e-6):
+        """
+        在圆所在平面内计算直线与圆的交点
+
+        参数:
+            line_point: 直线上的点
+            line_direction: 直线方向向量
+            circle: 圆对象
+            circle_plane: 圆所在平面
+
+        返回:
+            交点列表
+        """
+        # 1. 将问题转换到圆所在平面的二维坐标系
+        # 找到圆所在平面的两个基向量
+        normal = circle_plane.get_normal()
+
+        # 找一个与法向量不平行的基础向量
+        if abs(normal[0]) > tolerance or abs(normal[1]) > tolerance:
+            basis1 = np.array([-normal[1], normal[0], 0])
+        else:
+            basis1 = np.array([1, 0, 0])
+        basis1 = basis1 / np.linalg.norm(basis1)
+
+        # 第二个基向量
+        basis2 = np.cross(normal, basis1)
+        basis2 = basis2 / np.linalg.norm(basis2)
+
+        # 2. 将直线上的点、方向向量和圆心转换到二维坐标系
+        # 以圆心为原点
+        center_3d = circle.center
+
+        def to_2d(point_3d):
+            """将三维点转换到二维平面坐标系"""
+            vec = point_3d - center_3d
+            x = np.dot(vec, basis1)
+            y = np.dot(vec, basis2)
+            return np.array([x, y])
+
+        # 直线参数方程: p = line_point + t * line_direction
+        p0_2d = to_2d(line_point)
+        v_2d = to_2d(line_point + line_direction) - p0_2d
+
+        # 归一化v_2d
+        v_norm = np.linalg.norm(v_2d)
+        if v_norm < tolerance:
+            # 直线方向在平面上投影为零，直线垂直于圆所在平面
+            # 检查线点是否在圆上
+            p0_3d = line_point
+            dist = np.linalg.norm(p0_3d - center_3d)
+            if abs(dist - circle.radius) < tolerance:
+                return [p0_3d.tolist()]
+            else:
+                return []
+
+        v_2d = v_2d / v_norm
+
+        # 3. 在二维坐标系中解直线与圆的交点
+        # 直线方程: p = p0 + t*v
+        # 圆方程: |p|² = r²
+        # 代入: |p0 + t*v|² = r²
+        # 展开: (p0·p0) + 2t(p0·v) + t²(v·v) = r²
+        # 因为v是单位向量: t² + 2(p0·v)t + (|p0|² - r²) = 0
+
+        a = 1.0  # v·v = 1 (单位向量)
+        b = 2.0 * np.dot(p0_2d, v_2d)
+        c = np.dot(p0_2d, p0_2d) - circle.radius ** 2
+
+        # 判别式
+        discriminant = b ** 2 - 4 * a * c
+
+        if discriminant < -tolerance:
+            # 无实数解
+            return []
+
+        if abs(discriminant) < tolerance:
+            # 一个解（相切）
+            t = -b / (2 * a)
+            p_2d = p0_2d + t * v_2d
+            # 转换回三维坐标
+            p_3d = center_3d + p_2d[0] * basis1 + p_2d[1] * basis2
+            # 验证点在直线上（考虑数值误差）
+            return [p_3d.tolist()]
+        else:
+            # 两个解
+            sqrt_disc = math.sqrt(discriminant)
+            t1 = (-b + sqrt_disc) / (2 * a)
+            t2 = (-b - sqrt_disc) / (2 * a)
+
+            p1_2d = p0_2d + t1 * v_2d
+            p2_2d = p0_2d + t2 * v_2d
+
+            # 转换回三维坐标
+            p1_3d = center_3d + p1_2d[0] * basis1 + p1_2d[1] * basis2
+            p2_3d = center_3d + p2_2d[0] * basis1 + p2_2d[1] * basis2
+
+            # 验证两个点都在直线上（考虑数值误差）
+            # 计算参数t对应的三维点，验证是否在直线上
+            return [p1_3d.tolist(), p2_3d.tolist()]
+
+
+class Circle3D:
+    """三维空间中的圆形曲线类"""
+
+    def __init__(self, center, radius, plane):
+        """
+        初始化圆形曲线
+
+        参数:
+            center: 圆心坐标 [x, y, z]
+            radius: 半径
+            plane: 圆所在平面（Plane对象）
+        """
+        self.center = np.array(center)
+        self.radius = radius
+        self.plane = plane
+
+        # 验证圆心在平面上
+        if not plane.is_point_on_plane(self.center):
+            raise ValueError("圆心不在指定的平面上")
+
+    def is_point_on_circle(self, point, tolerance=1e-6):
+        """判断点是否在圆上"""
+        # 1. 点必须在圆所在平面上
+        if not self.plane.is_point_on_plane(point, tolerance):
+            return False
+
+        # 2. 点到圆心的距离等于半径
+        dist = np.linalg.norm(np.array(point) - self.center)
+        return abs(dist - self.radius) < tolerance
+
+    def get_equation_description(self):
+        """获取圆的描述"""
+        return f"圆心: {self.center}, 半径: {self.radius}, 平面: {self.plane.get_equation()}"
 
 
 class Cylinder:
@@ -1862,16 +2135,24 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
     geom_list.append(s_block_cut_revolve_shift.Line(point1=p3, point2=p4))
-    for i in range(1, index_r):
+    # 逆序循环，保证轮廓线从外到内的顺序排列
+    for i in range(index_r - 1, 0, -1):
         s_block_cut_revolve_shift.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=RIGHT)
 
     g = s_block_cut_revolve_shift.geometry
-    for i in [3, 4, 5, 6]:
-        pa = g[i].getVertices()[0].coords
-        pb = g[i + 5].getVertices()[0].coords
-        pc = g[i + 10].getVertices()[0].coords
-        s_block_cut_revolve_shift.Line(point1=pa, point2=pc)
-        s_block_cut_revolve_shift.Line(point1=pb, point2=pc)
+    faces_xz_plane = {}
+    for i in range(1, index_r):
+        faces_xz_plane[i] = []
+        for j in [2, 3, 4, 5, 6]:
+            pa = (np.array(g[j + 5 * (i - 1)].pointOn) + np.array(g[j + 5 * i].pointOn)) / 2.0
+            faces_xz_plane[i].append(pa)
+            s_block_cut_revolve_shift.Spot(point=pa)
+
+    for i in range(1, index_r):
+        for j in [3, 4, 5, 6]:
+            pa = g[5 * (i - 1) + j].getVertices()[0].coords
+            pb = g[5 * i + j].getVertices()[0].coords
+            s_block_cut_revolve_shift.Line(point1=pa, point2=pb)
 
     p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, tol, pen)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_block_cut_revolve_shift)
@@ -1917,7 +2198,6 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     # Partition
     p_faces = p.faces.getByBoundingBox(0, 0, tol, pen, pen, pen)
-    p.Set(faces=p_faces, name='face')
     p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
 
     # 拾取被切割平面上的线段，同一个theta
@@ -1982,13 +2262,37 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     set_names = create_block_sets_common(p, faces, dimension)
 
-    xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=10.0)
-    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
+    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for pa in faces_xz_plane[1]:
+        cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
+
+    p.Set(cells=cells, name='SET-1')
+
+    # def is_cell_in_set(cell, p_set):
+    #     for c in p_set.cells:
+    #         if c == cell:
+    #             return True
+    #     return False
+    #
+    # # 寻找与SET-CELL-GRAIN相邻的cells
+    # p_cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    # for cell in p.cells:
+    #     is_adjacent_grain = False
+    #     for c in cell.getAdjacentCells():
+    #         if is_cell_in_set(c, p.sets['SET-CELL-GRAIN']):
+    #             is_adjacent_grain = True
+    #             break
+    #     if is_adjacent_grain:
+    #         p_cells += p.cells[cell.index:cell.index + 1]
+    # p.Set(cells=p_cells, name='SET-CELL-GRAIN-ADJACENT')
+
+    # xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=10.0)
+    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
 
     # xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=-10.0)
     # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
 
-    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # pickedEdges = (p.edges[8], p.edges[42])
     # p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=pickedEdges, sense=REVERSE)
@@ -2234,16 +2538,12 @@ if __name__ == "__main__":
         'index_t': 3
     }
 
-    points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
-    # points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 50, 50])
+    # points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
+    points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 20, 20])
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
-        plot_geometries(points, lines, faces)
-
-        print(faces)
-        print(points.shape)
-        print(faces.shape)
+        # plot_geometries(points, lines, faces)
 
         # print(z_list)
         # p0 = (1600, 700)
@@ -2262,6 +2562,64 @@ if __name__ == "__main__":
         # r1, r2, r3 = 850, 1524, 655.2
         # result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
         # plot_three_arcs(result, p0, p3)
+
+        # 示例1: 创建平面和圆，计算交点
+        print("示例1: 平面与圆相交于两点")
+        # 创建平面 z=0
+        plane1 = Plane(0, 0, 1, 0)
+
+        # 创建圆：圆心在(0,0,0)，半径1，在平面z=0上
+        circle_plane = Plane(0, 0, 1, 0)  # z=0平面
+        circle1 = Circle3D([0, 0, 0], 1.0, circle_plane)
+
+        # 计算交点
+        intersections = plane1.intersection_with_circle(circle1)
+        print(f"平面: {plane1.get_equation()}")
+        print(f"圆: {circle1.get_equation_description()}")
+        print(f"交点: {intersections}")
+        print()
+
+        # 示例2: 平面与圆相切
+        print("示例2: 平面与圆相切")
+        # 创建平面 x=1
+        plane2 = Plane(1, 0, 0, -1)  # x-1=0 即 x=1
+
+        intersections2 = plane2.intersection_with_circle(circle1)
+        print(f"平面: {plane2.get_equation()}")
+        print(f"交点: {intersections2}")
+        print()
+
+        # 示例3: 平面与圆不相交
+        print("示例3: 平面与圆不相交")
+        # 创建平面 x=2
+        plane3 = Plane(1, 0, 0, -2)  # x-2=0 即 x=2
+
+        intersections3 = plane3.intersection_with_circle(circle1)
+        print(f"平面: {plane3.get_equation()}")
+        print(f"交点: {intersections3}")
+        print()
+
+        # 示例4: 倾斜平面与圆相交
+        print("示例4: 倾斜平面与圆相交")
+        # 创建倾斜平面 y = x
+        plane4 = Plane(1, -1, 0, 0)  # x - y = 0 即 y=x
+
+        intersections4 = plane4.intersection_with_circle(circle1)
+        print(f"平面: {plane4.get_equation()}")
+        print(f"交点: {intersections4}")
+        print()
+
+        # 示例5: 圆在倾斜平面上
+        print("示例5: 圆在倾斜平面上")
+        # 创建倾斜平面 z = x
+        tilt_plane = Plane(1, 0, -1, 0)  # x - z = 0 即 z=x
+        circle2 = Circle3D([0, 0, 0], 1.0, tilt_plane)
+
+        # 与水平面 z=0 相交
+        intersections5 = plane1.intersection_with_circle(circle2)
+        print(f"平面: {plane1.get_equation()}")
+        print(f"圆所在平面: {tilt_plane.get_equation()}")
+        print(f"交点: {intersections5}")
 
     if ABAQUS_ENV:
         model = mdb.models['Model-1']
