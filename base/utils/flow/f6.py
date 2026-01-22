@@ -742,6 +742,26 @@ def radians_to_degrees(radians):
     return radians * 180 / math.pi
 
 
+def rotate_point_radians(p, theta_rad):
+    """
+    计算点绕原点旋转后的坐标（使用弧度）
+
+    参数:
+    x, y: 原点的坐标
+    theta_rad: 旋转角度（弧度）
+
+    返回:
+    (x_rotated, y_rotated): 旋转后的坐标
+    """
+    # 计算旋转后的坐标
+    x = p[0]
+    y = p[1]
+    x_rotated = x * math.cos(theta_rad) - y * math.sin(theta_rad)
+    y_rotated = x * math.sin(theta_rad) + y * math.cos(theta_rad)
+
+    return (x_rotated, y_rotated)
+
+
 def is_unicode_all_uppercase(obj):
     return isinstance(obj, unicode) and obj.isupper() and any(c.isalpha() for c in obj)
 
@@ -2249,11 +2269,6 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     x = min(x, points[index_r, 0][0])
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
 
-    print(z_list)
-    print(z_list[-1])
-    print(x, y, points[index_r, 0], z_list[-1])
-    print(sweep_edge)
-
     # 拾取主体弧线
     partition_edges = []
     for g in s_block_cut_revolve_shift.geometry.values()[2:15]:
@@ -2322,6 +2337,10 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     l2 = Line2D([x0, 0.0], [x0, 1.0])
     p3 = l1.get_intersection(l2)
     p4 = [p3[0], 0.0]
+
+    p1p = rotate_point_radians(p1, degrees_to_radians(180.0 / n))
+    s_cut.Spot(point=p1p)
+
     s_cut.Line(point1=p1, point2=p3)
     s_cut.Line(point1=p3, point2=p4)
     s_cut.Line(point1=center, point2=p2)
