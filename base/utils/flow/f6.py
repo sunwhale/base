@@ -1238,6 +1238,49 @@ def geometries(d, x0, beta, rt, tt):
     return points, lines, faces
 
 
+def geometries_hex(x, y):
+    nx = len(x)
+    ny = len(y)
+
+    points = np.zeros([nx, ny, 2])
+
+    # 遍历所有点
+    for i in range(nx):
+        for j in range(ny):
+            points[i, j] = [x[i], y[j]]
+
+    lines = {}
+    center = (0, 0)
+    for i in range(points.shape[0]):
+        for j in range(points.shape[1]):
+            point1 = points[i, j]
+            if i - 1 > 0:
+                point2 = points[i - 1, j]
+                mid_point = 0.5 * (point1 + point2)
+                lines['%s%s-%s%s' % (i, j, i - 1, j)] = ['line', point1, point2, mid_point]
+            if i + 1 < points.shape[0]:
+                point2 = points[i + 1, j]
+                mid_point = 0.5 * (point1 + point2)
+                lines['%s%s-%s%s' % (i, j, i + 1, j)] = ['line', point1, point2, mid_point]
+            if j - 1 > 0:
+                point2 = points[i, j - 1]
+                mid_point = 0.5 * (point1 + point2)
+                lines['%s%s-%s%s' % (i, j, i, j - 1)] = ['line', point1, point2, mid_point]
+            if j + 1 < points.shape[1]:
+                point2 = points[i, j + 1]
+                mid_point = 0.5 * (point1 + point2)
+                lines['%s%s-%s%s' % (i, j, i, j + 1)] = ['line', point1, point2, mid_point]
+
+    faces = np.zeros([nx - 1, ny - 1, 2])
+    for i in range(faces.shape[0]):
+        for j in range(faces.shape[1]):
+            point = (np.array(lines['%s%s-%s%s' % (i, j, i, j + 1)][3]) + np.array(lines['%s%s-%s%s' % (i + 1, j, i + 1, j + 1)][3])) / 2.0
+            faces[i, j, 0] = point[0]
+            faces[i, j, 1] = point[1]
+
+    return points, lines, faces
+
+
 def plot_geometries(points, lines, faces):
     fig, ax = plt.subplots(1, 1, figsize=(10, 8))
 
@@ -1257,6 +1300,40 @@ def plot_geometries(points, lines, faces):
             arc = patches.Arc(center, width=2 * radius, height=2 * radius, angle=0, theta1=min(theta1, theta2), theta2=max(theta1, theta2), color='blue')
             ax.plot(mid_point[0], mid_point[1], marker='x', markersize=4, color='black')
             ax.add_patch(arc)
+
+    # 为每个节点添加编号
+    for i in range(points.shape[0]):
+        for j in range(points.shape[1]):
+            ax.annotate('({},{})'.format(i, j),
+                        (points[i, j][0], points[i, j][1]),
+                        textcoords="offset points",
+                        xytext=(5, 5),  # 文本偏移量，避免与点重叠
+                        ha='left',
+                        fontsize=8,
+                        color='red')
+
+    ax.plot(points.reshape(-1, 2)[:, 0], points.reshape(-1, 2)[:, 1], ls='', marker='o', color='red')
+    ax.plot(faces.reshape(-1, 2)[:, 0], faces.reshape(-1, 2)[:, 1], ls='', marker='s', color='green')
+    ax.grid(True, linestyle='--', alpha=0.7)
+    ax.legend()
+    ax.set_aspect('equal')
+    plt.show()
+
+
+def plot_geometries_hex(points, lines, faces):
+    fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+
+    center = (0, 0)
+    ax.plot(center[0], center[1], marker='o', markersize=8, color='black')
+
+    for line_key, line_value in lines.items():
+        line_type = line_value[0]
+        point1 = line_value[1]
+        point2 = line_value[2]
+        mid_point = line_value[3]
+        if line_type == 'line':
+            ax.plot([point1[0], point2[0]], [point1[1], point2[1]], color='blue')
+            ax.plot(mid_point[0], mid_point[1], marker='x', markersize=4, color='black')
 
     # 为每个节点添加编号
     for i in range(points.shape[0]):
@@ -2589,11 +2666,16 @@ if __name__ == "__main__":
     }
 
     # points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
-    points, lines, faces = geometries(d, x0, beta, [0, 10, 10], [0, 10, 10])
+    # points, lines, faces = geometries(d, x0, beta, [0, 10, 10], [0, 10, 10])
 
     if not ABAQUS_ENV:
-        points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
-        plot_geometries(points, lines, faces)
+        # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
+        # plot_geometries(points, lines, faces)
+        points, lines, faces = geometries_hex([0, 40, 60], [0, 20, 30])
+
+        # print(points[:,:,0])
+
+        plot_geometries_hex(points, lines, faces)
 
         # print(z_list)
         # p0 = (1600, 700)
