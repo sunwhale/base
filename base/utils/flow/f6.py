@@ -2246,7 +2246,13 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     # 基于p4点所在的半径拾取sweep_edge
     x, y = polar_to_cartesian(p4[1], tol)
+    x = min(x, points[index_r, 0][0])
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
+
+    print(z_list)
+    print(z_list[-1])
+    print(x, y, points[index_r, 0], z_list[-1])
+    print(sweep_edge)
 
     # 拾取主体弧线
     partition_edges = []
@@ -2259,6 +2265,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     # 基于p4点所在的半径拾取sweep_edge
     x, y = polar_to_cartesian(p4[1], tol)
+    x = min(x, points[index_r, 0][0])
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
 
     # 拾取分段连线
@@ -2284,7 +2291,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
         geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
 
     # Partition
-    p_faces = p.faces.getByBoundingBox(0, 0, tol, pen, pen, pen)
+    p_faces = p.faces.getByBoundingBox(0, 0, z_list[-1], pen, pen, pen)
     p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
 
     # 拾取被切割平面上的线段，同一个theta
@@ -2351,7 +2358,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     cells = p.sets['SET-CELL-INSULATION'].cells
     for pa in faces_xz_plane[2]:
-        p.DatumPointByCoordinate(coords=(pa[1], 0.0, pa[0]))
+        # p.DatumPointByCoordinate(coords=(pa[1], 0.0, pa[0]))
         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
         center = (0.0, 0.0, pa[0])
         p.DatumPointByCoordinate(coords=center)
@@ -2361,10 +2368,10 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
             plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
             pb = plane_2.intersection_with_circle(circle)
             if pb:
-                p.DatumPointByCoordinate(coords=pb[0])
-                p.DatumPointByCoordinate(coords=pb[1])
-            c = p.cells.findAt((pb[1],))
-            cells += c
+                # p.DatumPointByCoordinate(coords=pb[0])
+                # p.DatumPointByCoordinate(coords=pb[1])
+                c = p.cells.findAt((pb[1],))
+                cells += c
     p.Set(cells=cells, name='SET-CELL-INSULATION')
 
     cells = p.sets['SET-CELL-GLUE-A'].cells
@@ -2376,8 +2383,9 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
         for j in [2]:
             plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
             pb = plane_2.intersection_with_circle(circle)
-            c = p.cells.findAt((pb[1],))
-            cells += c
+            if pb:
+                c = p.cells.findAt((pb[1],))
+                cells += c
     p.Set(cells=cells, name='SET-CELL-GLUE-A')
 
     cells = p.sets['SET-CELL-GLUE-B'].cells
@@ -2390,8 +2398,9 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
         for j in [1, 2]:
             plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
             pb = plane_2.intersection_with_circle(circle)
-            c = p.cells.findAt((pb[1],))
-            cells += c
+            if pb:
+                c = p.cells.findAt((pb[1],))
+                cells += c
     p.Set(cells=cells, name='SET-CELL-GLUE-B')
 
     # def is_cell_in_set(cell, p_set):
@@ -2414,11 +2423,11 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     # xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=10.0)
     # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
-
+    #
     # xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=-10.0)
     # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
 
-    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # pickedEdges = (p.edges[8], p.edges[42])
     # p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=pickedEdges, sense=REVERSE)
@@ -2648,9 +2657,9 @@ if __name__ == "__main__":
     shell_insulation_ref_z = 407.581146
 
     block_dimension = {
-        # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
+        'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
         # 'z_list': [0, 183.4, 183.4 + 3.0, 183.4 + 11.0],
-        'z_list': [0, 183.4, 183.4 + 10.0, 183.4 + 20.0],
+        # 'z_list': [0, 183.4, 183.4 + 10.0, 183.4 + 20.0],
         'deep': 380.0,
         'x0': x0,
         'length_up': 1039.2,
@@ -2666,7 +2675,7 @@ if __name__ == "__main__":
     }
 
     # points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
-    # points, lines, faces = geometries(d, x0, beta, [0, 10, 10], [0, 10, 10])
+    points, lines, faces = geometries(d, x0, beta, [0, 10, 10], [0, 10, 10])
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
