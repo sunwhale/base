@@ -2271,7 +2271,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     # 拾取主体弧线
     partition_edges = []
-    for g in s_block_cut_revolve_shift.geometry.values()[2:15]:
+    for g in s_block_cut_revolve_shift.geometry.values()[2:index_r*5]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
@@ -2285,7 +2285,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     # 拾取分段连线
     partition_edges = []
-    for g in s_block_cut_revolve_shift.geometry.values()[15:]:
+    for g in s_block_cut_revolve_shift.geometry.values()[index_r*5:]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
@@ -2380,11 +2380,39 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
         cell_vertices = tuple(set(cell_vertices))
         return cell_vertices
 
+    def is_cell_in_set(cell, p_set):
+        for c in p_set.cells:
+            if c == cell:
+                return True
+        return False
+
     set_names = create_block_sets_common(p, faces, dimension)
 
     set_vertices = vertices_in_cells(p.sets['SET-CELL-GRAIN'].cells)
-    
-    print(set_vertices)
+    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for cell in p.cells:
+        cell_vertices = cell.getVertices()
+        is_adjacent = False
+        for v in cell_vertices:
+            if v in set_vertices:
+                is_adjacent = True
+                break
+        if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']):
+            cells += p.cells[cell.index:cell.index + 1]
+    p.Set(cells=cells, name='SET-CELL-INSULATION')
+
+    set_vertices = vertices_in_cells(p.sets['SET-CELL-INSULATION'].cells)
+    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for cell in p.cells:
+        cell_vertices = cell.getVertices()
+        is_adjacent = False
+        for v in cell_vertices:
+            if v in set_vertices:
+                is_adjacent = True
+                break
+        if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']) and not is_cell_in_set(cell, p.sets['SET-CELL-INSULATION']):
+            cells += p.cells[cell.index:cell.index + 1]
+    p.Set(cells=cells, name='SET-CELL-GLUE')
 
     # cells = p.sets['SET-CELL-INSULATION'].cells
     # for pa in faces_xz_plane[2]:
@@ -2451,16 +2479,17 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     #         p_cells += p.cells[cell.index:cell.index + 1]
     # p.Set(cells=p_cells, name='SET-CELL-GRAIN-ADJACENT')
 
-    # xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=10.0)
-    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
-    #
+    xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=10.0)
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
+
     # xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=-10.0)
     # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
 
-    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
-    # pickedEdges = (p.edges[8], p.edges[42])
-    # p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=pickedEdges, sense=REVERSE)
+    e = p.edges
+    pickedEdges = (e[230], e[290], e[292], e[298])
+    p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=pickedEdges, sense=REVERSE)
 
     # create_block_surface_common(p, points, dimension)
     #
@@ -2705,8 +2734,8 @@ if __name__ == "__main__":
         'index_t': 3
     }
 
-    points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
-    # points, lines, faces = geometries(d, x0, beta, [0, 10, 10], [0, 10, 10])
+    points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
+    # points, lines, faces = geometries(d, x0, beta, [0, 10, 200], [0, 10, 10])
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
