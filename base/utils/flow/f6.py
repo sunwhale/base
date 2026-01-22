@@ -2272,18 +2272,50 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     set_names = create_block_sets_common(p, faces, dimension)
 
-    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for pa in faces_xz_plane[1]:
+    cells = p.sets['SET-CELL-INSULATION'].cells
+    for pa in faces_xz_plane[2]:
+        p.DatumPointByCoordinate(coords=(pa[1], 0.0, pa[0]))
         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
-        center = (pa[0], 0.0, 0.0)
+        center = (0.0, 0.0, pa[0])
+        p.DatumPointByCoordinate(coords=center)
         plane_1 = Plane(center, (0.0, 0.0, 1.0))
         circle = Circle3D(center, abs(pa[1]), plane_1)
-        plane_2 = Plane((points[1, 1][0], points[1, 1][1], 0.0), (points[0, 0][0], points[0, 0][1], 0.0), (points[1, 1][0], points[1, 1][1], 1.0))
-        pb = plane_2.intersection_with_circle(circle)
-        c = p.cells.findAt(((pb[0], pb[1], pb[2]),))
-        print(c)
+        for j in [1]:
+            plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
+            pb = plane_2.intersection_with_circle(circle)
+            if pb:
+                p.DatumPointByCoordinate(coords=pb[0])
+                p.DatumPointByCoordinate(coords=pb[1])
+            c = p.cells.findAt((pb[1],))
+            cells += c
+    p.Set(cells=cells, name='SET-CELL-INSULATION')
 
-    p.Set(cells=cells, name='SET-1')
+    cells = p.sets['SET-CELL-GLUE-A'].cells
+    for pa in faces_xz_plane[2]:
+        center = (0.0, 0.0, pa[0])
+        p.DatumPointByCoordinate(coords=center)
+        plane_1 = Plane(center, (0.0, 0.0, 1.0))
+        circle = Circle3D(center, abs(pa[1]), plane_1)
+        for j in [2]:
+            plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
+            pb = plane_2.intersection_with_circle(circle)
+            c = p.cells.findAt((pb[1],))
+            cells += c
+    p.Set(cells=cells, name='SET-CELL-GLUE-A')
+
+    cells = p.sets['SET-CELL-GLUE-B'].cells
+    for pa in faces_xz_plane[1]:
+        cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
+        center = (0.0, 0.0, pa[0])
+        p.DatumPointByCoordinate(coords=center)
+        plane_1 = Plane(center, (0.0, 0.0, 1.0))
+        circle = Circle3D(center, abs(pa[1]), plane_1)
+        for j in [1, 2]:
+            plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
+            pb = plane_2.intersection_with_circle(circle)
+            c = p.cells.findAt((pb[1],))
+            cells += c
+    p.Set(cells=cells, name='SET-CELL-GLUE-B')
 
     # def is_cell_in_set(cell, p_set):
     #     for c in p_set.cells:
@@ -2540,7 +2572,8 @@ if __name__ == "__main__":
 
     block_dimension = {
         # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
-        'z_list': [0, 183.4, 183.4 + 3.0, 183.4 + 11.0],
+        # 'z_list': [0, 183.4, 183.4 + 3.0, 183.4 + 11.0],
+        'z_list': [0, 183.4, 183.4 + 10.0, 183.4 + 20.0],
         'deep': 380.0,
         'x0': x0,
         'length_up': 1039.2,
@@ -2551,12 +2584,12 @@ if __name__ == "__main__":
         'a': 50.0,
         'b': 25.0,
         'size': '1/2',
-        'index_r': 4,
-        'index_t': 4
+        'index_r': 3,
+        'index_t': 3
     }
 
-    points, lines, faces = geometries(d, x0, beta, [0, 3, 3, 3], [0, 9, 3, 9])
-    # points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 30, 30])
+    # points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
+    points, lines, faces = geometries(d, x0, beta, [0, 10, 10], [0, 10, 10])
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2585,9 +2618,9 @@ if __name__ == "__main__":
         model.setValues(absoluteZero=-273.15)
 
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
-        p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
+        # p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
         # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, block_dimension)
-        # p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, block_dimension)
+        p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, block_dimension)
 
         # a = model.rootAssembly
         # a.DatumCsysByDefault(CARTESIAN)
