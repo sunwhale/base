@@ -2277,9 +2277,11 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
         center = (pa[0], 0.0, 0.0)
         plane_1 = Plane(center, (0.0, 0.0, 1.0))
-        c = Circle3D(center, abs(pa[1]), plane_1)
-        
-        print(c.get_equation_description())
+        circle = Circle3D(center, abs(pa[1]), plane_1)
+        plane_2 = Plane((points[1, 1][0], points[1, 1][1], 0.0), (points[0, 0][0], points[0, 0][1], 0.0), (points[1, 1][0], points[1, 1][1], 1.0))
+        pb = plane_2.intersection_with_circle(circle)
+        c = p.cells.findAt(((pb[0], pb[1], pb[2]),))
+        print(c)
 
     p.Set(cells=cells, name='SET-1')
 
@@ -2549,16 +2551,16 @@ if __name__ == "__main__":
         'a': 50.0,
         'b': 25.0,
         'size': '1/2',
-        'index_r': 3,
-        'index_t': 3
+        'index_r': 4,
+        'index_t': 4
     }
 
-    # points, lines, faces = geometries(d, x0, beta, [0, 3, 3], [0, 9, 3])
-    points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 20, 20])
+    points, lines, faces = geometries(d, x0, beta, [0, 3, 3, 3], [0, 9, 3, 9])
+    # points, lines, faces = geometries(d, x0, beta, [0, 100, 100], [0, 30, 30])
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
-        # plot_geometries(points, lines, faces)
+        plot_geometries(points, lines, faces)
 
         # print(z_list)
         # p0 = (1600, 700)
@@ -2583,9 +2585,9 @@ if __name__ == "__main__":
         model.setValues(absoluteZero=-273.15)
 
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
-        # p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
+        p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
         # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, block_dimension)
-        p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, block_dimension)
+        # p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, block_dimension)
 
         # a = model.rootAssembly
         # a.DatumCsysByDefault(CARTESIAN)
