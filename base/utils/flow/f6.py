@@ -2271,7 +2271,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     # 拾取主体弧线
     partition_edges = []
-    for g in s_block_cut_revolve_shift.geometry.values()[2:index_r*5]:
+    for g in s_block_cut_revolve_shift.geometry.values()[2:index_r * 5]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
@@ -2285,7 +2285,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     # 拾取分段连线
     partition_edges = []
-    for g in s_block_cut_revolve_shift.geometry.values()[index_r*5:]:
+    for g in s_block_cut_revolve_shift.geometry.values()[index_r * 5:]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
@@ -2414,6 +2414,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
             cells += p.cells[cell.index:cell.index + 1]
     p.Set(cells=cells, name='SET-CELL-GLUE')
 
+
     # cells = p.sets['SET-CELL-INSULATION'].cells
     # for pa in faces_xz_plane[2]:
     #     # p.DatumPointByCoordinate(coords=(pa[1], 0.0, pa[0]))
@@ -2461,50 +2462,36 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     #             cells += c
     # p.Set(cells=cells, name='SET-CELL-GLUE-B')
 
-    # def is_cell_in_set(cell, p_set):
-    #     for c in p_set.cells:
-    #         if c == cell:
-    #             return True
-    #     return False
-    #
-    # # 寻找与SET-CELL-GRAIN相邻的cells
-    # p_cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    # for cell in p.cells:
-    #     is_adjacent_grain = False
-    #     for c in cell.getAdjacentCells():
-    #         if is_cell_in_set(c, p.sets['SET-CELL-GRAIN']):
-    #             is_adjacent_grain = True
-    #             break
-    #     if is_adjacent_grain:
-    #         p_cells += p.cells[cell.index:cell.index + 1]
-    # p.Set(cells=p_cells, name='SET-CELL-GRAIN-ADJACENT')
+    xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n)
+    p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
 
-    xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=10.0)
-    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
-
-    # xy_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=-10.0)
-    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
+    if size == '1':
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+        xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=-180.0 / n)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
-    e = p.edges
-    pickedEdges = (e[230], e[290], e[292], e[298])
-    p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=pickedEdges, sense=REVERSE)
+    p_edges = []
+    for z_center in z_centers:
+        p_edges.append(p.edges.findAt((p1p[0], p1p[1], z_center)))
+    p_edges.append(p.edges.findAt((p1p[0], p1p[1], 0.0)))
+    p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
-    # create_block_surface_common(p, points, dimension)
-    #
-    # p_faces = p.faces.getByBoundingBox(0, 0, 0, x0 + deep + b, width / 2.0, length_up / 2.0 + b / math.cos(degrees_to_radians(angle_demolding_2)))
-    # face_areas = []
-    # for face in p_faces:
-    #     face_area = face.getSize()
-    #     face_areas.append(face_area)
-    # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    # for face_id in range(len(p.faces)):
-    #     face_size = p.faces[face_id].getSize()
-    #     if min_difference(face_size, face_areas) < tol:
-    #         p_faces += p.faces[face_id:face_id + 1]
-    # if p_faces:
-    #     p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+    create_block_surface_common(p, points, dimension)
+
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, x0 + deep + b, width / 2.0, length_up / 2.0 + b / math.cos(degrees_to_radians(angle_demolding_2)))
+    face_areas = []
+    for face in p_faces:
+        face_area = face.getSize()
+        face_areas.append(face_area)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        face_size = p.faces[face_id].getSize()
+        if min_difference(face_size, face_areas) < tol:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -2728,13 +2715,13 @@ if __name__ == "__main__":
         'fillet_radius': 50.0,
         'a': 50.0,
         'b': 25.0,
-        'size': '1/2',
-        # 'size': '1',
-        'index_r': 3,
+        # 'size': '1/2',
+        'size': '1',
+        'index_r': 2,
         'index_t': 3
     }
 
-    points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
+    points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
     # points, lines, faces = geometries(d, x0, beta, [0, 10, 200], [0, 10, 10])
 
     if not ABAQUS_ENV:
