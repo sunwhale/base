@@ -2246,6 +2246,14 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     for i in range(index_r - 1, 0, -1):
         s_block_cut_revolve_shift.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=RIGHT)
 
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for g in s_block_cut_revolve_shift.geometry.values():
+        z, x = g.pointOn
+        p_faces += p.faces.findAt(((x, 0.0, z),))
+        p.DatumPointByCoordinate(coords=(x, 0.0, z))
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
+
     g = s_block_cut_revolve_shift.geometry
     faces_xz_plane = {}
     for i in range(1, index_r):
@@ -2386,114 +2394,114 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
                 return True
         return False
 
-    set_names = create_block_sets_common(p, faces, dimension)
-
-    set_vertices = vertices_in_cells(p.sets['SET-CELL-GRAIN'].cells)
-    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for cell in p.cells:
-        cell_vertices = cell.getVertices()
-        is_adjacent = False
-        for v in cell_vertices:
-            if v in set_vertices:
-                is_adjacent = True
-                break
-        if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']):
-            cells += p.cells[cell.index:cell.index + 1]
-    p.Set(cells=cells, name='SET-CELL-INSULATION')
-
-    set_vertices = vertices_in_cells(p.sets['SET-CELL-INSULATION'].cells)
-    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for cell in p.cells:
-        cell_vertices = cell.getVertices()
-        is_adjacent = False
-        for v in cell_vertices:
-            if v in set_vertices:
-                is_adjacent = True
-                break
-        if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']) and not is_cell_in_set(cell, p.sets['SET-CELL-INSULATION']):
-            cells += p.cells[cell.index:cell.index + 1]
-    p.Set(cells=cells, name='SET-CELL-GLUE')
-
-    # cells = p.sets['SET-CELL-INSULATION'].cells
-    # for pa in faces_xz_plane[2]:
-    #     # p.DatumPointByCoordinate(coords=(pa[1], 0.0, pa[0]))
-    #     cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
-    #     center = (0.0, 0.0, pa[0])
-    #     p.DatumPointByCoordinate(coords=center)
-    #     plane_1 = Plane(center, (0.0, 0.0, 1.0))
-    #     circle = Circle3D(center, abs(pa[1]), plane_1)
-    #     for j in [1]:
-    #         plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
-    #         pb = plane_2.intersection_with_circle(circle)
-    #         if pb:
-    #             p.DatumPointByCoordinate(coords=pb[0])
-    #             p.DatumPointByCoordinate(coords=pb[1])
-    #             c = p.cells.findAt((pb[1],))
-    #             cells += c
+    # set_names = create_block_sets_common(p, faces, dimension)
+    #
+    # set_vertices = vertices_in_cells(p.sets['SET-CELL-GRAIN'].cells)
+    # cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    # for cell in p.cells:
+    #     cell_vertices = cell.getVertices()
+    #     is_adjacent = False
+    #     for v in cell_vertices:
+    #         if v in set_vertices:
+    #             is_adjacent = True
+    #             break
+    #     if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']):
+    #         cells += p.cells[cell.index:cell.index + 1]
     # p.Set(cells=cells, name='SET-CELL-INSULATION')
     #
-    # cells = p.sets['SET-CELL-GLUE-A'].cells
-    # for pa in faces_xz_plane[2]:
-    #     center = (0.0, 0.0, pa[0])
-    #     p.DatumPointByCoordinate(coords=center)
-    #     plane_1 = Plane(center, (0.0, 0.0, 1.0))
-    #     circle = Circle3D(center, abs(pa[1]), plane_1)
-    #     for j in [2]:
-    #         plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
-    #         pb = plane_2.intersection_with_circle(circle)
-    #         if pb:
-    #             c = p.cells.findAt((pb[1],))
-    #             cells += c
-    # p.Set(cells=cells, name='SET-CELL-GLUE-A')
+    # set_vertices = vertices_in_cells(p.sets['SET-CELL-INSULATION'].cells)
+    # cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    # for cell in p.cells:
+    #     cell_vertices = cell.getVertices()
+    #     is_adjacent = False
+    #     for v in cell_vertices:
+    #         if v in set_vertices:
+    #             is_adjacent = True
+    #             break
+    #     if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']) and not is_cell_in_set(cell, p.sets['SET-CELL-INSULATION']):
+    #         cells += p.cells[cell.index:cell.index + 1]
+    # p.Set(cells=cells, name='SET-CELL-GLUE')
     #
-    # cells = p.sets['SET-CELL-GLUE-B'].cells
-    # for pa in faces_xz_plane[1]:
-    #     cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
-    #     center = (0.0, 0.0, pa[0])
-    #     p.DatumPointByCoordinate(coords=center)
-    #     plane_1 = Plane(center, (0.0, 0.0, 1.0))
-    #     circle = Circle3D(center, abs(pa[1]), plane_1)
-    #     for j in [1, 2]:
-    #         plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
-    #         pb = plane_2.intersection_with_circle(circle)
-    #         if pb:
-    #             c = p.cells.findAt((pb[1],))
-    #             cells += c
-    # p.Set(cells=cells, name='SET-CELL-GLUE-B')
+    # # cells = p.sets['SET-CELL-INSULATION'].cells
+    # # for pa in faces_xz_plane[2]:
+    # #     # p.DatumPointByCoordinate(coords=(pa[1], 0.0, pa[0]))
+    # #     cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
+    # #     center = (0.0, 0.0, pa[0])
+    # #     p.DatumPointByCoordinate(coords=center)
+    # #     plane_1 = Plane(center, (0.0, 0.0, 1.0))
+    # #     circle = Circle3D(center, abs(pa[1]), plane_1)
+    # #     for j in [1]:
+    # #         plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
+    # #         pb = plane_2.intersection_with_circle(circle)
+    # #         if pb:
+    # #             p.DatumPointByCoordinate(coords=pb[0])
+    # #             p.DatumPointByCoordinate(coords=pb[1])
+    # #             c = p.cells.findAt((pb[1],))
+    # #             cells += c
+    # # p.Set(cells=cells, name='SET-CELL-INSULATION')
+    # #
+    # # cells = p.sets['SET-CELL-GLUE-A'].cells
+    # # for pa in faces_xz_plane[2]:
+    # #     center = (0.0, 0.0, pa[0])
+    # #     p.DatumPointByCoordinate(coords=center)
+    # #     plane_1 = Plane(center, (0.0, 0.0, 1.0))
+    # #     circle = Circle3D(center, abs(pa[1]), plane_1)
+    # #     for j in [2]:
+    # #         plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
+    # #         pb = plane_2.intersection_with_circle(circle)
+    # #         if pb:
+    # #             c = p.cells.findAt((pb[1],))
+    # #             cells += c
+    # # p.Set(cells=cells, name='SET-CELL-GLUE-A')
+    # #
+    # # cells = p.sets['SET-CELL-GLUE-B'].cells
+    # # for pa in faces_xz_plane[1]:
+    # #     cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
+    # #     center = (0.0, 0.0, pa[0])
+    # #     p.DatumPointByCoordinate(coords=center)
+    # #     plane_1 = Plane(center, (0.0, 0.0, 1.0))
+    # #     circle = Circle3D(center, abs(pa[1]), plane_1)
+    # #     for j in [1, 2]:
+    # #         plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
+    # #         pb = plane_2.intersection_with_circle(circle)
+    # #         if pb:
+    # #             c = p.cells.findAt((pb[1],))
+    # #             cells += c
+    # # p.Set(cells=cells, name='SET-CELL-GLUE-B')
+    #
+    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    #
+    # p_edges = []
+    # for z_center in z_centers:
+    #     p_edges.append(p.edges.findAt((p1p[0], p1p[1], z_center)))
+    # p_edges.append(p.edges.findAt((p1p[0], p1p[1], 0.0)))
+    # p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
-    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    # create_block_surface_common(p, points, dimension)
+    #
+    # p1 = [x0 + deep + b, 0.0]
+    # x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
+    # y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
+    # p_faces = p.faces.getByBoundingBox(0, tol, -r_front - b, x1 * 1.1, y1, length / 2.0)
+    # face_areas = []
+    # for face in p_faces:
+    #     face_area = face.getSize()
+    #     face_areas.append(face_area)
+    # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    # for face_id in range(len(p.faces)):
+    #     face_size = p.faces[face_id].getSize()
+    #     if min_difference(face_size, face_areas) < tol:
+    #         p_faces += p.faces[face_id:face_id + 1]
+    # if p_faces:
+    #     p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
-    p_edges = []
-    for z_center in z_centers:
-        p_edges.append(p.edges.findAt((p1p[0], p1p[1], z_center)))
-    p_edges.append(p.edges.findAt((p1p[0], p1p[1], 0.0)))
-    p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
-
-    create_block_surface_common(p, points, dimension)
-
-    p1 = [x0 + deep + b, 0.0]
-    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
-    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, tol, -r_front - b, x1 * 1.1, y1, length / 2.0)
-    face_areas = []
-    for face in p_faces:
-        face_area = face.getSize()
-        face_areas.append(face_area)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        face_size = p.faces[face_id].getSize()
-        if min_difference(face_size, face_areas) < tol:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
-
-    xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n / 2.0)
-    p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
-
-    if size == '1':
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-        xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=-180.0 / n / 2.0)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
+    # xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n / 2.0)
+    # p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
+    #
+    # if size == '1':
+    #     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    #     xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=-180.0 / n / 2.0)
+    #     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -2717,13 +2725,13 @@ if __name__ == "__main__":
         'fillet_radius': 50.0,
         'a': 50.0,
         'b': 25.0,
-        # 'size': '1/2',
-        'size': '1',
+        'size': '1/2',
+        # 'size': '1',
         'index_r': 2,
         'index_t': 3
     }
 
-    points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
+    points, lines, faces = geometries(d, x0, beta, [0, 30], [0, 9, 3])
     # points, lines, faces = geometries(d, x0, beta, [0, 10, 200], [0, 10, 10])
 
     if not ABAQUS_ENV:
@@ -2758,7 +2766,7 @@ if __name__ == "__main__":
         model.setValues(absoluteZero=-273.15)
 
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
-        p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
+        # p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
         # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, block_dimension)
         p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, block_dimension)
 
