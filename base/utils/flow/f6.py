@@ -2462,14 +2462,6 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     #             cells += c
     # p.Set(cells=cells, name='SET-CELL-GLUE-B')
 
-    xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n)
-    p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
-
-    if size == '1':
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-        xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=-180.0 / n)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
-
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     p_edges = []
@@ -2480,7 +2472,10 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     create_block_surface_common(p, points, dimension)
 
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, x0 + deep + b, width / 2.0, length_up / 2.0 + b / math.cos(degrees_to_radians(angle_demolding_2)))
+    p1 = [x0 + deep + b, 0.0]
+    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
+    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
+    p_faces = p.faces.getByBoundingBox(0, tol, -1000, x1 * 1.1, y1, length / 2.0)
     face_areas = []
     for face in p_faces:
         face_area = face.getSize()
@@ -2492,6 +2487,14 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
             p_faces += p.faces[face_id:face_id + 1]
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+
+    xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n / 2.0)
+    p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
+
+    if size == '1':
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+        xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=-180.0 / n / 2.0)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -2715,8 +2718,8 @@ if __name__ == "__main__":
         'fillet_radius': 50.0,
         'a': 50.0,
         'b': 25.0,
-        # 'size': '1/2',
-        'size': '1',
+        'size': '1/2',
+        # 'size': '1',
         'index_r': 2,
         'index_t': 3
     }
