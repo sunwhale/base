@@ -2414,7 +2414,6 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
             cells += p.cells[cell.index:cell.index + 1]
     p.Set(cells=cells, name='SET-CELL-GLUE')
 
-
     # cells = p.sets['SET-CELL-INSULATION'].cells
     # for pa in faces_xz_plane[2]:
     #     # p.DatumPointByCoordinate(coords=(pa[1], 0.0, pa[0]))
@@ -2475,7 +2474,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     p1 = [x0 + deep + b, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, tol, -1000, x1 * 1.1, y1, length / 2.0)
+    p_faces = p.faces.getByBoundingBox(0, tol, -r_front - b, x1 * 1.1, y1, length / 2.0)
     face_areas = []
     for face in p_faces:
         face_area = face.getSize()
@@ -2718,8 +2717,8 @@ if __name__ == "__main__":
         'fillet_radius': 50.0,
         'a': 50.0,
         'b': 25.0,
-        'size': '1/2',
-        # 'size': '1',
+        # 'size': '1/2',
+        'size': '1',
         'index_r': 2,
         'index_t': 3
     }
@@ -2759,7 +2758,7 @@ if __name__ == "__main__":
         model.setValues(absoluteZero=-273.15)
 
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
-        # p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
+        p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
         # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, block_dimension)
         p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, block_dimension)
 
