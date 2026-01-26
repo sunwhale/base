@@ -742,24 +742,74 @@ def radians_to_degrees(radians):
     return radians * 180 / math.pi
 
 
-def rotate_point_radians(p, theta_rad):
+def rotate_point_around_origin_2d(point, theta):
     """
     计算点绕原点旋转后的坐标（使用弧度）
 
     参数:
     x, y: 原点的坐标
-    theta_rad: 旋转角度（弧度）
+    theta: 旋转角度（弧度）
 
     返回:
     (x_rotated, y_rotated): 旋转后的坐标
     """
     # 计算旋转后的坐标
-    x = p[0]
-    y = p[1]
-    x_rotated = x * math.cos(theta_rad) - y * math.sin(theta_rad)
-    y_rotated = x * math.sin(theta_rad) + y * math.cos(theta_rad)
+    x = point[0]
+    y = point[1]
+    x_rotated = x * math.cos(theta) - y * math.sin(theta)
+    y_rotated = x * math.sin(theta) + y * math.cos(theta)
 
     return (x_rotated, y_rotated)
+
+
+def rotate_point_around_vector(point, vector, theta):
+    """
+    使用四元数方法计算点绕给定轴旋转后的坐标
+
+    参数:
+    point: 三维点坐标 [x, y, z]
+    vector: 旋转轴方向向量 [x, y, z]，无需归一化
+    theta: 旋转角度（弧度）
+
+    返回:
+    旋转后的点坐标
+    """
+    # 将输入转换为numpy数组
+    point = np.array(point, dtype=float)
+    vector = np.array(vector, dtype=float)
+
+    # 归一化旋转轴
+    vector_norm = np.linalg.norm(vector)
+    if vector_norm == 0:
+        raise ValueError("旋转轴不能为零向量")
+    u = vector / vector_norm
+
+    # 构建四元数
+    q_w = math.cos(theta / 2)
+    q_xyz = math.sin(theta / 2) * u
+
+    # 四元数旋转公式：p' = q * p * q_conjugate
+    # 其中p是纯四元数 [0, point]
+    p = np.array([0, point[0], point[1], point[2]])
+    q = np.array([q_w, q_xyz[0], q_xyz[1], q_xyz[2]])
+    q_conj = np.array([q_w, -q_xyz[0], -q_xyz[1], -q_xyz[2]])
+
+    # 四元数乘法辅助函数
+    def quaternion_multiply(q1, q2):
+        w1, x1, y1, z1 = q1
+        w2, x2, y2, z2 = q2
+        return np.array([
+            w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+            w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2,
+            w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2,
+            w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
+        ])
+
+    # 应用四元数旋转
+    p_rotated = quaternion_multiply(quaternion_multiply(q, p), q_conj)
+
+    # 返回三维部分
+    return p_rotated[1:]
 
 
 def is_unicode_all_uppercase(obj):
@@ -2346,7 +2396,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     p3 = l1.get_intersection(l2)
     p4 = [p3[0], 0.0]
 
-    p1p = rotate_point_radians(p1, degrees_to_radians(180.0 / n))
+    p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
     s_cut.Spot(point=p1p)
 
     s_cut.Line(point1=p1, point2=p3)
