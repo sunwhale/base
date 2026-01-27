@@ -2774,10 +2774,27 @@ if __name__ == "__main__":
     first_block_height = 1391.0
     shell_insulation_ref_z = 407.581146
 
-    block_dimension = {
+    first_block_dimension = {
         # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
         'z_list': [0, 183.4, 183.4 + 3.0, 183.4 + 11.0],
         # 'z_list': [0, 183.4, 183.4 + 10.0, 183.4 + 20.0],
+        'deep': 380.0,
+        'x0': x0,
+        'length_up': 1039.2,
+        'width': 100.0,
+        'angle_demolding_1': 1.5,
+        'angle_demolding_2': 10.0,
+        'fillet_radius': 50.0,
+        'a': 50.0,
+        'b': 25.0,
+        'size': '1/2',
+        # 'size': '1',
+        'index_r': 2,
+        'index_t': 3
+    }
+
+    block_dimension = {
+        'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
         'deep': 380.0,
         'x0': x0,
         'length_up': 1039.2,
@@ -2826,6 +2843,18 @@ if __name__ == "__main__":
     if ABAQUS_ENV:
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
+
+        model.setValues(absoluteZero=-273.15)
+
+        set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
+        set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
+        set_material(model.Material(name='MATERIAL-KINEMATIC'), load_json('material_kinematic.json'))
+        set_material(model.Material(name='MATERIAL-SHELL'), load_json('material_shell.json'))
+
+        model.HomogeneousSolidSection(name='SECTION-GRAIN', material='MATERIAL-GRAIN', thickness=None)
+        model.HomogeneousSolidSection(name='SECTION-INSULATION', material='MATERIAL-INSULATION', thickness=None)
+        model.HomogeneousSolidSection(name='SECTION-KINEMATIC', material='MATERIAL-KINEMATIC', thickness=None)
+        model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
 
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
         # p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
