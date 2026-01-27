@@ -2799,41 +2799,7 @@ if __name__ == "__main__":
     first_block_height = 1391.0
     shell_insulation_ref_z = 407.581146
 
-    first_block_dimension = {
-        'z_list': [0, 183.4, 183.4 + block_insulation_thickness, 183.4 + block_insulation_thickness + block_gap / 2],
-        'deep': 380.0,
-        'x0': x0,
-        'length_up': 1039.2,
-        'width': 100.0,
-        'angle_demolding_1': 1.5,
-        'angle_demolding_2': 10.0,
-        'fillet_radius': 50.0,
-        'a': 50.0,
-        'b': 25.0,
-        'size': '1/2',
-        # 'size': '1',
-        'index_r': 3,
-        'index_t': 3
-    }
-
-    block_dimension = {
-        'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
-        'deep': 380.0,
-        'x0': x0,
-        'length_up': 1039.2,
-        'width': 100.0,
-        'angle_demolding_1': 1.5,
-        'angle_demolding_2': 10.0,
-        'fillet_radius': 50.0,
-        'a': 50.0,
-        'b': 25.0,
-        'size': '1/2',
-        # 'size': '1',
-        'index_r': 2,
-        'index_t': 3
-    }
-
-    points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
+    # points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
     # points, lines, faces = geometries(d, x0, beta, [0, 10, 200], [0, 10, 10])
 
     if not ABAQUS_ENV:
@@ -2878,15 +2844,49 @@ if __name__ == "__main__":
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
 
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
-        # p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
         # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, block_dimension)
 
-        points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
-        p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, first_block_dimension)
+        block_dimension = {
+            'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
+            'deep': 380.0,
+            'x0': x0,
+            'length_up': 1039.2,
+            'width': 100.0,
+            'angle_demolding_1': 1.5,
+            'angle_demolding_2': 10.0,
+            'fillet_radius': 50.0,
+            'a': 50.0,
+            'b': 25.0,
+            'size': '1/2',
+            # 'size': '1',
+            'index_r': 2,
+            'index_t': 3
+        }
+        points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
+        p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
 
-        p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-        p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-        p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        first_block_dimension = {
+            'z_list': [0, 183.4, 183.4 + block_insulation_thickness, 183.4 + block_insulation_thickness + block_gap / 2],
+            'deep': 380.0,
+            'x0': x0,
+            'length_up': 1039.2,
+            'width': 100.0,
+            'angle_demolding_1': 1.5,
+            'angle_demolding_2': 10.0,
+            'fillet_radius': 50.0,
+            'a': 50.0,
+            'b': 25.0,
+            'size': '1/2',
+            # 'size': '1',
+            'index_r': 3,
+            'index_t': 3
+        }
+        points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
+        p_block_front_b = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, first_block_dimension)
+
+        p_block_front_b.SectionAssignment(region=p_block_front_b.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        p_block_front_b.SectionAssignment(region=p_block_front_b.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        p_block_front_b.SectionAssignment(region=p_block_front_b.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
         # a = model.rootAssembly
         # a.DatumCsysByDefault(CARTESIAN)
