@@ -2573,6 +2573,9 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
+    for name in p.surfaces.keys():
+        p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
+
     xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n / 2.0)
     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
 
@@ -2840,7 +2843,7 @@ if __name__ == "__main__":
 
         model.HomogeneousSolidSection(name='SECTION-GRAIN', material='MATERIAL-GRAIN', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-INSULATION', material='MATERIAL-INSULATION', thickness=None)
-        model.HomogeneousSolidSection(name='SECTION-GLUE', material='MATERIAL-KINEMATIC', thickness=None)
+        model.HomogeneousSolidSection(name='SECTION-GLUE', material='MATERIAL-GLUE', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
 
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
@@ -2888,9 +2891,10 @@ if __name__ == "__main__":
         p_block_front_b.SectionAssignment(region=p_block_front_b.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
         p_block_front_b.SectionAssignment(region=p_block_front_b.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
-        # a = model.rootAssembly
-        # a.DatumCsysByDefault(CARTESIAN)
-        #
+        a = model.rootAssembly
+        a.DatumCsysByDefault(CARTESIAN)
+        cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
+
         # m = n
         # m = 2
         # for l in range(1, block_number):
@@ -2905,3 +2909,22 @@ if __name__ == "__main__":
         #         a.translate(instanceList=(instance_name,),
         #                     vector=(0.0, 0.0, shell_insulation_ref_z - first_block_height - (l + 1) * (block_gap + block_length)))
         #         a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+        model.StaticStep(name='Step-1', previous='Initial', nlgeom=ON)
+        a.Instance(name='PART-BLOCK-FRONT-B-1', part=p_block_front_b, dependent=ON)
+        model.YsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
+        model.YsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-T0'], localCsys=a.datums[cylindrical_datum.id])
+        model.ZsymmBC(name='BC-3', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
+        model.DisplacementBC(name='BC-4', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-OUTER'], u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+        model.Pressure(name='Load-1', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+        model.Pressure(name='Load-2', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].surfaces['SURFACE-X0'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+
+        mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
+            atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
+            memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
+            explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
+            modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
+            scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
+            multiprocessingMode=DEFAULT, numCpus=1, numGPUs=0)
+        
+        mdb.jobs['Job-1'].submit(consistencyChecking=OFF)
