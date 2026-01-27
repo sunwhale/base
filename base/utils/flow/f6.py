@@ -2453,6 +2453,22 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
+
+    for pa in faces_xz_plane[2]:
+        cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
+        center = (0.0, 0.0, pa[0])
+        p.DatumPointByCoordinate(coords=center)
+        plane_1 = Plane(center, (0.0, 0.0, 1.0))
+        circle = Circle3D(center, abs(pa[1]), plane_1)
+        for j in [1]:
+            plane_2 = Plane(center, (0.0, 1.0, 0.0))
+            pb = plane_2.intersection_with_circle(circle)
+            if pb:
+                p.DatumPointByCoordinate(coords=pb[0])
+                p.DatumPointByCoordinate(coords=pb[1])
+                c = p.cells.findAt((pb[1],))
+                cells += c
+
     if cells is not None:
         set_name = 'SET-CELL-GRAIN'
         p.Set(cells=cells, name=set_name)
@@ -2566,6 +2582,15 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
+
+    element_size = 20.0
+    c = p.cells
+    elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
+    p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    p.generateMesh()
 
     return p
 
@@ -2787,7 +2812,7 @@ if __name__ == "__main__":
         'b': 25.0,
         'size': '1/2',
         # 'size': '1',
-        'index_r': 2,
+        'index_r': 3,
         'index_t': 3
     }
 
@@ -2842,8 +2867,6 @@ if __name__ == "__main__":
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
-        model.setValues(absoluteZero=-273.15)
-
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
         set_material(model.Material(name='MATERIAL-GLUE'), load_json('material_kinematic.json'))
@@ -2857,12 +2880,13 @@ if __name__ == "__main__":
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
         # p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
         # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, block_dimension)
+
+        points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
         p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, first_block_dimension)
 
         p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
         p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
         p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-
 
         # a = model.rootAssembly
         # a.DatumCsysByDefault(CARTESIAN)
