@@ -2200,6 +2200,15 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
+    element_size = 20.0
+    c = p.cells
+    elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
+    p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    p.generateMesh()
+
     return p
 
 
@@ -2795,7 +2804,7 @@ if __name__ == "__main__":
     block_length = 1229.0
     block_insulation_thickness = 3.0
     block_gap = 18.0
-    block_number = 10
+    block_number = 2
     z_list = get_z_list(block_length, block_insulation_thickness, block_gap, block_number)
 
     element_size = 80
@@ -2834,6 +2843,7 @@ if __name__ == "__main__":
         # plot_three_arcs(result, p0, p3)
 
     if ABAQUS_ENV:
+        Mdb()
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
@@ -2861,16 +2871,20 @@ if __name__ == "__main__":
             'fillet_radius': 50.0,
             'a': 50.0,
             'b': 25.0,
-            'size': '1/2',
-            # 'size': '1',
+            # 'size': '1/2',
+            'size': '1',
             'index_r': 2,
             'index_t': 3
         }
         points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
         p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
+        p_block_b.SectionAssignment(region=p_block_b.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        p_block_b.SectionAssignment(region=p_block_b.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        p_block_b.SectionAssignment(region=p_block_b.sets['SET-CELL-GLUE-A'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
+        front_ref_length = 183.4
         first_block_dimension = {
-            'z_list': [0, 183.4, 183.4 + block_insulation_thickness, 183.4 + block_insulation_thickness + block_gap / 2],
+            'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
             'deep': 380.0,
             'x0': x0,
             'length_up': 1039.2,
@@ -2880,8 +2894,8 @@ if __name__ == "__main__":
             'fillet_radius': 50.0,
             'a': 50.0,
             'b': 25.0,
-            'size': '1/2',
-            # 'size': '1',
+            # 'size': '1/2',
+            'size': '1',
             'index_r': 3,
             'index_t': 3
         }
@@ -2896,23 +2910,26 @@ if __name__ == "__main__":
         a.DatumCsysByDefault(CARTESIAN)
         cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
 
+        instance_name = 'PART-BLOCK-FRONT-B-1'
+        a.Instance(name=instance_name, part=p_block_front_b, dependent=ON)
+
         # m = n
-        # m = 2
-        # for l in range(1, block_number):
-        #     for i in range(m):
-        #         instance_name = 'PART-BLOCK-%s-%s' % (l + 2, i + 1)
-        #         a.Instance(name=instance_name, part=p_block_b, dependent=ON)
-        #         a.translate(instanceList=(instance_name,),
-        #                     vector=(0.0, 0.0, shell_insulation_ref_z - first_block_height - (l + 1) * (block_gap + block_length)))
-        #         a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-        #         instance_name = 'PART-GAP-%s-%s' % (l + 2, i + 1)
-        #         a.Instance(name=instance_name, part=p_gap, dependent=ON)
-        #         a.translate(instanceList=(instance_name,),
-        #                     vector=(0.0, 0.0, shell_insulation_ref_z - first_block_height - (l + 1) * (block_gap + block_length)))
-        #         a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+        m = 1
+        for l in range(1, 3):
+            for i in range(m):
+                instance_name = 'PART-BLOCK-%s-%s' % (l + 1, i + 1)
+                a.Instance(name=instance_name, part=p_block_b, dependent=ON)
+                a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1 + 0.5) * (block_gap + block_length)))
+
+                # a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+                # instance_name = 'PART-GAP-%s-%s' % (l + 2, i + 1)
+                # a.Instance(name=instance_name, part=p_gap, dependent=ON)
+                # a.translate(instanceList=(instance_name,),
+                #             vector=(0.0, 0.0, shell_insulation_ref_z - first_block_height - (l + 1) * (block_gap + block_length)))
+                # a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
         model.StaticStep(name='Step-1', previous='Initial', nlgeom=ON)
-        a.Instance(name='PART-BLOCK-FRONT-B-1', part=p_block_front_b, dependent=ON)
+
         model.YsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
         model.YsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-T0'], localCsys=a.datums[cylindrical_datum.id])
         model.ZsymmBC(name='BC-3', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
