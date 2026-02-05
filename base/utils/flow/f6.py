@@ -2071,6 +2071,8 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    d = p.datums
+
     p.BaseSolidExtrude(sketch=s_block, depth=length / 2.0)
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
@@ -2078,7 +2080,6 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
     x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
     y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
     z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
-    d = p.datums
 
     # SKETCH-BLOCK-PARTITION
     s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0)
@@ -2838,7 +2839,7 @@ if __name__ == "__main__":
 
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
-        set_material(model.Material(name='MATERIAL-GLUE'), load_json('material_kinematic.json'))
+        set_material(model.Material(name='MATERIAL-GLUE'), load_json('material_glue_prony.json'))
         set_material(model.Material(name='MATERIAL-SHELL'), load_json('material_shell.json'))
 
         model.HomogeneousSolidSection(name='SECTION-GRAIN', material='MATERIAL-GRAIN', thickness=None)
@@ -2915,16 +2916,17 @@ if __name__ == "__main__":
         model.YsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
         model.YsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-T0'], localCsys=a.datums[cylindrical_datum.id])
         model.ZsymmBC(name='BC-3', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
-        model.DisplacementBC(name='BC-4', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-OUTER'], u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+        model.DisplacementBC(name='BC-4', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-OUTER'], u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM,
+                             fieldName='', localCsys=a.datums[cylindrical_datum.id])
         model.Pressure(name='Load-1', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
         model.Pressure(name='Load-2', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].surfaces['SURFACE-X0'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
 
         mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
-            atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
-            memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
-            explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
-            modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
-            scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
-            multiprocessingMode=DEFAULT, numCpus=1, numGPUs=0)
-        
-        mdb.jobs['Job-1'].submit(consistencyChecking=OFF)
+                atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
+                memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
+                explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
+                modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
+                scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
+                multiprocessingMode=DEFAULT, numCpus=1, numGPUs=0)
+
+        mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
