@@ -1,0 +1,31 @@
+{
+  "Elastic": {
+    "type": "TRACTION",
+    "table": [
+      [
+        3.0,
+        1.0,
+        1.0
+      ]
+    ]
+  },
+  "MaxsDamageInitiation": {
+    "table": [
+      [
+        0.05,
+        0.05,
+        0.05
+      ]
+    ]
+  },
+  ".maxsDamageInitiation": {
+    "DamageEvolution": {
+      "type": "ENERGY",
+      "table": [
+        [
+          1e-06
+        ]
+      ]
+    }
+  }
+}

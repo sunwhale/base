@@ -1,0 +1,38 @@
+{
+    "Density": {
+        "table": [
+            [
+                1.1e-9
+            ]
+        ]
+    },
+    "Conductivity": {
+        "table": [
+            [
+                0.31
+            ]
+        ]
+    },
+    "SpecificHeat": {
+        "table": [
+            [
+                1842000000
+            ]
+        ]
+    },
+    "Elastic": {
+        "table": [
+            [
+                30,
+                0.495
+            ]
+        ]
+    },
+    "Expansion": {
+        "table": [
+            [
+                0.000086
+            ]
+        ]
+    }
+}
