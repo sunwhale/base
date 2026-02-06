@@ -2862,6 +2862,7 @@ if __name__ == "__main__":
 
         block_dimension = {
             'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
+            # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2],
             'deep': 380.0,
             'x0': x0,
             'length_up': 1039.2,
@@ -2871,8 +2872,8 @@ if __name__ == "__main__":
             'fillet_radius': 50.0,
             'a': 50.0,
             'b': 25.0,
-            # 'size': '1/2',
-            'size': '1',
+            'size': '1/2',
+            # 'size': '1',
             'index_r': 2,
             'index_t': 3
         }
@@ -2885,6 +2886,7 @@ if __name__ == "__main__":
         front_ref_length = 183.4
         first_block_dimension = {
             'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
+            # 'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness],
             'deep': 380.0,
             'x0': x0,
             'length_up': 1039.2,
@@ -2894,8 +2896,8 @@ if __name__ == "__main__":
             'fillet_radius': 50.0,
             'a': 50.0,
             'b': 25.0,
-            # 'size': '1/2',
-            'size': '1',
+            'size': '1/2',
+            # 'size': '1',
             'index_r': 3,
             'index_t': 3
         }
@@ -2910,18 +2912,21 @@ if __name__ == "__main__":
         a.DatumCsysByDefault(CARTESIAN)
         cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
 
-        instance_name = 'PART-BLOCK-FRONT-B-1'
-        a.Instance(name=instance_name, part=p_block_front_b, dependent=ON)
-
         # m = n
         m = 1
+
+        for i in range(m):
+            instance_name = 'PART-BLOCK-FRONT-B-%s' % (i + 1)
+            a.Instance(name=instance_name, part=p_block_front_b, dependent=ON)
+            a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
         for l in range(1, 3):
             for i in range(m):
-                instance_name = 'PART-BLOCK-%s-%s' % (l + 1, i + 1)
+                instance_name = 'PART-BLOCK-B-%s-%s' % (l + 1, i + 1)
                 a.Instance(name=instance_name, part=p_block_b, dependent=ON)
                 a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1 + 0.5) * (block_gap + block_length)))
+                a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-                # a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
                 # instance_name = 'PART-GAP-%s-%s' % (l + 2, i + 1)
                 # a.Instance(name=instance_name, part=p_gap, dependent=ON)
                 # a.translate(instanceList=(instance_name,),
@@ -2931,7 +2936,10 @@ if __name__ == "__main__":
         model.StaticStep(name='Step-1', previous='Initial', nlgeom=ON)
 
         model.YsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
-        model.YsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-T0'], localCsys=a.datums[cylindrical_datum.id])
+        try:
+            model.YsymmBC(name='BC-2', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-T0'], localCsys=a.datums[cylindrical_datum.id])
+        except:
+            pass
         model.ZsymmBC(name='BC-3', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
         model.DisplacementBC(name='BC-4', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-OUTER'], u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM,
                              fieldName='', localCsys=a.datums[cylindrical_datum.id])
