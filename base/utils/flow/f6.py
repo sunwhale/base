@@ -2038,7 +2038,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
         if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
             faces += p.faces[face_id:face_id + 1]
     if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-R1')
+        p.Surface(side1Faces=faces, name='SURFACE-OUTER')
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -2192,6 +2192,9 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
+    for name in p.surfaces.keys():
+        p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
+
     # Partition
     p1 = [x0 + deep, -a]
     offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
@@ -2200,7 +2203,7 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
-    element_size = 30.0
+    element_size = 40.0
     c = p.cells
     elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
@@ -2596,7 +2599,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
-    element_size = 30.0
+    element_size = 40.0
     c = p.cells
     elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
@@ -2779,7 +2782,7 @@ def create_block_surface_common(p, points, dimension):
         if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
             p_faces += p.faces[face_id:face_id + 1]
     if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-R1')
+        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
 
 if __name__ == "__main__":
@@ -2977,6 +2980,22 @@ if __name__ == "__main__":
                 model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
                 load_name = 'LOAD-' + instance_name + '-SURFACE-X0'
                 model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-X0'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+
+                bc_name = 'BC-' + instance_name + '-SET-SURFACE-OUTER'
+                model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-OUTER'],
+                                     u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+
+                if i == 0:
+                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-1'
+                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-1'], localCsys=a.datums[cylindrical_datum.id])
+
+                if i == nt - 1:
+                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-T1'
+                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
+
+                if l == nl - 1:
+                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-Z1'
+                    model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
 
         mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
                 atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
