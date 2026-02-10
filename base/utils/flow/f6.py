@@ -2914,7 +2914,7 @@ if __name__ == "__main__":
 
         instance_names = {}
 
-        nl = 3
+        nl = 2
         nt = 3
 
         for l in range(nl):
@@ -2956,7 +2956,7 @@ if __name__ == "__main__":
                 instance_name_2 = 'BLOCK-%s-%s' % (l + 2, i + 1)
                 surface_name_2 = 'SURFACE-Z-1'
                 region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-                constrain_name = 'CONSTRAINT-%s-%s' % (instance_name_1, instance_name_2)
+                constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
                 model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
 
         for l in range(nl):
@@ -2964,11 +2964,19 @@ if __name__ == "__main__":
                 instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
                 surface_name_1 = 'SURFACE-T1'
                 region1 = a.instances[instance_name_1].surfaces[surface_name_1]
-                instance_name_2 = 'BLOCK-%s-%s' % (l + 1, i + 2)
+                instance_name_2 = 'BLOCK-%s-%s' % (l + 1, (i + 1) % 9 + 1)
                 surface_name_2 = 'SURFACE-T-1'
                 region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-                constrain_name = 'CONSTRAINT-%s-%s' % (instance_name_1, instance_name_2)
+                constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
                 model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+
+        for l in range(nl):
+            for i in range(nt):
+                instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                load_name = 'LOAD-' + instance_name + '-SURFACE-INNER'
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+                load_name = 'LOAD-' + instance_name + '-SURFACE-X0'
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-X0'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
 
         mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
                 atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
