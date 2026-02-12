@@ -2864,6 +2864,8 @@ if __name__ == "__main__":
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
+        size = '1/2'
+
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
         set_material(model.Material(name='MATERIAL-GLUE'), load_json('material_glue_prony.json'))
@@ -2889,8 +2891,7 @@ if __name__ == "__main__":
             'fillet_radius': 50.0,
             'a': 50.0,
             'b': 25.0,
-            # 'size': '1/2',
-            'size': '1',
+            'size': size,
             'index_r': 2,
             'index_t': 3
         }
@@ -2913,8 +2914,7 @@ if __name__ == "__main__":
             'fillet_radius': 50.0,
             'a': 50.0,
             'b': 25.0,
-            # 'size': '1/2',
-            'size': '1',
+            'size': size,
             'index_r': 3,
             'index_t': 3
         }
@@ -2932,7 +2932,7 @@ if __name__ == "__main__":
         instance_names = {}
 
         nl = 3
-        nt = 2
+        nt = 1
 
         for l in range(nl):
             for i in range(nt):
@@ -3000,8 +3000,12 @@ if __name__ == "__main__":
                                      u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
 
                 if i == 0:
-                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-1'
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-1'], localCsys=a.datums[cylindrical_datum.id])
+                    if size == '1':
+                        bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-1'
+                        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-1'], localCsys=a.datums[cylindrical_datum.id])
+                    elif size == '1/2':
+                        bc_name = 'BC-' + instance_name + '-SET-SURFACE-T0'
+                        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T0'], localCsys=a.datums[cylindrical_datum.id])
 
                 if i == nt - 1:
                     bc_name = 'BC-' + instance_name + '-SET-SURFACE-T1'
@@ -3010,6 +3014,8 @@ if __name__ == "__main__":
                 if l == nl - 1:
                     bc_name = 'BC-' + instance_name + '-SET-SURFACE-Z1'
                     model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
+
+
 
         mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
                 atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
