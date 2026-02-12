@@ -2586,9 +2586,6 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
-    for name in p.surfaces.keys():
-        p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
-
     xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n / 2.0)
     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
 
@@ -2596,6 +2593,23 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
         xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=-180.0 / n / 2.0)
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
+
+    # 通过排除法确定外表面
+    surface_names = list(p.surfaces.keys())
+    surface_names.remove('SURFACE-OUTER')
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        is_surface_outer = True
+        for surface_name in surface_names:
+            if p.faces[face_id] in p.surfaces[surface_name].faces:
+                is_surface_outer = False
+        if is_surface_outer and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
+
+    for name in p.surfaces.keys():
+        p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -2917,8 +2931,8 @@ if __name__ == "__main__":
 
         instance_names = {}
 
-        nl = 2
-        nt = 3
+        nl = 3
+        nt = 2
 
         for l in range(nl):
             for i in range(nt):
@@ -2938,7 +2952,7 @@ if __name__ == "__main__":
                 #             vector=(0.0, 0.0, shell_insulation_ref_z - first_block_height - (l + 1) * (block_gap + block_length)))
                 # a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-        model.StaticStep(name='Step-1', previous='Initial', nlgeom=ON)
+        model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=0.01, minInc=1e-06, maxInc=0.1)
 
         # model.YsymmBC(name='BC-1', createStepName='Step-1', region=a.instances['PART-BLOCK-FRONT-B-1'].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
         # try:
@@ -3003,6 +3017,6 @@ if __name__ == "__main__":
                 explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
                 modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
                 scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
-                multiprocessingMode=DEFAULT, numCpus=1, numGPUs=0)
+                multiprocessingMode=DEFAULT, numCpus=8, numDomains=8, numGPUs=0)
 
         mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
