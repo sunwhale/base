@@ -2296,6 +2296,15 @@ def create_part_gap_b(model, part_name, points, lines, faces, dimension):
     yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
     p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
 
+    element_size = 40.0
+    c = p.cells
+    elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
+    p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    p.generateMesh()
+    
     p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
@@ -3165,8 +3174,8 @@ if __name__ == "__main__":
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
 
         block_dimension = {
-            'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
-            # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2],
+            # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
+            'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2],
             'deep': 380.0,
             'x0': x0,
             'length_up': 1039.2,
@@ -3178,16 +3187,16 @@ if __name__ == "__main__":
             'b': 25.0,
             'size': size,
             'index_r': 2,
-            'index_t': 3
+            'index_t': 2
         }
         points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
         p_block = create_part_block_b(model, 'PART-BLOCK', points, lines, faces, block_dimension)
         p_block.SectionAssignment(region=p_block.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
         p_block.SectionAssignment(region=p_block.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-        p_block.SectionAssignment(region=p_block.sets['SET-CELL-GLUE-A'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        # p_block.SectionAssignment(region=p_block.sets['SET-CELL-GLUE-A'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
         p_block.SectionAssignment(region=p_block.sets['COHESIVE-ELEMENTS-GRAIN-INSULATION'], sectionName='SECTION-CZM', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
-        block_dimension = {
+        gap_dimension = {
             'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
             'deep': 380.0,
             'x0': x0,
@@ -3202,7 +3211,7 @@ if __name__ == "__main__":
             'index_r': 2,
             'index_t': 3
         }
-        p_gap_b = create_part_gap_b(model, 'PART-GAP', points, lines, faces, block_dimension)
+        p_gap = create_part_gap_b(model, 'PART-GAP', points, lines, faces, gap_dimension)
 
         front_ref_length = 183.4
         first_block_dimension = {
@@ -3249,11 +3258,10 @@ if __name__ == "__main__":
                     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1 + 0.5) * (block_gap + block_length)))
                     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-                # instance_name = 'PART-GAP-%s-%s' % (l + 2, i + 1)
-                # a.Instance(name=instance_name, part=p_gap, dependent=ON)
-                # a.translate(instanceList=(instance_name,),
-                #             vector=(0.0, 0.0, shell_insulation_ref_z - first_block_height - (l + 1) * (block_gap + block_length)))
-                # a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    a.Instance(name=instance_name, part=p_gap, dependent=ON)
+                    a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1 + 0.5) * (block_gap + block_length)))
+                    a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
         model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=0.01, minInc=1e-06, maxInc=0.1)
 
