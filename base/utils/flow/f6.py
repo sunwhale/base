@@ -2489,9 +2489,12 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
             elements = face.getElements()
         else:
             elements += face.getElements()
-    
+
     if elements:
         p.Set(elements=elements, name='COHESIVE-ELEMENTS-GRAIN-INSULATION')
+
+    elemType1 = mesh.ElemType(elemCode=COH3D8, elemLibrary=STANDARD)
+    p.setElementType(regions=p.sets['COHESIVE-ELEMENTS-GRAIN-INSULATION'], elemTypes=(elemType1,))
 
     return p
 
@@ -3151,17 +3154,19 @@ if __name__ == "__main__":
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
         set_material(model.Material(name='MATERIAL-GLUE'), load_json('material_glue_prony.json'))
         set_material(model.Material(name='MATERIAL-SHELL'), load_json('material_shell.json'))
+        set_material(model.Material(name='MATERIAL-CZM'), load_json('material_czm.json'))
 
         model.HomogeneousSolidSection(name='SECTION-GRAIN', material='MATERIAL-GRAIN', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-INSULATION', material='MATERIAL-INSULATION', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-GLUE', material='MATERIAL-GLUE', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
+        model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
         # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
 
         block_dimension = {
-            # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
-            'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2],
+            'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
+            # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2],
             'deep': 380.0,
             'x0': x0,
             'length_up': 1039.2,
@@ -3173,13 +3178,14 @@ if __name__ == "__main__":
             'b': 25.0,
             'size': size,
             'index_r': 2,
-            'index_t': 2
+            'index_t': 3
         }
         points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
-        p_block_b = create_part_block_b(model, 'PART-BLOCK-B', points, lines, faces, block_dimension)
-        p_block_b.SectionAssignment(region=p_block_b.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-        p_block_b.SectionAssignment(region=p_block_b.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-        # p_block_b.SectionAssignment(region=p_block_b.sets['SET-CELL-GLUE-A'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        p_block = create_part_block_b(model, 'PART-BLOCK', points, lines, faces, block_dimension)
+        p_block.SectionAssignment(region=p_block.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        p_block.SectionAssignment(region=p_block.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        p_block.SectionAssignment(region=p_block.sets['SET-CELL-GLUE-A'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        p_block.SectionAssignment(region=p_block.sets['COHESIVE-ELEMENTS-GRAIN-INSULATION'], sectionName='SECTION-CZM', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
         block_dimension = {
             'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
@@ -3196,117 +3202,117 @@ if __name__ == "__main__":
             'index_r': 2,
             'index_t': 3
         }
-        p_gap_b = create_part_gap_b(model, 'PART-GAP-B', points, lines, faces, block_dimension)
+        p_gap_b = create_part_gap_b(model, 'PART-GAP', points, lines, faces, block_dimension)
 
-        # front_ref_length = 183.4
-        # first_block_dimension = {
-        #     'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
-        #     # 'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness],
-        #     'deep': 380.0,
-        #     'x0': x0,
-        #     'length_up': 1039.2,
-        #     'width': 100.0,
-        #     'angle_demolding_1': 1.5,
-        #     'angle_demolding_2': 10.0,
-        #     'fillet_radius': 50.0,
-        #     'a': 50.0,
-        #     'b': 25.0,
-        #     'size': size,
-        #     'index_r': 3,
-        #     'index_t': 3
-        # }
-        # points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
-        # p_block_front_b = create_part_block_front_b(model, 'PART-BLOCK-FRONT-B', points, lines, faces, first_block_dimension)
-        #
-        # p_block_front_b.SectionAssignment(region=p_block_front_b.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-        # p_block_front_b.SectionAssignment(region=p_block_front_b.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-        # p_block_front_b.SectionAssignment(region=p_block_front_b.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-        #
-        # a = model.rootAssembly
-        # a.DatumCsysByDefault(CARTESIAN)
-        # cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
-        #
-        # instance_names = {}
-        #
-        # nl = 2
-        # nt = 1
-        #
-        # for l in range(nl):
-        #     for i in range(nt):
-        #         if l == 0:
-        #             instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-        #             a.Instance(name=instance_name, part=p_block_front_b, dependent=ON)
-        #             a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-        #         elif l < 10:
-        #             instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-        #             a.Instance(name=instance_name, part=p_block_b, dependent=ON)
-        #             a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1 + 0.5) * (block_gap + block_length)))
-        #             a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-        #
-        #         # instance_name = 'PART-GAP-%s-%s' % (l + 2, i + 1)
-        #         # a.Instance(name=instance_name, part=p_gap, dependent=ON)
-        #         # a.translate(instanceList=(instance_name,),
-        #         #             vector=(0.0, 0.0, shell_insulation_ref_z - first_block_height - (l + 1) * (block_gap + block_length)))
-        #         # a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-        #
-        # model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=0.01, minInc=1e-06, maxInc=0.1)
-        #
-        # for l in range(nl - 1):
-        #     for i in range(nt):
-        #         instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
-        #         surface_name_1 = 'SURFACE-Z1'
-        #         region1 = a.instances[instance_name_1].surfaces[surface_name_1]
-        #         instance_name_2 = 'BLOCK-%s-%s' % (l + 2, i + 1)
-        #         surface_name_2 = 'SURFACE-Z-1'
-        #         region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-        #         constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
-        #         model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
-        #
-        # for l in range(nl):
-        #     for i in range(nt - 1):
-        #         instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
-        #         surface_name_1 = 'SURFACE-T1'
-        #         region1 = a.instances[instance_name_1].surfaces[surface_name_1]
-        #         instance_name_2 = 'BLOCK-%s-%s' % (l + 1, (i + 1) % 9 + 1)
-        #         surface_name_2 = 'SURFACE-T-1'
-        #         region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-        #         constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
-        #         model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
-        #
-        # for l in range(nl):
-        #     for i in range(nt):
-        #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-        #         load_name = 'LOAD-' + instance_name + '-SURFACE-INNER'
-        #         model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
-        #         load_name = 'LOAD-' + instance_name + '-SURFACE-X0'
-        #         model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-X0'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
-        #
-        #         bc_name = 'BC-' + instance_name + '-SET-SURFACE-OUTER'
-        #         model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-OUTER'],
-        #                              u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
-        #
-        #         if i == 0:
-        #             if size == '1':
-        #                 bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-1'
-        #                 model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-1'], localCsys=a.datums[cylindrical_datum.id])
-        #             elif size == '1/2':
-        #                 bc_name = 'BC-' + instance_name + '-SET-SURFACE-T0'
-        #                 model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T0'], localCsys=a.datums[cylindrical_datum.id])
-        #
-        #         if i == nt - 1:
-        #             bc_name = 'BC-' + instance_name + '-SET-SURFACE-T1'
-        #             model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
-        #
-        #         if l == nl - 1:
-        #             bc_name = 'BC-' + instance_name + '-SET-SURFACE-Z1'
-        #             model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
-        #
-        # mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
-        #         atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
-        #         memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
-        #         explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
-        #         modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
-        #         scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
-        #         multiprocessingMode=DEFAULT, numCpus=8, numDomains=8, numGPUs=0)
-        #
-        # mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
+        front_ref_length = 183.4
+        first_block_dimension = {
+            'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
+            # 'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness],
+            'deep': 380.0,
+            'x0': x0,
+            'length_up': 1039.2,
+            'width': 100.0,
+            'angle_demolding_1': 1.5,
+            'angle_demolding_2': 10.0,
+            'fillet_radius': 50.0,
+            'a': 50.0,
+            'b': 25.0,
+            'size': size,
+            'index_r': 3,
+            'index_t': 3
+        }
+        points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
+        p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
+
+        p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+
+        a = model.rootAssembly
+        a.DatumCsysByDefault(CARTESIAN)
+        cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
+
+        instance_names = {}
+
+        nl = 2
+        nt = 1
+
+        for l in range(nl):
+            for i in range(nt):
+                if l == 0:
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    a.Instance(name=instance_name, part=p_block_front, dependent=ON)
+                    a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+                elif l < 10:
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    a.Instance(name=instance_name, part=p_block, dependent=ON)
+                    a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1 + 0.5) * (block_gap + block_length)))
+                    a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+                # instance_name = 'PART-GAP-%s-%s' % (l + 2, i + 1)
+                # a.Instance(name=instance_name, part=p_gap, dependent=ON)
+                # a.translate(instanceList=(instance_name,),
+                #             vector=(0.0, 0.0, shell_insulation_ref_z - first_block_height - (l + 1) * (block_gap + block_length)))
+                # a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+        model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=0.01, minInc=1e-06, maxInc=0.1)
+
+        for l in range(nl - 1):
+            for i in range(nt):
+                instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                surface_name_1 = 'SURFACE-Z1'
+                region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+                instance_name_2 = 'BLOCK-%s-%s' % (l + 2, i + 1)
+                surface_name_2 = 'SURFACE-Z-1'
+                region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+                constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
+                model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+
+        for l in range(nl):
+            for i in range(nt - 1):
+                instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                surface_name_1 = 'SURFACE-T1'
+                region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+                instance_name_2 = 'BLOCK-%s-%s' % (l + 1, (i + 1) % 9 + 1)
+                surface_name_2 = 'SURFACE-T-1'
+                region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+                constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
+                model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+
+        for l in range(nl):
+            for i in range(nt):
+                instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                load_name = 'LOAD-' + instance_name + '-SURFACE-INNER'
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+                load_name = 'LOAD-' + instance_name + '-SURFACE-X0'
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-X0'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+
+                bc_name = 'BC-' + instance_name + '-SET-SURFACE-OUTER'
+                model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-OUTER'],
+                                     u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+
+                if i == 0:
+                    if size == '1':
+                        bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-1'
+                        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-1'], localCsys=a.datums[cylindrical_datum.id])
+                    elif size == '1/2':
+                        bc_name = 'BC-' + instance_name + '-SET-SURFACE-T0'
+                        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T0'], localCsys=a.datums[cylindrical_datum.id])
+
+                if i == nt - 1:
+                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-T1'
+                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
+
+                if l == nl - 1:
+                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-Z1'
+                    model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
+
+        mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
+                atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
+                memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
+                explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
+                modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
+                scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
+                multiprocessingMode=DEFAULT, numCpus=8, numDomains=8, numGPUs=0)
+
+        mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
