@@ -6,6 +6,7 @@ import json
 import math
 
 import numpy as np
+from collections import Counter
 
 try:
     import matplotlib.pyplot as plt
@@ -714,6 +715,28 @@ class Cylinder:
             'axis_direction': tuple(self.axis_direction),
             'radius': self.radius
         }
+
+
+def find_duplicates(t):
+    """
+    找出元组中重复的元素。
+
+    参数:
+        t (tuple): 输入的元组
+
+    返回:
+        list: 包含所有重复元素的列表（按首次出现顺序）
+    """
+    # 统计每个元素的出现次数
+    count = Counter(t)
+    # 筛选出出现次数大于1的元素，并保持原顺序
+    duplicates = []
+    seen = set()
+    for item in t:
+        if count[item] > 1 and item not in seen:
+            duplicates.append(item)
+            seen.add(item)
+    return duplicates
 
 
 def load_json(file_path, encoding='utf-8'):
@@ -2632,6 +2655,24 @@ def create_part_gap_front_b(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells.getByBoundingBox(0, 0, 0, pen, pen, pen))
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+
+    p_edges = ()
+    for face in p.surfaces['SURFACE-OUTER'].faces.getByBoundingBox(0, 0, -pen, pen, pen, 0):
+        p_edges += face.getEdges()
+
+    p_edge_ids = find_duplicates(p_edges)
+
+    p_edges = p.edges.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for edge_id in p_edge_ids:
+        p_edges += p.edges[edge_id:edge_id + 1]
+
+    p_vertices = p.vertices.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for edge in p_edges:
+        for vertice_id in edge.getVertices():
+            p_vertices += p.vertices[vertice_id:vertice_id + 1]
+
+    pickedEntities = (p_vertices, p_edges,)
+    p.ignoreEntity(entities=pickedEntities)
 
     element_size = 40.0
     c = p.cells
