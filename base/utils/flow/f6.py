@@ -2362,9 +2362,9 @@ def create_part_gap_front_b(model, part_name, points, lines, faces, dimension):
     s_gap_z = model.ConstrainedSketch(name='SKETCH-GAP-Z', sheetSize=200.0)
     center = (0, 0)
     geom_list = []
-    geom_list.append(s_gap_z.Line(point1=points[0, 2], point2=points[2, 2]))
-    geom_list.append(s_gap_z.ArcByCenterEnds(center=center, point1=points[2, 2], point2=points[2, 3], direction=COUNTERCLOCKWISE))
-    geom_list.append(s_gap_z.Line(point1=points[2, 3], point2=points[0, 3]))
+    geom_list.append(s_gap_z.Line(point1=points[0, 2], point2=points[3, 2]))
+    geom_list.append(s_gap_z.ArcByCenterEnds(center=center, point1=points[3, 2], point2=points[3, 3], direction=COUNTERCLOCKWISE))
+    geom_list.append(s_gap_z.Line(point1=points[3, 3], point2=points[0, 3]))
     geom_list.append(s_gap_z.Line(point1=points[0, 3], point2=points[0, 2]))
 
     # Extrude
@@ -2438,18 +2438,22 @@ def create_part_gap_front_b(model, part_name, points, lines, faces, dimension):
     s_gap_t = model.ConstrainedSketch(name='SKETCH-GAP-T', sheetSize=4000.0, gridSpacing=100.0, transform=t)
     center = (0, 0)
     geom_list = []
-    geom_list.append(s_gap_t.Line(point1=points[0, 0], point2=points[2, 0]))
-    geom_list.append(s_gap_t.ArcByCenterEnds(center=center, point1=points[2, 0], point2=points[2, 3], direction=COUNTERCLOCKWISE))
-    geom_list.append(s_gap_t.Line(point1=points[2, 3], point2=points[0, 3]))
+    geom_list.append(s_gap_t.Line(point1=points[0, 0], point2=points[3, 0]))
+    geom_list.append(s_gap_t.ArcByCenterEnds(center=center, point1=points[3, 0], point2=points[3, 3], direction=COUNTERCLOCKWISE))
+    geom_list.append(s_gap_t.Line(point1=points[3, 3], point2=points[0, 3]))
     geom_list.append(s_gap_t.Line(point1=points[0, 3], point2=points[0, 0]))
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=OFF)
 
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+
     # Partition
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z1.id], cells=p.cells)
-    cut_edges = (
-        p.edges.findAt((lines['02-12'][3][0], lines['02-12'][3][1], length / 2.0)),
-    )
-    p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
+
+    point1 = p.DatumPointByCoordinate(coords=(lines['02-12'][1][0], lines['02-12'][1][1], length / 2.0))
+    point2 = p.DatumPointByCoordinate(coords=(lines['02-12'][2][0], lines['02-12'][2][1], length / 2.0))
+    point3 = p.DatumPointByCoordinate(coords=(lines['02-12'][1][0], lines['02-12'][1][1], 0.0))
+    partition_plane = p.DatumPlaneByThreePoints(point1=d[point1.id], point2=d[point2.id], point3=d[point3.id])
+    p.PartitionCellByDatumPlane(datumPlane=d[partition_plane.id], cells=p.cells)
 
     # SKETCH-CUT
     s_cut = model.ConstrainedSketch(name='SKETCH-CUT', sheetSize=200.0)
@@ -3594,8 +3598,8 @@ if __name__ == "__main__":
 
         front_ref_length = 183.4
         first_block_dimension = {
-            'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
-            # 'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness],
+            # 'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
+            'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness],
             'deep': 380.0,
             'x0': x0,
             'length_up': 1039.2,
@@ -3607,12 +3611,28 @@ if __name__ == "__main__":
             'b': 25.0,
             'size': size,
             'index_r': 3,
-            'index_t': 3
+            'index_t': 2
         }
         points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
         p_block_front = create_part_block_front_b(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
 
-        p_gap_front = create_part_gap_front_b(model, 'PART-GAP-FRONT', points, lines, faces, first_block_dimension)
+        first_gap_dimension = {
+            'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
+            'deep': 380.0,
+            'x0': x0,
+            'length_up': 1039.2,
+            'width': 100.0,
+            'angle_demolding_1': 1.5,
+            'angle_demolding_2': 10.0,
+            'fillet_radius': 50.0,
+            'a': 50.0,
+            'b': 25.0,
+            'size': size,
+            'index_r': 3,
+            'index_t': 2
+        }
+
+        p_gap_front = create_part_gap_front_b(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
 
         p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
         p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
