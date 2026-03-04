@@ -3631,7 +3631,6 @@ if __name__ == "__main__":
             'index_r': 3,
             'index_t': 2
         }
-
         p_gap_front = create_part_gap_front_b(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
 
         p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
@@ -3653,6 +3652,11 @@ if __name__ == "__main__":
                     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                     a.Instance(name=instance_name, part=p_block_front, dependent=ON)
                     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    a.Instance(name=instance_name, part=p_gap_front, dependent=ON)
+                    a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
                 elif l < 10:
                     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                     a.Instance(name=instance_name, part=p_block, dependent=ON)
