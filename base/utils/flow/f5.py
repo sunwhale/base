@@ -2491,7 +2491,7 @@ def create_part_gap_front_b(model, part_name, points, lines, faces, dimension):
     # Mirror
     if size == '1':
         p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
-        # p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
     elif size == '1/2':
         pass
     elif size == '1/4':
@@ -2656,12 +2656,12 @@ def create_part_gap_front_b(model, part_name, points, lines, faces, dimension):
     p1 = [x0 + deep, -a]
     offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
     yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
-    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells.getByBoundingBox(0, 0, 0, pen, pen, pen))
+    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells.getByBoundingBox(0, -pen, 0, pen, pen, pen))
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     p_edges = ()
-    for face in p.surfaces['SURFACE-OUTER'].faces.getByBoundingBox(0, 0, -pen, pen, pen, 0):
+    for face in p.surfaces['SURFACE-OUTER'].faces.getByBoundingBox(0, -pen, -pen, pen, pen, 0):
         p_edges += face.getEdges()
 
     p_edge_ids = find_duplicates(p_edges)
@@ -3540,7 +3540,7 @@ if __name__ == "__main__":
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
-        size = '1/2'
+        size = '1'
 
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
@@ -3643,7 +3643,7 @@ if __name__ == "__main__":
 
         instance_names = {}
 
-        nl = 2
+        nl = 5
         nt = 1
 
         for l in range(nl):
@@ -3672,11 +3672,11 @@ if __name__ == "__main__":
 
         for l in range(nl - 1):
             for i in range(nt):
-                instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                surface_name_1 = 'SURFACE-Z1'
+                instance_name_1 = 'GAP-%s-%s' % (l + 1, i + 1)
+                surface_name_1 = 'SURFACE-Z2'
                 region1 = a.instances[instance_name_1].surfaces[surface_name_1]
-                instance_name_2 = 'BLOCK-%s-%s' % (l + 2, i + 1)
-                surface_name_2 = 'SURFACE-Z-1'
+                instance_name_2 = 'GAP-%s-%s' % (l + 2, i + 1)
+                surface_name_2 = 'SURFACE-Z-2'
                 region2 = a.instances[instance_name_2].surfaces[surface_name_2]
                 constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
                 model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
