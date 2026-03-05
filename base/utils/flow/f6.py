@@ -3540,7 +3540,7 @@ if __name__ == "__main__":
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
-        size = '1/2'
+        size = '1'
 
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
@@ -3643,8 +3643,8 @@ if __name__ == "__main__":
 
         instance_names = {}
 
-        nl = 2
-        nt = 1
+        nl = 5
+        nt = 2
 
         for l in range(nl):
             for i in range(nt):
