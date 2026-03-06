@@ -2945,8 +2945,14 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
     l1 = Line2D(p3, np.tan(degrees_to_radians(theta_in_deg)))
-    l2 = Line2D((z_list[-1], 0.0), (z_list[-1], 1.0))
-    p4 = l1.get_intersection(l2)
+    l2 = Line2D([0.0, points[3, 0, 0]], [1.0, points[3, 0, 0]])
+    l3 = Line2D((z_list[-1], 0.0), (z_list[-1], 1.0))
+    if l1.get_intersection(l2)[0] > l1.get_intersection(l3)[0]:
+        p4 = l1.get_intersection(l3)
+        p5 = (pen, p4[1])
+    else:
+        p4 = l1.get_intersection(l2)
+        p5 = (z_list[-1], p4[1])
 
     p1 = result['p1']
     p2 = result['p2']
@@ -2963,8 +2969,9 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
     s_block_cut_revolve.Line(point1=(p0[0], 1), point2=(-pen, 1))
     s_block_cut_revolve.Line(point1=(-pen, 1), point2=(-pen, pen))
-    s_block_cut_revolve.Line(point1=(-pen, pen), point2=(p4[0], pen))
-    s_block_cut_revolve.Line(point1=(p4[0], pen), point2=p4)
+    s_block_cut_revolve.Line(point1=(-pen, pen), point2=(pen, pen))
+    s_block_cut_revolve.Line(point1=(pen, pen), point2=p5)
+    s_block_cut_revolve.Line(point1=p5, point2=p4)
     s_block_cut_revolve.Line(point1=p3, point2=p4)
     center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
     s_block_cut_revolve.assignCenterline(line=center_line)
@@ -2980,6 +2987,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
     geom_list.append(s_block_cut_revolve_shift.Line(point1=p3, point2=p4))
+    geom_list.append(s_block_cut_revolve_shift.Line(point1=p4, point2=p5))
     # 逆序循环，保证轮廓线从外到内的顺序排列
     for i in range(index_r - 1, 0, -1):
         s_block_cut_revolve_shift.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=RIGHT)
@@ -2999,15 +3007,15 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     faces_xz_plane = {}
     for i in range(1, index_r):
         faces_xz_plane[i] = []
-        for j in [2, 3, 4, 5, 6]:
-            pa = (np.array(g[j + 5 * (i - 1)].pointOn) + np.array(g[j + 5 * i].pointOn)) / 2.0
+        for j in [2, 3, 4, 5, 6, 7]:
+            pa = (np.array(g[j + 6 * (i - 1)].pointOn) + np.array(g[j + 6 * i].pointOn)) / 2.0
             faces_xz_plane[i].append(pa)
             s_block_cut_revolve_shift.Spot(point=pa)
 
     for i in range(1, index_r):
-        for j in [3, 4, 5, 6]:
-            pa = g[5 * (i - 1) + j].getVertices()[0].coords
-            pb = g[5 * i + j].getVertices()[0].coords
+        for j in [3, 4, 5, 6, 7]:
+            pa = g[6 * (i - 1) + j].getVertices()[0].coords
+            pb = g[6 * i + j].getVertices()[0].coords
             s_block_cut_revolve_shift.Line(point1=pa, point2=pb)
 
     p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, tol, pen)
@@ -3015,13 +3023,17 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     # 基于p4点所在的半径拾取sweep_edge
     x, y = polar_to_cartesian(p4[1], tol)
-    x = min(x, points[index_r, 0][0])
+    # x = min(x, points[index_r, 0][0])
+
+    p.DatumPointByCoordinate(coords=(x, y, z_list[-1]))
+
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
 
     # 拾取主体弧线
     partition_edges = []
-    for g in s_block_cut_revolve_shift.geometry.values()[2:index_r * 5]:
+    for g in s_block_cut_revolve_shift.geometry.values()[2:index_r * 6]:
         z, x = g.pointOn
+        p.DatumPointByCoordinate(coords=(x, 0.0, z))
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
             partition_edges.append(edge_sequence)
@@ -3034,7 +3046,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     # 拾取分段连线
     partition_edges = []
-    for g in s_block_cut_revolve_shift.geometry.values()[index_r * 5:]:
+    for g in s_block_cut_revolve_shift.geometry.values()[index_r * 6:]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
@@ -3509,7 +3521,7 @@ if __name__ == "__main__":
     # points, lines, faces = geometries(d, x0, beta, [0, 10, 200], [0, 10, 10])
 
     if not ABAQUS_ENV:
-        # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
+        points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
         plot_geometries(points, lines, faces)
         # points, lines, faces = geometries_hex([0, 40, 60], [0, 20, 30])
 
@@ -3540,7 +3552,7 @@ if __name__ == "__main__":
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
-        size = '1'
+        size = '1/2'
 
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
@@ -3597,7 +3609,8 @@ if __name__ == "__main__":
         p_gap = create_part_gap_b(model, 'PART-GAP', points, lines, faces, gap_dimension)
 
         front_ref_length = 183.4
-        first_block_dimension = {
+        # front_ref_length = 600.0
+        first_block_dimension =  {
             # 'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
             'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness],
             'deep': 380.0,
