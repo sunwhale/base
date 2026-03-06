@@ -2394,8 +2394,14 @@ def create_part_gap_front_b(model, part_name, points, lines, faces, dimension):
 
     result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
     l1 = Line2D(p3, np.tan(degrees_to_radians(theta_in_deg)))
-    l2 = Line2D((z_list[-1], 0.0), (z_list[-1], 1.0))
-    p4 = l1.get_intersection(l2)
+    l2 = Line2D([0.0, points[3, 0, 0]], [1.0, points[3, 0, 0]])
+    l3 = Line2D((z_list[-1], 0.0), (z_list[-1], 1.0))
+    if l1.get_intersection(l2)[0] > l1.get_intersection(l3)[0]:
+        p4 = l1.get_intersection(l3)
+        p5 = (pen, p4[1])
+    else:
+        p4 = l1.get_intersection(l2)
+        p5 = (z_list[-1], p4[1])
 
     p1 = result['p1']
     p2 = result['p2']
@@ -2412,8 +2418,9 @@ def create_part_gap_front_b(model, part_name, points, lines, faces, dimension):
     s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
     s_block_cut_revolve.Line(point1=(p0[0], 1), point2=(-pen, 1))
     s_block_cut_revolve.Line(point1=(-pen, 1), point2=(-pen, pen))
-    s_block_cut_revolve.Line(point1=(-pen, pen), point2=(p4[0], pen))
-    s_block_cut_revolve.Line(point1=(p4[0], pen), point2=p4)
+    s_block_cut_revolve.Line(point1=(-pen, pen), point2=(pen, pen))
+    s_block_cut_revolve.Line(point1=(pen, pen), point2=p5)
+    s_block_cut_revolve.Line(point1=p5, point2=p4)
     s_block_cut_revolve.Line(point1=p3, point2=p4)
     center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
     s_block_cut_revolve.assignCenterline(line=center_line)
@@ -3024,9 +3031,6 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     # 基于p4点所在的半径拾取sweep_edge
     x, y = polar_to_cartesian(p4[1], tol)
     # x = min(x, points[index_r, 0][0])
-
-    p.DatumPointByCoordinate(coords=(x, y, z_list[-1]))
-
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
 
     # 拾取主体弧线
@@ -3609,7 +3613,7 @@ if __name__ == "__main__":
         p_gap = create_part_gap_b(model, 'PART-GAP', points, lines, faces, gap_dimension)
 
         front_ref_length = 183.4
-        # front_ref_length = 600.0
+        front_ref_length = 600.0
         first_block_dimension =  {
             # 'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
             'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness],
