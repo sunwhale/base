@@ -29,6 +29,19 @@ except ImportError as e:
     print(e)
     ABAQUS_ENV = False
 
+# 获取版本字符串
+version_str = abaqus.version
+print("当前Abaqus版本:", version_str)
+
+# 示例：解析版本号并执行不同逻辑
+# 注意：版本格式可能是 '6.14-1' 或 '2024'，解析逻辑需根据实际情况调整
+try:
+    # 尝试按旧格式（如 6.14-1）解析
+    major_version = int(version_str.split('.')[0])
+except ValueError:
+    # 尝试按新格式（如 2024）解析
+    major_version = int(version_str.split('-')[0])
+
 
 class Line2D:
     """2D空间直线类"""
@@ -3614,7 +3627,7 @@ if __name__ == "__main__":
 
         front_ref_length = 183.4
         front_ref_length = 600.0
-        first_block_dimension =  {
+        first_block_dimension = {
             # 'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
             'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness],
             'deep': 380.0,
@@ -3696,7 +3709,10 @@ if __name__ == "__main__":
                 surface_name_2 = 'SURFACE-Z-2'
                 region2 = a.instances[instance_name_2].surfaces[surface_name_2]
                 constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
-                model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+                if major_version >= 2022:
+                    model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+                else:
+                    model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
 
         for l in range(nl):
             for i in range(nt - 1):
@@ -3707,7 +3723,10 @@ if __name__ == "__main__":
                 surface_name_2 = 'SURFACE-T-1'
                 region2 = a.instances[instance_name_2].surfaces[surface_name_2]
                 constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
-                model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+                if major_version >= 2022:
+                    model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+                else:
+                    model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
 
         for l in range(nl):
             for i in range(nt):
