@@ -2348,13 +2348,13 @@ def create_part_gap_b(model, part_name, points, lines, faces, dimension):
     yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
     p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
 
-    element_size = 40.0
+    element_size = 30.0
     c = p.cells
     elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
-    p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    p.seedPart(size=element_size, deviationFactor=0.2, minSizeValue=8.0)
     p.generateMesh()
 
     p.setValues(geometryRefinement=EXTRA_FINE)
@@ -2727,13 +2727,13 @@ def create_part_gap_front_b(model, part_name, points, lines, faces, dimension):
     set_name = 'SET-CELL-GLUE'
     p.Set(cells=p.cells, name=set_name)
 
-    element_size = 40.0
+    element_size = 30.0
     c = p.cells
     elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
-    p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    p.seedPart(size=element_size, deviationFactor=0.2, minSizeValue=8.0)
     p.generateMesh()
 
     p.setValues(geometryRefinement=EXTRA_FINE)
@@ -2925,13 +2925,13 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
-    element_size = 40.0
+    element_size = 30.0
     c = p.cells
     elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
-    p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    p.seedPart(size=element_size, deviationFactor=0.2, minSizeValue=8.0)
     p.generateMesh()
 
     p_faces = p.sets['SET-FACES-GRAIN-INSULATION'].faces
@@ -3370,13 +3370,13 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
-    element_size = 40.0
+    element_size = 30.0
     c = p.cells
     elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
-    p.seedPart(size=element_size, deviationFactor=0.1, minSizeFactor=0.1)
+    p.seedPart(size=element_size, deviationFactor=0.2, minSizeValue=8.0)
     p.generateMesh()
 
     return p
@@ -3752,7 +3752,8 @@ if __name__ == "__main__":
                     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1 + 0.5) * (block_gap + block_length)))
                     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-        model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=0.01, minInc=1e-06, maxInc=0.1)
+        model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
+        model.StaticStep(name='Step-2', previous='Step-1', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=0.01, minInc=1e-06, maxInc=0.1)
 
         for l in range(nl - 1):
             for i in range(nt):
@@ -3800,9 +3801,9 @@ if __name__ == "__main__":
             for i in range(nt):
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                 load_name = 'LOAD-' + instance_name + '-SURFACE-INNER'
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+                model.Pressure(name=load_name, createStepName='Step-2', region=a.instances[instance_name].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
                 load_name = 'LOAD-' + instance_name + '-SURFACE-X0'
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-X0'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+                model.Pressure(name=load_name, createStepName='Step-2', region=a.instances[instance_name].surfaces['SURFACE-X0'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
 
                 bc_name = 'BC-' + instance_name + '-SET-SURFACE-OUTER'
                 model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-OUTER'],
@@ -3810,25 +3811,28 @@ if __name__ == "__main__":
 
                 if i == 0:
                     if size == '1':
-                        bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-1'
-                        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-1'], localCsys=a.datums[cylindrical_datum.id])
+                        # bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-1'
+                        # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-1'], localCsys=a.datums[cylindrical_datum.id])
+                        pass
                     elif size == '1/2':
                         bc_name = 'BC-' + instance_name + '-SET-SURFACE-T0'
                         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T0'], localCsys=a.datums[cylindrical_datum.id])
 
                 if i == nt - 1:
-                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-T1'
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
+                    # bc_name = 'BC-' + instance_name + '-SET-SURFACE-T1'
+                    # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
+                    pass
 
                 if l == nl - 1:
-                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-Z1'
-                    model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
+                    # bc_name = 'BC-' + instance_name + '-SET-SURFACE-Z1'
+                    # model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
+                    pass
 
                 instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
                 load_name = 'LOAD-' + instance_name + '-SURFACE-INNER'
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+                model.Pressure(name=load_name, createStepName='Step-2', region=a.instances[instance_name].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
                 load_name = 'LOAD-' + instance_name + '-SURFACE-X0'
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-X0'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+                model.Pressure(name=load_name, createStepName='Step-2', region=a.instances[instance_name].surfaces['SURFACE-X0'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
 
                 bc_name = 'BC-' + instance_name + '-SET-SURFACE-OUTER'
                 model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-OUTER'],
