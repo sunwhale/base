@@ -2323,6 +2323,19 @@ def create_part_gap_b(model, part_name, points, lines, faces, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p.surfaces['SURFACE-T1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    for face in p.surfaces['SURFACE-Z1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    for face in p.surfaces['SURFACE-Z-1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-TIE')
+
     for name in p.surfaces.keys():
         p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
 
@@ -2874,6 +2887,19 @@ def create_part_block_b(model, part_name, points, lines, faces, dimension):
             p_faces += p.faces[face_id:face_id + 1]
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p.surfaces['SURFACE-T1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    for face in p.surfaces['SURFACE-Z1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    for face in p.surfaces['SURFACE-Z-1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-TIE')
 
     for name in p.surfaces.keys():
         p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
@@ -3701,7 +3727,7 @@ if __name__ == "__main__":
 
         instance_names = {}
 
-        nl = 1
+        nl = 2
         nt = 1
 
         for l in range(nl):
@@ -3750,32 +3776,11 @@ if __name__ == "__main__":
                 instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
                 surface_name_2 = 'SURFACE-TIE'
                 region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-                constrain_name = 'TIE-%s-%s-%s-%s' % (instance_name_1, surface_name_1, instance_name_2, surface_name_2)
+                constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
                 if major_version >= 2022:
                     model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
                 else:
                     model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
-
-                # surface_name_1 = 'SURFACE-Z1'
-                # region1 = a.instances[instance_name_1].surfaces[surface_name_1]
-                # surface_name_2 = 'SURFACE-Z1'
-                # region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-                # constrain_name = 'TIE-%s-%s-%s-%s' % (instance_name_1, surface_name_1, instance_name_2, surface_name_2)
-                # if major_version >= 2022:
-                #     model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
-                # else:
-                #     model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
-                #
-                # if l > 0:
-                #     surface_name_1 = 'SURFACE-Z-1'
-                #     region1 = a.instances[instance_name_1].surfaces[surface_name_1]
-                #     surface_name_2 = 'SURFACE-Z-1'
-                #     region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-                #     constrain_name = 'TIE-%s-%s-%s-%s' % (instance_name_1, surface_name_1, instance_name_2, surface_name_2)
-                #     if major_version >= 2022:
-                #         model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
-                #     else:
-                #         model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
 
         for l in range(nl):
             for i in range(nt - 1):
