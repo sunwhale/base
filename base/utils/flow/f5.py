@@ -3625,8 +3625,8 @@ if __name__ == "__main__":
         }
         p_gap = create_part_gap_b(model, 'PART-GAP', points, lines, faces, gap_dimension)
 
-        front_ref_length = 183.4
-        front_ref_length = 600.0
+        # front_ref_length = 183.4
+        front_ref_length = 509.0
         first_block_dimension = {
             # 'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
             'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness],
@@ -3673,7 +3673,7 @@ if __name__ == "__main__":
 
         instance_names = {}
 
-        nl = 5
+        nl = 2
         nt = 1
 
         for l in range(nl):
@@ -3756,12 +3756,47 @@ if __name__ == "__main__":
                     bc_name = 'BC-' + instance_name + '-SET-SURFACE-Z1'
                     model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
 
-        mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
-                atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
-                memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
-                explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
-                modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
-                scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
-                multiprocessingMode=DEFAULT, numCpus=8, numDomains=8, numGPUs=0)
+                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                load_name = 'LOAD-' + instance_name + '-SURFACE-INNER'
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+                load_name = 'LOAD-' + instance_name + '-SURFACE-X0'
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-X0'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+
+                bc_name = 'BC-' + instance_name + '-SET-SURFACE-OUTER'
+                model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-OUTER'],
+                                     u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+
+                if i == 0:
+                    if size == '1':
+                        bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-1'
+                        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-1'], localCsys=a.datums[cylindrical_datum.id])
+                    elif size == '1/2':
+                        bc_name = 'BC-' + instance_name + '-SET-SURFACE-T0'
+                        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T0'], localCsys=a.datums[cylindrical_datum.id])
+
+                if i == nt - 1:
+                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-T1'
+                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
+
+                if l == nl - 1:
+                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-Z1'
+                    model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
+
+        if major_version >= 2022:
+            mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
+                    atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
+                    memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
+                    explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
+                    modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
+                    scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
+                    multiprocessingMode=DEFAULT, numCpus=8, numDomains=8, numGPUs=0)
+        else:
+            mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
+                    atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
+                    memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
+                    explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
+                    modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
+                    scratch='', resultsFormat=ODB, multiprocessingMode=DEFAULT, numCpus=4,
+                    numDomains=4, numGPUs=0)
 
         mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
