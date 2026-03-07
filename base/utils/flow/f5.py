@@ -2326,6 +2326,9 @@ def create_part_gap_b(model, part_name, points, lines, faces, dimension):
     for name in p.surfaces.keys():
         p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
 
+    set_name = 'SET-CELL-GLUE'
+    p.Set(cells=p.cells, name=set_name)
+
     # Partition
     p1 = [x0 + deep, -a]
     offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
@@ -2523,122 +2526,122 @@ def create_part_gap_front_b(model, part_name, points, lines, faces, dimension):
     p2 = (points[0, 1][0], points[0, 1][1], 0.0)
     p3 = (points[0, 0][0], points[0, 0][1], 1.0)
     plane = Plane(p1, p2, p3)
-    faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            faces += p.faces[face_id:face_id + 1]
-    if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-X0')
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-X0')
 
     p1 = (points[0, 0][0], points[0, 0][1], 0.0)
     p2 = (points[0, 1][0], points[0, 1][1], 0.0)
     p3 = (points[1, 0][0], points[1, 0][1], 0.0)
     plane = Plane(p1, p2, p3)
-    faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            faces += p.faces[face_id:face_id + 1]
-    if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-Z0')
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-Z0')
 
     p1 = (points[0, 0][0], points[0, 0][1], z_list[-2])
     p2 = (points[0, 1][0], points[0, 1][1], z_list[-2])
     p3 = (points[1, 0][0], points[1, 0][1], z_list[-2])
     plane = Plane(p1, p2, p3)
-    faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            faces += p.faces[face_id:face_id + 1]
-    if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-Z1')
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-Z1')
 
     p1 = (points[0, 0][0], points[0, 0][1], z_list[-1])
     p2 = (points[0, 1][0], points[0, 1][1], z_list[-1])
     p3 = (points[1, 0][0], points[1, 0][1], z_list[-1])
     plane = Plane(p1, p2, p3)
-    faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            faces += p.faces[face_id:face_id + 1]
-    if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-Z2')
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-Z2')
 
     p1 = (points[0, 0][0], points[0, 0][1], -z_list[-2])
     p2 = (points[0, 1][0], points[0, 1][1], -z_list[-2])
     p3 = (points[1, 0][0], points[1, 0][1], -z_list[-2])
     plane = Plane(p1, p2, p3)
-    faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            faces += p.faces[face_id:face_id + 1]
-    if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-Z-1')
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-Z-1')
 
     p1 = (points[0, 0][0], points[0, 0][1], -z_list[-1])
     p2 = (points[0, 1][0], points[0, 1][1], -z_list[-1])
     p3 = (points[1, 0][0], points[1, 0][1], -z_list[-1])
     plane = Plane(p1, p2, p3)
-    faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            faces += p.faces[face_id:face_id + 1]
-    if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-Z-2')
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-Z-2')
 
     p1 = (points[0, 0][0], points[0, 0][1], 0.0)
     p2 = (points[2, 0][0], points[2, 0][1], 0.0)
     p3 = (points[0, 0][0], points[0, 0][1], length / 2.0)
     plane = Plane(p1, p2, p3)
-    faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            faces += p.faces[face_id:face_id + 1]
-    if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-T0')
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-T0')
 
     p1 = (points[0, 2][0], points[0, 2][1], 0.0)
     p2 = (points[2, 2][0], points[2, 2][1], 0.0)
     p3 = (points[0, 2][0], points[0, 2][1], length / 2.0)
     plane = Plane(p1, p2, p3)
-    faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            faces += p.faces[face_id:face_id + 1]
-    if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-T1')
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-T1')
 
     p1 = (points[0, 3][0], points[0, 3][1], 0.0)
     p2 = (points[2, 3][0], points[2, 3][1], 0.0)
     p3 = (points[0, 3][0], points[0, 3][1], length / 2.0)
     plane = Plane(p1, p2, p3)
-    faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            faces += p.faces[face_id:face_id + 1]
-    if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-T2')
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-T2')
 
     p1 = (points[0, 2][0], -points[0, 2][1], 0.0)
     p2 = (points[2, 2][0], -points[2, 2][1], 0.0)
     p3 = (points[0, 2][0], -points[0, 2][1], length / 2.0)
     plane = Plane(p1, p2, p3)
-    faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            faces += p.faces[face_id:face_id + 1]
-    if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-T-1')
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-T-1')
 
     p1 = (points[0, 3][0], -points[0, 3][1], 0.0)
     p2 = (points[2, 3][0], -points[2, 3][1], 0.0)
     p3 = (points[0, 3][0], -points[0, 3][1], length / 2.0)
     plane = Plane(p1, p2, p3)
-    faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            faces += p.faces[face_id:face_id + 1]
-    if faces:
-        p.Surface(side1Faces=faces, name='SURFACE-T-2')
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-T-2')
 
     p1 = [x0 + deep + b, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
@@ -2669,6 +2672,16 @@ def create_part_gap_front_b(model, part_name, points, lines, faces, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p.surfaces['SURFACE-T1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    for face in p.surfaces['SURFACE-Z1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-TIE')
+
     for name in p.surfaces.keys():
         p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
 
@@ -2697,6 +2710,9 @@ def create_part_gap_front_b(model, part_name, points, lines, faces, dimension):
 
     pickedEntities = (p_vertices, p_edges,)
     p.ignoreEntity(entities=pickedEntities)
+
+    set_name = 'SET-CELL-GLUE'
+    p.Set(cells=p.cells, name=set_name)
 
     element_size = 40.0
     c = p.cells
@@ -3313,6 +3329,16 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p.surfaces['SURFACE-T1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    for face in p.surfaces['SURFACE-Z1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-TIE')
+
     for name in p.surfaces.keys():
         p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
 
@@ -3624,6 +3650,7 @@ if __name__ == "__main__":
             'index_t': 3
         }
         p_gap = create_part_gap_b(model, 'PART-GAP', points, lines, faces, gap_dimension)
+        p_gap.SectionAssignment(region=p_gap.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
         # front_ref_length = 183.4
         front_ref_length = 509.0
@@ -3662,6 +3689,7 @@ if __name__ == "__main__":
             'index_t': 2
         }
         p_gap_front = create_part_gap_front_b(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
+        p_gap_front.SectionAssignment(region=p_gap_front.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
         p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
         p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
@@ -3673,7 +3701,7 @@ if __name__ == "__main__":
 
         instance_names = {}
 
-        nl = 2
+        nl = 1
         nt = 1
 
         for l in range(nl):
@@ -3713,6 +3741,41 @@ if __name__ == "__main__":
                     model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
                 else:
                     model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+
+        for l in range(nl):
+            for i in range(nt):
+                instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                surface_name_1 = 'SURFACE-TIE'
+                region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+                instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
+                surface_name_2 = 'SURFACE-TIE'
+                region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+                constrain_name = 'TIE-%s-%s-%s-%s' % (instance_name_1, surface_name_1, instance_name_2, surface_name_2)
+                if major_version >= 2022:
+                    model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+                else:
+                    model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+
+                # surface_name_1 = 'SURFACE-Z1'
+                # region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+                # surface_name_2 = 'SURFACE-Z1'
+                # region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+                # constrain_name = 'TIE-%s-%s-%s-%s' % (instance_name_1, surface_name_1, instance_name_2, surface_name_2)
+                # if major_version >= 2022:
+                #     model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+                # else:
+                #     model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+                #
+                # if l > 0:
+                #     surface_name_1 = 'SURFACE-Z-1'
+                #     region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+                #     surface_name_2 = 'SURFACE-Z-1'
+                #     region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+                #     constrain_name = 'TIE-%s-%s-%s-%s' % (instance_name_1, surface_name_1, instance_name_2, surface_name_2)
+                #     if major_version >= 2022:
+                #         model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+                #     else:
+                #         model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
 
         for l in range(nl):
             for i in range(nt - 1):
@@ -3768,19 +3831,19 @@ if __name__ == "__main__":
 
                 if i == 0:
                     if size == '1':
-                        bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-1'
-                        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-1'], localCsys=a.datums[cylindrical_datum.id])
+                        bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-2'
+                        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-2'], localCsys=a.datums[cylindrical_datum.id])
                     elif size == '1/2':
                         bc_name = 'BC-' + instance_name + '-SET-SURFACE-T0'
                         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T0'], localCsys=a.datums[cylindrical_datum.id])
 
                 if i == nt - 1:
-                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-T1'
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
+                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-T2'
+                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T2'], localCsys=a.datums[cylindrical_datum.id])
 
                 if l == nl - 1:
-                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-Z1'
-                    model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-Z1'], localCsys=a.datums[cylindrical_datum.id])
+                    bc_name = 'BC-' + instance_name + '-SET-SURFACE-Z2'
+                    model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-Z2'], localCsys=a.datums[cylindrical_datum.id])
 
         if major_version >= 2022:
             mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
