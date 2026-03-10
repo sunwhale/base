@@ -3383,7 +3383,7 @@ def create_part_block_front_b(model, part_name, points, lines, faces, dimension)
     return p
 
 
-def create_part_block_behind_1_b(model, part_name, points, lines, faces, dimension):
+def create_part_block_behind_2_b(model, part_name, points, lines, faces, dimension):
     z_list = dimension['z_list']
     deep = dimension['deep']
     x0 = dimension['x0']
@@ -3565,9 +3565,9 @@ def create_part_block_behind_1_b(model, part_name, points, lines, faces, dimensi
     yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
     p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
 
-    # 旋转切割头部外轮廓
+    # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-BEHIND', sheetSize=4000.0, transform=t)
+    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-BEHIND-2-CUT-REVOLVE', sheetSize=4000.0, transform=t)
 
     p1 = [block_length / 2.0, x0 + deep + b - 1.0]
     p2 = [block_length / 2.0 - block_insulation_thickness, x0 + deep + b - 1.0]
@@ -3663,7 +3663,7 @@ def create_part_block_behind_b(model, part_name, points, lines, faces, dimension
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-BEHIND', sheetSize=4000.0, transform=t)
+    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-BEHIND-CUT-REVOLVE', sheetSize=4000.0, transform=t)
     p0 = (1207.5, 794)
     theta0_deg = -90
     p3 = (350, 1762.5)
@@ -3710,7 +3710,7 @@ def create_part_block_behind_b(model, part_name, points, lines, faces, dimension
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=4000.0, transform=t)
+    s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-BEHIND-CUT-REVOLVE-SHIFT', sheetSize=4000.0, transform=t)
     geom_list = []
     geom_list.append(s_block_cut_revolve_shift.Line(point1=(p0[0], x0), point2=p0))
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
@@ -3899,22 +3899,6 @@ def create_part_block_behind_b(model, part_name, points, lines, faces, dimension
 
     create_block_surface_common(p, points, dimension)
 
-    # p1 = [x0 + deep + b, 0.0]
-    # x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
-    # y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    # p_faces = p.faces.getByBoundingBox(0, tol, -r_front - b, x1 * 1.1, y1, length / 2.0)
-    # face_areas = []
-    # for face in p_faces:
-    #     face_area = face.getSize()
-    #     face_areas.append(face_area)
-    # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    # for face_id in range(len(p.faces)):
-    #     face_size = p.faces[face_id].getSize()
-    #     if min_difference(face_size, face_areas) < tol:
-    #         p_faces += p.faces[face_id:face_id + 1]
-    # if p_faces:
-    #     p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
-
     xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n / 2.0)
     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
 
@@ -3946,6 +3930,38 @@ def create_part_block_behind_b(model, part_name, points, lines, faces, dimension
         p_faces += p.faces[face_id:face_id + 1]
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-TIE')
+
+    # 旋转切割头部外轮廓
+    t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-BEHIND-CUT-REVOLVE-2', sheetSize=4000.0, transform=t)
+
+    p1 = [-pen, x0 + deep + b]
+    p2 = [pen, x0 + deep + b]
+    p3 = [pen, 0]
+    p4 = [-pen, 0]
+
+    s_block_cut_revolve.Line(point1=p1, point2=p2)
+    s_block_cut_revolve.Line(point1=p2, point2=p3)
+    s_block_cut_revolve.Line(point1=p3, point2=p4)
+    s_block_cut_revolve.Line(point1=p4, point2=p1)
+
+    center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
+    s_block_cut_revolve.assignCenterline(line=center_line)
+
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+
+    # 通过排除法确定内表面
+    surface_names = list(p.surfaces.keys())
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        is_surface_outer = True
+        for surface_name in surface_names:
+            if p.faces[face_id] in p.surfaces[surface_name].faces:
+                is_surface_outer = False
+        if is_surface_outer and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
     for name in p.surfaces.keys():
         p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
@@ -4328,7 +4344,7 @@ if __name__ == "__main__":
             'index_t': 2
         }
         points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
-        # p_block_behind_1 = create_part_block_behind_1_b(model, 'PART-BLOCK-BEHIND-1', points, lines, faces, behind_block_dimension)
+        # p_block_behind_1 = create_part_block_behind_2_b(model, 'PART-BLOCK-BEHIND-1', points, lines, faces, behind_block_dimension)
 
         behind_ref_length = 509.0
         behind_block_dimension = {
