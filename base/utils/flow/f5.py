@@ -3791,16 +3791,10 @@ def create_part_block_behind_b(model, part_name, points, lines, faces, dimension
     geom_list = []
     # 拾取被切割平面上的线段，同一个theta
     for i in range(1, index_t):
-        # geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
-        geom_list.append(s_block_partition.Line(point1=(-points[0, i, 0], points[0, i, 1]), point2=(-points[index_r, i, 0], points[index_r, i, 1])))
-
-    # s_block_partition.Line(point1=(-pen, -pen), point2=(pen, pen))
-
-    print(y_axis.id)
+        geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
 
     # Partition
     p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, pen, -z_list[-1])
-    p.Set(faces=p_faces, name = 'Set-1')
     p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
 
     # 拾取被切割平面上的线段，同一个theta
@@ -3815,43 +3809,10 @@ def create_part_block_behind_b(model, part_name, points, lines, faces, dimension
     for line_key in line_keys:
         line_middle_point = lines[line_key][3]
         x, y = line_middle_point
-        edge_sequence = p.edges.findAt(((x, y, z_list[-1]),))
+        edge_sequence = p.edges.findAt(((x, y, -z_list[-1]),))
         if len(edge_sequence) > 0:
             partition_edges.append(edge_sequence[0])
-    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
-
-    # SKETCH-CUT
-    s_cut = model.ConstrainedSketch(name='SKETCH-CUT', sheetSize=200.0)
-    x1 = 400.0
-    center = [x0 + deep, 0.0]
-    p1 = [x0 + deep, -a]
-    p2 = [x0 + deep + b, 0.0]
-    e1 = s_cut.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
-    l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
-    l2 = Line2D([x0, 0.0], [x0, 1.0])
-    p3 = l1.get_intersection(l2)
-    p4 = [p3[0], 0.0]
-
-    p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
-    s_cut.Spot(point=p1p)
-
-    s_cut.Line(point1=p1, point2=p3)
-    s_cut.Line(point1=p3, point2=p4)
-    s_cut.Line(point1=center, point2=p2)
-    s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
-    s_cut.Line(point1=p4, point2=center)
-    center_line = s_cut.ConstructionLine(point1=(x0 + deep - r_front, -pen), point2=(x0 + deep - r_front, pen))
-    geom_list = []
-    for g in s_cut.geometry.values():
-        geom_list.append(g)
-    s_cut.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
-    s_cut.assignCenterline(line=center_line)
-
-    # CutExtrude
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
-
-    # 旋转切割头部燃道
-    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
+    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
 
     for i in range(1, len(z_list) - 1):
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
@@ -3934,78 +3895,25 @@ def create_part_block_behind_b(model, part_name, points, lines, faces, dimension
             cells += p.cells[cell.index:cell.index + 1]
     p.Set(cells=cells, name='SET-CELL-GLUE')
 
-    # cells = p.sets['SET-CELL-INSULATION'].cells
-    # for pa in faces_xz_plane[2]:
-    #     # p.DatumPointByCoordinate(coords=(pa[1], 0.0, pa[0]))
-    #     cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
-    #     center = (0.0, 0.0, pa[0])
-    #     p.DatumPointByCoordinate(coords=center)
-    #     plane_1 = Plane(center, (0.0, 0.0, 1.0))
-    #     circle = Circle3D(center, abs(pa[1]), plane_1)
-    #     for j in [1]:
-    #         plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
-    #         pb = plane_2.intersection_with_circle(circle)
-    #         if pb:
-    #             p.DatumPointByCoordinate(coords=pb[0])
-    #             p.DatumPointByCoordinate(coords=pb[1])
-    #             c = p.cells.findAt((pb[1],))
-    #             cells += c
-    # p.Set(cells=cells, name='SET-CELL-INSULATION')
-    #
-    # cells = p.sets['SET-CELL-GLUE-A'].cells
-    # for pa in faces_xz_plane[2]:
-    #     center = (0.0, 0.0, pa[0])
-    #     p.DatumPointByCoordinate(coords=center)
-    #     plane_1 = Plane(center, (0.0, 0.0, 1.0))
-    #     circle = Circle3D(center, abs(pa[1]), plane_1)
-    #     for j in [2]:
-    #         plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
-    #         pb = plane_2.intersection_with_circle(circle)
-    #         if pb:
-    #             c = p.cells.findAt((pb[1],))
-    #             cells += c
-    # p.Set(cells=cells, name='SET-CELL-GLUE-A')
-    #
-    # cells = p.sets['SET-CELL-GLUE-B'].cells
-    # for pa in faces_xz_plane[1]:
-    #     cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
-    #     center = (0.0, 0.0, pa[0])
-    #     p.DatumPointByCoordinate(coords=center)
-    #     plane_1 = Plane(center, (0.0, 0.0, 1.0))
-    #     circle = Circle3D(center, abs(pa[1]), plane_1)
-    #     for j in [1, 2]:
-    #         plane_2 = Plane((faces[0, j][0], faces[0, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 0.0), (faces[1, j][0], faces[1, j][1], 1.0))
-    #         pb = plane_2.intersection_with_circle(circle)
-    #         if pb:
-    #             c = p.cells.findAt((pb[1],))
-    #             cells += c
-    # p.Set(cells=cells, name='SET-CELL-GLUE-B')
-
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-
-    p_edges = []
-    for z_center in z_centers:
-        p_edges.append(p.edges.findAt((p1p[0], p1p[1], z_center)))
-    p_edges.append(p.edges.findAt((p1p[0], p1p[1], 0.0)))
-    p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
     create_block_surface_common(p, points, dimension)
 
-    p1 = [x0 + deep + b, 0.0]
-    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
-    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, tol, -r_front - b, x1 * 1.1, y1, length / 2.0)
-    face_areas = []
-    for face in p_faces:
-        face_area = face.getSize()
-        face_areas.append(face_area)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        face_size = p.faces[face_id].getSize()
-        if min_difference(face_size, face_areas) < tol:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+    # p1 = [x0 + deep + b, 0.0]
+    # x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
+    # y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
+    # p_faces = p.faces.getByBoundingBox(0, tol, -r_front - b, x1 * 1.1, y1, length / 2.0)
+    # face_areas = []
+    # for face in p_faces:
+    #     face_area = face.getSize()
+    #     face_areas.append(face_area)
+    # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    # for face_id in range(len(p.faces)):
+    #     face_size = p.faces[face_id].getSize()
+    #     if min_difference(face_size, face_areas) < tol:
+    #         p_faces += p.faces[face_id:face_id + 1]
+    # if p_faces:
+    #     p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
     xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n / 2.0)
     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
@@ -4033,7 +3941,7 @@ def create_part_block_behind_b(model, part_name, points, lines, faces, dimension
     for face in p.surfaces['SURFACE-T1'].faces:
         face_id = face.index
         p_faces += p.faces[face_id:face_id + 1]
-    for face in p.surfaces['SURFACE-Z1'].faces:
+    for face in p.surfaces['SURFACE-Z-1'].faces:
         face_id = face.index
         p_faces += p.faces[face_id:face_id + 1]
     if p_faces:
