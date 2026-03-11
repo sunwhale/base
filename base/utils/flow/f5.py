@@ -4307,7 +4307,7 @@ def create_part_gap_behind_b(model, part_name, points, lines, faces, dimension):
 
     set_name = 'SET-CELL-GLUE'
     p.Set(cells=p.cells, name=set_name)
-    
+
     element_size = 30.0
     c = p.cells
     elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
@@ -4594,17 +4594,19 @@ def create_part_gap_behind_2_b(model, part_name, points, lines, faces, dimension
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-BEHIND-2-CUT-REVOLVE', sheetSize=4000.0, transform=t)
 
+    p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], x0 + deep + b - 1.0]
     p1 = [block_length / 2.0, x0 + deep + b - 1.0]
     p2 = [block_length / 2.0 - block_insulation_thickness, x0 + deep + b - 1.0]
     l1 = Line2D(p2, np.tan(degrees_to_radians(45.0)))
     l2 = Line2D([0.0, 0.0], [1.0, 0.0])
     p3 = l1.get_intersection(l2)
-    p4 = [block_length / 2.0, 0.0]
+    p4 = [block_length / 2.0 + z_list[-1] - z_list[-2], 0.0]
 
+    s_block_cut_revolve.Line(point1=p0, point2=p1)
     s_block_cut_revolve.Line(point1=p1, point2=p2)
     s_block_cut_revolve.Line(point1=p2, point2=p3)
     s_block_cut_revolve.Line(point1=p3, point2=p4)
-    s_block_cut_revolve.Line(point1=p4, point2=p1)
+    s_block_cut_revolve.Line(point1=p4, point2=p0)
 
     center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
     s_block_cut_revolve.assignCenterline(line=center_line)
@@ -5031,8 +5033,8 @@ if __name__ == "__main__":
 
         points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
         behind_gap_dimension = {
-            # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
-            'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2],
+            'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
+            # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2],
             'deep': 380.0,
             'x0': x0,
             'length_up': 1039.2,
@@ -5086,9 +5088,19 @@ if __name__ == "__main__":
                     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1 + 0.5) * (block_gap + block_length)))
                     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
+                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    a.Instance(name=instance_name, part=p_gap_behind_2, dependent=ON)
+                    a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1 + 0.5) * (block_gap + block_length)))
+                    a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
                 else:
                     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                     a.Instance(name=instance_name, part=p_block_behind, dependent=ON)
+                    a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1) * (block_gap + block_length) + block_gap / 2 + block_insulation_thickness + behind_ref_length))
+                    a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    a.Instance(name=instance_name, part=p_gap_behind, dependent=ON)
                     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1) * (block_gap + block_length) + block_gap / 2 + block_insulation_thickness + behind_ref_length))
                     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
