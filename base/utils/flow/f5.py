@@ -4931,49 +4931,25 @@ if __name__ == "__main__":
         gap_dimension['index_t'] = 3
         p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
 
+        penult_block_dimension = deepcopy(block_dimension)
+        p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
+
+        penult_gap_dimension = deepcopy(gap_dimension)
+        p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
+
+        points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
         front_ref_length = 509.0
         first_block_dimension = deepcopy(block_dimension)
         first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness]
         first_block_dimension['index_r'] = 3
         first_block_dimension['index_t'] = 2
-        points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
         p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
 
-        first_gap_dimension = {
-            'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
-            'deep': 380.0,
-            'x0': x0,
-            'length_up': 1039.2,
-            'width': 100.0,
-            'angle_demolding_1': 1.5,
-            'angle_demolding_2': 10.0,
-            'fillet_radius': 50.0,
-            'a': 50.0,
-            'b': 25.0,
-            'size': size,
-            'index_r': 3,
-            'index_t': 2
-        }
+        first_gap_dimension = deepcopy(block_dimension)
+        first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2]
+        first_gap_dimension['index_r'] = 3
+        first_gap_dimension['index_t'] = 2
         p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
-
-        behind_block_dimension = {
-            # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
-            'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2],
-            'deep': 380.0,
-            'x0': x0,
-            'length_up': 1039.2,
-            'width': 100.0,
-            'angle_demolding_1': 1.5,
-            'angle_demolding_2': 10.0,
-            'fillet_radius': 50.0,
-            'a': 50.0,
-            'b': 25.0,
-            'size': size,
-            'index_r': 2,
-            'index_t': 2
-        }
-        points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
-        p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, behind_block_dimension)
 
         behind_ref_length = 509.0
         behind_block_dimension = {
@@ -5012,24 +4988,7 @@ if __name__ == "__main__":
         }
         p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
 
-        points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
-        behind_gap_dimension = {
-            'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
-            # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2],
-            'deep': 380.0,
-            'x0': x0,
-            'length_up': 1039.2,
-            'width': 100.0,
-            'angle_demolding_1': 1.5,
-            'angle_demolding_2': 10.0,
-            'fillet_radius': 50.0,
-            'a': 50.0,
-            'b': 25.0,
-            'size': size,
-            'index_r': 3,
-            'index_t': 2
-        }
-        p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, behind_gap_dimension)
+
 
         a = model.rootAssembly
         a.DatumCsysByDefault(CARTESIAN)
