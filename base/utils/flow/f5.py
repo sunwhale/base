@@ -4,6 +4,7 @@
 """
 import json
 import math
+from copy import deepcopy
 
 import numpy as np
 from collections import Counter
@@ -2497,8 +2498,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     for name in p.surfaces.keys():
         p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
 
-    p.setValues(geometryRefinement=EXTRA_FINE)
-
     element_size = 30.0
     c = p.cells
     elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
@@ -2507,6 +2506,12 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
     p.seedPart(size=element_size, deviationFactor=0.2, minSizeValue=8.0)
     p.generateMesh()
+
+    p.SectionAssignment(region=p.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+    p.SectionAssignment(region=p.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+    p.SectionAssignment(region=p.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
 
@@ -2721,7 +2726,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
     p.SectionAssignment(region=p.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
     p.SectionAssignment(region=p.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-CELL-GLUE-A'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+    # p.SectionAssignment(region=p.sets['SET-CELL-GLUE-A'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
     p.SectionAssignment(region=p.sets['COHESIVE-ELEMENTS-GRAIN-INSULATION'], sectionName='SECTION-CZM', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
     return p
@@ -3698,6 +3703,8 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p.seedPart(size=element_size, deviationFactor=0.2, minSizeValue=8.0)
     p.generateMesh()
 
+    p.SectionAssignment(region=p.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+
     p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
@@ -3979,6 +3986,8 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
     p.seedPart(size=element_size, deviationFactor=0.2, minSizeValue=8.0)
     p.generateMesh()
+
+    p.SectionAssignment(region=p.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -4284,6 +4293,8 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
     p.seedPart(size=element_size, deviationFactor=0.2, minSizeValue=8.0)
     p.generateMesh()
+
+    p.SectionAssignment(region=p.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -4627,6 +4638,8 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     p.seedPart(size=element_size, deviationFactor=0.2, minSizeValue=8.0)
     p.generateMesh()
 
+    p.SectionAssignment(region=p.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+
     p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
@@ -4893,8 +4906,6 @@ if __name__ == "__main__":
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
-        # p_block_a = create_part_block_a(model, 'PART-BLOCK-A', points, lines, faces, block_dimension)
-
         block_dimension = {
             # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
             'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2],
@@ -4914,48 +4925,19 @@ if __name__ == "__main__":
         points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
         p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
 
-        gap_dimension = {
-            'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
-            'deep': 380.0,
-            'x0': x0,
-            'length_up': 1039.2,
-            'width': 100.0,
-            'angle_demolding_1': 1.5,
-            'angle_demolding_2': 10.0,
-            'fillet_radius': 50.0,
-            'a': 50.0,
-            'b': 25.0,
-            'size': size,
-            'index_r': 2,
-            'index_t': 3
-        }
+        gap_dimension = deepcopy(block_dimension)
+        gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2]
+        gap_dimension['index_r'] = 2
+        gap_dimension['index_t'] = 3
         p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
-        p_gap.SectionAssignment(region=p_gap.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
-        # front_ref_length = 183.4
         front_ref_length = 509.0
-        first_block_dimension = {
-            # 'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
-            'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness],
-            'deep': 380.0,
-            'x0': x0,
-            'length_up': 1039.2,
-            'width': 100.0,
-            'angle_demolding_1': 1.5,
-            'angle_demolding_2': 10.0,
-            'fillet_radius': 50.0,
-            'a': 50.0,
-            'b': 25.0,
-            'size': size,
-            'index_r': 3,
-            'index_t': 2
-        }
+        first_block_dimension = deepcopy(block_dimension)
+        first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness]
+        first_block_dimension['index_r'] = 3
+        first_block_dimension['index_t'] = 2
         points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
         p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
-
-        p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-        p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-        p_block_front.SectionAssignment(region=p_block_front.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
         first_gap_dimension = {
             'z_list': [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2],
@@ -4973,7 +4955,6 @@ if __name__ == "__main__":
             'index_t': 2
         }
         p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
-        p_gap_front.SectionAssignment(region=p_gap_front.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
         behind_block_dimension = {
             # 'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2],
@@ -4992,7 +4973,7 @@ if __name__ == "__main__":
             'index_t': 2
         }
         points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
-        p_block_penult = create_part_block_penult(model, 'PART-BLOCK-BEHIND-2', points, lines, faces, behind_block_dimension)
+        p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, behind_block_dimension)
 
         behind_ref_length = 509.0
         behind_block_dimension = {
@@ -5030,7 +5011,6 @@ if __name__ == "__main__":
             'index_t': 2
         }
         p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
-        p_gap_behind.SectionAssignment(region=p_gap_behind.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
         points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
         behind_gap_dimension = {
@@ -5049,8 +5029,7 @@ if __name__ == "__main__":
             'index_r': 3,
             'index_t': 2
         }
-        p_gap_penult = create_part_gap_penult(model, 'PART-GAP-BEHIND-2', points, lines, faces, behind_gap_dimension)
-        p_gap_penult.SectionAssignment(region=p_gap_penult.sets['SET-CELL-GLUE'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+        p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, behind_gap_dimension)
 
         a = model.rootAssembly
         a.DatumCsysByDefault(CARTESIAN)
