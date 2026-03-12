@@ -2961,6 +2961,11 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     # elemType1 = mesh.ElemType(elemCode=COH3D8, elemLibrary=STANDARD)
     # p.setElementType(regions=p.sets['COHESIVE-ELEMENTS-GRAIN-INSULATION'], elemTypes=(elemType1,))
 
+    p.SectionAssignment(region=p.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+    p.SectionAssignment(region=p.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+    # p.SectionAssignment(region=p.sets['SET-CELL-GLUE-A'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+    # p.SectionAssignment(region=p.sets['COHESIVE-ELEMENTS-GRAIN-INSULATION'], sectionName='SECTION-CZM', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+
     return p
 
 
@@ -3325,6 +3330,11 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
     p.seedPart(size=element_size, deviationFactor=0.2, minSizeValue=8.0)
     p.generateMesh()
+
+    p.SectionAssignment(region=p.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+    p.SectionAssignment(region=p.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+    # p.SectionAssignment(region=p.sets['SET-CELL-GLUE-A'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+    # p.SectionAssignment(region=p.sets['COHESIVE-ELEMENTS-GRAIN-INSULATION'], sectionName='SECTION-CZM', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
     return p
 
@@ -4948,7 +4958,7 @@ if __name__ == "__main__":
         first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2]
         p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
 
-        behind_ref_length = 1000.0
+        behind_ref_length = 500.0
         behind_block_dimension = deepcopy(first_block_dimension)
         behind_block_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness]
         p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
