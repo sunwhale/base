@@ -86,6 +86,8 @@ class F1From(FlaskForm):
     userDefinedInc = FloatField('用户自定义增量步长', default=1.0e-7)
     step_time = FloatField('载荷步时间，s', default=1.0)
     mass_scaling_factor = FloatField('质量缩放系数', default=1.0)
+    linearBulkViscosity = FloatField('线性体积粘度系数', default=0.2)
+    quadBulkViscosity = FloatField('二次体粘滞系数‌', default=2.5)
 
     submit = SubmitField('保存当前参数')
 
