@@ -1452,7 +1452,7 @@ def set_obj(obj, attr, attr_dict):
 
 def set_material(material_obj, material_dict):
     for material_key, material_value in material_dict.items():
-        print(material_key)
+        # print(material_key)
         if '.' in material_key:
             if hasattr(material_obj, material_key.split('.')[1]):
                 material_sub_obj = getattr(material_obj, material_key.split('.')[1])
@@ -1464,17 +1464,17 @@ def set_material(material_obj, material_dict):
                 set_obj(material_obj, material_key, material_value)
 
 
-def get_same_volume_cells(p, cells):
+def get_same_volume_cells(p, cells, tol=1e-3):
     cell_volumes = []
     for cell in cells:
-        cell_volume = cell.getSize()
+        cell_volume = cell.getSize(printResults=False)
         cell_volumes.append(cell_volume)
 
     if cell_volumes != []:
         cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
         for cell_id in range(len(p.cells)):
-            cell_size = p.cells[cell_id].getSize()
-            if min_difference(cell_size, cell_volumes) < 1e-3:
+            cell_size = p.cells[cell_id].getSize(printResults=False)
+            if min_difference(cell_size, cell_volumes) < tol:
                 cells += p.cells[cell_id:cell_id + 1]
         return cells
     else:
@@ -1488,7 +1488,7 @@ def get_direction(delta):
         return CLOCKWISE
 
 
-def get_common_faces_between_sets(p_set_1, p_set_2):
+def get_common_faces_between_sets(p, p_set_1, p_set_2):
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     faces_1 = p_set_1.cells.getExteriorFaces()
     faces_2 = p_set_2.cells.getExteriorFaces()
