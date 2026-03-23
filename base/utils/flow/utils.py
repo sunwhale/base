@@ -1494,7 +1494,7 @@ def get_same_area_faces(p, p_faces, tol=1e-3):
             face_size = p.faces[face_id].getSize(printResults=False)
             if min_difference(face_size, face_areas) < tol:
                 p_faces += p.faces[face_id:face_id + 1]
-            return p_faces
+        return p_faces
     else:
         return None
 
@@ -1536,6 +1536,28 @@ def generate_part_mesh(p, element_size, deviationFactor=0.2, minSizeValue=8.0):
     p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
     p.seedPart(size=element_size, deviationFactor=deviationFactor, minSizeValue=minSizeValue)
     p.generateMesh()
+
+
+def insert_COH3D8_at_face_set(p, face_set_name, element_set_name):
+    p_faces = p.sets[face_set_name].faces
+    picked_faces = regionToolset.Region(side1Faces=p_faces)
+    p.insertElements(faces=picked_faces)
+    for i, face in enumerate(p_faces):
+        if i == 0:
+            elements = face.getElements()
+        else:
+            elements += face.getElements()
+
+    if elements:
+        p.Set(elements=elements, name=element_set_name)
+
+    elemType1 = mesh.ElemType(elemCode=COH3D8, elemLibrary=STANDARD)
+    p.setElementType(regions=p.sets[element_set_name], elemTypes=(elemType1,))
+
+
+def create_face_set_from_surface(p):
+    for name in p.surfaces.keys():
+        p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
 
 
 if __name__ == "__main__":
