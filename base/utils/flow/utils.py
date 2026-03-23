@@ -1506,6 +1506,21 @@ def get_direction(delta):
         return CLOCKWISE
 
 
+def vertices_in_cells(cells):
+    cell_vertices = ()
+    for cell in cells:
+        cell_vertices += cell.getVertices()
+    cell_vertices = tuple(set(cell_vertices))
+    return cell_vertices
+
+
+def is_cell_in_set(cell, p_set):
+    for c in p_set.cells:
+        if c == cell:
+            return True
+    return False
+
+
 def get_common_faces_between_sets(p, p_set_1, p_set_2):
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     faces_1 = p_set_1.cells.getExteriorFaces()
