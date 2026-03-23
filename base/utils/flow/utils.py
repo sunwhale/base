@@ -1087,7 +1087,7 @@ def solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3, tol=1e-6):
             _, _, delta2 = included_angle(c2, p1, p2)
             _, _, delta3 = included_angle(c3, p2, p3)
 
-            print(s, delta1, delta2, delta3)
+            # print(s, delta1, delta2, delta3)
 
             def same_sign(a, b, c):
                 """通过乘积判断三个数是否同号"""
