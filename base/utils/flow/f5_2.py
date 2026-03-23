@@ -48,7 +48,6 @@ def create_sketch_block(model, sketch_name, points, index_r, index_t):
 
 def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n):
     s_cut = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
-    x1 = 400.0
     center = [x0 + deep, 0.0]
     p1 = [x0 + deep, -a]
     p2 = [x0 + deep + b, 0.0]
@@ -67,6 +66,32 @@ def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n):
         geom_list.append(g)
     s_cut.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
     return s_cut
+
+
+def create_sketch_cut_front(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_front):
+    s_cut = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+    center = [x0 + deep, 0.0]
+    p1 = [x0 + deep, -a]
+    p2 = [x0 + deep + b, 0.0]
+    e1 = s_cut.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
+    l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
+    l2 = Line2D([x0, 0.0], [x0, 1.0])
+    p3 = l1.get_intersection(l2)
+    p4 = [p3[0], 0.0]
+    p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
+    s_cut.Spot(point=p1p)
+    s_cut.Line(point1=p1, point2=p3)
+    s_cut.Line(point1=p3, point2=p4)
+    s_cut.Line(point1=center, point2=p2)
+    s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
+    s_cut.Line(point1=p4, point2=center)
+    center_line = s_cut.ConstructionLine(point1=(x0 + deep - r_front, -1e4), point2=(x0 + deep - r_front, 1e4))
+    geom_list = []
+    for g in s_cut.geometry.values():
+        geom_list.append(g)
+    s_cut.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
+    s_cut.assignCenterline(line=center_line)
+    return s_cut, p1p
 
 
 def create_part_block(model, part_name, points, lines, faces, dimension):
@@ -525,35 +550,10 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
 
     # SKETCH-CUT
-    s_cut = model.ConstrainedSketch(name='SKETCH-CUT-FRONT', sheetSize=200.0)
-    center = [x0 + deep, 0.0]
-    p1 = [x0 + deep, -a]
-    p2 = [x0 + deep + b, 0.0]
-    e1 = s_cut.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
-    l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
-    l2 = Line2D([x0, 0.0], [x0, 1.0])
-    p3 = l1.get_intersection(l2)
-    p4 = [p3[0], 0.0]
+    s_cut, p1p = create_sketch_cut_front(model, 'SKETCH-CUT-FRONT', x0, deep, a, b, angle_demolding_1, n, r_front)
 
-    p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
-    s_cut.Spot(point=p1p)
-
-    s_cut.Line(point1=p1, point2=p3)
-    s_cut.Line(point1=p3, point2=p4)
-    s_cut.Line(point1=center, point2=p2)
-    s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
-    s_cut.Line(point1=p4, point2=center)
-    center_line = s_cut.ConstructionLine(point1=(x0 + deep - r_front, -pen), point2=(x0 + deep - r_front, pen))
-    geom_list = []
-    for g in s_cut.geometry.values():
-        geom_list.append(g)
-    s_cut.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
-    s_cut.assignCenterline(line=center_line)
-
-    # CutExtrude
+    # 切割头部燃道
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
-
-    # 旋转切割头部燃道
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
 
     for i in range(1, len(z_list) - 1):
