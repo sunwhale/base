@@ -1465,19 +1465,36 @@ def set_material(material_obj, material_dict):
                 set_obj(material_obj, material_key, material_value)
 
 
-def get_same_volume_cells(p, cells, tol=1e-3):
+def get_same_volume_cells(p, p_cells, tol=1e-3):
     cell_volumes = []
-    for cell in cells:
+    for cell in p_cells:
         cell_volume = cell.getSize(printResults=False)
         cell_volumes.append(cell_volume)
 
     if cell_volumes != []:
-        cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+        p_cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
         for cell_id in range(len(p.cells)):
             cell_size = p.cells[cell_id].getSize(printResults=False)
             if min_difference(cell_size, cell_volumes) < tol:
-                cells += p.cells[cell_id:cell_id + 1]
-        return cells
+                p_cells += p.cells[cell_id:cell_id + 1]
+        return p_cells
+    else:
+        return None
+
+
+def get_same_area_faces(p, p_faces, tol=1e-3):
+    face_areas = []
+    for face in p_faces:
+        face_area = face.getSize(printResults=False)
+        face_areas.append(face_area)
+
+    if face_areas != []:
+        p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+        for face_id in range(len(p.faces)):
+            face_size = p.faces[face_id].getSize(printResults=False)
+            if min_difference(face_size, face_areas) < tol:
+                p_faces += p.faces[face_id:face_id + 1]
+            return p_faces
     else:
         return None
 
