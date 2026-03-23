@@ -410,7 +410,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
     l1 = Line2D(p3, np.tan(degrees_to_radians(theta_in_deg)))
-    l2 = Line2D([0.0, points[3, 0, 0]], [1.0, points[3, 0, 0]])
+    l2 = Line2D([0.0, points[index_r, 0, 0]], [1.0, points[index_r, 0, 0]])
     l3 = Line2D((z_list[-1], 0.0), (z_list[-1], 1.0))
     if l1.get_intersection(l2)[0] > l1.get_intersection(l3)[0]:
         p4 = l1.get_intersection(l3)
@@ -458,7 +458,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         s_block_cut_revolve_shift.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=RIGHT)
 
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for g in s_block_cut_revolve_shift.geometry.values():
+    for g in s_block_cut_revolve_shift.geometry.values()[:6]:
         z, x = g.pointOn
         point = (x, 0.0, z)
         angle = degrees_to_radians(180.0 / n / 2.0)
@@ -578,7 +578,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
 
-    for pa in faces_xz_plane[2]:
+    for pa in faces_xz_plane[index_r - 1]:
         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
         center = (0.0, 0.0, pa[0])
         p.DatumPointByCoordinate(coords=center)
@@ -590,12 +590,11 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
             if pb:
                 p.DatumPointByCoordinate(coords=pb[0])
                 p.DatumPointByCoordinate(coords=pb[1])
-                c = p.cells.findAt((pb[1],))
-                cells += c
+                # c = p.cells.findAt((pb[0],))
+                # cells += c
 
-    if cells is not None:
-        set_name = 'SET-CELL-GRAIN'
-        p.Set(cells=cells, name=set_name)
+    if cells:
+        p.Set(cells=cells, name='SET-CELL-GRAIN')
 
     # 与GRAIN相邻的为INSULATION集合
     set_vertices = vertices_in_cells(p.sets['SET-CELL-GRAIN'].cells)
@@ -609,7 +608,8 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
                 break
         if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']):
             cells += p.cells[cell.index:cell.index + 1]
-    p.Set(cells=cells, name='SET-CELL-INSULATION')
+    if cells:
+        p.Set(cells=cells, name='SET-CELL-INSULATION')
 
     # 与INSULATION相邻的为GLUE集合
     set_vertices = vertices_in_cells(p.sets['SET-CELL-INSULATION'].cells)
@@ -623,7 +623,8 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
                 break
         if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']) and not is_cell_in_set(cell, p.sets['SET-CELL-INSULATION']):
             cells += p.cells[cell.index:cell.index + 1]
-    p.Set(cells=cells, name='SET-CELL-GLUE')
+    if cells:
+        p.Set(cells=cells, name='SET-CELL-GLUE-A')
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
@@ -1038,14 +1039,15 @@ if __name__ == "__main__":
     shell_insulation_ref_z = 407.581146
 
     if not ABAQUS_ENV:
-        pass
+        points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
+        plot_geometries(points, lines, faces)
 
     if ABAQUS_ENV:
         Mdb()
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
-        size = '1'
+        size = '1/2'
 
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
@@ -1090,7 +1092,7 @@ if __name__ == "__main__":
         first_block_dimension = deepcopy(block_dimension)
         first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness]
         first_block_dimension['index_r'] = 3
-        first_block_dimension['index_t'] = 2
+        first_block_dimension['index_t'] = 3
         p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
 
         # first_gap_dimension = deepcopy(first_block_dimension)
