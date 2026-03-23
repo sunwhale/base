@@ -1529,6 +1529,15 @@ def combine_surfaces(p, surface_names, combine_surface_name):
         p.Surface(side1Faces=p_faces, name=combine_surface_name)
 
 
+def generate_part_mesh(p, element_size, deviationFactor=0.2, minSizeValue=8.0):
+    elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
+    p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
+    p.seedPart(size=element_size, deviationFactor=deviationFactor, minSizeValue=minSizeValue)
+    p.generateMesh()
+
+
 if __name__ == "__main__":
 
     if not ABAQUS_ENV:
