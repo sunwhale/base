@@ -25,6 +25,7 @@ try:
     import regionToolset
 
     ABAQUS_ENV = True
+    major_version = 0
 
     # 获取版本字符串
     version_str = abaqus.version
@@ -1497,6 +1498,18 @@ def get_common_faces_between_sets(p, p_set_1, p_set_2):
             face_id = face.index
             p_faces += p.faces[face_id:face_id + 1]
     return p_faces
+
+
+def combine_surfaces(p, surface_names, combine_surface_name):
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+
+    for surface_name in surface_names:
+        for face in p.surfaces[surface_name].faces:
+            face_id = face.index
+            p_faces += p.faces[face_id:face_id + 1]
+
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name=combine_surface_name)
 
 
 if __name__ == "__main__":
