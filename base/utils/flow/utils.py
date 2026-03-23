@@ -43,6 +43,7 @@ try:
 except ImportError as e:
     print(e)
     ABAQUS_ENV = False
+    major_version = 0
 
 
 class Line2D:
