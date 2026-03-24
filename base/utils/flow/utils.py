@@ -1576,6 +1576,19 @@ def create_face_set_from_surface(p):
         p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
 
 
+def create_surface_from_p_remove_given_surface_names(p, given_surface_names, output_surface_name):
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        is_surface_outer = True
+        for surface_name in given_surface_names:
+            if p.faces[face_id] in p.surfaces[surface_name].faces:
+                is_surface_outer = False
+        if is_surface_outer and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name=output_surface_name)
+
+
 if __name__ == "__main__":
 
     if not ABAQUS_ENV:
