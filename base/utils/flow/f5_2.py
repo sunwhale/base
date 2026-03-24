@@ -34,7 +34,7 @@ sys.path.insert(0, FLOW_PATH)
 from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
     load_json, min_difference, mirror_y_axis, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, \
     combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set, create_surface_from_p_remove_given_surface_names, \
-    get_cells_adjacent_to_set_and_remove_set_names
+    get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces
 
 
 def create_sketch_block(model, sketch_name, points, index_r, index_t):
@@ -841,19 +841,8 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 拓扑层面忽略外表面的公共边
-    p_edges = ()
-    for face in p.surfaces['SURFACE-OUTER'].faces.getByBoundingBox(0, -pen, -pen, pen, pen, 0):
-        p_edges += face.getEdges()
-    p_edge_ids = find_duplicates(p_edges)
-    p_edges = p.edges.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for edge_id in p_edge_ids:
-        p_edges += p.edges[edge_id:edge_id + 1]
-    p_vertices = p.vertices.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for edge in p_edges:
-        for vertice_id in edge.getVertices():
-            p_vertices += p.vertices[vertice_id:vertice_id + 1]
-    pickedEntities = (p_vertices, p_edges,)
-    p.ignoreEntity(entities=pickedEntities)
+    p_faces = p.surfaces['SURFACE-OUTER'].faces.getByBoundingBox(0, -pen, -pen, pen, pen, 0)
+    ignore_common_edges_of_faces(p, p_faces)
 
     set_name = 'SET-CELL-GLUE-A'
     p.Set(cells=p.cells, name=set_name)
