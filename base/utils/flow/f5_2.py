@@ -814,6 +814,203 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     return p
 
 
+def create_part_block_penult(model, part_name, points, lines, faces, dimension):
+    z_list = dimension['z_list']
+    deep = dimension['deep']
+    x0 = dimension['x0']
+    length_up = dimension['length_up']
+    width = dimension['width']
+    angle_demolding_1 = dimension['angle_demolding_1']
+    angle_demolding_2 = dimension['angle_demolding_2']
+    fillet_radius = dimension['fillet_radius']
+    a = dimension['a']
+    b = dimension['b']
+    size = dimension['size']
+    index_r = dimension['index_r']
+    index_t = dimension['index_t']
+    element_size = dimension['element_size']
+    origin = (0.0, 0.0, 0.0)
+    length = z_list[-1] * 2.0
+    pen = 1e4
+    tol = 1e-6
+    z = np.array(z_list)
+    z_centers = (z[:-1] + z[1:]) / 2.0
+
+    # SKETCH-BLOCK
+    s_block = create_sketch_block(model, 'SKETCH-BLOCK', points, index_r, index_t)
+
+    # Extrude
+    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    d = p.datums
+
+    p.BaseSolidExtrude(sketch=s_block, depth=length / 2.0)
+    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
+    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
+    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
+    y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
+    z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
+
+    # SKETCH-BLOCK-PARTITION
+    s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0)
+    center = (0, 0)
+    geom_list = []
+    # 拾取被切割平面上的线段，同一个theta
+    for i in range(1, index_t):
+        geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
+    # 拾取被切割平面上的线段，同一个r
+    for i in range(1, index_r):
+        geom_list.append(s_block_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
+
+    # Partition
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, pen, pen, tol)
+    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_block_partition)
+
+    # 拾取被切割平面上的线段，同一个r
+    partition_edges = []
+    line_keys = []
+    for i in range(1, index_r):
+        for j in range(0, index_t):
+            line_key = '%s%s-%s%s' % (i, j, i, j + 1)
+            line_keys.append(line_key)
+
+    for line_key in line_keys:
+        line_middle_point = lines[line_key][3]
+        x, y = line_middle_point
+        edge_sequence = p.edges.findAt(((x, y, 0),))
+        if len(edge_sequence) > 0:
+            partition_edges.append(edge_sequence[0])
+    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
+
+    # 拾取被切割平面上的线段，同一个theta
+    partition_edges = []
+    line_keys = []
+
+    for j in range(1, index_t):
+        for i in range(0, index_r):
+            line_key = '%s%s-%s%s' % (i, j, i + 1, j)
+            line_keys.append(line_key)
+
+    for line_key in line_keys:
+        line_middle_point = lines[line_key][3]
+        x, y = line_middle_point
+        edge_sequence = p.edges.findAt(((x, y, 0),))
+        if len(edge_sequence) > 0:
+            partition_edges.append(edge_sequence[0])
+    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
+
+    xy_plane_z = {}
+    for i in range(1, len(z_list) - 1):
+        xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
+
+    # SKETCH-CUT
+    s_cut = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
+
+    # CutExtrude
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
+
+    # Mirror
+    if size == '1':
+        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
+        p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    elif size == '1/2':
+        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    elif size == '1/4':
+        pass
+    else:
+        raise NotImplementedError('Unsupported size {}'.format(size))
+
+    set_names = create_block_sets_common(p, faces, dimension)
+
+    create_block_surface_common(p, points, dimension)
+
+    p1 = [x0 + deep + b, 0.0]
+    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
+    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
+    p_faces = p.faces.getByBoundingBox(0, tol, 0, x1 * 1.1, y1, length / 2.0)
+    face_areas = []
+    for face in p_faces:
+        face_area = face.getSize()
+        face_areas.append(face_area)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        face_size = p.faces[face_id].getSize()
+        if min_difference(face_size, face_areas) < tol:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p.surfaces['SURFACE-T1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    for face in p.surfaces['SURFACE-Z1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    for face in p.surfaces['SURFACE-Z-1'].faces:
+        face_id = face.index
+        p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-TIE')
+
+    for name in p.surfaces.keys():
+        p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
+
+    def get_common_faces_between_sets(p_set_1, p_set_2):
+        p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+        faces_1 = p_set_1.cells.getExteriorFaces()
+        faces_2 = p_set_2.cells.getExteriorFaces()
+        for face in faces_1:
+            if face in faces_2:
+                face_id = face.index
+                p_faces += p.faces[face_id:face_id + 1]
+        return p_faces
+
+    p_faces = get_common_faces_between_sets(p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION'])
+    p.Set(faces=p_faces, name='SET-FACES-GRAIN-INSULATION')
+
+    # Partition
+    p1 = [x0 + deep, -a]
+    offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
+    yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
+    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
+
+    # 旋转切割内燃道
+    t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-BEHIND-2-CUT-REVOLVE', sheetSize=4000.0, transform=t)
+
+    p1 = [block_length / 2.0, x0 + deep + b - 1.0]
+    p2 = [block_length / 2.0 - block_insulation_thickness, x0 + deep + b - 1.0]
+    l1 = Line2D(p2, np.tan(degrees_to_radians(45.0)))
+    l2 = Line2D([0.0, 0.0], [1.0, 0.0])
+    p3 = l1.get_intersection(l2)
+    p4 = [block_length / 2.0, 0.0]
+
+    s_block_cut_revolve.Line(point1=p1, point2=p2)
+    s_block_cut_revolve.Line(point1=p2, point2=p3)
+    s_block_cut_revolve.Line(point1=p3, point2=p4)
+    s_block_cut_revolve.Line(point1=p4, point2=p1)
+
+    center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
+    s_block_cut_revolve.assignCenterline(line=center_line)
+
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+
+    generate_part_mesh(p, element_size=element_size)
+
+    insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
+
+    set_section_common(p)
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
+
+
 def create_block_sets_common(p, faces, dimension):
     z_list = dimension['z_list']
     z = np.array(z_list)
@@ -1209,7 +1406,7 @@ if __name__ == "__main__":
             'element_size': element_size
         }
 
-        # points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
+        points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
         # p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
         #
         # gap_dimension = deepcopy(block_dimension)
@@ -1217,6 +1414,12 @@ if __name__ == "__main__":
         # gap_dimension['index_r'] = 2
         # gap_dimension['index_t'] = 3
         # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
+
+        penult_block_dimension = deepcopy(block_dimension)
+        p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
+
+        # penult_gap_dimension = deepcopy(gap_dimension)
+        # p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
 
         points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
         front_ref_length = 509.0
@@ -1236,8 +1439,8 @@ if __name__ == "__main__":
         first_block_dimension['r3'] = 655.2
         first_block_dimension['theta_in_deg'] = 0.16
 
-        p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
-
-        first_gap_dimension = deepcopy(first_block_dimension)
-        first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2]
-        p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
+        # p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
+        #
+        # first_gap_dimension = deepcopy(first_block_dimension)
+        # first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2]
+        # p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
