@@ -33,7 +33,7 @@ sys.path.insert(0, FLOW_PATH)
 
 from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
     load_json, min_difference, mirror_y_axis, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, \
-    combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set
+    combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set, create_surface_from_p_remove_given_surface_names
 
 
 def create_sketch_block(model, sketch_name, points, index_r, index_t):
@@ -370,9 +370,9 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     index_r = dimension['index_r']
     index_t = dimension['index_t']
     element_size = dimension['element_size']
+    r_front = dimension['r_front']
+    length_front = dimension['length_front']
 
-    r_front = 460.0
-    length_front = 1500.0
 
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
@@ -581,51 +581,29 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     for pa in faces_xz_plane[index_r - 1]:
         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
-        center = (0.0, 0.0, pa[0])
-        p.DatumPointByCoordinate(coords=center)
-        plane_1 = Plane(center, (0.0, 0.0, 1.0))
-        circle = Circle3D(center, abs(pa[1]), plane_1)
-        for j in [1]:
-            plane_2 = Plane(center, (0.0, 1.0, 0.0))
-            pb = plane_2.intersection_with_circle(circle)
-            if pb:
-                p.DatumPointByCoordinate(coords=pb[0])
-                p.DatumPointByCoordinate(coords=pb[1])
+        # center = (0.0, 0.0, pa[0])
+        # p.DatumPointByCoordinate(coords=center)
+        # plane_1 = Plane(center, (0.0, 0.0, 1.0))
+        # circle = Circle3D(center, abs(pa[1]), plane_1)
+        # for j in [1]:
+        #     plane_2 = Plane(center, (0.0, 1.0, 0.0))
+        #     pb = plane_2.intersection_with_circle(circle)
+        #     if pb:
+        #         p.DatumPointByCoordinate(coords=pb[0])
+        #         p.DatumPointByCoordinate(coords=pb[1])
                 # c = p.cells.findAt((pb[0],))
                 # cells += c
 
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
-    # 与GRAIN相邻的为INSULATION集合
-    set_vertices = vertices_in_cells(p.sets['SET-CELL-GRAIN'].cells)
-    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for cell in p.cells:
-        cell_vertices = cell.getVertices()
-        is_adjacent = False
-        for v in cell_vertices:
-            if v in set_vertices:
-                is_adjacent = True
-                break
-        if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']):
-            cells += p.cells[cell.index:cell.index + 1]
-    if cells:
-        p.Set(cells=cells, name='SET-CELL-INSULATION')
+    # 建立INSULATION集合
+    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-GRAIN', ['SET-CELL-GRAIN'])
+    p.Set(cells=cells, name='SET-CELL-INSULATION')
 
-    # 与INSULATION相邻的为GLUE集合
-    set_vertices = vertices_in_cells(p.sets['SET-CELL-INSULATION'].cells)
-    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for cell in p.cells:
-        cell_vertices = cell.getVertices()
-        is_adjacent = False
-        for v in cell_vertices:
-            if v in set_vertices:
-                is_adjacent = True
-                break
-        if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']) and not is_cell_in_set(cell, p.sets['SET-CELL-INSULATION']):
-            cells += p.cells[cell.index:cell.index + 1]
-    if cells:
-        p.Set(cells=cells, name='SET-CELL-GLUE-A')
+    # 建立GLUE集合
+    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-INSULATION', ['SET-CELL-GRAIN', 'SET-CELL-INSULATION'])
+    p.Set(cells=cells, name='SET-CELL-GLUE-A')
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
@@ -654,7 +632,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
 
     # 通过排除法确定外表面
-
     given_surface_names = list(p.surfaces.keys())
     given_surface_names.remove('SURFACE-OUTER')
     create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-OUTER')
@@ -675,6 +652,24 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     return p
 
+
+def get_cells_adjacent_to_set_and_remove_set_names(p, set_name, remove_set_names):
+    set_vertices = vertices_in_cells(p.sets[set_name].cells)
+    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for cell in p.cells:
+        cell_vertices = cell.getVertices()
+        is_adjacent = False
+        for v in cell_vertices:
+            if v in set_vertices:
+                is_adjacent = True
+                break
+        for remove_set_name in remove_set_names:
+            if is_cell_in_set(cell, p.sets[remove_set_name]):
+                is_adjacent = False
+                break
+        if is_adjacent:
+            cells += p.cells[cell.index:cell.index + 1]
+    return cells
 
 def create_block_sets_common(p, faces, dimension):
     z_list = dimension['z_list']
@@ -1086,6 +1081,9 @@ if __name__ == "__main__":
         first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness]
         first_block_dimension['index_r'] = 3
         first_block_dimension['index_t'] = 3
+
+        first_block_dimension['r_front'] = 460.0
+        first_block_dimension['length_front'] = 1500.0
         p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
 
         # first_gap_dimension = deepcopy(first_block_dimension)
