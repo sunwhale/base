@@ -153,17 +153,19 @@ def create_sketch_block_cut_revolve_shift(model, sketch_name, t, points, index_r
 def create_sketch_block_cut_revolve_penult(model, sketch_name, t, x0, deep, a, b, pen):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
+    p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], x0 + deep + b - 1.0]
     p1 = [block_length / 2.0, x0 + deep + b - 1.0]
     p2 = [block_length / 2.0 - block_insulation_thickness, x0 + deep + b - 1.0]
     l1 = Line2D(p2, np.tan(degrees_to_radians(45.0)))
     l2 = Line2D([0.0, 0.0], [1.0, 0.0])
     p3 = l1.get_intersection(l2)
-    p4 = [block_length / 2.0, 0.0]
+    p4 = [block_length / 2.0 + z_list[-1] - z_list[-2], 0.0]
 
+    s.Line(point1=p0, point2=p1)
     s.Line(point1=p1, point2=p2)
     s.Line(point1=p2, point2=p3)
     s.Line(point1=p3, point2=p4)
-    s.Line(point1=p4, point2=p1)
+    s.Line(point1=p4, point2=p0)
 
     center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
     s.assignCenterline(line=center_line)
@@ -986,6 +988,125 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     return p
 
 
+def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
+    z_list = dimension['z_list']
+    deep = dimension['deep']
+    x0 = dimension['x0']
+    length_up = dimension['length_up']
+    width = dimension['width']
+    angle_demolding_1 = dimension['angle_demolding_1']
+    angle_demolding_2 = dimension['angle_demolding_2']
+    fillet_radius = dimension['fillet_radius']
+    a = dimension['a']
+    b = dimension['b']
+    size = dimension['size']
+    index_r = dimension['index_r']
+    index_t = dimension['index_t']
+    element_size = dimension['element_size']
+    origin = (0.0, 0.0, 0.0)
+    length = z_list[-2] * 2.0
+    pen = 1e4
+    tol = 1e-6
+    z = np.array(z_list)
+    z_centers = (z[:-1] + z[1:]) / 2.0
+
+    # SKETCH-GAP
+    s_gap_z = model.ConstrainedSketch(name='SKETCH-GAP-Z', sheetSize=200.0)
+    center = (0, 0)
+    geom_list = []
+    geom_list.append(s_gap_z.Line(point1=points[0, 2], point2=points[2, 2]))
+    geom_list.append(s_gap_z.ArcByCenterEnds(center=center, point1=points[2, 2], point2=points[2, 3], direction=COUNTERCLOCKWISE))
+    geom_list.append(s_gap_z.Line(point1=points[2, 3], point2=points[0, 3]))
+    geom_list.append(s_gap_z.Line(point1=points[0, 3], point2=points[0, 2]))
+
+    # Extrude
+    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    p.BaseSolidExtrude(sketch=s_gap_z, depth=length / 2.0)
+    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
+    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
+    xy_plane_z1 = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=length / 2.0)
+    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
+    y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
+    z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
+    d = p.datums
+
+    # SKETCH-GAP
+    t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
+    s_gap_t = model.ConstrainedSketch(name='SKETCH-GAP-T', sheetSize=4000.0, gridSpacing=100.0, transform=t)
+    center = (0, 0)
+    geom_list = []
+    geom_list.append(s_gap_t.Line(point1=points[0, 0], point2=points[2, 0]))
+    geom_list.append(s_gap_t.ArcByCenterEnds(center=center, point1=points[2, 0], point2=points[2, 3], direction=COUNTERCLOCKWISE))
+    geom_list.append(s_gap_t.Line(point1=points[2, 3], point2=points[0, 3]))
+    geom_list.append(s_gap_t.Line(point1=points[0, 3], point2=points[0, 0]))
+    p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=OFF)
+
+    # Partition
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z1.id], cells=p.cells)
+    cut_edges = (
+        p.edges.findAt((lines['02-12'][3][0], lines['02-12'][3][1], length / 2.0)),
+    )
+    p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
+
+    # SKETCH-CUT
+    s_cut = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
+
+    # CutExtrude
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
+
+    # Mirror
+    if size == '1':
+        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
+        p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    elif size == '1/2':
+        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    elif size == '1/4':
+        pass
+    else:
+        raise NotImplementedError('Unsupported size {}'.format(size))
+
+    create_gap_surface_common(p, points, dimension)
+
+    p1 = [x0 + deep + b, 0.0]
+    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
+    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
+    p_faces = p.faces.getByBoundingBox(0, tol, 0, x1 * 1.1, y1, z_list[-1])
+    p_faces = get_same_area_faces(p, p_faces)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
+
+    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
+    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
+
+    create_face_set_from_surface(p)
+
+    set_name = 'SET-CELL-GLUE'
+    p.Set(cells=p.cells, name=set_name)
+
+    # Partition
+    p1 = [x0 + deep, -a]
+    offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
+    yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
+    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
+
+    # 旋转切割内燃道
+    t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s_block_cut_revolve_penult = create_sketch_block_cut_revolve_penult(model, 'SKETCH-BLOCK-PENULT-CUT-REVOLVE', t, x0, deep, a, b, pen)
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve_penult, angle=360.0, flipRevolveDirection=ON)
+
+    generate_part_mesh(p, element_size=element_size)
+
+    set_section_common(p)
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
+
+
 def create_block_sets_common(p, faces, dimension):
     z_list = dimension['z_list']
     z = np.array(z_list)
@@ -1383,18 +1504,18 @@ if __name__ == "__main__":
 
         points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
         # p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
-        #
-        # gap_dimension = deepcopy(block_dimension)
-        # gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2]
-        # gap_dimension['index_r'] = 2
-        # gap_dimension['index_t'] = 3
+
+        gap_dimension = deepcopy(block_dimension)
+        gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2]
+        gap_dimension['index_r'] = 2
+        gap_dimension['index_t'] = 3
         # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
 
         penult_block_dimension = deepcopy(block_dimension)
         p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
 
-        # penult_gap_dimension = deepcopy(gap_dimension)
-        # p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
+        penult_gap_dimension = deepcopy(gap_dimension)
+        p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
 
         points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
         front_ref_length = 509.0
