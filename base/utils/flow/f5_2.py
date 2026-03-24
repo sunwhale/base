@@ -228,6 +228,25 @@ def create_sketch_block_cut_revolve_penult(model, sketch_name, t, x0, deep, bloc
     return s
 
 
+def create_sketch_behind_cut_revolve_2(model, sketch_name, t, x0, deep, a, b, pen):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
+
+    p1 = [-pen, x0 + deep + b]
+    p2 = [pen, x0 + deep + b]
+    p3 = [pen, 0]
+    p4 = [-pen, 0]
+
+    s.Line(point1=p1, point2=p2)
+    s.Line(point1=p2, point2=p3)
+    s.Line(point1=p3, point2=p4)
+    s.Line(point1=p4, point2=p1)
+
+    center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
+    s.assignCenterline(line=center_line)
+
+    return s
+
+
 def create_part_block(model, part_name, points, lines, faces, dimension):
     z_list = dimension['z_list']
     deep = dimension['deep']
@@ -1382,20 +1401,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-BEHIND-CUT-REVOLVE-2', sheetSize=4000.0, transform=t)
-
-    p1 = [-pen, x0 + deep + b]
-    p2 = [pen, x0 + deep + b]
-    p3 = [pen, 0]
-    p4 = [-pen, 0]
-
-    s_block_cut_revolve.Line(point1=p1, point2=p2)
-    s_block_cut_revolve.Line(point1=p2, point2=p3)
-    s_block_cut_revolve.Line(point1=p3, point2=p4)
-    s_block_cut_revolve.Line(point1=p4, point2=p1)
-
-    center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
-    s_block_cut_revolve.assignCenterline(line=center_line)
+    s_block_cut_revolve = create_sketch_behind_cut_revolve_2(model, 'SKETCH-BEHIND-CUT-REVOLVE-2', t, x0, deep, a, b, pen)
 
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
 
