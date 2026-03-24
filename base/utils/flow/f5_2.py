@@ -369,7 +369,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
 
-    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
+    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
 
     create_face_set_from_surface(p)
@@ -484,7 +484,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
 
-    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
+    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
 
     create_face_set_from_surface(p)
@@ -744,7 +744,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     given_surface_names.remove('SURFACE-OUTER')
     create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-OUTER')
 
-    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-Z1'], 'SURFACE-TIE')
+    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
 
     create_face_set_from_surface(p)
@@ -883,7 +883,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     given_surface_names = list(p.surfaces.keys())
     create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-OUTER')
 
-    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-Z1'], 'SURFACE-TIE')
+    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
 
     create_face_set_from_surface(p)
@@ -1033,7 +1033,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
 
-    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
+    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
 
     create_face_set_from_surface(p)
@@ -1153,7 +1153,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
 
-    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
+    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
 
     create_face_set_from_surface(p)
@@ -1396,8 +1396,10 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     given_surface_names.remove('SURFACE-OUTER')
     create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-OUTER')
 
-    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-Z-1'], 'SURFACE-TIE')
-    # combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
+    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
+
+    given_surface_names = list(p.surfaces.keys())
+    create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-INNER')
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -1783,7 +1785,7 @@ if __name__ == "__main__":
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
-        size = '1'
+        size = '1/2'
 
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
@@ -1815,19 +1817,19 @@ if __name__ == "__main__":
         }
 
         points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
-        # p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
+        p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
 
         gap_dimension = deepcopy(block_dimension)
         gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2]
         gap_dimension['index_r'] = 2
         gap_dimension['index_t'] = 3
-        # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
+        p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
 
         penult_block_dimension = deepcopy(block_dimension)
-        # p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
+        p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
 
         penult_gap_dimension = deepcopy(gap_dimension)
-        # p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
+        p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
 
         points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
         front_ref_length = 509.0
@@ -1847,11 +1849,11 @@ if __name__ == "__main__":
         first_block_dimension['r3'] = 655.2
         first_block_dimension['theta_in_deg'] = 0.16
 
-        # p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
+        p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
 
         first_gap_dimension = deepcopy(first_block_dimension)
         first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2]
-        # p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
+        p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
 
         behind_ref_length = 500.0
         behind_block_dimension = deepcopy(first_block_dimension)
