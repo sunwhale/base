@@ -1235,7 +1235,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
         s_block_cut_revolve_shift.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=LEFT)
 
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for g in s_block_cut_revolve_shift.geometry.values():
+    for g in s_block_cut_revolve_shift.geometry.values()[:6]:
         z, x = g.pointOn
         point = (x, 0.0, z)
         angle = degrees_to_radians(180.0 / n / 2.0)
@@ -1280,7 +1280,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 基于p4点所在的半径拾取sweep_edge
     x, y = polar_to_cartesian(p4[1], tol)
-    # x = min(x, points[index_r, 0][0])
+    x = min(x, points[index_r, 0][0])
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
 
     # 拾取分段连线
@@ -1340,72 +1340,25 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
 
-    def vertices_in_cells(cells):
-        cell_vertices = ()
-        for cell in cells:
-            cell_vertices += cell.getVertices()
-        cell_vertices = tuple(set(cell_vertices))
-        return cell_vertices
-
-    def is_cell_in_set(cell, p_set):
-        for c in p_set.cells:
-            if c == cell:
-                return True
-        return False
-
-    set_names = []
+    # 建立GRAIN集合
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
         [0, 0, 0]
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
-
-    for pa in faces_xz_plane[2]:
+    for pa in faces_xz_plane[index_r - 1]:
         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
-        center = (0.0, 0.0, pa[0])
-        p.DatumPointByCoordinate(coords=center)
-        plane_1 = Plane(center, (0.0, 0.0, 1.0))
-        circle = Circle3D(center, abs(pa[1]), plane_1)
-        for j in [1]:
-            plane_2 = Plane(center, (0.0, 1.0, 0.0))
-            pb = plane_2.intersection_with_circle(circle)
-            if pb:
-                p.DatumPointByCoordinate(coords=pb[0])
-                p.DatumPointByCoordinate(coords=pb[1])
-                c = p.cells.findAt((pb[1],))
-                cells += c
+    if cells:
+        p.Set(cells=cells, name='SET-CELL-GRAIN')
 
-    if cells is not None:
-        set_name = 'SET-CELL-GRAIN'
-        p.Set(cells=cells, name=set_name)
-        set_names.append(set_name)
-
-    set_vertices = vertices_in_cells(p.sets['SET-CELL-GRAIN'].cells)
-    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for cell in p.cells:
-        cell_vertices = cell.getVertices()
-        is_adjacent = False
-        for v in cell_vertices:
-            if v in set_vertices:
-                is_adjacent = True
-                break
-        if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']):
-            cells += p.cells[cell.index:cell.index + 1]
+    # 建立INSULATION集合
+    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-GRAIN', ['SET-CELL-GRAIN'])
     p.Set(cells=cells, name='SET-CELL-INSULATION')
 
-    set_vertices = vertices_in_cells(p.sets['SET-CELL-INSULATION'].cells)
-    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for cell in p.cells:
-        cell_vertices = cell.getVertices()
-        is_adjacent = False
-        for v in cell_vertices:
-            if v in set_vertices:
-                is_adjacent = True
-                break
-        if is_adjacent and not is_cell_in_set(cell, p.sets['SET-CELL-GRAIN']) and not is_cell_in_set(cell, p.sets['SET-CELL-INSULATION']):
-            cells += p.cells[cell.index:cell.index + 1]
-    p.Set(cells=cells, name='SET-CELL-GLUE')
+    # 建立GLUE集合
+    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-INSULATION', ['SET-CELL-GRAIN', 'SET-CELL-INSULATION'])
+    p.Set(cells=cells, name='SET-CELL-GLUE-A')
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
@@ -1420,28 +1373,12 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
 
     # 通过排除法确定外表面
-    surface_names = list(p.surfaces.keys())
-    surface_names.remove('SURFACE-OUTER')
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        is_surface_outer = True
-        for surface_name in surface_names:
-            if p.faces[face_id] in p.surfaces[surface_name].faces:
-                is_surface_outer = False
-        if is_surface_outer and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
+    given_surface_names = list(p.surfaces.keys())
+    given_surface_names.remove('SURFACE-OUTER')
+    create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-OUTER')
 
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face in p.surfaces['SURFACE-T1'].faces:
-        face_id = face.index
-        p_faces += p.faces[face_id:face_id + 1]
-    for face in p.surfaces['SURFACE-Z-1'].faces:
-        face_id = face.index
-        p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-TIE')
+    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-Z-1'], 'SURFACE-TIE')
+    # combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -1462,37 +1399,16 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
 
-    # 通过排除法确定内表面
-    surface_names = list(p.surfaces.keys())
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        is_surface_outer = True
-        for surface_name in surface_names:
-            if p.faces[face_id] in p.surfaces[surface_name].faces:
-                is_surface_outer = False
-        if is_surface_outer and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+    create_face_set_from_surface(p)
 
-    for name in p.surfaces.keys():
-        p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
+    p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
 
+    generate_part_mesh(p, element_size=element_size)
+
+    # insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
+
+    set_section_common(p)
     p.setValues(geometryRefinement=EXTRA_FINE)
-
-    element_size = 30.0
-    c = p.cells
-    elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
-    p.setElementType(regions=regionToolset.Region(cells=p.cells), elemTypes=(elemType1, elemType2, elemType3))
-    p.seedPart(size=element_size, deviationFactor=0.2, minSizeValue=8.0)
-    p.generateMesh()
-
-    p.SectionAssignment(region=p.sets['SET-CELL-GRAIN'], sectionName='SECTION-GRAIN', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-    p.SectionAssignment(region=p.sets['SET-CELL-INSULATION'], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-    # p.SectionAssignment(region=p.sets['SET-CELL-GLUE-A'], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
-    # p.SectionAssignment(region=p.sets['COHESIVE-ELEMENTS-GRAIN-INSULATION'], sectionName='SECTION-CZM', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
     return p
 
