@@ -1595,6 +1595,22 @@ def create_face_set_from_surface(p):
         p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
 
 
+def ignore_common_edges_of_faces(p, p_faces):
+    p_edges = ()
+    for face in p_faces:
+        p_edges += face.getEdges()
+    p_edge_ids = find_duplicates(p_edges)
+    p_edges = p.edges.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for edge_id in p_edge_ids:
+        p_edges += p.edges[edge_id:edge_id + 1]
+    p_vertices = p.vertices.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for edge in p_edges:
+        for vertice_id in edge.getVertices():
+            p_vertices += p.vertices[vertice_id:vertice_id + 1]
+    pickedEntities = (p_vertices, p_edges,)
+    p.ignoreEntity(entities=pickedEntities)
+
+
 def create_surface_from_p_remove_given_surface_names(p, given_surface_names, output_surface_name):
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
