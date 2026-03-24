@@ -135,7 +135,7 @@ def create_sketch_block_cut_revolve(model, sketch_name, t, points, index_r, inde
     return s_block_cut_revolve, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3
 
 
-def create_sketch_block_cut_revolve_shift(model, sketch_name, t, points, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3):
+def create_sketch_block_cut_revolve_shift(model, sketch_name, t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3):
     s_block_cut_revolve_shift = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
     geom_list = []
     geom_list.append(s_block_cut_revolve_shift.Line(point1=(p0[0], x0), point2=p0))
@@ -150,7 +150,7 @@ def create_sketch_block_cut_revolve_shift(model, sketch_name, t, points, index_r
     return s_block_cut_revolve_shift
 
 
-def create_sketch_block_cut_revolve_penult(model, sketch_name, t, x0, deep, a, b, pen):
+def create_sketch_block_cut_revolve_penult(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
     p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], x0 + deep + b - 1.0]
@@ -492,7 +492,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_shift = create_sketch_block_cut_revolve_shift(model, 'SKETCH-BLOCK-CUT-REVOLVE-SHIFT', t, points, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_block_cut_revolve_shift = create_sketch_block_cut_revolve_shift(model, 'SKETCH-BLOCK-CUT-REVOLVE-SHIFT', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for g in s_block_cut_revolve_shift.geometry.values()[:6]:
@@ -752,7 +752,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_shift = create_sketch_block_cut_revolve_shift(model, 'SKETCH-BLOCK-CUT-REVOLVE-SHIFT', t, points, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_block_cut_revolve_shift = create_sketch_block_cut_revolve_shift(model, 'SKETCH-BLOCK-CUT-REVOLVE-SHIFT', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
@@ -974,7 +974,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_penult = create_sketch_block_cut_revolve_penult(model, 'SKETCH-BLOCK-PENULT-CUT-REVOLVE', t, x0, deep, a, b, pen)
+    s_block_cut_revolve_penult = create_sketch_block_cut_revolve_penult(model, 'SKETCH-BLOCK-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve_penult, angle=360.0, flipRevolveDirection=ON)
 
     generate_part_mesh(p, element_size=element_size)
@@ -1095,7 +1095,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_penult = create_sketch_block_cut_revolve_penult(model, 'SKETCH-BLOCK-PENULT-CUT-REVOLVE', t, x0, deep, a, b, pen)
+    s_block_cut_revolve_penult = create_sketch_block_cut_revolve_penult(model, 'SKETCH-BLOCK-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve_penult, angle=360.0, flipRevolveDirection=ON)
 
     generate_part_mesh(p, element_size=element_size)
