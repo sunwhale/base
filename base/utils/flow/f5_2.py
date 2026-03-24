@@ -27,11 +27,12 @@ except ImportError as e:
 
 import sys
 
-FLOW_PATH = r'F:\Github\base\base\utils\flow'
+# FLOW_PATH = r'F:\Github\base\base\utils\flow'
+FLOW_PATH = r'/home/dell/base/base/utils/flow'
 sys.path.insert(0, FLOW_PATH)
 
 from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
-    load_json, min_difference, mirror_y_axis, patches, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, \
+    load_json, min_difference, mirror_y_axis, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, \
     combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set
 
 
@@ -653,18 +654,10 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
 
     # 通过排除法确定外表面
-    surface_names = list(p.surfaces.keys())
-    surface_names.remove('SURFACE-OUTER')
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        is_surface_outer = True
-        for surface_name in surface_names:
-            if p.faces[face_id] in p.surfaces[surface_name].faces:
-                is_surface_outer = False
-        if is_surface_outer and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
+
+    given_surface_names = list(p.surfaces.keys())
+    given_surface_names.remove('SURFACE-OUTER')
+    create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-OUTER')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-Z1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
