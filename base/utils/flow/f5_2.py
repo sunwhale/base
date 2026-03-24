@@ -33,7 +33,8 @@ sys.path.insert(0, FLOW_PATH)
 
 from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
     load_json, min_difference, mirror_y_axis, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, \
-    combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set, create_surface_from_p_remove_given_surface_names
+    combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set, create_surface_from_p_remove_given_surface_names, \
+    get_cells_adjacent_to_set_and_remove_set_names
 
 
 def create_sketch_block(model, sketch_name, points, index_r, index_t):
@@ -373,7 +374,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     r_front = dimension['r_front']
     length_front = dimension['length_front']
 
-
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
     pen = 1e4
@@ -591,8 +591,8 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         #     if pb:
         #         p.DatumPointByCoordinate(coords=pb[0])
         #         p.DatumPointByCoordinate(coords=pb[1])
-                # c = p.cells.findAt((pb[0],))
-                # cells += c
+        # c = p.cells.findAt((pb[0],))
+        # cells += c
 
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
@@ -652,24 +652,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     return p
 
-
-def get_cells_adjacent_to_set_and_remove_set_names(p, set_name, remove_set_names):
-    set_vertices = vertices_in_cells(p.sets[set_name].cells)
-    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for cell in p.cells:
-        cell_vertices = cell.getVertices()
-        is_adjacent = False
-        for v in cell_vertices:
-            if v in set_vertices:
-                is_adjacent = True
-                break
-        for remove_set_name in remove_set_names:
-            if is_cell_in_set(cell, p.sets[remove_set_name]):
-                is_adjacent = False
-                break
-        if is_adjacent:
-            cells += p.cells[cell.index:cell.index + 1]
-    return cells
 
 def create_block_sets_common(p, faces, dimension):
     z_list = dimension['z_list']
