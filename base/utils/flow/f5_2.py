@@ -373,6 +373,14 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     element_size = dimension['element_size']
     r_front = dimension['r_front']
     length_front = dimension['length_front']
+    p0 = dimension['p0']
+    theta0_deg = dimension['theta0_deg']
+    p3 = dimension['p3']
+    theta3_deg = dimension['theta3_deg']
+    theta_in_deg = dimension['theta_in_deg']
+    r1 = dimension['r1']
+    r2 = dimension['r2']
+    r3 = dimension['r3']
 
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
@@ -402,12 +410,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=4000.0, transform=t)
-    p0 = (-1207.5, 794)
-    theta0_deg = 90
-    p3 = (-350, 1762.5)
-    theta3_deg = 0.0
-    r1, r2, r3 = 929.4, 1524, 655.2
-    theta_in_deg = 0.16
 
     result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
     l1 = Line2D(p3, np.tan(degrees_to_radians(theta_in_deg)))
@@ -550,7 +552,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
             partition_edges.append(edge_sequence[0])
     p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
 
-    # SKETCH-CUT
+    # SKETCH-CUT-FRONT
     s_cut, p1p = create_sketch_cut_front(model, 'SKETCH-CUT-FRONT', x0, deep, a, b, angle_demolding_1, n, r_front)
 
     # 切割头部燃道
@@ -578,7 +580,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
     cells = get_same_volume_cells(p, cells)
-
     for pa in faces_xz_plane[index_r - 1]:
         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
         # center = (0.0, 0.0, pa[0])
@@ -593,7 +594,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         #         p.DatumPointByCoordinate(coords=pb[1])
         # c = p.cells.findAt((pb[0],))
         # cells += c
-
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
@@ -1066,6 +1066,15 @@ if __name__ == "__main__":
 
         first_block_dimension['r_front'] = 460.0
         first_block_dimension['length_front'] = 1500.0
+        first_block_dimension['p0'] = (-1207.5, 794)
+        first_block_dimension['theta0_deg'] = 90.0
+        first_block_dimension['p3'] = (-350, 1762.5)
+        first_block_dimension['theta3_deg'] = 0.0
+        first_block_dimension['r1'] = 929.4
+        first_block_dimension['r2'] = 1524.0
+        first_block_dimension['r3'] = 655.2
+        first_block_dimension['theta_in_deg'] = 0.16
+
         p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
 
         # first_gap_dimension = deepcopy(first_block_dimension)
