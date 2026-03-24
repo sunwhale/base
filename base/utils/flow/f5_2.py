@@ -135,7 +135,7 @@ def create_sketch_block_cut_revolve(model, sketch_name, t, points, index_r, inde
     return s_block_cut_revolve, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3
 
 
-def create_sketch_block_cut_revolve_shift(model, sketch_name, t, points, index_r, p0, p1, p2, p3, p4, c1, c2, c3, delta1, delta2, delta3):
+def create_sketch_block_cut_revolve_shift(model, sketch_name, t, points, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3):
     s_block_cut_revolve_shift = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
     geom_list = []
     geom_list.append(s_block_cut_revolve_shift.Line(point1=(p0[0], x0), point2=p0))
@@ -143,6 +143,7 @@ def create_sketch_block_cut_revolve_shift(model, sketch_name, t, points, index_r
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
     geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
     geom_list.append(s_block_cut_revolve_shift.Line(point1=p3, point2=p4))
+    geom_list.append(s_block_cut_revolve_shift.Line(point1=p4, point2=p5))
     # 逆序循环，保证轮廓线从外到内的顺序排列
     for i in range(index_r - 1, 0, -1):
         s_block_cut_revolve_shift.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=RIGHT)
@@ -462,56 +463,13 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE', sheetSize=4000.0, transform=t)
-
-    result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
-    l1 = Line2D(p3, np.tan(degrees_to_radians(theta_in_deg)))
-    l2 = Line2D([0.0, points[index_r, 0, 0]], [1.0, points[index_r, 0, 0]])
-    l3 = Line2D((z_list[-1], 0.0), (z_list[-1], 1.0))
-    if l1.get_intersection(l2)[0] > l1.get_intersection(l3)[0]:
-        p4 = l1.get_intersection(l3)
-        p5 = (pen, p4[1])
-    else:
-        p4 = l1.get_intersection(l2)
-        p5 = (z_list[-1], p4[1])
-
-    p1 = result['p1']
-    p2 = result['p2']
-    c1 = result['c1']
-    c2 = result['c2']
-    c3 = result['c3']
-    delta1 = result['delta1']
-    delta2 = result['delta2']
-    delta3 = result['delta3']
-
-    s_block_cut_revolve.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
-    s_block_cut_revolve.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
-    s_block_cut_revolve.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
-    s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
-    s_block_cut_revolve.Line(point1=(p0[0], 1), point2=(-pen, 1))
-    s_block_cut_revolve.Line(point1=(-pen, 1), point2=(-pen, pen))
-    s_block_cut_revolve.Line(point1=(-pen, pen), point2=(p5[0], pen))
-    s_block_cut_revolve.Line(point1=(p5[0], pen), point2=p5)
-    s_block_cut_revolve.Line(point1=p5, point2=p4)
-    s_block_cut_revolve.Line(point1=p3, point2=p4)
-    center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
-    s_block_cut_revolve.assignCenterline(line=center_line)
+    s_block_cut_revolve, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_block_cut_revolve(model, 'SKETCH-BLOCK-CUT-REVOLVE', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen)
 
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-CUT-REVOLVE-SHIFT', sheetSize=4000.0, transform=t)
-    geom_list = []
-    geom_list.append(s_block_cut_revolve_shift.Line(point1=(p0[0], x0), point2=p0))
-    geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
-    geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
-    geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
-    geom_list.append(s_block_cut_revolve_shift.Line(point1=p3, point2=p4))
-    geom_list.append(s_block_cut_revolve_shift.Line(point1=p4, point2=p5))
-    # 逆序循环，保证轮廓线从外到内的顺序排列
-    for i in range(index_r - 1, 0, -1):
-        s_block_cut_revolve_shift.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=RIGHT)
+    s_block_cut_revolve_shift = create_sketch_block_cut_revolve_shift(model, 'SKETCH-BLOCK-CUT-REVOLVE-SHIFT', t, points, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for g in s_block_cut_revolve_shift.geometry.values()[:6]:
@@ -771,7 +729,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_shift = create_sketch_block_cut_revolve_shift(model, 'SKETCH-BLOCK-CUT-REVOLVE-SHIFT', t, points, index_r, p0, p1, p2, p3, p4, c1, c2, c3, delta1, delta2, delta3)
+    s_block_cut_revolve_shift = create_sketch_block_cut_revolve_shift(model, 'SKETCH-BLOCK-CUT-REVOLVE-SHIFT', t, points, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
