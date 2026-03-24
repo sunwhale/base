@@ -1522,6 +1522,25 @@ def is_cell_in_set(cell, p_set):
     return False
 
 
+def get_cells_adjacent_to_set_and_remove_set_names(p, set_name, remove_set_names):
+    set_vertices = vertices_in_cells(p.sets[set_name].cells)
+    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for cell in p.cells:
+        cell_vertices = cell.getVertices()
+        is_adjacent = False
+        for v in cell_vertices:
+            if v in set_vertices:
+                is_adjacent = True
+                break
+        for remove_set_name in remove_set_names:
+            if is_cell_in_set(cell, p.sets[remove_set_name]):
+                is_adjacent = False
+                break
+        if is_adjacent:
+            cells += p.cells[cell.index:cell.index + 1]
+    return cells
+
+
 def get_common_faces_between_sets(p, p_set_1, p_set_2):
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     faces_1 = p_set_1.cells.getExteriorFaces()
