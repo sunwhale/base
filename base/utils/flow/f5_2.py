@@ -150,6 +150,27 @@ def create_sketch_block_cut_revolve_shift(model, sketch_name, t, points, index_r
     return s_block_cut_revolve_shift
 
 
+def create_sketch_block_cut_revolve_penult(model, sketch_name, t, x0, deep, a, b, pen):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
+
+    p1 = [block_length / 2.0, x0 + deep + b - 1.0]
+    p2 = [block_length / 2.0 - block_insulation_thickness, x0 + deep + b - 1.0]
+    l1 = Line2D(p2, np.tan(degrees_to_radians(45.0)))
+    l2 = Line2D([0.0, 0.0], [1.0, 0.0])
+    p3 = l1.get_intersection(l2)
+    p4 = [block_length / 2.0, 0.0]
+
+    s.Line(point1=p1, point2=p2)
+    s.Line(point1=p2, point2=p3)
+    s.Line(point1=p3, point2=p4)
+    s.Line(point1=p4, point2=p1)
+
+    center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
+    s.assignCenterline(line=center_line)
+
+    return s
+
+
 def create_part_block(model, part_name, points, lines, faces, dimension):
     z_list = dimension['z_list']
     deep = dimension['deep']
@@ -932,46 +953,16 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
     p_faces = p.faces.getByBoundingBox(0, tol, 0, x1 * 1.1, y1, length / 2.0)
-    face_areas = []
-    for face in p_faces:
-        face_area = face.getSize()
-        face_areas.append(face_area)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        face_size = p.faces[face_id].getSize()
-        if min_difference(face_size, face_areas) < tol:
-            p_faces += p.faces[face_id:face_id + 1]
+    p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+        p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
 
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face in p.surfaces['SURFACE-T1'].faces:
-        face_id = face.index
-        p_faces += p.faces[face_id:face_id + 1]
-    for face in p.surfaces['SURFACE-Z1'].faces:
-        face_id = face.index
-        p_faces += p.faces[face_id:face_id + 1]
-    for face in p.surfaces['SURFACE-Z-1'].faces:
-        face_id = face.index
-        p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-TIE')
+    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
+    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
 
-    for name in p.surfaces.keys():
-        p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
+    create_face_set_from_surface(p)
 
-    def get_common_faces_between_sets(p_set_1, p_set_2):
-        p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-        faces_1 = p_set_1.cells.getExteriorFaces()
-        faces_2 = p_set_2.cells.getExteriorFaces()
-        for face in faces_1:
-            if face in faces_2:
-                face_id = face.index
-                p_faces += p.faces[face_id:face_id + 1]
-        return p_faces
-
-    p_faces = get_common_faces_between_sets(p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION'])
-    p.Set(faces=p_faces, name='SET-FACES-GRAIN-INSULATION')
+    p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
 
     # Partition
     p1 = [x0 + deep, -a]
@@ -981,24 +972,8 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve = model.ConstrainedSketch(name='SKETCH-BLOCK-BEHIND-2-CUT-REVOLVE', sheetSize=4000.0, transform=t)
-
-    p1 = [block_length / 2.0, x0 + deep + b - 1.0]
-    p2 = [block_length / 2.0 - block_insulation_thickness, x0 + deep + b - 1.0]
-    l1 = Line2D(p2, np.tan(degrees_to_radians(45.0)))
-    l2 = Line2D([0.0, 0.0], [1.0, 0.0])
-    p3 = l1.get_intersection(l2)
-    p4 = [block_length / 2.0, 0.0]
-
-    s_block_cut_revolve.Line(point1=p1, point2=p2)
-    s_block_cut_revolve.Line(point1=p2, point2=p3)
-    s_block_cut_revolve.Line(point1=p3, point2=p4)
-    s_block_cut_revolve.Line(point1=p4, point2=p1)
-
-    center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
-    s_block_cut_revolve.assignCenterline(line=center_line)
-
-    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+    s_block_cut_revolve_penult = create_sketch_block_cut_revolve_penult(model, 'SKETCH-BLOCK-PENULT-CUT-REVOLVE', t, x0, deep, a, b, pen)
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve_penult, angle=360.0, flipRevolveDirection=ON)
 
     generate_part_mesh(p, element_size=element_size)
 
