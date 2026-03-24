@@ -1556,9 +1556,10 @@ def combine_surfaces(p, surface_names, combine_surface_name):
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
 
     for surface_name in surface_names:
-        for face in p.surfaces[surface_name].faces:
-            face_id = face.index
-            p_faces += p.faces[face_id:face_id + 1]
+        if surface_name in p.surfaces.keys():
+            for face in p.surfaces[surface_name].faces:
+                face_id = face.index
+                p_faces += p.faces[face_id:face_id + 1]
 
     if p_faces:
         p.Surface(side1Faces=p_faces, name=combine_surface_name)
