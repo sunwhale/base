@@ -1612,7 +1612,7 @@ def ignore_common_edges_of_faces(p, p_faces):
     p.ignoreEntity(entities=pickedEntities)
 
 
-def create_surface_from_p_remove_given_surface_names(p, given_surface_names, output_surface_name):
+def get_faces_of_p_remove_given_surface_names(p, given_surface_names):
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         is_surface_outer = True
@@ -1621,8 +1621,7 @@ def create_surface_from_p_remove_given_surface_names(p, given_surface_names, out
                 is_surface_outer = False
         if is_surface_outer and len(p.faces[face_id].getCells()) == 1:
             p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name=output_surface_name)
+    return p_faces
 
 
 if __name__ == "__main__":
