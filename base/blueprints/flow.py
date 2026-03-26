@@ -79,11 +79,12 @@ def delete_flow_file(flow_id, filename):
 @flow_bp.route('/run_preproc/<int:flow_id>')
 @permission_required('FLOW')
 def run_preproc(flow_id):
+    base_path = current_app.config['BASE_PATH']
     flows_path = current_app.config['FLOW_PATH']
     flow_path = os.path.join(flows_path, str(flow_id))
     if os.path.exists(flow_path):
         p = Preproc(flow_path)
-        p.read_msg()
+        p.script_abspath = os.path.join(base_path, 'utils', 'flow', f'f{flow_id}.py')
         p.clear()
         if p.check_setting_files():
             proc = p.run()
@@ -381,7 +382,7 @@ def f2():
         f = upload_form.filename.data
         f.save(os.path.join(flow_path, f.filename))
         flash('上传文件%s成功。' % f.filename, 'success')
-        return redirect(url_for('flow.f1', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
+        return redirect(url_for('flow.f2', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
 
     if job_form.submit.data and job_form.validate():
         project_id = job_form.project_id.data.split('_')[0]
