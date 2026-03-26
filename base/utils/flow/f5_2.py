@@ -205,7 +205,7 @@ def create_sketch_front_cut_revolve_shift(model, sketch_name, t, points, x0, ind
     return s
 
 
-def create_sketch_block_cut_revolve_penult(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen):
+def create_sketch_penult_cut_revolve(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
     p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], x0 + deep + b - 1.0]
@@ -581,7 +581,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # SKETCH-BLOCK
     s_block = create_sketch_block(model, 'SKETCH-BLOCK', points, index_r, index_t)
-    s_block_grain = create_sketch_block(model, 'SKETCH-BLOCK-GRAIN', points, index_r, 2)
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
@@ -1076,7 +1075,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_penult = create_sketch_block_cut_revolve_penult(model, 'SKETCH-BLOCK-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen)
+    s_block_cut_revolve_penult = create_sketch_penult_cut_revolve(model, 'SKETCH-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve_penult, angle=360.0, flipRevolveDirection=ON)
 
     generate_part_mesh(p, element_size=element_size)
@@ -1186,7 +1185,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_penult = create_sketch_block_cut_revolve_penult(model, 'SKETCH-BLOCK-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen)
+    s_block_cut_revolve_penult = create_sketch_penult_cut_revolve(model, 'SKETCH-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve_penult, angle=360.0, flipRevolveDirection=ON)
 
     generate_part_mesh(p, element_size=element_size)
@@ -1257,17 +1256,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_shift = model.ConstrainedSketch(name='SKETCH-BLOCK-BEHIND-CUT-REVOLVE-SHIFT', sheetSize=4000.0, transform=t)
-    geom_list = []
-    geom_list.append(s_block_cut_revolve_shift.Line(point1=(p0[0], x0), point2=p0))
-    geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
-    geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
-    geom_list.append(s_block_cut_revolve_shift.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
-    geom_list.append(s_block_cut_revolve_shift.Line(point1=p3, point2=p4))
-    geom_list.append(s_block_cut_revolve_shift.Line(point1=p4, point2=p5))
-    # 逆序循环，保证轮廓线从外到内的顺序排列
-    for i in range(index_r - 1, 0, -1):
-        s_block_cut_revolve_shift.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=LEFT)
+    s_block_cut_revolve_shift = create_sketch_behind_cut_revolve_shift(model, 'SKETCH-BEHIND-CUT-REVOLVE-SHIFT', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for g in s_block_cut_revolve_shift.geometry.values()[:6]:
