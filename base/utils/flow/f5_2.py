@@ -4,6 +4,7 @@
 """
 import math
 from copy import deepcopy
+from math import log10
 
 import numpy as np
 
@@ -2245,3 +2246,22 @@ if __name__ == "__main__":
             a.Instance(name=instance_name, part=gap_dict[block_label], dependent=ON)
             a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
             a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+        model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
+
+        ties_dict = get_ties(block)
+
+        for tie_block_loc, tie_type in ties_dict.items():
+            if tie_type == 'down':
+                l1, i1, l2, i2 = tie_block_loc
+                instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                surface_name_1 = 'SURFACE-Z2'
+                region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+                instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                surface_name_2 = 'SURFACE-Z-2'
+                region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+                constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
+                if major_version >= 2022:
+                    model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+                else:
+                    model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
