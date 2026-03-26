@@ -2068,6 +2068,16 @@ def get_block_types(block):
     return labels
 
 
+def create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2):
+    region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+    region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+    constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
+    if major_version >= 2022:
+        model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+    else:
+        model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+
+
 if __name__ == "__main__":
     epsilon = 0.95
     n = 9
@@ -2254,94 +2264,78 @@ if __name__ == "__main__":
             l, i = block_loc
             instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
             surface_name_1 = 'SURFACE-TIE'
-            region1 = a.instances[instance_name_1].surfaces[surface_name_1]
             instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
             surface_name_2 = 'SURFACE-TIE'
-            region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-            constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
-            if major_version >= 2022:
-                model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
-            else:
-                model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+            create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
         for tie_loc, tie_type in ties_types.items():
+            l1, i1, l2, i2 = tie_loc
             if tie_type == 'down':
-                l1, i1, l2, i2 = tie_loc
                 instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
                 surface_name_1 = 'SURFACE-Z2'
-                region1 = a.instances[instance_name_1].surfaces[surface_name_1]
                 instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
                 surface_name_2 = 'SURFACE-Z-2'
-                region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-                constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
-                if major_version >= 2022:
-                    model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
-                else:
-                    model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
             elif tie_type == 'right':
-                l1, i1, l2, i2 = tie_loc
                 instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
                 surface_name_1 = 'SURFACE-T2'
-                region1 = a.instances[instance_name_1].surfaces[surface_name_1]
                 instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
                 surface_name_2 = 'SURFACE-T-2'
-                region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-                constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
-                if major_version >= 2022:
-                    model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
-                else:
-                    model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
             elif tie_type == 'circular':
-                l1, i1, l2, i2 = tie_loc
                 instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
                 surface_name_1 = 'SURFACE-T-2'
-                region1 = a.instances[instance_name_1].surfaces[surface_name_1]
                 instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
                 surface_name_2 = 'SURFACE-T2'
-                region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-                constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
-                if major_version >= 2022:
-                    model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
-                else:
-                    model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
         for block_loc, block_type in block_types.items():
             l, i = block_loc
             instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-            load_name = 'LOAD-' + instance_name + '-SURFACE-INNER'
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
-            bc_name = 'BC-' + instance_name + '-SET-SURFACE-OUTER'
-            model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-OUTER'],
+            surface_name = 'SURFACE-INNER'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+
+            set_name = 'SET-SURFACE-OUTER'
+            bc_name = 'BC-' + instance_name + '-' + set_name
+            model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
                                  u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
 
             instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-            load_name = 'LOAD-' + instance_name + '-SURFACE-INNER'
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces['SURFACE-INNER'], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
-            bc_name = 'BC-' + instance_name + '-SET-SURFACE-OUTER'
-            model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-OUTER'],
+            surface_name = 'SURFACE-INNER'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+
+            set_name = 'SET-SURFACE-OUTER'
+            bc_name = 'BC-' + instance_name + '-' + set_name
+            model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
                                  u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
 
         for block_loc, block_type in block_types.items():
             l, i = block_loc
             if i == 1:
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                bc_name = 'BC-' + instance_name + '-SET-SURFACE-T1'
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
+                set_name = 'SET-SURFACE-T1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
                 instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                bc_name = 'BC-' + instance_name + '-SET-SURFACE-T2'
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T2'], localCsys=a.datums[cylindrical_datum.id])
+                set_name = 'SET-SURFACE-T2'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             if i == 8:
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-1'
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-1'], localCsys=a.datums[cylindrical_datum.id])
+                set_name = 'SET-SURFACE-T-1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
                 instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-2'
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-2'], localCsys=a.datums[cylindrical_datum.id])
+                set_name = 'SET-SURFACE-T-2'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
         datum_list = []
         for instance_name in model.rootAssembly.allInstances.keys():
