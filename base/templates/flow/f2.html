@@ -1,0 +1,567 @@
+{% extends 'layout.html' %}
+{% from 'bootstrap4/form.html' import render_form, render_form_row, render_field %}
+
+{% block title %}{{ flow_id }}号流程{% endblock title %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='AdminLTE/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+{% endblock css %}
+
+{% block pageheader %}流程信息{% endblock pageheader %}
+
+{% block level %}
+<li class="breadcrumb-item"><a href="/">主界面</a></li>
+<li class="breadcrumb-item"><a href="{{ url_for('flow.manage_flows') }}">流程管理</a></li>
+<li class="breadcrumb-item active">流程信息</li>
+{% endblock level %}
+
+{% block content %}
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-6">
+            <div class="column">
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-1">
+                  <div class="card-header">
+                    <h3 class="card-title">{{ flow_id }}号流程信息</h3>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        <h5 class="text-primary">流程信息</h5>
+                        <ul class="list-unstyled">
+                          <li> 流程名称：{{ status['name'] }}</li>
+                          <li> 流程编号：{{ flow_id }}</li>
+                          <li> 创建时间：{{ status['flow_time'] }}</li>
+                          <li> 流程备注：</li>
+                          <textarea id="descript" class="form-control" rows="4">{{ status['descript'] }}</textarea>
+                        </ul>
+                        <h5 class="text-primary">运行控制</h5>
+                        <p class="mb-1" id="text_solver_status">{{ solver_status }}</p>
+                        <p class="mb-1">您可以通过点击下面的按钮开始ABAQUS前处理的运行。
+                        </p>
+
+                        <button id="calculateBtn" class="btn btn-secondary" disabled><strong>开始前处理</strong></button>
+                        <a id="calculateLink" href="{{ url_for('flow.run_preproc', flow_id=flow_id) }}" class="btn btn-success"><strong>开始前处理</strong></a>
+
+                        <button id="resetBtn" class="btn btn-secondary" disabled><strong>重 置</strong></button>
+                        <a id="resetLink" href="#" class="btn btn-info"><strong>重 置</strong></a>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-2">
+                  <div class="card-header">
+                    <h3 class="card-title">新建/重写ABAQUS作业</h3>
+                  </div>
+                  <div class="card-body">
+                    <form action="" method="post" class="form" role="form">
+                      {{ job_form.csrf_token() }}
+                      {{ render_form_row([job_form.project_id]) }}
+                      {{ render_form_row([job_form.job, job_form.user, job_form.cpus]) }}
+                      {{ render_form_row([job_form.descript]) }}
+                      <div class="form-row align-items-center">
+                        <!-- Overwrite 复选框（占 33% 宽度） -->
+                        <div class="col-md-4">
+                          <div class="form-check">
+                            {{ job_form.overwrite(class="form-check-input") }}
+                            <label class="form-check-label" for="{{ job_form.overwrite.id }}">
+                              {{ job_form.overwrite.label.text }}
+                            </label>
+                          </div>
+                        </div>
+                        <!-- Job ID + Label（占 66% 宽度） -->
+                        <div class="col-md-8">
+                          <div class="form-row align-items-center">
+                            <!-- Label（可选：固定宽度） -->
+                            <div class="col-auto">
+                              <label for="{{ job_form.job_id.id }}" class="col-form-label">
+                                {{ job_form.job_id.label.text }}:
+                              </label>
+                            </div>
+                            <!-- Input（占剩余空间） -->
+                            <div class="col">
+                              {{ job_form.job_id(class="form-control") }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      {{ render_field(job_form.submit, button_style='btn btn-info') }}
+                    </form>
+                  </div>
+                </div>
+              </div>
+              <form action="" method="post" class="form" role="form">
+                {{ form.csrf_token() }}
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-3">
+                    <div class="card-header">
+                      <h3 class="card-title">铣刀零件参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.tool_option]) }}
+                          <div id="analytical-fields" style="display: {% if form.tool_option.data == 'analytical' %}block{% else %}none{% endif %};">
+                            {{ render_form_row([form.r1, form.r2, form.n]) }}
+                            {{ render_form_row([form.length, form.pitch]) }}
+                          </div>
+                          <div id="file-fields" style="display: {% if form.tool_option.data == 'file' %}block{% else %}none{% endif %};">
+                            {{ render_form_row([form.step_file_name]) }}
+                          </div>
+                          <hr>
+                          {{ render_form_row([form.tool_ref_point_x, form.tool_ref_point_y, form.tool_ref_point_z]) }}
+                          {{ render_form_row([form.tool_seed_size]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-4">
+                    <div class="card-header">
+                      <h3 class="card-title">平板零件参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.x_length_of_plane, form.y_length_of_plane, form.z_length_of_plane]) }}
+                          {{ render_form_row([form.plane_seed_size]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-5">
+                    <div class="card-header">
+                      <h3 class="card-title">初始条件</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          <h6 class="text-info">铣刀初始位置</h6>
+                          {{ render_form_row([form.x_shift_of_tool, form.y_shift_of_tool, form.z_shift_of_tool]) }}
+                          <h6 class="text-info">初始温度</h6>
+                          {{ render_form_row([form.temperature_tool_init, form.temperature_plane_init]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-6">
+                    <div class="card-header">
+                      <h3 class="card-title">边界条件</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.tool_rotation_speed, form.tool_shift_speed, form.temperature_tool_z1]) }}
+                          {{ render_form_row([form.tool_path_type]) }}
+                          <div id="square_wave-fields" style="display: {% if form.tool_path_type.data == 'square_wave' %}block{% else %}none{% endif %};">
+                            {{ render_form_row([form.square_wave_width, form.square_wave_height, form.square_wave_depth]) }}
+                            {{ render_form_row([form.square_wave_cycles, form.square_wave_layers, form.square_wave_head_shift, form.square_wave_tail_shift]) }}
+                          </div>
+                          <div id="drill-fields" style="display: {% if form.tool_path_type.data == 'drill' %}block{% else %}none{% endif %};">
+                            {{ render_form_row([form.drill_depth]) }}
+                          </div>
+                          <div id="tool_path_file_name-fields" style="display: {% if form.tool_path_type.data == 'tool_path_file' %}block{% else %}none{% endif %};">
+                            {{ render_form_row([form.tool_path_file_name]) }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-7">
+                    <div class="card-header">
+                      <h3 class="card-title">材料设置</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.material_plane, form.material_tool, form.material_interaction]) }}
+                          <div class="row">
+                            <div class="col">
+                              <a id="editMaterialPlaneBtn" class="btn btn-info">编辑平板材料</a>
+                            </div>
+                            <div class="col">
+                              <a id="editMaterialToolBtn" class="btn btn-info">编辑铣刀材料</a>
+                            </div>
+                            <div class="col">
+                              <a id="editMaterialInteractionBtn" class="btn btn-info">编辑接触属性</a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-8">
+                    <div class="card-header">
+                      <h3 class="card-title">求解控制</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.output_variables, form.output_numIntervals]) }}
+                          {{ render_form_row([form.step_time, form.mass_scaling_factor]) }}
+                          {{ render_form_row([form.timeIncrementationMethod, form.userDefinedInc]) }}
+                          {{ render_form_row([form.linearBulkViscosity, form.quadBulkViscosity]) }}
+                          <hr>
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="column">
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-9">
+                  <div class="card-header">
+                    <h3 class="card-title">求解状态</h3>
+                  </div>
+                  <div class="card-body">
+                    <ul class="nav nav-pills ml-auto p-2">
+                      <li class="nav-item"><a class="nav-link active" href="#tab_1" data-toggle="tab">前处理日志 abaqus.rpy</a></li>
+                      <li class="nav-item"><a class="nav-link" href="#tab_2" data-toggle="tab">命令行日志 run.log</a></li>
+                    </ul>
+                    <div class="tab-content">
+                      <div class="tab-pane active" id="tab_1">
+                        <textarea id="textarea_log" class="form-control" style="height: 322.0px;"></textarea>
+                      </div>
+                      <div class="tab-pane" id="tab_2">
+                        <textarea id="textarea_run_log" class="form-control" style="height: 322.0px;"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-10">
+                  <div class="card-header">
+                    <h3 class="card-title">模型预览</h3>
+                  </div>
+                  <div class="card-body">
+                    <a id="updateFigures" href="#" class="btn btn-success" onclick="refreshImages(); return false;"><strong>刷新图片</strong></a>
+                    <span id="refreshStatus" style="margin-left: 10px; display: none;"></span>
+                    <hr>
+                    <div class="row" id="imageContainer">
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">刀具网格</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='part_tool_mesh_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">平板网格</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='part_plane_mesh_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">Iso视图</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">Bottom视图</h6>
+                         <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_bottom.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">Front视图</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_front.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">刀具路径</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_front_with_path.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-11">
+                  <div class="card-header">
+                    <h3 class="card-title">文件列表</h3>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-12">
+                        <h5 class="text-primary">上传文件</h5>
+                        <form action="" method="post" class="form" enctype="multipart/form-data" role="form">
+                          {{ upload_form.csrf_token }}
+                          <div class="form-group">
+                            {{ upload_form.submit }}{{ upload_form.filename }}
+                          </div>
+                        </form>
+                      </div>
+
+                      <div class="col-12">
+                        <table class="table table-sm table-hover">
+                          <thead>
+                          <tr>
+                            <th width=40%>文件名</th>
+                            <th width=30%>修改日期</th>
+                            <th width=10%>大小</th>
+                            <th width=20%>操作</th>
+                          </tr>
+                          </thead>
+                          <tbody id="table_files_body">
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+{% endblock content %}
+
+{% block script %}
+<script type="text/javascript">
+
+  $(document).ready(function () {
+    $('#descript').attr('disabled', true)
+  });
+  
+  document.getElementById('flow').className = 'nav-item menu-open'
+
+  let isUpdate = true
+
+  function updateFiles(files) {
+    const tableBody = document.getElementById('table_files_body');
+    tableBody.innerHTML = "";
+    files.forEach(row => {
+      const tr = document.createElement('tr');
+      tr.style.verticalAlign = 'middle';
+      tr.style.textAlign = 'left';
+
+      const td1 = document.createElement('td');
+      td1.textContent = row['name'];
+      tr.appendChild(td1);
+
+      const td2 = document.createElement('td');
+      td2.textContent = row['time'];
+      tr.appendChild(td2);
+
+      const td3 = document.createElement('td');
+      td3.textContent = row['size'];
+      tr.appendChild(td3);
+
+      const td4 = document.createElement('td');
+      const html1 = "<a href=\"{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='0000') }}\" target=\"_blank\">下载</a>"
+      const html2 = "<a href=\"{{ url_for('tools.code')}}?url={{ url_for('flow.get_flow_file', flow_id=flow_id, filename='0000', _external=True) }}\" target=\"_blank\">编辑</a>"
+      const html3 = "<a onclick=\"return confirm('确定删除文件？')\" href=\"{{ url_for('flow.delete_flow_file', flow_id=flow_id, filename='0000') }}\">删除</a>"
+      td4.innerHTML = html1.replace('0000', row['name']) + " | " + html2.replace('0000', row['name']) + " | " + html3.replace('0000', row['name']);
+      if ({{ config.HOST_PORT }} !== 0){
+        td4.innerHTML = td4.innerHTML.replace('http://sunjingyu.com', 'https://sunjingyu.com:{{ config.HOST_PORT }}').replace('http://www.sunjingyu.com', 'https://www.sunjingyu.com:{{ config.HOST_PORT }}')
+      }
+      tr.appendChild(td4);
+
+      tableBody.appendChild(tr);
+    });
+  }
+
+  function updateTextSolverStatus(solverStatus) {
+    const textSolverStatus = document.getElementById('text_solver_status');
+    textSolverStatus.innerText = '前处理状态：' + solverStatus;
+  }
+
+  function updateLog(logs) {
+    const textarea = document.getElementById('textarea_log');
+    textarea.value = logs;
+    textarea.scrollTop = textarea.scrollHeight; // 滚动到最底部
+  }
+
+  function updateRunLog(run_logs) {
+    const textarea = document.getElementById('textarea_run_log');
+    textarea.value = run_logs;
+    textarea.scrollTop = textarea.scrollHeight; // 滚动到最底部
+  }
+
+  function updateButtons(solverStatus) {
+    const calculateBtn = document.getElementById('calculateBtn');
+    const calculateLink = document.getElementById('calculateLink');
+    const resetBtn = document.getElementById('resetBtn');
+    const resetLink = document.getElementById('resetLink');
+
+    if (solverStatus === 'Submitting' || solverStatus === 'Running' || solverStatus === 'Pause' || solverStatus === 'Stopping') {
+      calculateBtn.style.display = 'inline-block';
+      calculateLink.style.display = 'none';
+    } else {
+      calculateBtn.style.display = 'none';
+      calculateLink.style.display = 'inline-block';
+    }
+
+    if (solverStatus === 'Completed' || solverStatus === 'Stopped' || solverStatus === 'Setting') {
+      resetBtn.style.display = 'none';
+      resetLink.style.display = 'inline-block';
+    } else {
+      resetBtn.style.display = 'inline-block';
+      resetLink.style.display = 'none';
+    }
+  }
+
+  function updateStatus() {
+    if (isUpdate === true) {
+      fetch("{{ url_for('flow.flow_status', flow_id=flow_id) }}")
+        .then(response => response.json())
+        .then(data => {
+          // console.log(data)
+          updateButtons(data["flow_status"])
+          updateLog(data['logs'])
+          updateRunLog(data['run_logs'])
+          updateTextSolverStatus(data["flow_status"])
+          updateFiles(data["files"])
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    }
+  }
+
+  updateStatus()
+  setInterval(updateStatus, 4000);
+
+  function editMaterialPlane() {
+    const material_plane_choices = "{{ form.material_plane.data }}"
+    const material_id = material_plane_choices.split("_")[0]
+    const url = "{{ url_for('material.view_material', material_id=0) }}"
+    window.open(url.replace('0', material_id), "_blank")
+  }
+  function editMaterialTool() {
+    const material_plane_choices = "{{ form.material_tool.data }}"
+    const material_id = material_plane_choices.split("_")[0]
+    const url = "{{ url_for('material.view_material', material_id=0) }}"
+    window.open(url.replace('0', material_id), "_blank")
+  }
+    function editMaterialInteraction() {
+    const material_plane_choices = "{{ form.material_interaction.data }}"
+    const material_id = material_plane_choices.split("_")[0]
+    const url = "{{ url_for('material.view_material', material_id=0) }}"
+    window.open(url.replace('0', material_id), "_blank")
+  }
+  document.getElementById('editMaterialPlaneBtn').addEventListener('click', editMaterialPlane)
+  document.getElementById('editMaterialToolBtn').addEventListener('click', editMaterialTool)
+  document.getElementById('editMaterialInteractionBtn').addEventListener('click', editMaterialInteraction)
+
+  function refreshImages() {
+    const refreshStatus = document.getElementById('refreshStatus');
+    const container = document.getElementById('imageContainer');
+    const images = container.getElementsByTagName('img');
+    const button = document.getElementById('updateFigures');
+
+    // Disable button during refresh
+    button.disabled = true;
+    refreshStatus.textContent = "正在刷新...";
+    refreshStatus.style.color = "#666";
+    refreshStatus.style.display = "inline";
+
+    // Force refresh each image
+    for (let img of images) {
+      img.src = img.src.split('?')[0] + '?t=' + new Date().getTime();
+    }
+
+    // Set a small delay before showing success to allow images to start loading
+    setTimeout(() => {
+      refreshStatus.textContent = "刷新成功!";
+      refreshStatus.style.color = "green";
+      button.disabled = false;
+
+      // Hide message after 3 seconds
+      setTimeout(() => {
+        refreshStatus.style.display = "none";
+      }, 3000);
+    }, 500);
+  }
+
+  // async function fetchJSON(url) {
+  //   try {
+  //     const response = await fetch(url);
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP 错误: ${response.status}`);
+  //     }
+  //     const data = await response.json(); // 解析 JSON 数据
+  //     return data; // 返回解析后的 JSON 对象
+  //   } catch (error) {
+  //     console.error("获取数据失败:", error);
+  //   }
+  // }
+  //
+  // sel_project_id = document.getElementById("job-project_id")
+  // sel_job_id = document.getElementById("job-job_id");
+  //
+  // fetchJSON("{{ url_for('abaqus.projects_status') }}").then(projects_status => {
+  //   console.log(projects_status);
+  //   window.projects_status = projects_status
+  //   sel_project_id.options.length = 0;
+  //   for (var i = 0; i < projects_status['data'].length; i++) {
+  //     var project_id = projects_status['data'][i]['project_id'];
+  //     var option_project_id = document.createElement("option");
+  //     var textNode = document.createTextNode(project_id);
+  //     option_project_id.appendChild(textNode);
+  //     sel_project_id.appendChild(option_project_id);
+  //   }
+  // })
+  //
+  // sel_project_id.addEventListener("change", function () {
+  //   const project_id = sel_project_id.value.split('_')[0];
+  //   const apiUrl = "{{ url_for('abaqus.project_jobs_status', project_id=0) }}".replace("0", project_id);
+  //   fetchJSON(apiUrl).then(project_jobs_status => {
+  //     sel_job_id.options.length = 0;
+  //     for (var i = 0; i < project_jobs_status['data'].length; i++) {
+  //       var job_id = project_jobs_status['data'][i]['job_id'];
+  //       var option_job_id = document.createElement("option");
+  //       var textNode = document.createTextNode(job_id);
+  //       option_job_id.appendChild(textNode);
+  //       sel_job_id.appendChild(option_job_id);
+  //     }
+  //   });
+  // })
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const radioButtons = document.querySelectorAll('[name="tool_option"]');
+    radioButtons.forEach(radio => {
+      radio.addEventListener('change', function () {
+        console.log('Selected:', this.value); // 调试用
+        document.getElementById('analytical-fields').style.display =
+          (this.value === 'analytical') ? 'block' : 'none';
+        document.getElementById('file-fields').style.display =
+          (this.value === 'file') ? 'block' : 'none';
+      });
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const radioButtons = document.querySelectorAll('[name="tool_path_type"]');
+    radioButtons.forEach(radio => {
+      radio.addEventListener('change', function () {
+        console.log('Selected:', this.value); // 调试用
+        document.getElementById('square_wave-fields').style.display =
+          (this.value === 'square_wave') ? 'block' : 'none';
+        document.getElementById('drill-fields').style.display =
+          (this.value === 'drill') ? 'block' : 'none';
+        document.getElementById('tool_path_file_name-fields').style.display =
+          (this.value === 'tool_path_file') ? 'block' : 'none';
+      });
+    });
+  });
+
+</script>
+{% endblock script %}
