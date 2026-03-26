@@ -1,8 +1,8 @@
-from pprint import pprint
+# -*- coding: utf-8 -*-
+"""
 
+"""
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 
 
 def draw_map(block):
@@ -11,6 +11,10 @@ def draw_map(block):
     参数:
         block: np.ndarray, 布尔矩阵，True 表示该位置有块
     """
+
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as mpatches
+
     nl, nt = block.shape
 
     # 数值矩阵用于颜色
@@ -67,8 +71,8 @@ def draw_map(block):
     # 行方向环状接触：检查每行的第一个和最后一个格子
     for i in range(nl):
         if block[i, 0] and block[i, -1]:
-            ax.plot([-0.5, -0.5], [i - 0.5, i + 0.5], color=highlight_color, linewidth=linewidth)      # 左边界
-            ax.plot([nt - 0.5, nt - 0.5], [i - 0.5, i + 0.5], color=highlight_color, linewidth=linewidth) # 右边界
+            ax.plot([-0.5, -0.5], [i - 0.5, i + 0.5], color=highlight_color, linewidth=linewidth)  # 左边界
+            ax.plot([nt - 0.5, nt - 0.5], [i - 0.5, i + 0.5], color=highlight_color, linewidth=linewidth)  # 右边界
 
     # 图例
     legend_patches = [
@@ -124,7 +128,7 @@ def output_edges_dict(block):
                 key = (c2[0], c2[1], c1[0], c1[1])
         edges_dict[key] = d
 
-    # 打印输出（使用 .format 代替 f-string）
+    # 打印输出
     for key, d in edges_dict.items():
         r1, c1, r2, c2 = key
         print("({},{}) ↔ ({},{})  [{}]".format(r1 + 1, c1 + 1, r2 + 1, c2 + 1, d))
@@ -133,14 +137,14 @@ def output_edges_dict(block):
 
 
 if __name__ == "__main__":
-    # 生成 block 矩阵（与原代码逻辑一致）
     nl, nt = 12, 9
     block = np.zeros((nl, nt), dtype=bool)
     block[:, 0] = True
     block[:, 1] = True
     block[:, 8] = True
 
-    # draw_map(block)          # 绘图
-    edges_dict = output_edges_dict(block) # 输出字典
+    draw_map(block)
+    edges_dict = output_edges_dict(block)
     from pprint import pprint
-    pprint(edges_dict) # 美化打印字典
+
+    pprint(edges_dict)
