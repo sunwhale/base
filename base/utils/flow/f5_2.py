@@ -2282,10 +2282,10 @@ if __name__ == "__main__":
             elif tie_type == 'right':
                 l1, i1, l2, i2 = tie_loc
                 instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                surface_name_1 = 'SURFACE-T1'
+                surface_name_1 = 'SURFACE-T2'
                 region1 = a.instances[instance_name_1].surfaces[surface_name_1]
                 instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                surface_name_2 = 'SURFACE-T-1'
+                surface_name_2 = 'SURFACE-T-2'
                 region2 = a.instances[instance_name_2].surfaces[surface_name_2]
                 constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
                 if major_version >= 2022:
@@ -2296,10 +2296,10 @@ if __name__ == "__main__":
             elif tie_type == 'circular':
                 l1, i1, l2, i2 = tie_loc
                 instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                surface_name_1 = 'SURFACE-T-1'
+                surface_name_1 = 'SURFACE-T-2'
                 region1 = a.instances[instance_name_1].surfaces[surface_name_1]
                 instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                surface_name_2 = 'SURFACE-T1'
+                surface_name_2 = 'SURFACE-T2'
                 region2 = a.instances[instance_name_2].surfaces[surface_name_2]
                 constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
                 if major_version >= 2022:
@@ -2330,10 +2330,18 @@ if __name__ == "__main__":
                 bc_name = 'BC-' + instance_name + '-SET-SURFACE-T1'
                 model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T1'], localCsys=a.datums[cylindrical_datum.id])
 
+                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                bc_name = 'BC-' + instance_name + '-SET-SURFACE-T2'
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T2'], localCsys=a.datums[cylindrical_datum.id])
+
             if i == 8:
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                 bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-1'
                 model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-1'], localCsys=a.datums[cylindrical_datum.id])
+
+                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                bc_name = 'BC-' + instance_name + '-SET-SURFACE-T-2'
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets['SET-SURFACE-T-2'], localCsys=a.datums[cylindrical_datum.id])
 
         datum_list = []
         for instance_name in model.rootAssembly.allInstances.keys():
