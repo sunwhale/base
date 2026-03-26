@@ -530,7 +530,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
 
     create_face_set_from_surface(p)
 
-    set_name = 'SET-CELL-GLUE'
+    set_name = 'SET-CELL-GLUE-A'
     p.Set(cells=p.cells, name=set_name)
 
     # Partition
@@ -1186,7 +1186,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
-    set_name = 'SET-CELL-GLUE'
+    set_name = 'SET-CELL-GLUE-A'
     p.Set(cells=p.cells, name=set_name)
 
     # Partition
@@ -2158,7 +2158,7 @@ if __name__ == "__main__":
         first_block_dimension = deepcopy(block_dimension)
         first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness]
         first_block_dimension['index_r'] = 3
-        first_block_dimension['index_t'] = 3
+        first_block_dimension['index_t'] = 2
 
         first_block_dimension['r_front'] = 460.0
         first_block_dimension['length_front'] = 1500.0
@@ -2211,15 +2211,19 @@ if __name__ == "__main__":
             'MIDDLE': p_block
         }
 
+        gap_dict = {
+            'FRONT': p_gap_front,
+            'PENULT': p_gap_penult,
+            'BEHIND': p_gap_behind,
+            'MIDDLE': p_gap
+        }
+
         a = model.rootAssembly
         a.DatumCsysByDefault(CARTESIAN)
         cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
 
         for block_loc, block_label in block_labels.items():
             l, i = block_loc
-
-            instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-            a.Instance(name=instance_name, part=block_dict[block_label], dependent=ON)
 
             z_shift = 0.0
 
@@ -2232,5 +2236,12 @@ if __name__ == "__main__":
             elif block_label == 'BEHIND':
                 z_shift = front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1) * (block_gap + block_length) + block_gap / 2 + block_insulation_thickness + behind_ref_length
 
+            instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            a.Instance(name=instance_name, part=block_dict[block_label], dependent=ON)
+            a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
+            a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+            instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            a.Instance(name=instance_name, part=gap_dict[block_label], dependent=ON)
             a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
             a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
