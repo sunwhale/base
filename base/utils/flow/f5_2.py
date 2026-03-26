@@ -2078,6 +2078,46 @@ def create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surf
         model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
 
 
+def print_sketch(session, model, viewport, sketch_name):
+    s = model.ConstrainedSketch(name='__edit__', objectToCopy=mdb.models['Model-1'].sketches[sketch_name])
+    s.setPrimaryObject(option=STANDALONE)
+    s.Spot(point=(0, 0))
+    s.sketchOptions.setValues(grid=OFF)
+    if 'REVOLVE' in sketch_name:
+        viewport.view.rotate(xAngle=90, yAngle=90, zAngle=0, mode=MODEL)
+    viewport.view.fitView()
+    session.printToFile(fileName=sketch_name + '.png', format=PNG, canvasObjects=(viewport,))
+    s.unsetPrimaryObject()
+    del model.sketches['__edit__']
+
+
+def print_part(session, model, viewport, part_name):
+    p = model.parts[part_name]
+    viewport.setValues(displayedObject=p)
+    viewport.view.setValues(session.views['Iso'])
+    cmap = viewport.colorMappings['Material']
+    viewport.setColor(colorMapping=cmap)
+    session.printToFile(fileName=part_name + '_iso.png', format=PNG, canvasObjects=(viewport,))
+
+
+def print_assembly(session, model, viewport):
+    viewport.setValues(displayedObject=a)
+    cmap = viewport.colorMappings['Material']
+    viewport.setColor(colorMapping=cmap)
+
+    datum_list = []
+    for instance_name in model.rootAssembly.allInstances.keys():
+        for datum_id in model.rootAssembly.allInstances[instance_name].datums.keys():
+            datum_list.append(model.rootAssembly.allInstances[instance_name].datums[datum_id])
+    leaf = dgm.LeafFromDatums(datum_list)
+    viewport.assemblyDisplay.displayGroup.remove(leaf=leaf)
+
+    session.printOptions.setValues(reduceColors=False)
+    viewport.view.setValues(session.views['Iso'])
+    viewport.view.rotate(xAngle=0, yAngle=0, zAngle=-90, mode=MODEL)
+    session.printToFile(fileName='assembly_iso.png', format=PNG, canvasObjects=(viewport,))
+
+
 if __name__ == "__main__":
     epsilon = 0.95
     n = 9
@@ -2338,13 +2378,6 @@ if __name__ == "__main__":
                 bc_name = 'BC-' + instance_name + '-' + set_name
                 model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-        datum_list = []
-        for instance_name in model.rootAssembly.allInstances.keys():
-            for datum_id in model.rootAssembly.allInstances[instance_name].datums.keys():
-                datum_list.append(model.rootAssembly.allInstances[instance_name].datums[datum_id])
-        leaf = dgm.LeafFromDatums(datum_list)
-        session.viewports['Viewport: 1'].assemblyDisplay.displayGroup.remove(leaf=leaf)
-
         if major_version >= 2022:
             mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
                     atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
@@ -2361,5 +2394,19 @@ if __name__ == "__main__":
                     modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
                     scratch='', resultsFormat=ODB, multiprocessingMode=DEFAULT, numCpus=8,
                     numDomains=8, numGPUs=0)
+
+        viewport = session.viewports['Viewport: 1']
+        viewport.makeCurrent()
+        viewport.setValues(width=300)
+        viewport.setValues(height=300)
+        session.pngOptions.setValues(imageSize=(1600, 1600))
+
+        print_assembly(session, model, viewport)
+
+        for sketch_name in model.sketches.keys():
+            print_sketch(session, model, viewport, sketch_name)
+
+        for part_name in model.parts.keys():
+            print_part(session, model, viewport, part_name)
 
         # mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
