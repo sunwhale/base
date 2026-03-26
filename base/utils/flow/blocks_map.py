@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -40,11 +42,11 @@ def draw_map(block):
     ax.set_yticks(np.arange(-0.5, nl, 1), minor=True)
     ax.grid(which='minor', color='black', linewidth=0.5, linestyle='-')
 
-    # 在每个 True 格子中心加坐标标签
+    # 在每个 True 格子中心加坐标标签（使用 .format 代替 f-string）
     for i in range(nl):
         for j in range(nt):
             if data[i, j] != 0:
-                ax.text(j, i, f'({i}-{j})', ha='center', va='center', color='black', fontsize=8)
+                ax.text(j, i, '({}-{})'.format(i, j), ha='center', va='center', color='black', fontsize=8)
 
     # 高亮相邻 True 格子之间的共享边
     highlight_color = 'red'
@@ -122,10 +124,12 @@ def output_edges_dict(block):
                 key = (c2[0], c2[1], c1[0], c1[1])
         edges_dict[key] = d
 
-    # 打印输出（使用1‑based索引）
+    # 打印输出（使用 .format 代替 f-string）
     for key, d in edges_dict.items():
         r1, c1, r2, c2 = key
-        print(f"({r1 + 1},{c1 + 1}) ↔ ({r2 + 1},{c2 + 1})  [{d}]")
+        print("({},{}) ↔ ({},{})  [{}]".format(r1 + 1, c1 + 1, r2 + 1, c2 + 1, d))
+
+    return edges_dict
 
 
 if __name__ == "__main__":
@@ -137,4 +141,6 @@ if __name__ == "__main__":
     block[:, 8] = True
 
     # draw_map(block)          # 绘图
-    # output_edges_dict(block) # 输出字典
+    edges_dict = output_edges_dict(block) # 输出字典
+    from pprint import pprint
+    pprint(edges_dict) # 美化打印字典
