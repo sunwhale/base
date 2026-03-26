@@ -247,6 +247,30 @@ def create_sketch_behind_cut_revolve_2(model, sketch_name, t, x0, deep, a, b, pe
     return s
 
 
+def create_sketch_gap_z_front_behind(model, sketch_name, points):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+    center = (0, 0)
+    geom_list = []
+    geom_list.append(s.Line(point1=points[0, 2], point2=points[3, 2]))
+    geom_list.append(s.ArcByCenterEnds(center=center, point1=points[3, 2], point2=points[3, 3], direction=COUNTERCLOCKWISE))
+    geom_list.append(s.Line(point1=points[3, 3], point2=points[0, 3]))
+    geom_list.append(s.Line(point1=points[0, 3], point2=points[0, 2]))
+
+    return s
+
+
+def create_sketch_gap_z(model, sketch_name, points):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+    center = (0, 0)
+    geom_list = []
+    geom_list.append(s.Line(point1=points[0, 2], point2=points[2, 2]))
+    geom_list.append(s.ArcByCenterEnds(center=center, point1=points[2, 2], point2=points[2, 3], direction=COUNTERCLOCKWISE))
+    geom_list.append(s.Line(point1=points[2, 3], point2=points[0, 3]))
+    geom_list.append(s.Line(point1=points[0, 3], point2=points[0, 2]))
+
+    return s
+
+
 def create_part_block(model, part_name, points, lines, faces, dimension):
     z_list = dimension['z_list']
     deep = dimension['deep']
@@ -415,14 +439,8 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
-    # SKETCH-GAP
-    s_gap_z = model.ConstrainedSketch(name='SKETCH-GAP-Z', sheetSize=200.0)
-    center = (0, 0)
-    geom_list = []
-    geom_list.append(s_gap_z.Line(point1=points[0, 2], point2=points[2, 2]))
-    geom_list.append(s_gap_z.ArcByCenterEnds(center=center, point1=points[2, 2], point2=points[2, 3], direction=COUNTERCLOCKWISE))
-    geom_list.append(s_gap_z.Line(point1=points[2, 3], point2=points[0, 3]))
-    geom_list.append(s_gap_z.Line(point1=points[0, 3], point2=points[0, 2]))
+    # SKETCH-GAP-Z
+    s_gap_z = create_sketch_gap_z(model, 'SKETCH-GAP-Z', points)
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
@@ -795,13 +813,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-GAP-Z
-    s_gap_z = model.ConstrainedSketch(name='SKETCH-GAP-Z', sheetSize=200.0)
-    center = (0, 0)
-    geom_list = []
-    geom_list.append(s_gap_z.Line(point1=points[0, 2], point2=points[3, 2]))
-    geom_list.append(s_gap_z.ArcByCenterEnds(center=center, point1=points[3, 2], point2=points[3, 3], direction=COUNTERCLOCKWISE))
-    geom_list.append(s_gap_z.Line(point1=points[3, 3], point2=points[0, 3]))
-    geom_list.append(s_gap_z.Line(point1=points[0, 3], point2=points[0, 2]))
+    s_gap_z = create_sketch_gap_z_front_behind(model, 'SKETCH-GAP-Z', points)
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
@@ -1085,13 +1097,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-GAP
-    s_gap_z = model.ConstrainedSketch(name='SKETCH-GAP-Z', sheetSize=200.0)
-    center = (0, 0)
-    geom_list = []
-    geom_list.append(s_gap_z.Line(point1=points[0, 2], point2=points[2, 2]))
-    geom_list.append(s_gap_z.ArcByCenterEnds(center=center, point1=points[2, 2], point2=points[2, 3], direction=COUNTERCLOCKWISE))
-    geom_list.append(s_gap_z.Line(point1=points[2, 3], point2=points[0, 3]))
-    geom_list.append(s_gap_z.Line(point1=points[0, 3], point2=points[0, 2]))
+    s_gap_z = create_sketch_gap_z(model, 'SKETCH-GAP-Z', points)
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
@@ -1454,13 +1460,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-GAP-Z
-    s_gap_z = model.ConstrainedSketch(name='SKETCH-GAP-Z', sheetSize=200.0)
-    center = (0, 0)
-    geom_list = []
-    geom_list.append(s_gap_z.Line(point1=points[0, 2], point2=points[3, 2]))
-    geom_list.append(s_gap_z.ArcByCenterEnds(center=center, point1=points[3, 2], point2=points[3, 3], direction=COUNTERCLOCKWISE))
-    geom_list.append(s_gap_z.Line(point1=points[3, 3], point2=points[0, 3]))
-    geom_list.append(s_gap_z.Line(point1=points[0, 3], point2=points[0, 2]))
+    s_gap_z = create_sketch_gap_z_front_behind(model, 'SKETCH-GAP-Z', points)
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
@@ -1528,8 +1528,6 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     # combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
-
-
 
     # 通过排除法确定内表面
     surface_names = list(p.surfaces.keys())
@@ -1959,19 +1957,19 @@ if __name__ == "__main__":
         }
 
         points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
-        # p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
+        p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
 
         gap_dimension = deepcopy(block_dimension)
         gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2]
         gap_dimension['index_r'] = 2
         gap_dimension['index_t'] = 3
-        # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
+        p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
 
         penult_block_dimension = deepcopy(block_dimension)
-        # p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
+        p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
 
         penult_gap_dimension = deepcopy(gap_dimension)
-        # p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
+        p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
 
         points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
         front_ref_length = 509.0
@@ -1991,11 +1989,11 @@ if __name__ == "__main__":
         first_block_dimension['r3'] = 655.2
         first_block_dimension['theta_in_deg'] = 0.16
 
-        # p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
+        p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
 
         first_gap_dimension = deepcopy(first_block_dimension)
         first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2]
-        # p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
+        p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
 
         behind_ref_length = 500.0
         behind_block_dimension = deepcopy(first_block_dimension)
@@ -2010,7 +2008,7 @@ if __name__ == "__main__":
         behind_block_dimension['r2'] = 1524.0
         behind_block_dimension['r3'] = 655.2
         behind_block_dimension['theta_in_deg'] = 0.16
-        # p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
+        p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
 
         behind_gap_dimension = deepcopy(behind_block_dimension)
         behind_gap_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness, behind_ref_length + block_insulation_thickness + block_gap / 2]
