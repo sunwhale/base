@@ -75,6 +75,7 @@ class Preproc:
     def __init__(self, path, script='script.py'):
         self.path = path
         self.script = script
+        self.script_abspath = None
 
     def read_msg(self):
         msg_file = os.path.join(self.path, '.preproc_msg')
@@ -86,7 +87,10 @@ class Preproc:
         return message
 
     def check_setting_files(self):
-        setting_file = os.path.join(self.path, self.script)
+        if self.script_abspath is None:
+            setting_file = os.path.join(self.path, self.script)
+        else:
+            setting_file = self.script_abspath
         if not os.path.exists(setting_file):
             return False
         else:
@@ -103,7 +107,10 @@ class Preproc:
 
     def run(self):
         os.chdir(self.path)
-        py_file = os.path.join(self.path, self.script)
+        if self.script_abspath is None:
+            py_file = os.path.join(self.path, self.script)
+        else:
+            py_file = self.script_abspath
         cmd = '%s cae noGui=\"%s\"' % (ABAQUS, py_file)
         print(cmd)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path)
