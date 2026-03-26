@@ -28,8 +28,8 @@ except ImportError as e:
 
 import sys
 
-# FLOW_PATH = r'F:\Github\base\base\utils\flow'
-FLOW_PATH = r'/home/dell/base/base/utils/flow'
+FLOW_PATH = r'F:\Github\base\base\utils\flow'
+# FLOW_PATH = r'/home/dell/base/base/utils/flow'
 sys.path.insert(0, FLOW_PATH)
 
 from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
@@ -2029,9 +2029,9 @@ def get_ties(block):
         edges_dict[key] = d
 
     # 打印输出
-    for key, d in edges_dict.items():
-        r1, c1, r2, c2 = key
-        print("({},{}) ↔ ({},{})  [{}]".format(r1 + 1, c1 + 1, r2 + 1, c2 + 1, d))
+    # for key, d in edges_dict.items():
+    #     r1, c1, r2, c2 = key
+    #     print("({},{}) -> ({},{})  [{}]".format(r1 + 1, c1 + 1, r2 + 1, c2 + 1, d))
 
     return edges_dict
 
@@ -2197,7 +2197,7 @@ if __name__ == "__main__":
         behind_gap_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness, behind_ref_length + block_insulation_thickness + block_gap / 2]
         p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
 
-        nl, nt = 12, 9
+        nl, nt = 6, 9
         block = np.zeros((nl, nt), dtype=bool)
         block[:, 0] = True
         block[:, 1] = True
@@ -2265,3 +2265,38 @@ if __name__ == "__main__":
                     model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
                 else:
                     model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+
+            elif tie_type == 'right':
+                l1, i1, l2, i2 = tie_block_loc
+                instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                surface_name_1 = 'SURFACE-T1'
+                region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+                instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                surface_name_2 = 'SURFACE-T-1'
+                region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+                constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
+                if major_version >= 2022:
+                    model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+                else:
+                    model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+
+            elif tie_type == 'circular':
+                l1, i1, l2, i2 = tie_block_loc
+                instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                surface_name_1 = 'SURFACE-T-1'
+                region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+                instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                surface_name_2 = 'SURFACE-T1'
+                region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+                constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
+                if major_version >= 2022:
+                    model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+                else:
+                    model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
+
+        datum_list = []
+        for instance_name in model.rootAssembly.allInstances.keys():
+            for datum_id in model.rootAssembly.allInstances[instance_name].datums.keys():
+                datum_list.append(model.rootAssembly.allInstances[instance_name].datums[datum_id])
+        leaf = dgm.LeafFromDatums(datum_list)
+        session.viewports['Viewport: 1'].assemblyDisplay.displayGroup.remove(leaf=leaf)
