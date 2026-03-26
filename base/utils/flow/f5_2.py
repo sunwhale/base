@@ -33,7 +33,7 @@ sys.path.insert(0, FLOW_PATH)
 
 from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
     load_json, min_difference, mirror_y_axis, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, \
-    combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set, create_surface_from_p_remove_given_surface_names, \
+    combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set, get_faces_of_p_remove_given_surface_names, \
     get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces
 
 
@@ -780,7 +780,9 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
     given_surface_names.remove('SURFACE-OUTER')
-    create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-OUTER')
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
@@ -908,7 +910,9 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
-    create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-OUTER')
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
@@ -1398,12 +1402,11 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
     given_surface_names.remove('SURFACE-OUTER')
-    create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-OUTER')
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
-
-    given_surface_names = list(p.surfaces.keys())
-    create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-INNER')
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -1411,6 +1414,11 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_cut_revolve_2, angle=360.0, flipRevolveDirection=ON)
 
+    given_surface_names = list(p.surfaces.keys())
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+        
     create_face_set_from_surface(p)
 
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
@@ -1518,25 +1526,19 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
 
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
-    create_surface_from_p_remove_given_surface_names(p, given_surface_names, 'SURFACE-OUTER')
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
-    # combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
 
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_behind_cut_revolve_2 = create_sketch_behind_cut_revolve_2(model, 'SKETCH-BEHIND-CUT-REVOLVE-2', t, x0, deep, a, b, pen)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_cut_revolve_2, angle=360.0, flipRevolveDirection=ON)
 
     # 通过排除法确定内表面
-    surface_names = list(p.surfaces.keys())
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        is_surface_outer = True
-        for surface_name in surface_names:
-            if p.faces[face_id] in p.surfaces[surface_name].faces:
-                is_surface_outer = False
-        if is_surface_outer and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
+    given_surface_names = list(p.surfaces.keys())
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
@@ -1557,6 +1559,8 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
+
+
 
 
 def create_block_sets_common(p, faces, dimension):
