@@ -1989,7 +1989,7 @@ def draw_map(block):
     plt.show()
 
 
-def get_ties(block):
+def get_tie_types(block):
     """
     根据 block 矩阵计算相邻（包括环形相邻）的格子对，并输出字典。
     参数:
@@ -2036,7 +2036,7 @@ def get_ties(block):
     return edges_dict
 
 
-def get_block_labels(block):
+def get_block_types(block):
     """
     返回每个有块位置的标签。
     参数:
@@ -2203,7 +2203,8 @@ if __name__ == "__main__":
         block[:, 1] = True
         block[:, 8] = True
 
-        block_labels = get_block_labels(block)
+        block_types = get_block_types(block)
+        ties_types = get_tie_types(block)
 
         block_dict = {
             'FRONT': p_block_front,
@@ -2223,7 +2224,7 @@ if __name__ == "__main__":
         a.DatumCsysByDefault(CARTESIAN)
         cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
 
-        for block_loc, block_label in block_labels.items():
+        for block_loc, block_label in block_types.items():
             l, i = block_loc
 
             z_shift = 0.0
@@ -2249,11 +2250,9 @@ if __name__ == "__main__":
 
         model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
 
-        ties_dict = get_ties(block)
-
-        for tie_block_loc, tie_type in ties_dict.items():
+        for tie_loc, tie_type in ties_types.items():
             if tie_type == 'down':
-                l1, i1, l2, i2 = tie_block_loc
+                l1, i1, l2, i2 = tie_loc
                 instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
                 surface_name_1 = 'SURFACE-Z2'
                 region1 = a.instances[instance_name_1].surfaces[surface_name_1]
@@ -2267,7 +2266,7 @@ if __name__ == "__main__":
                     model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
 
             elif tie_type == 'right':
-                l1, i1, l2, i2 = tie_block_loc
+                l1, i1, l2, i2 = tie_loc
                 instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
                 surface_name_1 = 'SURFACE-T1'
                 region1 = a.instances[instance_name_1].surfaces[surface_name_1]
@@ -2281,7 +2280,7 @@ if __name__ == "__main__":
                     model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=ON, tieRotations=ON, thickness=ON)
 
             elif tie_type == 'circular':
-                l1, i1, l2, i2 = tie_block_loc
+                l1, i1, l2, i2 = tie_loc
                 instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
                 surface_name_1 = 'SURFACE-T-1'
                 region1 = a.instances[instance_name_1].surfaces[surface_name_1]
