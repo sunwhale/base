@@ -24,6 +24,7 @@ class Operations:
 
 
 class BaseConfig:
+    BASE_PATH = os.path.join(basedir, 'base')
     STATIC_PATH = os.path.join(basedir, 'base', 'static')
     if os.getenv('FILE_PATH') is not None:
         FILE_PATH = os.getenv('FILE_PATH')
