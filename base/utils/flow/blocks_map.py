@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-
 """
+
 import numpy as np
 
 
@@ -89,7 +89,7 @@ def draw_map(block):
     plt.show()
 
 
-def output_edges_dict(block):
+def get_ties(block):
     """
     根据 block 矩阵计算相邻（包括环形相邻）的格子对，并输出字典。
     参数:
@@ -136,6 +136,38 @@ def output_edges_dict(block):
     return edges_dict
 
 
+def get_block_labels(block):
+    """
+    返回每个有块位置的标签。
+    参数:
+        block: np.ndarray, 布尔矩阵，True 表示有块
+    返回:
+        dict: 键为 (行,列) 坐标，值为标签字符串 ('FRONT','PENULT','BEHIND','MIDDLE')
+    """
+    nl, nt = block.shape
+    labels = {}
+
+    # 第一行
+    for j in np.where(block[0, :])[0]:
+        labels[(0, int(j))] = 'FRONT'
+
+    # 倒数第二行
+    if nl >= 2:
+        for j in np.where(block[-2, :])[0]:
+            labels[(nl - 2, int(j))] = 'PENULT'
+
+    # 最后一行
+    for j in np.where(block[-1, :])[0]:
+        labels[(nl - 1, int(j))] = 'BEHIND'
+
+    # 中间行（索引 1 到 nl-3）
+    for i in range(1, nl - 2):
+        for j in np.where(block[i, :])[0]:
+            labels[(i, int(j))] = 'MIDDLE'
+
+    return labels
+
+
 if __name__ == "__main__":
     nl, nt = 12, 9
     block = np.zeros((nl, nt), dtype=bool)
@@ -143,8 +175,11 @@ if __name__ == "__main__":
     block[:, 1] = True
     block[:, 8] = True
 
-    draw_map(block)
-    edges_dict = output_edges_dict(block)
+    # draw_map(block)
+    ties_dict = get_ties(block)
     from pprint import pprint
+    pprint(ties_dict)
 
-    pprint(edges_dict)
+    # 新增：输出颜色标签
+    block_labels = get_block_labels(block)
+    pprint(block_labels)
