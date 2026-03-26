@@ -271,6 +271,30 @@ def create_sketch_gap_z(model, sketch_name, points):
     return s
 
 
+def create_sketch_gap_t_front_behind(model, sketch_name, t, points):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, gridSpacing=100.0, transform=t)
+
+    center = (0, 0)
+    geom_list = []
+    geom_list.append(s.Line(point1=points[0, 0], point2=points[3, 0]))
+    geom_list.append(s.ArcByCenterEnds(center=center, point1=points[3, 0], point2=points[3, 3], direction=COUNTERCLOCKWISE))
+    geom_list.append(s.Line(point1=points[3, 3], point2=points[0, 3]))
+    geom_list.append(s.Line(point1=points[0, 3], point2=points[0, 0]))
+
+    return s
+
+def create_sketch_gap_t(model, sketch_name, t, points):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, gridSpacing=100.0, transform=t)
+
+    center = (0, 0)
+    geom_list = []
+    geom_list.append(s.Line(point1=points[0, 0], point2=points[2, 0]))
+    geom_list.append(s.ArcByCenterEnds(center=center, point1=points[2, 0], point2=points[2, 3], direction=COUNTERCLOCKWISE))
+    geom_list.append(s.Line(point1=points[2, 3], point2=points[0, 3]))
+    geom_list.append(s.Line(point1=points[0, 3], point2=points[0, 0]))
+
+    return s
+
 def create_part_block(model, part_name, points, lines, faces, dimension):
     z_list = dimension['z_list']
     deep = dimension['deep']
@@ -456,13 +480,8 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
 
     # SKETCH-GAP
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
-    s_gap_t = model.ConstrainedSketch(name='SKETCH-GAP-T', sheetSize=4000.0, gridSpacing=100.0, transform=t)
-    center = (0, 0)
-    geom_list = []
-    geom_list.append(s_gap_t.Line(point1=points[0, 0], point2=points[2, 0]))
-    geom_list.append(s_gap_t.ArcByCenterEnds(center=center, point1=points[2, 0], point2=points[2, 3], direction=COUNTERCLOCKWISE))
-    geom_list.append(s_gap_t.Line(point1=points[2, 3], point2=points[0, 3]))
-    geom_list.append(s_gap_t.Line(point1=points[0, 3], point2=points[0, 0]))
+    s_gap_t = create_sketch_gap_t(model, 'SKETCH-GAP-T', t, points)
+
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=OFF)
 
     # Partition
@@ -842,13 +861,8 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
-    s_gap_t = model.ConstrainedSketch(name='SKETCH-GAP-T', sheetSize=4000.0, gridSpacing=100.0, transform=t)
-    center = (0, 0)
-    geom_list = []
-    geom_list.append(s_gap_t.Line(point1=points[0, 0], point2=points[3, 0]))
-    geom_list.append(s_gap_t.ArcByCenterEnds(center=center, point1=points[3, 0], point2=points[3, 3], direction=COUNTERCLOCKWISE))
-    geom_list.append(s_gap_t.Line(point1=points[3, 3], point2=points[0, 3]))
-    geom_list.append(s_gap_t.Line(point1=points[0, 3], point2=points[0, 0]))
+    s_gap_t = create_sketch_gap_t_front_behind(model, 'SKETCH-GAP-T', t, points)
+
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=OFF)
 
     # 旋转切割头部外轮廓
@@ -1113,13 +1127,8 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # SKETCH-GAP
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
-    s_gap_t = model.ConstrainedSketch(name='SKETCH-GAP-T', sheetSize=4000.0, gridSpacing=100.0, transform=t)
-    center = (0, 0)
-    geom_list = []
-    geom_list.append(s_gap_t.Line(point1=points[0, 0], point2=points[2, 0]))
-    geom_list.append(s_gap_t.ArcByCenterEnds(center=center, point1=points[2, 0], point2=points[2, 3], direction=COUNTERCLOCKWISE))
-    geom_list.append(s_gap_t.Line(point1=points[2, 3], point2=points[0, 3]))
-    geom_list.append(s_gap_t.Line(point1=points[0, 3], point2=points[0, 0]))
+    s_gap_t = create_sketch_gap_t(model, 'SKETCH-GAP-T', t, points)
+
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=OFF)
 
     # Partition
@@ -1489,13 +1498,8 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
 
     # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
-    s_gap_t = model.ConstrainedSketch(name='SKETCH-GAP-T', sheetSize=4000.0, gridSpacing=100.0, transform=t)
-    center = (0, 0)
-    geom_list = []
-    geom_list.append(s_gap_t.Line(point1=points[0, 0], point2=points[3, 0]))
-    geom_list.append(s_gap_t.ArcByCenterEnds(center=center, point1=points[3, 0], point2=points[3, 3], direction=COUNTERCLOCKWISE))
-    geom_list.append(s_gap_t.Line(point1=points[3, 3], point2=points[0, 3]))
-    geom_list.append(s_gap_t.Line(point1=points[0, 3], point2=points[0, 0]))
+    s_gap_t = create_sketch_gap_t_front_behind(model, 'SKETCH-GAP-T', t, points)
+    
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=ON)
 
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut_revolve, angle=360.0, flipRevolveDirection=ON)
