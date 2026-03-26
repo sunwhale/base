@@ -2258,7 +2258,8 @@ if __name__ == "__main__":
             a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
             a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-        model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
+        # model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
+        model.FrequencyStep(name='Step-1', previous='Initial', numEigen=3)
 
         for block_loc, block_type in block_types.items():
             l, i = block_loc
@@ -2293,20 +2294,20 @@ if __name__ == "__main__":
 
         for block_loc, block_type in block_types.items():
             l, i = block_loc
-            instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-            surface_name = 'SURFACE-INNER'
-            load_name = 'LOAD-' + instance_name + '-' + surface_name
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+            # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            # surface_name = 'SURFACE-INNER'
+            # load_name = 'LOAD-' + instance_name + '-' + surface_name
+            # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
 
             set_name = 'SET-SURFACE-OUTER'
             bc_name = 'BC-' + instance_name + '-' + set_name
             model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
                                  u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
 
-            instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-            surface_name = 'SURFACE-INNER'
-            load_name = 'LOAD-' + instance_name + '-' + surface_name
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+            # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            # surface_name = 'SURFACE-INNER'
+            # load_name = 'LOAD-' + instance_name + '-' + surface_name
+            # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
 
             set_name = 'SET-SURFACE-OUTER'
             bc_name = 'BC-' + instance_name + '-' + set_name
