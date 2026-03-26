@@ -1065,11 +1065,6 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
-    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
-
-    create_face_set_from_surface(p)
-
-    p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
 
     # Partition
     p1 = [x0 + deep, -a]
@@ -1081,6 +1076,16 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_penult_cut_revolve = create_sketch_penult_cut_revolve(model, 'SKETCH-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+
+    given_surface_names = list(p.surfaces.keys())
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-CUT-2')
+    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT', 'SURFACE-CUT-2'], 'SURFACE-INNER')
+
+    create_face_set_from_surface(p)
+
+    p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
 
     generate_part_mesh(p, element_size=element_size)
 
@@ -1174,9 +1179,6 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
-    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
-
-    create_face_set_from_surface(p)
 
     set_name = 'SET-CELL-GLUE'
     p.Set(cells=p.cells, name=set_name)
@@ -1191,6 +1193,14 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_penult_cut_revolve = create_sketch_penult_cut_revolve(model, 'SKETCH-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+
+    given_surface_names = list(p.surfaces.keys())
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-CUT-2')
+    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT', 'SURFACE-CUT-2'], 'SURFACE-INNER')
+
+    create_face_set_from_surface(p)
 
     generate_part_mesh(p, element_size=element_size)
 
@@ -1418,7 +1428,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
-        
+
     create_face_set_from_surface(p)
 
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
@@ -1559,8 +1569,6 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
-
-
 
 
 def create_block_sets_common(p, faces, dimension):
