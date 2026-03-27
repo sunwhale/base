@@ -78,33 +78,33 @@ def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n):
 
 
 def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_cut):
-    s_cut = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = [x0 + deep, 0.0]
     p1 = [x0 + deep, -a]
     p2 = [x0 + deep + b, 0.0]
-    e1 = s_cut.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
+    e1 = s.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
     l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
     l2 = Line2D([x0, 0.0], [x0, 1.0])
     p3 = l1.get_intersection(l2)
     p4 = [p3[0], 0.0]
     p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
-    s_cut.Spot(point=p1p)
-    s_cut.Line(point1=p1, point2=p3)
-    s_cut.Line(point1=p3, point2=p4)
-    s_cut.Line(point1=center, point2=p2)
-    s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
-    s_cut.Line(point1=p4, point2=center)
-    center_line = s_cut.ConstructionLine(point1=(x0 + deep - r_cut, -1e4), point2=(x0 + deep - r_cut, 1e4))
+    s.Spot(point=p1p)
+    s.Line(point1=p1, point2=p3)
+    s.Line(point1=p3, point2=p4)
+    s.Line(point1=center, point2=p2)
+    s.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
+    s.Line(point1=p4, point2=center)
+    center_line = s.ConstructionLine(point1=(x0 + deep - r_cut, -1e4), point2=(x0 + deep - r_cut, 1e4))
     geom_list = []
-    for g in s_cut.geometry.values():
+    for g in s.geometry.values():
         geom_list.append(g)
-    s_cut.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
-    s_cut.assignCenterline(line=center_line)
-    return s_cut, p1p
+    s.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
+    s.assignCenterline(line=center_line)
+    return s, p1p
 
 
 def create_sketch_front_cut_revolve(model, sketch_name, t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen):
-    s_block_cut_revolve = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
     result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
     l1 = Line2D(p3, np.tan(degrees_to_radians(theta_in_deg)))
@@ -126,20 +126,20 @@ def create_sketch_front_cut_revolve(model, sketch_name, t, points, index_r, inde
     delta2 = result['delta2']
     delta3 = result['delta3']
 
-    s_block_cut_revolve.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
-    s_block_cut_revolve.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
-    s_block_cut_revolve.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
-    s_block_cut_revolve.Line(point1=p0, point2=(p0[0], 1))
-    s_block_cut_revolve.Line(point1=(p0[0], 1), point2=(-pen, 1))
-    s_block_cut_revolve.Line(point1=(-pen, 1), point2=(-pen, pen))
-    s_block_cut_revolve.Line(point1=(-pen, pen), point2=(p5[0], pen))
-    s_block_cut_revolve.Line(point1=(p5[0], pen), point2=p5)
-    s_block_cut_revolve.Line(point1=p5, point2=p4)
-    s_block_cut_revolve.Line(point1=p3, point2=p4)
-    center_line = s_block_cut_revolve.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
-    s_block_cut_revolve.assignCenterline(line=center_line)
+    s.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
+    s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
+    s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
+    s.Line(point1=p0, point2=(p0[0], 1))
+    s.Line(point1=(p0[0], 1), point2=(-pen, 1))
+    s.Line(point1=(-pen, 1), point2=(-pen, pen))
+    s.Line(point1=(-pen, pen), point2=(p5[0], pen))
+    s.Line(point1=(p5[0], pen), point2=p5)
+    s.Line(point1=p5, point2=p4)
+    s.Line(point1=p3, point2=p4)
+    center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
+    s.assignCenterline(line=center_line)
 
-    return s_block_cut_revolve, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3
+    return s, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3
 
 
 def create_sketch_behind_cut_revolve(model, sketch_name, t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen):
@@ -764,9 +764,23 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     p_edges = []
-    for z_center in z_centers:
-        p_edges.append(p.edges.findAt((p1p[0], p1p[1], z_center)))
+    # for z_center in z_centers:
+    #     p_edges.append(p.edges.findAt((p1p[0], p1p[1], z_center)))
+
+        # p.DatumPointByCoordinate(coords=(p1p[0], p1p[1], z_center))
+
+    # print(p.edges.findAt((p1p[0], p1p[1], 0.0)))
     p_edges.append(p.edges.findAt((p1p[0], p1p[1], 0.0)))
+
+    point1 = (x0 + deep - r_cut, 0.0)
+    point2 = (x0 + deep - r_cut, 1.0)
+    point3 = rotate_point_around_origin_2d(point1, np.radians(20.0))
+    point4 = rotate_point_around_origin_2d(point2, np.radians(20.0))
+
+    rotate_point_around_axis((p1p[0], p1p[1], 0.0), )
+
+    p.DatumPointByCoordinate(coords=(p1p[0], p1p[1], 0.0))
+
     p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
     create_block_surface_common(p, points, dimension)
@@ -2126,9 +2140,9 @@ def print_assembly(session, model, viewport):
 
 if __name__ == "__main__":
     n = 9
-    beta = math.pi / n
 
     d = 3529.0
+    d = 3650.0
     x0 = 500.0
 
     block_length = 1229.0
@@ -2146,7 +2160,7 @@ if __name__ == "__main__":
     element_size = 40
     insert_czm = False
 
-    size = '1'
+    size = '1/2'
 
     front_ref_length = 509.0
     behind_ref_length = 500.0
@@ -2160,7 +2174,7 @@ if __name__ == "__main__":
     r1_front = 929.4
     r2_front = 1524.0
     r3_front = 655.2
-    theta_in_deg_front = 0.16
+    theta_in_deg_front = 1.6
 
     r_cut_behind = 460.0
     length_behind = 1500.0
@@ -2173,21 +2187,62 @@ if __name__ == "__main__":
     r3_behind = 655.2
     theta_in_deg_behind = 0.16
 
-    # setting_file = 'setting.json'
-    # message = load_json(setting_file)
-    #
+    nl, nt = 6, n
+    block = np.zeros((nl, nt), dtype=bool)
+    block[:, 0] = True
+    block[:, 1] = True
+    # block[:, 8] = True
+
+    setting_file = 'setting.json'
+    message = load_json(setting_file)
+
     # n = message['n']
     # d = message['d']
     # x0 = message['x0']
-    #
-    # radius_insulation_thickness = message['radius_insulation_thickness']
-    # radius_gap = message['radius_gap']
-    # shell_insulation_thickness = message['shell_insulation_thickness']
-    # shell_thickness = message['shell_thickness']
+    # block_length = message['block_length']
+    # block_insulation_thickness_z = message['block_insulation_thickness_z']
+    # block_insulation_thickness_t = message['block_insulation_thickness_t']
+    # block_insulation_thickness_r = message['block_insulation_thickness_r']
+    # block_gap_z = message['block_gap_z']
+    # block_gap_t = message['block_gap_t']
+    # a = message['a']
+    # b = message['b']
+    # fillet_radius = message['fillet_radius']
+    # angle_demolding_1 = message['angle_demolding_1']
+    # element_size = message['element_size']
+    # insert_czm = message['insert_czm']
+    # size = message['size']
+    # front_ref_length = message['front_ref_length']
+    # behind_ref_length = message['behind_ref_length']
+    # r_cut_front = message['r_cut_front']
+    # length_front = message['length_front']
+    # p0_front = message['p0_front']
+    # theta0_deg_front = message['theta0_deg_front']
+    # p3_front = message['p3_front']
+    # theta3_deg_front = message['theta3_deg_front']
+    # r1_front = message['r1_front']
+    # r2_front = message['r2_front']
+    # r3_front = message['r3_front']
+    # theta_in_deg_front = message['theta_in_deg_front']
+    # r_cut_behind = message['r_cut_behind']
+    # length_behind = message['length_behind']
+    # p0_behind = message['p0_behind']
+    # theta0_deg_behind = message['theta0_deg_behind']
+    # p3_behind = message['p3_behind']
+    # theta3_deg_behind = message['theta3_deg_behind']
+    # r1_behind = message['r1_behind']
+    # r2_behind = message['r2_behind']
+    # r3_behind = message['r3_behind']
+    # theta_in_deg_behind = message['theta_in_deg_behind']
+
+    beta = math.pi / n
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
         # plot_geometries(points, lines, faces)
+
+        points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        print(points)
 
     if ABAQUS_ENV:
         Mdb()
@@ -2225,19 +2280,19 @@ if __name__ == "__main__":
         }
 
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
-        p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
+        # p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
 
         gap_dimension = deepcopy(block_dimension)
         gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
         gap_dimension['index_r'] = 2
         gap_dimension['index_t'] = 3
-        p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
+        # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
 
         penult_block_dimension = deepcopy(block_dimension)
-        p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
+        # p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
 
         penult_gap_dimension = deepcopy(gap_dimension)
-        p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
+        # p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
 
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, 300], [0, block_gap_z / 2.0, block_insulation_thickness_t])
 
@@ -2280,12 +2335,6 @@ if __name__ == "__main__":
         behind_gap_dimension = deepcopy(behind_block_dimension)
         behind_gap_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z, behind_ref_length + block_insulation_thickness_z + block_gap_z / 2]
         p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
-
-        nl, nt = 6, 9
-        block = np.zeros((nl, nt), dtype=bool)
-        block[:, 0] = True
-        block[:, 1] = True
-        block[:, 8] = True
 
         block_types = get_block_types(block)
         ties_types = get_tie_types(block)
