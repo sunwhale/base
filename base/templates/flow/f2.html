@@ -98,89 +98,6 @@
               <form action="" method="post" class="form" role="form">
                 {{ form.csrf_token() }}
                 <div class="col-12">
-                  <div class="card card-primary" data-card-id="card-3">
-                    <div class="card-header">
-                      <h3 class="card-title">铣刀零件参数</h3>
-                    </div>
-                    <div class="card-body">
-                      <div class="row">
-                        <div class="col-12">
-                          {{ render_field(form.submit, button_style='btn btn-info') }}
-                          <hr>
-                          {{ render_form_row([form.tool_option]) }}
-                          <div id="analytical-fields" style="display: {% if form.tool_option.data == 'analytical' %}block{% else %}none{% endif %};">
-                            {{ render_form_row([form.r1, form.r2, form.n]) }}
-                            {{ render_form_row([form.length, form.pitch]) }}
-                          </div>
-                          <div id="file-fields" style="display: {% if form.tool_option.data == 'file' %}block{% else %}none{% endif %};">
-                            {{ render_form_row([form.step_file_name]) }}
-                          </div>
-                          <hr>
-                          {{ render_form_row([form.tool_ref_point_x, form.tool_ref_point_y, form.tool_ref_point_z]) }}
-                          {{ render_form_row([form.tool_seed_size]) }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-12">
-                  <div class="card card-primary" data-card-id="card-4">
-                    <div class="card-header">
-                      <h3 class="card-title">平板零件参数</h3>
-                    </div>
-                    <div class="card-body">
-                      <div class="row">
-                        <div class="col-12">
-                          {{ render_form_row([form.x_length_of_plane, form.y_length_of_plane, form.z_length_of_plane]) }}
-                          {{ render_form_row([form.plane_seed_size]) }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-12">
-                  <div class="card card-primary" data-card-id="card-5">
-                    <div class="card-header">
-                      <h3 class="card-title">初始条件</h3>
-                    </div>
-                    <div class="card-body">
-                      <div class="row">
-                        <div class="col-12">
-                          <h6 class="text-info">铣刀初始位置</h6>
-                          {{ render_form_row([form.x_shift_of_tool, form.y_shift_of_tool, form.z_shift_of_tool]) }}
-                          <h6 class="text-info">初始温度</h6>
-                          {{ render_form_row([form.temperature_tool_init, form.temperature_plane_init]) }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-12">
-                  <div class="card card-primary" data-card-id="card-6">
-                    <div class="card-header">
-                      <h3 class="card-title">边界条件</h3>
-                    </div>
-                    <div class="card-body">
-                      <div class="row">
-                        <div class="col-12">
-                          {{ render_form_row([form.tool_rotation_speed, form.tool_shift_speed, form.temperature_tool_z1]) }}
-                          {{ render_form_row([form.tool_path_type]) }}
-                          <div id="square_wave-fields" style="display: {% if form.tool_path_type.data == 'square_wave' %}block{% else %}none{% endif %};">
-                            {{ render_form_row([form.square_wave_width, form.square_wave_height, form.square_wave_depth]) }}
-                            {{ render_form_row([form.square_wave_cycles, form.square_wave_layers, form.square_wave_head_shift, form.square_wave_tail_shift]) }}
-                          </div>
-                          <div id="drill-fields" style="display: {% if form.tool_path_type.data == 'drill' %}block{% else %}none{% endif %};">
-                            {{ render_form_row([form.drill_depth]) }}
-                          </div>
-                          <div id="tool_path_file_name-fields" style="display: {% if form.tool_path_type.data == 'tool_path_file' %}block{% else %}none{% endif %};">
-                            {{ render_form_row([form.tool_path_file_name]) }}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-12">
                   <div class="card card-primary" data-card-id="card-7">
                     <div class="card-header">
                       <h3 class="card-title">材料设置</h3>
@@ -200,25 +117,6 @@
                               <a id="editMaterialInteractionBtn" class="btn btn-info">编辑接触属性</a>
                             </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-12">
-                  <div class="card card-primary" data-card-id="card-8">
-                    <div class="card-header">
-                      <h3 class="card-title">求解控制</h3>
-                    </div>
-                    <div class="card-body">
-                      <div class="row">
-                        <div class="col-12">
-                          {{ render_form_row([form.output_variables, form.output_numIntervals]) }}
-                          {{ render_form_row([form.step_time, form.mass_scaling_factor]) }}
-                          {{ render_form_row([form.timeIncrementationMethod, form.userDefinedInc]) }}
-                          {{ render_form_row([form.linearBulkViscosity, form.quadBulkViscosity]) }}
-                          <hr>
-                          {{ render_field(form.submit, button_style='btn btn-info') }}
                         </div>
                       </div>
                     </div>

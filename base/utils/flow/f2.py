@@ -2412,4 +2412,4 @@ if __name__ == "__main__":
         for part_name in model.parts.keys():
             print_part(session, model, viewport, part_name)
 
-        # mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
+        mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)

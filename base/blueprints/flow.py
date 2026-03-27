@@ -358,8 +358,8 @@ def f2():
         project_list.append('%s_%s' % (project['project_id'], project['name']))
 
     files = files_in_dir(flow_path)
-    step_file_name_list = []
-    tool_path_file_name_list = []
+    step_file_name_list = ['']
+    tool_path_file_name_list = ['']
     for file in files:
         if file['name'].endswith('.stp'):
             step_file_name_list.append(file['name'])
@@ -370,11 +370,11 @@ def f2():
     job_form = JobForm(prefix='job')
     form = F2Form()
 
-    form.step_file_name.choices = step_file_name_list
+    # form.step_file_name.choices = step_file_name_list
     form.material_tool.choices = material_list
     form.material_plane.choices = material_list
     form.material_interaction.choices = material_list
-    form.tool_path_file_name.choices = tool_path_file_name_list
+    # form.tool_path_file_name.choices = tool_path_file_name_list
 
     job_form.project_id.choices = project_list
 
@@ -429,7 +429,7 @@ def f2():
         }
         dump_json(job_form_message_file, job_form_message)
 
-        return redirect(url_for('flow.f1', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
+        return redirect(url_for('flow.f2', flow_id=flow_id, form=form, upload_form=upload_form, job_form=job_form))
 
     if os.path.exists(job_form_message_file):
         job_form_message = load_json(job_form_message_file)
@@ -443,50 +443,11 @@ def f2():
 
     if form.submit.data and form.validate():
         message = {
-            'tool_option': form.tool_option.data,
-            'r1': form.r1.data,
-            'r2': form.r2.data,
-            'n': form.n.data,
-            'length': form.length.data,
-            'pitch': form.pitch.data,
-            'step_file_name': form.step_file_name.data,
-            'tool_ref_point_x': form.tool_ref_point_x.data,
-            'tool_ref_point_y': form.tool_ref_point_y.data,
-            'tool_ref_point_z': form.tool_ref_point_z.data,
-            'tool_seed_size': form.tool_seed_size.data,
-            'x_length_of_plane': form.x_length_of_plane.data,
-            'y_length_of_plane': form.y_length_of_plane.data,
-            'z_length_of_plane': form.z_length_of_plane.data,
-            'plane_seed_size': form.plane_seed_size.data,
-            'x_shift_of_tool': form.x_shift_of_tool.data,
-            'y_shift_of_tool': form.y_shift_of_tool.data,
-            'z_shift_of_tool': form.z_shift_of_tool.data,
+
             'material_tool': form.material_tool.data,
             'material_plane': form.material_plane.data,
-            'tool_rotation_speed': form.tool_rotation_speed.data,
-            'tool_shift_speed': form.tool_shift_speed.data,
-            'temperature_tool_z1': form.temperature_tool_z1.data,
-            'temperature_tool_init': form.temperature_tool_init.data,
-            'temperature_plane_init': form.temperature_plane_init.data,
-            'tool_path_type': form.tool_path_type.data,
-            'square_wave_width': form.square_wave_width.data,
-            'square_wave_height': form.square_wave_height.data,
-            'square_wave_depth': form.square_wave_depth.data,
-            'square_wave_head_shift': form.square_wave_head_shift.data,
-            'square_wave_tail_shift': form.square_wave_tail_shift.data,
-            'square_wave_cycles': form.square_wave_cycles.data,
-            'square_wave_layers': form.square_wave_layers.data,
-            'drill_depth': form.drill_depth.data,
-            'tool_path_file_name': form.tool_path_file_name.data,
             'material_interaction': form.material_interaction.data,
-            'output_variables': form.output_variables.data,
-            'output_numIntervals': form.output_numIntervals.data,
-            'timeIncrementationMethod': form.timeIncrementationMethod.data,
-            'userDefinedInc': form.userDefinedInc.data,
-            'step_time': form.step_time.data,
-            'mass_scaling_factor': form.mass_scaling_factor.data,
-            'linearBulkViscosity': form.linearBulkViscosity.data,
-            'quadBulkViscosity': form.quadBulkViscosity.data,
+
         }
         dump_json(setting_file, message)
 
@@ -508,50 +469,10 @@ def f2():
     if os.path.exists(setting_file):
         try:
             message = load_json(setting_file)
-            form.tool_option.data = message['tool_option']
-            form.r1.data = message['r1']
-            form.r2.data = message['r2']
-            form.n.data = message['n']
-            form.length.data = message['length']
-            form.pitch.data = message['pitch']
-            form.step_file_name.data = message['step_file_name']
-            form.tool_ref_point_x.data = message['tool_ref_point_x']
-            form.tool_ref_point_y.data = message['tool_ref_point_y']
-            form.tool_ref_point_z.data = message['tool_ref_point_z']
-            form.tool_seed_size.data = message['tool_seed_size']
-            form.x_length_of_plane.data = message['x_length_of_plane']
-            form.y_length_of_plane.data = message['y_length_of_plane']
-            form.z_length_of_plane.data = message['z_length_of_plane']
-            form.plane_seed_size.data = message['plane_seed_size']
-            form.x_shift_of_tool.data = message['x_shift_of_tool']
-            form.y_shift_of_tool.data = message['y_shift_of_tool']
-            form.z_shift_of_tool.data = message['z_shift_of_tool']
             form.material_tool.data = message['material_tool']
             form.material_plane.data = message['material_plane']
             form.material_interaction.data = message['material_interaction']
-            form.tool_rotation_speed.data = message['tool_rotation_speed']
-            form.tool_shift_speed.data = message['tool_shift_speed']
-            form.temperature_tool_z1.data = message['temperature_tool_z1']
-            form.temperature_tool_init.data = message['temperature_tool_init']
-            form.temperature_plane_init.data = message['temperature_plane_init']
-            form.tool_path_type.data = message['tool_path_type']
-            form.square_wave_width.data = message['square_wave_width']
-            form.square_wave_height.data = message['square_wave_height']
-            form.square_wave_depth.data = message['square_wave_depth']
-            form.square_wave_head_shift.data = message['square_wave_head_shift']
-            form.square_wave_tail_shift.data = message['square_wave_tail_shift']
-            form.square_wave_cycles.data = message['square_wave_cycles']
-            form.square_wave_layers.data = message['square_wave_layers']
-            form.drill_depth.data = message['drill_depth']
-            form.tool_path_file_name.data = message['tool_path_file_name']
-            form.output_variables.data = message['output_variables']
-            form.output_numIntervals.data = message['output_numIntervals']
-            form.timeIncrementationMethod.data = message['timeIncrementationMethod']
-            form.userDefinedInc.data = message['userDefinedInc']
-            form.step_time.data = message['step_time']
-            form.mass_scaling_factor.data = message['mass_scaling_factor']
-            form.linearBulkViscosity.data = message['linearBulkViscosity']
-            form.quadBulkViscosity.data = message['quadBulkViscosity']
+
         except KeyError:
             pass
 
