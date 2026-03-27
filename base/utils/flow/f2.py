@@ -3,8 +3,9 @@
 
 """
 import math
+import os
+import sys
 from copy import deepcopy
-from math import log10
 
 import numpy as np
 
@@ -26,10 +27,11 @@ try:
 except ImportError as e:
     print(e)
 
-import sys
-
-FLOW_PATH = r'F:\Github\base\base\utils\flow'
-# FLOW_PATH = r'/home/dell/base/base/utils/flow'
+if os.path.isfile(sys.argv[3]):
+    FLOW_PATH = os.path.dirname(sys.argv[3])
+else:
+    # FLOW_PATH = r'F:\Github\base\base\utils\flow'
+    FLOW_PATH = r'/home/dell/base/base/utils/flow'
 sys.path.insert(0, FLOW_PATH)
 
 from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
@@ -2150,7 +2152,7 @@ if __name__ == "__main__":
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
-        plot_geometries(points, lines, faces)
+        # plot_geometries(points, lines, faces)
 
     if ABAQUS_ENV:
         Mdb()
@@ -2397,8 +2399,8 @@ if __name__ == "__main__":
 
         viewport = session.viewports['Viewport: 1']
         viewport.makeCurrent()
-        viewport.setValues(width=300)
-        viewport.setValues(height=300)
+        viewport.setValues(width=200)
+        viewport.setValues(height=200)
         session.pngOptions.setValues(imageSize=(1600, 1600))
         session.printOptions.setValues(vpDecorations=OFF)
 
