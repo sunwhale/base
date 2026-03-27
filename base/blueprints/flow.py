@@ -443,11 +443,47 @@ def f2():
 
     if form.submit.data and form.validate():
         message = {
-
             'material_tool': form.material_tool.data,
             'material_plane': form.material_plane.data,
             'material_interaction': form.material_interaction.data,
-
+            'n': form.n.data,
+            'd': form.d.data,
+            'x0': form.x0.data,
+            'block_length': form.block_length.data,
+            'block_insulation_thickness_z': form.block_insulation_thickness_z.data,
+            'block_insulation_thickness_t': form.block_insulation_thickness_t.data,
+            'block_insulation_thickness_r': form.block_insulation_thickness_r.data,
+            'block_gap_z': form.block_gap_z.data,
+            'block_gap_t': form.block_gap_t.data,
+            'a': form.a.data,
+            'b': form.b.data,
+            'fillet_radius': form.fillet_radius.data,
+            'angle_demolding_1': form.angle_demolding_1.data,
+            'element_size': form.element_size.data,
+            'insert_czm': form.insert_czm.data,
+            'size': form.size.data,
+            'front_ref_length': form.front_ref_length.data,
+            'behind_ref_length': form.behind_ref_length.data,
+            'r_cut_front': form.r_cut_front.data,
+            'length_front': form.length_front.data,
+            'p0_front': form.p0_front.data,
+            'theta0_deg_front': form.theta0_deg_front.data,
+            'p3_front': form.p3_front.data,
+            'theta3_deg_front': form.theta3_deg_front.data,
+            'r1_front': form.r1_front.data,
+            'r2_front': form.r2_front.data,
+            'r3_front': form.r3_front.data,
+            'theta_in_deg_front': form.theta_in_deg_front.data,
+            'r_cut_behind': form.r_cut_behind.data,
+            'length_behind': form.length_behind.data,
+            'p0_behind': form.p0_behind.data,
+            'theta0_deg_behind': form.theta0_deg_behind.data,
+            'p3_behind': form.p3_behind.data,
+            'theta3_deg_behind': form.theta3_deg_behind.data,
+            'r1_behind': form.r1_behind.data,
+            'r2_behind': form.r2_behind.data,
+            'r3_behind': form.r3_behind.data,
+            'theta_in_deg_behind': form.theta_in_deg_behind.data,
         }
         dump_json(setting_file, message)
 
@@ -472,7 +508,44 @@ def f2():
             form.material_tool.data = message['material_tool']
             form.material_plane.data = message['material_plane']
             form.material_interaction.data = message['material_interaction']
-
+            form.n.data = message['n']
+            form.d.data = message['d']
+            form.x0.data = message['x0']
+            form.block_length.data = message['block_length']
+            form.block_insulation_thickness_z.data = message['block_insulation_thickness_z']
+            form.block_insulation_thickness_t.data = message['block_insulation_thickness_t']
+            form.block_insulation_thickness_r.data = message['block_insulation_thickness_r']
+            form.block_gap_z.data = message['block_gap_z']
+            form.block_gap_t.data = message['block_gap_t']
+            form.a.data = message['a']
+            form.b.data = message['b']
+            form.fillet_radius.data = message['fillet_radius']
+            form.angle_demolding_1.data = message['angle_demolding_1']
+            form.element_size.data = message['element_size']
+            form.insert_czm.data = message['insert_czm']
+            form.size.data = message['size']
+            form.front_ref_length.data = message['front_ref_length']
+            form.behind_ref_length.data = message['behind_ref_length']
+            form.r_cut_front.data = message['r_cut_front']
+            form.length_front.data = message['length_front']
+            form.p0_front.data = message['p0_front']
+            form.theta0_deg_front.data = message['theta0_deg_front']
+            form.p3_front.data = message['p3_front']
+            form.theta3_deg_front.data = message['theta3_deg_front']
+            form.r1_front.data = message['r1_front']
+            form.r2_front.data = message['r2_front']
+            form.r3_front.data = message['r3_front']
+            form.theta_in_deg_front.data = message['theta_in_deg_front']
+            form.r_cut_behind.data = message['r_cut_behind']
+            form.length_behind.data = message['length_behind']
+            form.p0_behind.data = message['p0_behind']
+            form.theta0_deg_behind.data = message['theta0_deg_behind']
+            form.p3_behind.data = message['p3_behind']
+            form.theta3_deg_behind.data = message['theta3_deg_behind']
+            form.r1_behind.data = message['r1_behind']
+            form.r2_behind.data = message['r2_behind']
+            form.r3_behind.data = message['r3_behind']
+            form.theta_in_deg_behind.data = message['theta_in_deg_behind']
         except KeyError:
             pass
 
