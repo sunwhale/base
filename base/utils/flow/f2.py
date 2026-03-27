@@ -27,12 +27,15 @@ try:
 except ImportError as e:
     print(e)
 
+# FLOW_PATH = r'F:\Github\base\base\utils\flow'
+FLOW_PATH = r'/home/dell/base/base/utils/flow'
+
 try:
     if os.path.isfile(sys.argv[3]):
         FLOW_PATH = os.path.dirname(sys.argv[3])
 except:
-    # FLOW_PATH = r'F:\Github\base\base\utils\flow'
-    FLOW_PATH = r'/home/dell/base/base/utils/flow'
+    pass
+
 sys.path.insert(0, FLOW_PATH)
 
 from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
