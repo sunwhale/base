@@ -98,6 +98,23 @@
               <form action="" method="post" class="form" role="form">
                 {{ form.csrf_token() }}
                 <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-3">
+                    <div class="card-header">
+                      <h3 class="card-title">铣刀零件参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.n, form.d, form.x0]) }}
+                          {{ render_form_row([form.block_length]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-12">
                   <div class="card card-primary" data-card-id="card-7">
                     <div class="card-header">
                       <h3 class="card-title">材料设置</h3>
