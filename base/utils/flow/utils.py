@@ -805,6 +805,64 @@ def rotate_point_around_origin_2d(point, theta):
     return (x_rotated, y_rotated)
 
 
+def rotate_point_around_axis(p, a, b, theta, degrees=True):
+    """
+    计算点 p 绕轴 AB 旋转角度 theta 后的新坐标。
+
+    参数:
+        p : list or np.ndarray, 形状 (3,)
+            原始点的坐标 (x0, y0, z0)
+        a : list or np.ndarray, 形状 (3,)
+            轴上的起点 A (x1, y1, z1)
+        b : list or np.ndarray, 形状 (3,)
+            轴上的终点 B (x2, y2, z2)
+        theta : float
+            旋转角度，若 degrees=True 则为角度制，否则为弧度制
+        degrees : bool, default=True
+            指示 theta 是否为角度制，若为 True 则内部转换为弧度
+
+    返回:
+        np.ndarray, 形状 (3,)
+            旋转后的点坐标
+    """
+    # 将输入转换为 numpy 数组
+    p = np.asarray(p, dtype=float)
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+
+    # 计算轴方向向量
+    axis = b - a
+    axis_len = np.linalg.norm(axis)
+    if axis_len < 1e-12:
+        raise ValueError("轴向量长度为零，无法确定旋转轴")
+
+    # 归一化轴向量
+    u = axis / axis_len
+
+    # 将点平移到以 A 为原点的坐标系
+    p_rel = p - a
+
+    # 将角度转换为弧度（如果需要）
+    if degrees:
+        theta = np.radians(theta)
+
+    # 罗德里格斯旋转公式
+    cos_theta = np.cos(theta)
+    sin_theta = np.sin(theta)
+    dot = np.dot(u, p_rel)  # u · p_rel
+
+    # 计算叉积 u × p_rel
+    cross = np.cross(u, p_rel)
+
+    # 旋转后的相对坐标
+    p_rot_rel = p_rel * cos_theta + cross * sin_theta + u * dot * (1 - cos_theta)
+
+    # 平移回原坐标系
+    p_rot = a + p_rot_rel
+
+    return p_rot
+
+
 def rotate_point_around_vector(point, vector, theta):
     """
     使用四元数方法计算点绕给定轴旋转后的坐标
