@@ -2131,10 +2131,17 @@ if __name__ == "__main__":
     block_length = 1229.0
     block_insulation_thickness_z = 3.0
     block_insulation_thickness_t = 3.0
+    block_insulation_thickness_r = 3.0
     block_gap_z = 18.0
     block_gap_t = 18.0
 
+    a = 50.0
+    b = 25.0
+    fillet_radius = 50.0
+    angle_demolding_1 = 1.5
+
     element_size = 40
+    insert_czm = False
 
 
     # setting_file = 'setting.json'
@@ -2179,19 +2186,19 @@ if __name__ == "__main__":
             'x0': x0,
             'length_up': 1039.2,
             'width': 100.0,
-            'angle_demolding_1': 1.5,
+            'angle_demolding_1': angle_demolding_1,
             'angle_demolding_2': 10.0,
-            'fillet_radius': 50.0,
-            'a': 50.0,
-            'b': 25.0,
+            'fillet_radius': fillet_radius,
+            'a': a,
+            'b': b,
             'size': size,
             'index_r': 2,
             'index_t': 2,
             'element_size': element_size,
-            'insert_czm': False,
+            'insert_czm': insert_czm,
         }
 
-        points, lines, faces = geometries(d, x0, beta, [0, 3], [0, 9, 3])
+        points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
 
         gap_dimension = deepcopy(block_dimension)
@@ -2206,7 +2213,7 @@ if __name__ == "__main__":
         penult_gap_dimension = deepcopy(gap_dimension)
         p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
 
-        points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
+        points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, 300], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         front_ref_length = 509.0
         first_block_dimension = deepcopy(block_dimension)
         first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z]
