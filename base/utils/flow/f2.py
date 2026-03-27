@@ -27,9 +27,10 @@ try:
 except ImportError as e:
     print(e)
 
-if os.path.isfile(sys.argv[3]):
-    FLOW_PATH = os.path.dirname(sys.argv[3])
-else:
+try:
+    if os.path.isfile(sys.argv[3]):
+        FLOW_PATH = os.path.dirname(sys.argv[3])
+except:
     # FLOW_PATH = r'F:\Github\base\base\utils\flow'
     FLOW_PATH = r'/home/dell/base/base/utils/flow'
 sys.path.insert(0, FLOW_PATH)
@@ -208,12 +209,12 @@ def create_sketch_front_cut_revolve_shift(model, sketch_name, t, points, x0, ind
     return s
 
 
-def create_sketch_penult_cut_revolve(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen):
+def create_sketch_penult_cut_revolve(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
     p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], x0 + deep + b - 1.0]
     p1 = [block_length / 2.0, x0 + deep + b - 1.0]
-    p2 = [block_length / 2.0 - block_insulation_thickness, x0 + deep + b - 1.0]
+    p2 = [block_length / 2.0 - block_insulation_thickness_z, x0 + deep + b - 1.0]
     l1 = Line2D(p2, np.tan(degrees_to_radians(45.0)))
     l2 = Line2D([0.0, 0.0], [1.0, 0.0])
     p3 = l1.get_intersection(l2)
@@ -1082,7 +1083,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_cut_revolve = create_sketch_penult_cut_revolve(model, 'SKETCH-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen)
+    s_penult_cut_revolve = create_sketch_penult_cut_revolve(model, 'SKETCH-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_cut_revolve, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
@@ -1200,7 +1201,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_cut_revolve = create_sketch_penult_cut_revolve(model, 'SKETCH-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness, a, b, pen)
+    s_penult_cut_revolve = create_sketch_penult_cut_revolve(model, 'SKETCH-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_cut_revolve, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
@@ -2121,34 +2122,33 @@ def print_assembly(session, model, viewport):
 
 
 if __name__ == "__main__":
-    epsilon = 0.95
     n = 9
     beta = math.pi / n
-    zeta = beta * 2.0 + 3.0 * math.pi / 180.0
 
-    radius_insulation_thickness = 3.0
-    radius_gap = 4.0
-    shell_insulation_thickness = 10.0
-    shell_thickness = 30.0
-
-    d = (1767.5 - radius_insulation_thickness) * 2.0
-    e = 862.9 - radius_insulation_thickness
-
+    d = 3529.0
     x0 = 500.0
 
-    theta_insulation_thickness = 3.0
-    theta_gap = 9.0
-
     block_length = 1229.0
-    block_insulation_thickness = 3.0
-    block_gap = 18.0
-    block_number = 2
-    z_list = get_z_list(block_length, block_insulation_thickness, block_gap, block_number)
+    block_insulation_thickness_z = 3.0
+    block_insulation_thickness_t = 3.0
+    block_gap_z = 18.0
+    block_gap_t = 18.0
 
     element_size = 40
 
-    first_block_height = 1391.0
-    shell_insulation_ref_z = 407.581146
+
+    # setting_file = 'setting.json'
+    # message = load_json(setting_file)
+    #
+    # n = message['n']
+    # d = message['d']
+    # x0 = message['x0']
+    #
+    # radius_insulation_thickness = message['radius_insulation_thickness']
+    # radius_gap = message['radius_gap']
+    # shell_insulation_thickness = message['shell_insulation_thickness']
+    # shell_thickness = message['shell_thickness']
+
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2174,7 +2174,7 @@ if __name__ == "__main__":
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
         block_dimension = {
-            'z_list': [0, block_length / 2 - block_insulation_thickness, block_length / 2],
+            'z_list': [0, block_length / 2 - block_insulation_thickness_z, block_length / 2],
             'deep': 380.0,
             'x0': x0,
             'length_up': 1039.2,
@@ -2195,7 +2195,7 @@ if __name__ == "__main__":
         p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
 
         gap_dimension = deepcopy(block_dimension)
-        gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness, block_length / 2, block_length / 2 + block_gap / 2]
+        gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
         gap_dimension['index_r'] = 2
         gap_dimension['index_t'] = 3
         p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
@@ -2209,7 +2209,7 @@ if __name__ == "__main__":
         points, lines, faces = geometries(d, x0, beta, [0, 3, 300], [0, 9, 3])
         front_ref_length = 509.0
         first_block_dimension = deepcopy(block_dimension)
-        first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness]
+        first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z]
         first_block_dimension['index_r'] = 3
         first_block_dimension['index_t'] = 2
 
@@ -2227,12 +2227,12 @@ if __name__ == "__main__":
         p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
 
         first_gap_dimension = deepcopy(first_block_dimension)
-        first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness, front_ref_length + block_insulation_thickness + block_gap / 2]
+        first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_z / 2]
         p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
 
         behind_ref_length = 500.0
         behind_block_dimension = deepcopy(first_block_dimension)
-        behind_block_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness]
+        behind_block_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z]
         behind_block_dimension['r_front'] = 460.0
         behind_block_dimension['length_front'] = 1500.0
         behind_block_dimension['p0'] = (1207.5, 794)
@@ -2246,7 +2246,7 @@ if __name__ == "__main__":
         p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
 
         behind_gap_dimension = deepcopy(behind_block_dimension)
-        behind_gap_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness, behind_ref_length + block_insulation_thickness + block_gap / 2]
+        behind_gap_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z, behind_ref_length + block_insulation_thickness_z + block_gap_z / 2]
         p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
 
         nl, nt = 6, 9
@@ -2284,11 +2284,11 @@ if __name__ == "__main__":
             if block_type == 'FRONT':
                 z_shift = 0.0
             elif block_type == 'MIDDLE':
-                z_shift = front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1 + 0.5) * (block_gap + block_length)
+                z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
             elif block_type == 'PENULT':
-                z_shift = front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1 + 0.5) * (block_gap + block_length)
+                z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
             elif block_type == 'BEHIND':
-                z_shift = front_ref_length + block_insulation_thickness + block_gap / 2 + (l - 1) * (block_gap + block_length) + block_gap / 2 + block_insulation_thickness + behind_ref_length
+                z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1) * (block_gap_z + block_length) + block_gap_z / 2 + block_insulation_thickness_z + behind_ref_length
 
             instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
             a.Instance(name=instance_name, part=block_dict[block_type], dependent=ON)
