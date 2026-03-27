@@ -74,7 +74,7 @@ def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n):
     return s_cut
 
 
-def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_front):
+def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_cut):
     s_cut = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = [x0 + deep, 0.0]
     p1 = [x0 + deep, -a]
@@ -91,7 +91,7 @@ def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_
     s_cut.Line(point1=center, point2=p2)
     s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
     s_cut.Line(point1=p4, point2=center)
-    center_line = s_cut.ConstructionLine(point1=(x0 + deep - r_front, -1e4), point2=(x0 + deep - r_front, 1e4))
+    center_line = s_cut.ConstructionLine(point1=(x0 + deep - r_cut, -1e4), point2=(x0 + deep - r_cut, 1e4))
     geom_list = []
     for g in s_cut.geometry.values():
         geom_list.append(g)
@@ -568,7 +568,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     index_t = dimension['index_t']
     element_size = dimension['element_size']
     insert_czm = dimension['insert_czm']
-    r_front = dimension['r_front']
+    r_cut = dimension['r_cut']
     length_front = dimension['length_front']
     p0 = dimension['p0']
     theta0_deg = dimension['theta0_deg']
@@ -706,7 +706,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
 
     # SKETCH-FRONT-CUT
-    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_front)
+    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut)
 
     # 切割头部燃道
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -771,7 +771,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p1 = [x0 + deep + b, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, tol, -r_front - b, x1 * 1.1, y1, length / 2.0)
+    p_faces = p.faces.getByBoundingBox(0, tol, -r_cut - b, x1 * 1.1, y1, length / 2.0)
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
@@ -824,7 +824,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     index_r = dimension['index_r']
     index_t = dimension['index_t']
     element_size = dimension['element_size']
-    r_front = dimension['r_front']
+    r_cut = dimension['r_cut']
     length_front = dimension['length_front']
     p0 = dimension['p0']
     theta0_deg = dimension['theta0_deg']
@@ -889,7 +889,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByDatumPlane(datumPlane=d[partition_plane.id], cells=p.cells)
 
     # SKETCH-FRONT-CUT
-    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_front)
+    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut)
 
     # 切割头部燃道
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -911,7 +911,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p1 = [x0 + deep + b, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, tol, -r_front - b, x1 * 1.1, y1, z_list[-1])
+    p_faces = p.faces.getByBoundingBox(0, tol, -r_cut - b, x1 * 1.1, y1, z_list[-1])
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
@@ -1237,8 +1237,8 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     index_t = dimension['index_t']
     element_size = dimension['element_size']
     insert_czm = dimension['insert_czm']
-    r_front = dimension['r_front']
-    length_front = dimension['length_front']
+    r_cut = dimension['r_cut']
+    length_behind = dimension['length_behind']
     p0 = dimension['p0']
     theta0_deg = dimension['theta0_deg']
     p3 = dimension['p3']
@@ -1270,7 +1270,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block, depth=length / 2.0, flipExtrudeDirection=ON)
 
     # 头部药块额外拉伸
-    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block, depth=length_front, flipExtrudeDirection=OFF)
+    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block, depth=length_behind, flipExtrudeDirection=OFF)
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -1470,8 +1470,8 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     index_r = dimension['index_r']
     index_t = dimension['index_t']
     element_size = dimension['element_size']
-    r_front = dimension['r_front']
-    length_front = dimension['length_front']
+    r_cut = dimension['r_cut']
+    length_behind = dimension['length_behind']
     p0 = dimension['p0']
     theta0_deg = dimension['theta0_deg']
     p3 = dimension['p3']
@@ -1504,7 +1504,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_z, depth=length / 2.0, flipExtrudeDirection=ON)
 
     # 头部药块额外拉伸
-    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_z, depth=length_front, flipExtrudeDirection=OFF)
+    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_z, depth=length_behind, flipExtrudeDirection=OFF)
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -2143,6 +2143,32 @@ if __name__ == "__main__":
     element_size = 40
     insert_czm = False
 
+    size = '1'
+
+    front_ref_length = 509.0
+    behind_ref_length = 500.0
+
+    r_cut_front = 460.0
+    length_front = 1500.0
+    p0_front = (-1207.5, 794)
+    theta0_deg_front = 90.0
+    p3_front = (-350, 1762.5)
+    theta3_deg_front = 0.0
+    r1_front = 929.4
+    r2_front = 1524.0
+    r3_front = 655.2
+    theta_in_deg_front = 0.16
+
+    r_cut_behind = 460.0
+    length_behind = 1500.0
+    p0_behind = (1207.5, 794)
+    theta0_deg_behind = -90.0
+    p3_behind = (350, 1762.5)
+    theta3_deg_behind = 0.0
+    r1_behind = 929.4
+    r2_behind = 1524.0
+    r3_behind = 655.2
+    theta_in_deg_behind = 0.16
 
     # setting_file = 'setting.json'
     # message = load_json(setting_file)
@@ -2156,7 +2182,6 @@ if __name__ == "__main__":
     # shell_insulation_thickness = message['shell_insulation_thickness']
     # shell_thickness = message['shell_thickness']
 
-
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
         # plot_geometries(points, lines, faces)
@@ -2165,8 +2190,6 @@ if __name__ == "__main__":
         Mdb()
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
-
-        size = '1'
 
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
@@ -2214,22 +2237,22 @@ if __name__ == "__main__":
         p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
 
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, 300], [0, block_gap_z / 2.0, block_insulation_thickness_t])
-        front_ref_length = 509.0
+
         first_block_dimension = deepcopy(block_dimension)
         first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z]
         first_block_dimension['index_r'] = 3
         first_block_dimension['index_t'] = 2
 
-        first_block_dimension['r_front'] = 460.0
-        first_block_dimension['length_front'] = 1500.0
-        first_block_dimension['p0'] = (-1207.5, 794)
-        first_block_dimension['theta0_deg'] = 90.0
-        first_block_dimension['p3'] = (-350, 1762.5)
-        first_block_dimension['theta3_deg'] = 0.0
-        first_block_dimension['r1'] = 929.4
-        first_block_dimension['r2'] = 1524.0
-        first_block_dimension['r3'] = 655.2
-        first_block_dimension['theta_in_deg'] = 0.16
+        first_block_dimension['r_cut'] = r_cut_front
+        first_block_dimension['length_front'] = length_front
+        first_block_dimension['p0'] = p0_front
+        first_block_dimension['theta0_deg'] = theta0_deg_front
+        first_block_dimension['p3'] = p3_front
+        first_block_dimension['theta3_deg'] = theta3_deg_front
+        first_block_dimension['r1'] = r1_front
+        first_block_dimension['r2'] = r2_front
+        first_block_dimension['r3'] = r3_front
+        first_block_dimension['theta_in_deg'] = theta_in_deg_front
 
         p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
 
@@ -2237,19 +2260,18 @@ if __name__ == "__main__":
         first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_z / 2]
         p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
 
-        behind_ref_length = 500.0
         behind_block_dimension = deepcopy(first_block_dimension)
         behind_block_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z]
-        behind_block_dimension['r_front'] = 460.0
-        behind_block_dimension['length_front'] = 1500.0
-        behind_block_dimension['p0'] = (1207.5, 794)
-        behind_block_dimension['theta0_deg'] = -90.0
-        behind_block_dimension['p3'] = (350, 1762.5)
-        behind_block_dimension['theta3_deg'] = 0.0
-        behind_block_dimension['r1'] = 929.4
-        behind_block_dimension['r2'] = 1524.0
-        behind_block_dimension['r3'] = 655.2
-        behind_block_dimension['theta_in_deg'] = 0.16
+        behind_block_dimension['r_cut'] = r_cut_behind
+        behind_block_dimension['length_behind'] = length_behind
+        behind_block_dimension['p0'] = p0_behind
+        behind_block_dimension['theta0_deg'] = theta0_deg_behind
+        behind_block_dimension['p3'] = p3_behind
+        behind_block_dimension['theta3_deg'] = theta3_deg_behind
+        behind_block_dimension['r1'] = r1_behind
+        behind_block_dimension['r2'] = r2_behind
+        behind_block_dimension['r3'] = r3_behind
+        behind_block_dimension['theta_in_deg'] = theta_in_deg_behind
         p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
 
         behind_gap_dimension = deepcopy(behind_block_dimension)
