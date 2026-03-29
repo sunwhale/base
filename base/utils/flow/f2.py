@@ -1356,25 +1356,15 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
         geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
 
     # Partition
-    p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, pen, -z_list[-1])
-    p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
+    # p_faces = p.faces.getByBoundingBox(0, 0, z_list[-1], pen, pen, pen)
+    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
 
-    # 拾取被切割平面上的线段，同一个theta
-    partition_edges = []
-    line_keys = []
-
+    # 建立平面，通过三个点：同一个theta的两个点和z方向上偏移1.0的点，保证平面法向量朝外，用该平面切割p.cells
+    t_planes = []
     for j in range(1, index_t):
-        for i in range(0, index_r):
-            line_key = '%s%s-%s%s' % (i, j, i + 1, j)
-            line_keys.append(line_key)
-
-    for line_key in line_keys:
-        line_middle_point = lines[line_key][3]
-        x, y = line_middle_point
-        edge_sequence = p.edges.findAt(((x, y, -z_list[-1]),))
-        if len(edge_sequence) > 0:
-            partition_edges.append(edge_sequence[0])
-    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
+        t_planes.append(p.DatumPlaneByThreePoints(point1=(points[0, j, 0], points[0, j, 1], 0.0), point2=(points[-1, j, 0], points[-1, j, 1], 0.0), point3=(points[0, j, 0], points[0, j, 1], 1.0)))
+    for t_plane in t_planes:
+        p.PartitionCellByDatumPlane(datumPlane=d[t_plane.id], cells=p.cells)
 
     for i in range(1, len(z_list) - 1):
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
@@ -2132,8 +2122,8 @@ if __name__ == "__main__":
 
     block_length = 1229.0
     block_insulation_thickness_z = 3.0
-    block_insulation_thickness_t = 30.0
-    block_insulation_thickness_r = 30.0
+    block_insulation_thickness_t = 3.0
+    block_insulation_thickness_r = 3.0
     block_gap_z = 18.0
     block_gap_t = 18.0
 
@@ -2271,26 +2261,26 @@ if __name__ == "__main__":
         }
 
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
-        # p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
+        p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
 
         gap_dimension = deepcopy(block_dimension)
         gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
         gap_dimension['index_r'] = 2
         gap_dimension['index_t'] = 3
-        # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
+        p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
 
         penult_block_dimension = deepcopy(block_dimension)
-        # p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
+        p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
 
         penult_gap_dimension = deepcopy(gap_dimension)
-        # p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
+        p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
 
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, 300], [0, block_gap_z / 2.0, block_insulation_thickness_t])
 
         first_block_dimension = deepcopy(block_dimension)
         first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z]
         first_block_dimension['index_r'] = 3
-        first_block_dimension['index_t'] = 3
+        first_block_dimension['index_t'] = 2
 
         first_block_dimension['r_cut'] = r_cut_front
         first_block_dimension['length_front'] = length_front
