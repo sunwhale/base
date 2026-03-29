@@ -646,7 +646,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, tol, pen)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_front_cut_revolve_shift)
 
-
     # print(beta)
     # print(180.0 / n / 2.0)
     # return p
@@ -2273,19 +2272,19 @@ if __name__ == "__main__":
         }
 
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
-        # p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
+        p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
 
         gap_dimension = deepcopy(block_dimension)
         gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
         gap_dimension['index_r'] = 2
         gap_dimension['index_t'] = 3
-        # p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
+        p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
 
         penult_block_dimension = deepcopy(block_dimension)
-        # p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
+        p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
 
         penult_gap_dimension = deepcopy(gap_dimension)
-        # p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
+        p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
 
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, 300], [0, block_gap_z / 2.0, block_insulation_thickness_t])
 
@@ -2309,7 +2308,7 @@ if __name__ == "__main__":
 
         first_gap_dimension = deepcopy(first_block_dimension)
         first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_z / 2]
-        # p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
+        p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
 
         behind_block_dimension = deepcopy(first_block_dimension)
         behind_block_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z]
@@ -2323,167 +2322,167 @@ if __name__ == "__main__":
         behind_block_dimension['r2'] = r2_behind
         behind_block_dimension['r3'] = r3_behind
         behind_block_dimension['theta_in_deg'] = theta_in_deg_behind
-        # p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
+        p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
 
         behind_gap_dimension = deepcopy(behind_block_dimension)
         behind_gap_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z, behind_ref_length + block_insulation_thickness_z + block_gap_z / 2]
-        # p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
+        p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
 
-        # block_types = get_block_types(block)
-        # ties_types = get_tie_types(block)
-        #
-        # block_dict = {
-        #     'FRONT': p_block_front,
-        #     'PENULT': p_block_penult,
-        #     'BEHIND': p_block_behind,
-        #     'MIDDLE': p_block
-        # }
-        #
-        # gap_dict = {
-        #     'FRONT': p_gap_front,
-        #     'PENULT': p_gap_penult,
-        #     'BEHIND': p_gap_behind,
-        #     'MIDDLE': p_gap
-        # }
-        #
-        # a = model.rootAssembly
-        # a.DatumCsysByDefault(CARTESIAN)
-        # cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
-        #
-        # for block_loc, block_type in block_types.items():
-        #     l, i = block_loc
-        #
-        #     z_shift = 0.0
-        #
-        #     if block_type == 'FRONT':
-        #         z_shift = 0.0
-        #     elif block_type == 'MIDDLE':
-        #         z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
-        #     elif block_type == 'PENULT':
-        #         z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
-        #     elif block_type == 'BEHIND':
-        #         z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1) * (block_gap_z + block_length) + block_gap_z / 2 + block_insulation_thickness_z + behind_ref_length
-        #
-        #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-        #     a.Instance(name=instance_name, part=block_dict[block_type], dependent=ON)
-        #     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
-        #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-        #
-        #     instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-        #     a.Instance(name=instance_name, part=gap_dict[block_type], dependent=ON)
-        #     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
-        #     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-        #
-        # # model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
-        # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=3)
-        #
-        # for block_loc, block_type in block_types.items():
-        #     l, i = block_loc
-        #     instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
-        #     surface_name_1 = 'SURFACE-TIE'
-        #     instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
-        #     surface_name_2 = 'SURFACE-TIE'
-        #     create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-        #
-        # for tie_loc, tie_type in ties_types.items():
-        #     l1, i1, l2, i2 = tie_loc
-        #     if tie_type == 'down':
-        #         instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-        #         surface_name_1 = 'SURFACE-Z2'
-        #         instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-        #         surface_name_2 = 'SURFACE-Z-2'
-        #         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-        #
-        #     elif tie_type == 'right':
-        #         instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-        #         surface_name_1 = 'SURFACE-T2'
-        #         instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-        #         surface_name_2 = 'SURFACE-T-2'
-        #         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-        #
-        #     elif tie_type == 'circular':
-        #         instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-        #         surface_name_1 = 'SURFACE-T-2'
-        #         instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-        #         surface_name_2 = 'SURFACE-T2'
-        #         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-        #
-        # for block_loc, block_type in block_types.items():
-        #     l, i = block_loc
-        #     # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-        #     # surface_name = 'SURFACE-INNER'
-        #     # load_name = 'LOAD-' + instance_name + '-' + surface_name
-        #     # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
-        #
-        #     set_name = 'SET-SURFACE-OUTER'
-        #     bc_name = 'BC-' + instance_name + '-' + set_name
-        #     model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
-        #                          u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
-        #
-        #     # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-        #     # surface_name = 'SURFACE-INNER'
-        #     # load_name = 'LOAD-' + instance_name + '-' + surface_name
-        #     # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
-        #
-        #     set_name = 'SET-SURFACE-OUTER'
-        #     bc_name = 'BC-' + instance_name + '-' + set_name
-        #     model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
-        #                          u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
-        #
-        # for block_loc, block_type in block_types.items():
-        #     l, i = block_loc
-        #     if i == 1:
-        #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-        #         set_name = 'SET-SURFACE-T1'
-        #         bc_name = 'BC-' + instance_name + '-' + set_name
-        #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-        #
-        #         instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-        #         set_name = 'SET-SURFACE-T2'
-        #         bc_name = 'BC-' + instance_name + '-' + set_name
-        #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-        #
-        #     if i == 8:
-        #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-        #         set_name = 'SET-SURFACE-T-1'
-        #         bc_name = 'BC-' + instance_name + '-' + set_name
-        #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-        #
-        #         instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-        #         set_name = 'SET-SURFACE-T-2'
-        #         bc_name = 'BC-' + instance_name + '-' + set_name
-        #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-        #
-        # if major_version >= 2022:
-        #     mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
-        #             atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
-        #             memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
-        #             explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
-        #             modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
-        #             scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
-        #             multiprocessingMode=DEFAULT, numCpus=8, numDomains=8, numGPUs=0)
-        # else:
-        #     mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
-        #             atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
-        #             memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
-        #             explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
-        #             modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
-        #             scratch='', resultsFormat=ODB, multiprocessingMode=DEFAULT, numCpus=8,
-        #             numDomains=8, numGPUs=0)
-        #
-        # viewport = session.viewports['Viewport: 1']
-        # viewport.makeCurrent()
-        # viewport.setValues(width=200)
-        # viewport.setValues(height=200)
-        # session.pngOptions.setValues(imageSize=(1600, 1600))
-        # session.printOptions.setValues(vpDecorations=OFF)
-        #
-        # print_assembly(session, model, viewport)
-        #
-        # for sketch_name in model.sketches.keys():
-        #     print_sketch(session, model, viewport, sketch_name)
-        #
-        # for part_name in model.parts.keys():
-        #     print_part(session, model, viewport, part_name)
-        #
-        # mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
+        block_types = get_block_types(block)
+        ties_types = get_tie_types(block)
+
+        block_dict = {
+            'FRONT': p_block_front,
+            'PENULT': p_block_penult,
+            'BEHIND': p_block_behind,
+            'MIDDLE': p_block
+        }
+
+        gap_dict = {
+            'FRONT': p_gap_front,
+            'PENULT': p_gap_penult,
+            'BEHIND': p_gap_behind,
+            'MIDDLE': p_gap
+        }
+
+        a = model.rootAssembly
+        a.DatumCsysByDefault(CARTESIAN)
+        cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
+
+        for block_loc, block_type in block_types.items():
+            l, i = block_loc
+
+            z_shift = 0.0
+
+            if block_type == 'FRONT':
+                z_shift = 0.0
+            elif block_type == 'MIDDLE':
+                z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
+            elif block_type == 'PENULT':
+                z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
+            elif block_type == 'BEHIND':
+                z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1) * (block_gap_z + block_length) + block_gap_z / 2 + block_insulation_thickness_z + behind_ref_length
+
+            instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            a.Instance(name=instance_name, part=block_dict[block_type], dependent=ON)
+            a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
+            a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+            instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            a.Instance(name=instance_name, part=gap_dict[block_type], dependent=ON)
+            a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
+            a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+        # model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
+        model.FrequencyStep(name='Step-1', previous='Initial', numEigen=3)
+
+        for block_loc, block_type in block_types.items():
+            l, i = block_loc
+            instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            surface_name_1 = 'SURFACE-TIE'
+            instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
+            surface_name_2 = 'SURFACE-TIE'
+            create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+        for tie_loc, tie_type in ties_types.items():
+            l1, i1, l2, i2 = tie_loc
+            if tie_type == 'down':
+                instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                surface_name_1 = 'SURFACE-Z2'
+                instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                surface_name_2 = 'SURFACE-Z-2'
+                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+            elif tie_type == 'right':
+                instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                surface_name_1 = 'SURFACE-T2'
+                instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                surface_name_2 = 'SURFACE-T-2'
+                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+            elif tie_type == 'circular':
+                instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                surface_name_1 = 'SURFACE-T-2'
+                instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                surface_name_2 = 'SURFACE-T2'
+                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+        for block_loc, block_type in block_types.items():
+            l, i = block_loc
+            # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            # surface_name = 'SURFACE-INNER'
+            # load_name = 'LOAD-' + instance_name + '-' + surface_name
+            # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+
+            set_name = 'SET-SURFACE-OUTER'
+            bc_name = 'BC-' + instance_name + '-' + set_name
+            model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
+                                 u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+
+            # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            # surface_name = 'SURFACE-INNER'
+            # load_name = 'LOAD-' + instance_name + '-' + surface_name
+            # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+
+            set_name = 'SET-SURFACE-OUTER'
+            bc_name = 'BC-' + instance_name + '-' + set_name
+            model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
+                                 u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+
+        for block_loc, block_type in block_types.items():
+            l, i = block_loc
+            if i == 1:
+                instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                set_name = 'SET-SURFACE-T1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                set_name = 'SET-SURFACE-T2'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+            if i == 8:
+                instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                set_name = 'SET-SURFACE-T-1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                set_name = 'SET-SURFACE-T-2'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+        if major_version >= 2022:
+            mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
+                    atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
+                    memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
+                    explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
+                    modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
+                    scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
+                    multiprocessingMode=DEFAULT, numCpus=8, numDomains=8, numGPUs=0)
+        else:
+            mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
+                    atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
+                    memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
+                    explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
+                    modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
+                    scratch='', resultsFormat=ODB, multiprocessingMode=DEFAULT, numCpus=8,
+                    numDomains=8, numGPUs=0)
+
+        viewport = session.viewports['Viewport: 1']
+        viewport.makeCurrent()
+        viewport.setValues(width=200)
+        viewport.setValues(height=200)
+        session.pngOptions.setValues(imageSize=(1600, 1600))
+        session.printOptions.setValues(vpDecorations=OFF)
+
+        print_assembly(session, model, viewport)
+
+        for sketch_name in model.sketches.keys():
+            print_sketch(session, model, viewport, sketch_name)
+
+        for part_name in model.parts.keys():
+            print_part(session, model, viewport, part_name)
+
+        mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
