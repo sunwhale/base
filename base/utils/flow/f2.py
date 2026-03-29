@@ -1330,7 +1330,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     partition_edges = []
     for g in s_behind_cut_revolve_shift.geometry.values()[2:index_r * 6]:
         z, x = g.pointOn
-        p.DatumPointByCoordinate(coords=(x, 0.0, z))
+        # p.DatumPointByCoordinate(coords=(x, 0.0, z))
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
             partition_edges.append(edge_sequence)
@@ -2183,13 +2183,13 @@ if __name__ == "__main__":
     # block[:, 1] = True
     # block[:, 8] = True
 
-    # setting_file = 'setting.json'
-    # message = load_json(setting_file)
+    setting_file = 'setting.json'
+    message = load_json(setting_file)
 
-    # n = message['n']
-    # d = message['d']
-    # x0 = message['x0']
-    # block_length = message['block_length']
+    n = message['n']
+    d = message['d']
+    x0 = message['x0']
+    block_length = message['block_length']
     # block_insulation_thickness_z = message['block_insulation_thickness_z']
     # block_insulation_thickness_t = message['block_insulation_thickness_t']
     # block_insulation_thickness_r = message['block_insulation_thickness_r']
