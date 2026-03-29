@@ -688,25 +688,15 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
 
     # Partition
-    p_faces = p.faces.getByBoundingBox(0, 0, z_list[-1], pen, pen, pen)
-    p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
+    # p_faces = p.faces.getByBoundingBox(0, 0, z_list[-1], pen, pen, pen)
+    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
 
-    # 拾取被切割平面上的线段，同一个theta
-    partition_edges = []
-    line_keys = []
-
+    # 建立平面，通过三个点：同一个theta的两个点和z方向上偏移1.0的点，保证平面法向量朝外，用该平面切割p.cells
+    t_planes = []
     for j in range(1, index_t):
-        for i in range(0, index_r):
-            line_key = '%s%s-%s%s' % (i, j, i + 1, j)
-            line_keys.append(line_key)
-
-    for line_key in line_keys:
-        line_middle_point = lines[line_key][3]
-        x, y = line_middle_point
-        edge_sequence = p.edges.findAt(((x, y, z_list[-1]),))
-        if len(edge_sequence) > 0:
-            partition_edges.append(edge_sequence[0])
-    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=REVERSE)
+        t_planes.append(p.DatumPlaneByThreePoints(point1=(points[0, j, 0], points[0, j, 1], 0.0), point2=(points[-1, j, 0], points[-1, j, 1], 0.0), point3=(points[0, j, 0], points[0, j, 1], 1.0)))
+    for t_plane in t_planes:
+        p.PartitionCellByDatumPlane(datumPlane=d[t_plane.id], cells=p.cells)
 
     # SKETCH-FRONT-CUT
     s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut)
@@ -2300,7 +2290,7 @@ if __name__ == "__main__":
         first_block_dimension = deepcopy(block_dimension)
         first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z]
         first_block_dimension['index_r'] = 3
-        first_block_dimension['index_t'] = 2
+        first_block_dimension['index_t'] = 3
 
         first_block_dimension['r_cut'] = r_cut_front
         first_block_dimension['length_front'] = length_front
