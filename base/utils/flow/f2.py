@@ -2124,10 +2124,9 @@ def print_assembly(session, model, viewport):
 
 
 if __name__ == "__main__":
-    n = 8
+    n = 9
 
     d = 3529.0
-    d = 3700.0
     x0 = 500.0
 
     block_length = 1229.0
@@ -2181,7 +2180,7 @@ if __name__ == "__main__":
     nl, nt = 6, n
     block = np.zeros((nl, nt), dtype=bool)
     block[:, 0] = True
-    block[:, 1] = True
+    # block[:, 1] = True
     # block[:, 8] = True
 
     # setting_file = 'setting.json'
@@ -2373,8 +2372,8 @@ if __name__ == "__main__":
             a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
             a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-        # model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
-        model.FrequencyStep(name='Step-1', previous='Initial', numEigen=3)
+        model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
+        # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
 
         for block_loc, block_type in block_types.items():
             l, i = block_loc
@@ -2409,20 +2408,20 @@ if __name__ == "__main__":
 
         for block_loc, block_type in block_types.items():
             l, i = block_loc
-            # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-            # surface_name = 'SURFACE-INNER'
-            # load_name = 'LOAD-' + instance_name + '-' + surface_name
-            # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+            instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            surface_name = 'SURFACE-INNER'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
 
             set_name = 'SET-SURFACE-OUTER'
             bc_name = 'BC-' + instance_name + '-' + set_name
             model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
                                  u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
 
-            # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-            # surface_name = 'SURFACE-INNER'
-            # load_name = 'LOAD-' + instance_name + '-' + surface_name
-            # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+            instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            surface_name = 'SURFACE-INNER'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
 
             set_name = 'SET-SURFACE-OUTER'
             bc_name = 'BC-' + instance_name + '-' + set_name
@@ -2431,7 +2430,8 @@ if __name__ == "__main__":
 
         for block_loc, block_type in block_types.items():
             l, i = block_loc
-            if i == 1:
+
+            if i == 0:
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                 set_name = 'SET-SURFACE-T1'
                 bc_name = 'BC-' + instance_name + '-' + set_name
@@ -2442,16 +2442,16 @@ if __name__ == "__main__":
                 bc_name = 'BC-' + instance_name + '-' + set_name
                 model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-            if i == 8:
-                instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                set_name = 'SET-SURFACE-T-1'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                set_name = 'SET-SURFACE-T-2'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            # if i == 8:
+            #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #     set_name = 'SET-SURFACE-T-1'
+            #     bc_name = 'BC-' + instance_name + '-' + set_name
+            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #     instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            #     set_name = 'SET-SURFACE-T-2'
+            #     bc_name = 'BC-' + instance_name + '-' + set_name
+            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
         if major_version >= 2022:
             mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
