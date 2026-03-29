@@ -41,7 +41,7 @@ sys.path.insert(0, FLOW_PATH)
 from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
     load_json, min_difference, mirror_y_axis, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, \
     combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set, get_faces_of_p_remove_given_surface_names, \
-    get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces
+    get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces, rotate_point_around_axis
 
 
 def create_sketch_block(model, sketch_name, points, index_r, index_t):
@@ -763,24 +763,19 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
+    # 拾取内部切割后的轮廓曲线
     p_edges = []
-    # for z_center in z_centers:
-    #     p_edges.append(p.edges.findAt((p1p[0], p1p[1], z_center)))
-
-        # p.DatumPointByCoordinate(coords=(p1p[0], p1p[1], z_center))
-
-    # print(p.edges.findAt((p1p[0], p1p[1], 0.0)))
-    p_edges.append(p.edges.findAt((p1p[0], p1p[1], 0.0)))
+    for z_center in z_centers:
+        p_edges.append(p.edges.findAt((p1p[0], p1p[1], z_center)))
 
     point1 = (x0 + deep - r_cut, 0.0)
     point2 = (x0 + deep - r_cut, 1.0)
     point3 = rotate_point_around_origin_2d(point1, np.radians(20.0))
     point4 = rotate_point_around_origin_2d(point2, np.radians(20.0))
+    point5 = rotate_point_around_axis((p1p[0], p1p[1], 0.0), (point3[0], point3[1], 0.0), (point4[0], point4[1], 0.0), 20.0)
+    # p.DatumPointByCoordinate(coords=point5)
 
-    rotate_point_around_axis((p1p[0], p1p[1], 0.0), )
-
-    p.DatumPointByCoordinate(coords=(p1p[0], p1p[1], 0.0))
-
+    p_edges.append(p.edges.findAt(point5))
     p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
     create_block_surface_common(p, points, dimension)
@@ -2142,13 +2137,13 @@ if __name__ == "__main__":
     n = 9
 
     d = 3529.0
-    d = 3650.0
+    d = 3700.0
     x0 = 500.0
 
     block_length = 1229.0
     block_insulation_thickness_z = 3.0
-    block_insulation_thickness_t = 3.0
-    block_insulation_thickness_r = 3.0
+    block_insulation_thickness_t = 30.0
+    block_insulation_thickness_r = 30.0
     block_gap_z = 18.0
     block_gap_t = 18.0
 
@@ -2186,6 +2181,12 @@ if __name__ == "__main__":
     r2_behind = 1524.0
     r3_behind = 655.2
     theta_in_deg_behind = 0.16
+
+    if p3_front[1] > d /2.0:
+        raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
+
+    if p3_behind[1] > d /2.0:
+        raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
 
     nl, nt = 6, n
     block = np.zeros((nl, nt), dtype=bool)
