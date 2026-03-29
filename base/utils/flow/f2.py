@@ -578,6 +578,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p3 = dimension['p3']
     theta3_deg = dimension['theta3_deg']
     theta_in_deg = dimension['theta_in_deg']
+    beta = dimension['beta']
     r1 = dimension['r1']
     r2 = dimension['r2']
     r3 = dimension['r3']
@@ -757,13 +758,14 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p_edges = []
     for z_center in z_centers:
         p_edges.append(p.edges.findAt((p1p[0], p1p[1], z_center)))
+        p.DatumPointByCoordinate(coords=(p1p[0], p1p[1], z_center))
 
     point1 = (x0 + deep - r_cut, 0.0)
     point2 = (x0 + deep - r_cut, 1.0)
-    point3 = rotate_point_around_origin_2d(point1, np.radians(20.0))
-    point4 = rotate_point_around_origin_2d(point2, np.radians(20.0))
-    point5 = rotate_point_around_axis((p1p[0], p1p[1], 0.0), (point3[0], point3[1], 0.0), (point4[0], point4[1], 0.0), 20.0)
-    # p.DatumPointByCoordinate(coords=point5)
+    point3 = rotate_point_around_origin_2d(point1, np.radians(beta / 2.0))
+    point4 = rotate_point_around_origin_2d(point2, np.radians(beta / 2.0))
+    point5 = rotate_point_around_axis((p1p[0], p1p[1], 0.0), (point3[0], point3[1], 0.0), (point4[0], point4[1], 0.0), tol)
+    p.DatumPointByCoordinate(coords=point5)
 
     p_edges.append(p.edges.findAt(point5))
     p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
@@ -2114,7 +2116,7 @@ def print_assembly(session, model, viewport):
 
 
 if __name__ == "__main__":
-    n = 9
+    n = 8
 
     d = 3529.0
     d = 3700.0
@@ -2162,10 +2164,10 @@ if __name__ == "__main__":
     r3_behind = 655.2
     theta_in_deg_behind = 0.16
 
-    if p3_front[1] > d /2.0:
+    if p3_front[1] > d / 2.0:
         raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
 
-    if p3_behind[1] > d /2.0:
+    if p3_behind[1] > d / 2.0:
         raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
 
     nl, nt = 6, n
@@ -2258,6 +2260,7 @@ if __name__ == "__main__":
             'index_t': 2,
             'element_size': element_size,
             'insert_czm': insert_czm,
+            'beta': beta
         }
 
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
