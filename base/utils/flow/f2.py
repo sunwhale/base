@@ -55,7 +55,7 @@ def create_sketch_block(model, sketch_name, points, index_r, index_t):
     return s
 
 
-def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, offset=100.0):
+def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = [x0 + deep, 0.0]
     p1 = [x0 + deep, -a]
@@ -91,7 +91,7 @@ def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, 
     return s, p1p
 
 
-def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_cut, offset=100.0):
+def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_cut, offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = [x0 + deep, 0.0]
     p1 = [x0 + deep, -a]
