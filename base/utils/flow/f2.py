@@ -55,7 +55,7 @@ def create_sketch_block(model, sketch_name, points, index_r, index_t):
     return s
 
 
-def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, offset=0.0):
+def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = [x0 + deep, 0.0]
     p1 = [x0 + deep, -a]
@@ -71,8 +71,8 @@ def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, 
     s.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
     s.Line(point1=p4, point2=center)
 
-    if offset > 0:
-        s.offset(distance=offset, objectList=(s.geometry[4], s.geometry[7]), side=RIGHT)
+    if burn_offset > 0:
+        s.offset(distance=burn_offset, objectList=(s.geometry[4], s.geometry[7]), side=RIGHT)
         s.Line(point1=s.vertices[3].coords, point2=s.vertices[7].coords)
         s.Line(point1=s.vertices[5].coords, point2=s.vertices[8].coords)
         s.delete(objectList=(s.geometry[4], s.geometry[7]))
@@ -82,7 +82,7 @@ def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, 
         geom_list.append(g)
     s.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
 
-    if offset > 0:
+    if burn_offset > 0:
         p1p = s.vertices[6].coords
     else:
         p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
@@ -91,7 +91,7 @@ def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, 
     return s, p1p
 
 
-def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_cut, offset=0.0):
+def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = [x0 + deep, 0.0]
     p1 = [x0 + deep, -a]
@@ -108,8 +108,8 @@ def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_
     s.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
     s.Line(point1=p4, point2=center)
 
-    if offset > 0:
-        s.offset(distance=offset, objectList=(s.geometry[4], s.geometry[7]), side=RIGHT)
+    if burn_offset > 0:
+        s.offset(distance=burn_offset, objectList=(s.geometry[4], s.geometry[7]), side=RIGHT)
         s.Line(point1=s.vertices[3].coords, point2=s.vertices[7].coords)
         s.Line(point1=s.vertices[5].coords, point2=s.vertices[8].coords)
         s.delete(objectList=(s.geometry[4], s.geometry[7]))
@@ -121,7 +121,7 @@ def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_
     s.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
     s.assignCenterline(line=center_line)
 
-    if offset > 0:
+    if burn_offset > 0:
         p1p = s.vertices[6].coords
     else:
         p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
@@ -262,11 +262,11 @@ def create_sketch_penult_cut_revolve(model, sketch_name, t, x0, deep, block_leng
     return s
 
 
-def create_sketch_behind_cut_revolve_2(model, sketch_name, t, x0, deep, a, b, pen, offset=0.0):
+def create_sketch_behind_cut_revolve_2(model, sketch_name, t, x0, deep, a, b, pen, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
-    p1 = [-pen, x0 + deep + b + offset]
-    p2 = [pen, x0 + deep + b + offset]
+    p1 = [-pen, x0 + deep + b + burn_offset]
+    p2 = [pen, x0 + deep + b + burn_offset]
     p3 = [pen, 0]
     p4 = [-pen, 0]
 
@@ -347,6 +347,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     index_t = dimension['index_t']
     element_size = dimension['element_size']
     insert_czm = dimension['insert_czm']
+    burn_offset = dimension['burn_offset']
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
     pen = 1e4
@@ -495,6 +496,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     index_r = dimension['index_r']
     index_t = dimension['index_t']
     element_size = dimension['element_size']
+    burn_offset = dimension['burn_offset']
     origin = (0.0, 0.0, 0.0)
     length = z_list[-2] * 2.0
     pen = 1e4
@@ -600,6 +602,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     index_t = dimension['index_t']
     element_size = dimension['element_size']
     insert_czm = dimension['insert_czm']
+    burn_offset = dimension['burn_offset']
     r_cut = dimension['r_cut']
     length_front = dimension['length_front']
     p0 = dimension['p0']
@@ -863,6 +866,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     index_r = dimension['index_r']
     index_t = dimension['index_t']
     element_size = dimension['element_size']
+    burn_offset = dimension['burn_offset']
     r_cut = dimension['r_cut']
     length_front = dimension['length_front']
     p0 = dimension['p0']
@@ -1005,6 +1009,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     index_t = dimension['index_t']
     element_size = dimension['element_size']
     insert_czm = dimension['insert_czm']
+    burn_offset = dimension['burn_offset']
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
     pen = 1e4
@@ -1163,6 +1168,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     index_r = dimension['index_r']
     index_t = dimension['index_t']
     element_size = dimension['element_size']
+    burn_offset = dimension['burn_offset']
     origin = (0.0, 0.0, 0.0)
     length = z_list[-2] * 2.0
     pen = 1e4
@@ -1278,6 +1284,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     index_t = dimension['index_t']
     element_size = dimension['element_size']
     insert_czm = dimension['insert_czm']
+    burn_offset = dimension['burn_offset']
     r_cut = dimension['r_cut']
     length_behind = dimension['length_behind']
     p0 = dimension['p0']
@@ -1503,6 +1510,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     index_r = dimension['index_r']
     index_t = dimension['index_t']
     element_size = dimension['element_size']
+    burn_offset = dimension['burn_offset']
     r_cut = dimension['r_cut']
     length_behind = dimension['length_behind']
     p0 = dimension['p0']
@@ -2172,6 +2180,8 @@ if __name__ == "__main__":
     fillet_radius = 50.0
     angle_demolding_1 = 1.5
 
+    burn_offset = 100.0
+
     element_size = 40
     insert_czm = False
 
@@ -2298,7 +2308,8 @@ if __name__ == "__main__":
             'index_t': 2,
             'element_size': element_size,
             'insert_czm': insert_czm,
-            'beta': beta
+            'beta': beta,
+            'burn_offset': burn_offset
         }
 
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
@@ -2505,7 +2516,7 @@ if __name__ == "__main__":
         viewport.makeCurrent()
         viewport.setValues(width=200)
         viewport.setValues(height=200)
-        session.pngOptions.setValues(imageSize=(1600, 1600))
+        # session.pngOptions.setValues(imageSize=(1600, 1600))
         session.printOptions.setValues(vpDecorations=OFF)
 
         print_assembly(session, model, viewport)
