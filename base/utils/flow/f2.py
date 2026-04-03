@@ -439,15 +439,9 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
         xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
 
-    # SKETCH-CUT
-    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n, burn_offset)
-    # CutExtrude
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
+    set_names = create_block_sets_common(p, faces, dimension)
 
-    # SKETCH-X0-BURN
-    s_x0_burn = create_sketch_x0_burn(model, 'SKETCH-X0-BURN', x0, pen, burn_offset)
-    # CutExtrude
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_x0_burn, flipExtrudeDirection=ON)
+    p1p = cut_extrude(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
 
     # Mirror
     if size == '1':
@@ -463,14 +457,12 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
 
-    set_names = create_block_sets_common(p, faces, dimension)
-
     create_block_surface_common(p, points, dimension)
 
     p1 = [x0 + deep + b + burn_offset, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, tol, 0, x1 * 1.1, y1, length / 2.0)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, x1 * 1.1, y1, length / 2.0)
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
@@ -482,12 +474,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
 
-    # Partition
-    p1 = [x0 + deep, -a]
-    offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
-    offset = p1p[0]
-    yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
-    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
+    partition_p1p(p, d, p1p)
 
     generate_part_mesh(p, element_size=element_size)
 
@@ -552,11 +539,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     )
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
-    # SKETCH-CUT
-    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n, burn_offset)
-
-    # CutExtrude
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
+    p1p = cut_extrude(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
 
     # Mirror
     if size == '1':
@@ -590,12 +573,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     set_name = 'SET-CELL-GLUE-A'
     p.Set(cells=p.cells, name=set_name)
 
-    # Partition
-    p1 = [x0 + deep, -a]
-    offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
-    offset = p1p[0]
-    yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
-    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
+    partition_p1p(p, d, p1p)
 
     generate_part_mesh(p, element_size=element_size)
 
@@ -755,27 +733,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     for t_plane in t_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[t_plane.id], cells=p.cells)
 
-    # SKETCH-FRONT-CUT
-    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
-
-    # 切割头部燃道
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
-    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
-
-    for i in range(1, len(z_list) - 1):
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
-
-    # Mirror
-    if size == '1':
-        p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
-        # p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-    elif size == '1/2':
-        pass
-    elif size == '1/4':
-        pass
-    else:
-        raise NotImplementedError('Unsupported size {}'.format(size))
-
     # 建立GRAIN集合
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
@@ -800,6 +757,16 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
+    # SKETCH-FRONT-CUT
+    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
+
+    # 切割头部燃道
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
+    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, angle=90.0, flipRevolveDirection=OFF)
+
+    for i in range(1, len(z_list) - 1):
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
+
     # 建立INSULATION集合
     cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-GRAIN', ['SET-CELL-GRAIN'])
     if cells:
@@ -810,12 +777,25 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     if cells:
         p.Set(cells=cells, name='SET-CELL-GLUE-A')
 
+    # Mirror
+    if size == '1':
+        p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
+        # p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    elif size == '1/2':
+        pass
+    elif size == '1/4':
+        pass
+    else:
+        raise NotImplementedError('Unsupported size {}'.format(size))
+
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 拾取内部切割后的轮廓曲线
     p_edges = []
     for z_center in z_centers:
-        p_edges.append(p.edges.findAt((p1p[0], p1p[1], z_center)))
+        edge = p.edges.findAt((p1p[0], p1p[1], z_center))
+        if edge is not None:
+            p_edges.append(edge)
         p.DatumPointByCoordinate(coords=(p1p[0], p1p[1], z_center))
 
     point1 = (x0 + deep - r_cut, 0.0)
@@ -825,8 +805,12 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     point5 = rotate_point_around_axis((p1p[0], p1p[1], 0.0), (point3[0], point3[1], 0.0), (point4[0], point4[1], 0.0), tol)
     p.DatumPointByCoordinate(coords=point5)
 
-    p_edges.append(p.edges.findAt(point5))
-    p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
+    edge = p.edges.findAt(point5)
+    if edge is not None:
+        p_edges.append(edge)
+
+    if p_edges:
+        p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
     create_block_surface_common(p, points, dimension)
 
@@ -1105,12 +1089,6 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
         xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
 
-    # SKETCH-CUT
-    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n, burn_offset)
-
-    # CutExtrude
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
-
     # Mirror
     if size == '1':
         p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
@@ -1127,6 +1105,8 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     set_names = create_block_sets_common(p, faces, dimension)
 
+    p1p = cut_extrude(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
+
     create_block_surface_common(p, points, dimension)
 
     p1 = [x0 + deep + b, 0.0]
@@ -1139,12 +1119,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
-    # Partition
-    p1 = [x0 + deep, -a]
-    offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
-    offset = p1p[0]
-    yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
-    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
+    partition_p1p(p, d, p1p)
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -1259,12 +1234,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     set_name = 'SET-CELL-GLUE-A'
     p.Set(cells=p.cells, name=set_name)
 
-    # Partition
-    p1 = [x0 + deep, -a]
-    offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
-    offset = p1p[0]
-    yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
-    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
+    partition_p1p(p, d, p1p)
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -1644,6 +1614,32 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     return p
 
 
+def partition_p1p(p, d, p1p):
+    # Partition
+    # p1 = [x0 + deep, -a]
+    # offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
+    offset = p1p[0]
+    if offset >= p.cells.getBoundingBox()['low'][0]:
+        yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
+        p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
+
+
+def cut_extrude(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis):
+    # SKETCH-CUT
+    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n, burn_offset)
+    # CutExtrude
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
+    # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=OFF)
+
+    # SKETCH-X0-BURN
+    s_x0_burn = create_sketch_x0_burn(model, 'SKETCH-X0-BURN', x0, pen, burn_offset)
+    # CutExtrude
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_x0_burn, flipExtrudeDirection=ON)
+    # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_x0_burn, flipExtrudeDirection=OFF)
+
+    return p1p
+
+
 def create_block_sets_common(p, faces, dimension):
     z_list = dimension['z_list']
     z = np.array(z_list)
@@ -1655,7 +1651,6 @@ def create_block_sets_common(p, faces, dimension):
         [0, 0, 0]
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
-    cells = get_same_volume_cells(p, cells)
     if cells is not None:
         set_name = 'SET-CELL-GRAIN'
         p.Set(cells=cells, name=set_name)
@@ -1672,7 +1667,6 @@ def create_block_sets_common(p, faces, dimension):
         [0, 1, 1]
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
-    cells = get_same_volume_cells(p, cells)
     if cells is not None:
         set_name = 'SET-CELL-INSULATION'
         p.Set(cells=cells, name=set_name)
@@ -1693,8 +1687,6 @@ def create_block_sets_common(p, faces, dimension):
             [1, 1, 2]
         ]:
             cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
-
-        cells = get_same_volume_cells(p, cells)
         if cells is not None:
             set_name = 'SET-CELL-GLUE-A'
             p.Set(cells=cells, name=set_name)
@@ -1714,7 +1706,6 @@ def create_block_sets_common(p, faces, dimension):
             [2, 2, 2],
         ]:
             cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
-        cells = get_same_volume_cells(p, cells)
         if cells is not None:
             set_name = 'SET-CELL-GLUE-B'
             p.Set(cells=cells, name=set_name)
@@ -2201,12 +2192,12 @@ if __name__ == "__main__":
     fillet_radius = 50.0
     angle_demolding_1 = 1.5
 
-    burn_offset = 400.0
+    burn_offset = 0.0
 
     element_size = 40
     insert_czm = False
 
-    size = '1/2'
+    size = '1'
 
     front_ref_length = 509.0
     behind_ref_length = 500.0
