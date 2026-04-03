@@ -55,6 +55,22 @@ def create_sketch_block(model, sketch_name, points, index_r, index_t):
     return s
 
 
+def create_sketch_x0_burn(model, sketch_name, x0, pen, burn_offset=0.0):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+
+    p1 = [0.0, 0.0]
+    p2 = [x0 + burn_offset, 0.0]
+    p3 = [x0 + burn_offset, pen]
+    p4 = [0, pen]
+
+    s.Line(point1=p1, point2=p2)
+    s.Line(point1=p2, point2=p3)
+    s.Line(point1=p3, point2=p4)
+    s.Line(point1=p4, point2=p1)
+
+    return s
+
+
 def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = [x0 + deep, 0.0]
@@ -425,9 +441,13 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
     # SKETCH-CUT
     s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n, burn_offset)
-
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
+
+    # SKETCH-X0-BURN
+    s_x0_burn = create_sketch_x0_burn(model, 'SKETCH-X0-BURN', x0, pen, burn_offset)
+    # CutExtrude
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_x0_burn, flipExtrudeDirection=ON)
 
     # Mirror
     if size == '1':
@@ -447,7 +467,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
     create_block_surface_common(p, points, dimension)
 
-    p1 = [x0 + deep + b, 0.0]
+    p1 = [x0 + deep + b + burn_offset, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
     p_faces = p.faces.getByBoundingBox(0, tol, 0, x1 * 1.1, y1, length / 2.0)
@@ -1707,11 +1727,12 @@ def create_block_surface_common(p, points, dimension):
     z_list = dimension['z_list']
     index_r = dimension['index_r']
     index_t = dimension['index_t']
+    burn_offset = dimension['burn_offset']
     length = z_list[-1] * 2.0
 
-    p1 = (points[0, 0][0], points[0, 0][1], 0.0)
-    p2 = (points[0, 1][0], points[0, 1][1], 0.0)
-    p3 = (points[0, 0][0], points[0, 0][1], 1.0)
+    p1 = (points[0, 0][0] + burn_offset, points[0, 0][1], 0.0)
+    p2 = (points[0, 1][0] + burn_offset, points[0, 1][1], 0.0)
+    p3 = (points[0, 0][0] + burn_offset, points[0, 0][1], 1.0)
     plane = Plane(p1, p2, p3)
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
@@ -2180,7 +2201,7 @@ if __name__ == "__main__":
     fillet_radius = 50.0
     angle_demolding_1 = 1.5
 
-    burn_offset = 100.0
+    burn_offset = 400.0
 
     element_size = 40
     insert_czm = False
