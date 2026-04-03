@@ -55,51 +55,78 @@ def create_sketch_block(model, sketch_name, points, index_r, index_t):
     return s
 
 
-def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n):
-    s_cut = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
-    center = [x0 + deep, 0.0]
-    p1 = [x0 + deep, -a]
-    p2 = [x0 + deep + b, 0.0]
-    e1 = s_cut.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
-    l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
-    l2 = Line2D([x0, 0.0], [x0, 1.0])
-    p3 = l1.get_intersection(l2)
-    p4 = [p3[0], 0.0]
-    s_cut.Line(point1=p1, point2=p3)
-    s_cut.Line(point1=p3, point2=p4)
-    s_cut.Line(point1=center, point2=p2)
-    s_cut.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
-    s_cut.Line(point1=p4, point2=center)
-    geom_list = []
-    for g in s_cut.geometry.values():
-        geom_list.append(g)
-    s_cut.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
-    return s_cut
-
-
-def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_cut):
+def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = [x0 + deep, 0.0]
     p1 = [x0 + deep, -a]
     p2 = [x0 + deep + b, 0.0]
     e1 = s.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
     l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
-    l2 = Line2D([x0, 0.0], [x0, 1.0])
+    l2 = Line2D([0.0, 0.0], [0.0, 1.0])
     p3 = l1.get_intersection(l2)
     p4 = [p3[0], 0.0]
-    p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
-    s.Spot(point=p1p)
     s.Line(point1=p1, point2=p3)
     s.Line(point1=p3, point2=p4)
     s.Line(point1=center, point2=p2)
     s.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
     s.Line(point1=p4, point2=center)
+
+    if offset > 0:
+        s.offset(distance=offset, objectList=(s.geometry[4], s.geometry[7]), side=RIGHT)
+        s.Line(point1=s.vertices[3].coords, point2=s.vertices[7].coords)
+        s.Line(point1=s.vertices[5].coords, point2=s.vertices[8].coords)
+        s.delete(objectList=(s.geometry[4], s.geometry[7]))
+
+    geom_list = []
+    for g in s.geometry.values():
+        geom_list.append(g)
+    s.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
+
+    if offset > 0:
+        p1p = s.vertices[6].coords
+    else:
+        p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
+    s.Spot(point=p1p)
+
+    return s, p1p
+
+
+def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_cut, offset=0.0):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+    center = [x0 + deep, 0.0]
+    p1 = [x0 + deep, -a]
+    p2 = [x0 + deep + b, 0.0]
+    e1 = s.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
+    l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
+    l2 = Line2D([x0 + deep - r_cut, 0.0], [x0 + deep - r_cut, 1.0])
+    p3 = l1.get_intersection(l2)
+    p4 = [p3[0], 0.0]
+
+    s.Line(point1=p1, point2=p3)
+    s.Line(point1=p3, point2=p4)
+    s.Line(point1=center, point2=p2)
+    s.autoTrimCurve(curve1=e1, point1=[x0 + deep, a])
+    s.Line(point1=p4, point2=center)
+
+    if offset > 0:
+        s.offset(distance=offset, objectList=(s.geometry[4], s.geometry[7]), side=RIGHT)
+        s.Line(point1=s.vertices[3].coords, point2=s.vertices[7].coords)
+        s.Line(point1=s.vertices[5].coords, point2=s.vertices[8].coords)
+        s.delete(objectList=(s.geometry[4], s.geometry[7]))
+
     center_line = s.ConstructionLine(point1=(x0 + deep - r_cut, -1e4), point2=(x0 + deep - r_cut, 1e4))
     geom_list = []
     for g in s.geometry.values():
         geom_list.append(g)
     s.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
     s.assignCenterline(line=center_line)
+
+    if offset > 0:
+        p1p = s.vertices[6].coords
+    else:
+        p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
+    s.Spot(point=p1p)
+
     return s, p1p
 
 
@@ -396,7 +423,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
 
     # SKETCH-CUT
-    s_cut = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
+    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
 
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -437,6 +464,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     # Partition
     p1 = [x0 + deep, -a]
     offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
+    offset = p1p[0]
     yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
     p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
 
@@ -503,7 +531,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
     # SKETCH-CUT
-    s_cut = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
+    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
 
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -543,6 +571,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     # Partition
     p1 = [x0 + deep, -a]
     offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
+    offset = p1p[0]
     yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
     p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
 
@@ -1052,7 +1081,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
 
     # SKETCH-CUT
-    s_cut = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
+    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
 
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -1088,6 +1117,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     # Partition
     p1 = [x0 + deep, -a]
     offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
+    offset = p1p[0]
     yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
     p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
 
@@ -1169,7 +1199,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
     # SKETCH-CUT
-    s_cut = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
+    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
 
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -1206,6 +1236,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     # Partition
     p1 = [x0 + deep, -a]
     offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
+    offset = p1p[0]
     yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
     p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
 
@@ -2183,13 +2214,13 @@ if __name__ == "__main__":
     # block[:, 1] = True
     # block[:, 8] = True
 
-    setting_file = 'setting.json'
-    message = load_json(setting_file)
-
-    n = message['n']
-    d = message['d']
-    x0 = message['x0']
-    block_length = message['block_length']
+    # setting_file = 'setting.json'
+    # message = load_json(setting_file)
+    #
+    # n = message['n']
+    # d = message['d']
+    # x0 = message['x0']
+    # block_length = message['block_length']
     # block_insulation_thickness_z = message['block_insulation_thickness_z']
     # block_insulation_thickness_t = message['block_insulation_thickness_t']
     # block_insulation_thickness_r = message['block_insulation_thickness_r']
