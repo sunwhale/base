@@ -424,7 +424,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
 
     # SKETCH-CUT
-    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
+    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n, burn_offset)
 
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -533,7 +533,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
     # SKETCH-CUT
-    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
+    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n, burn_offset)
 
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -736,7 +736,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[t_plane.id], cells=p.cells)
 
     # SKETCH-FRONT-CUT
-    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut)
+    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
 
     # 切割头部燃道
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -932,7 +932,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByDatumPlane(datumPlane=d[partition_plane.id], cells=p.cells)
 
     # SKETCH-FRONT-CUT
-    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut)
+    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
 
     # 切割头部燃道
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -1086,7 +1086,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
 
     # SKETCH-CUT
-    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
+    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n, burn_offset)
 
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -1205,7 +1205,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
     # SKETCH-CUT
-    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n)
+    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n, burn_offset)
 
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -1471,7 +1471,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_cut_revolve_2 = create_sketch_behind_cut_revolve_2(model, 'SKETCH-BEHIND-CUT-REVOLVE-2', t, x0, deep, a, b, pen)
+    s_behind_cut_revolve_2 = create_sketch_behind_cut_revolve_2(model, 'SKETCH-BEHIND-CUT-REVOLVE-2', t, x0, deep, a, b, pen, burn_offset)
 
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_cut_revolve_2, angle=360.0, flipRevolveDirection=ON)
 
@@ -1596,7 +1596,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_cut_revolve_2 = create_sketch_behind_cut_revolve_2(model, 'SKETCH-BEHIND-CUT-REVOLVE-2', t, x0, deep, a, b, pen)
+    s_behind_cut_revolve_2 = create_sketch_behind_cut_revolve_2(model, 'SKETCH-BEHIND-CUT-REVOLVE-2', t, x0, deep, a, b, pen, burn_offset)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_cut_revolve_2, angle=360.0, flipRevolveDirection=ON)
 
     # 通过排除法确定内表面
