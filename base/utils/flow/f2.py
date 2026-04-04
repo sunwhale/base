@@ -245,7 +245,7 @@ def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_
     return s
 
 
-def create_sketch_behind_cut_revolve_2(model, sketch_name, t, x0, deep, a, b, pen, burn_offset=0.0):
+def create_sketch_behind_inner(model, sketch_name, t, x0, deep, a, b, pen, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
     p1 = [-pen, x0 + deep + b + burn_offset]
@@ -1442,9 +1442,9 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_cut_revolve_2 = create_sketch_behind_cut_revolve_2(model, 'SKETCH-BEHIND-CUT-REVOLVE-2', t, x0, deep, a, b, pen, burn_offset)
+    s_behind_inner = create_sketch_behind_inner(model, 'SKETCH-BEHIND-INNER', t, x0, deep, a, b, pen, burn_offset)
 
-    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_cut_revolve_2, angle=360.0, flipRevolveDirection=ON)
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_inner, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
@@ -1569,8 +1569,8 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_cut_revolve_2 = create_sketch_behind_cut_revolve_2(model, 'SKETCH-BEHIND-CUT-REVOLVE-2', t, x0, deep, a, b, pen, burn_offset)
-    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_cut_revolve_2, angle=360.0, flipRevolveDirection=ON)
+    s_behind_inner = create_sketch_behind_inner(model, 'SKETCH-BEHIND-INNER', t, x0, deep, a, b, pen, burn_offset)
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_inner, angle=360.0, flipRevolveDirection=ON)
 
     # 通过排除法确定内表面
     given_surface_names = list(p.surfaces.keys())
