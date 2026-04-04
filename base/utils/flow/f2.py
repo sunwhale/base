@@ -370,7 +370,7 @@ def create_part_base(model, part_name, s_cross_section, length):
     return p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1
 
 
-def part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r, z_list):
+def part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r):
     s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0)
     center = (0, 0)
     geom_list = []
@@ -436,10 +436,14 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     length = z_list[-1] * 2.0
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
-
+    
     s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_cross_section, length)
+
+    part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r)
+
+    part_partition_z(p, d, z_list)
 
     set_names = create_block_sets_common(p, faces, dimension)
 
