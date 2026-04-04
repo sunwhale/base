@@ -152,7 +152,7 @@ def create_sketch_front_outer(model, sketch_name, t, points, index_r, index_t, p
     return s, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3
 
 
-def create_sketch_behind_cut_revolve(model, sketch_name, t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen):
+def create_sketch_behind_outer(model, sketch_name, t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
     result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
@@ -191,7 +191,7 @@ def create_sketch_behind_cut_revolve(model, sketch_name, t, points, index_r, ind
     return s, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3
 
 
-def create_sketch_behind_cut_revolve_shift(model, sketch_name, t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3):
+def create_sketch_behind_outer_offset(model, sketch_name, t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
     geom_list = []
     geom_list.append(s.Line(point1=(p0[0], x0), point2=p0))
@@ -207,7 +207,7 @@ def create_sketch_behind_cut_revolve_shift(model, sketch_name, t, points, x0, in
     return s
 
 
-def create_sketch_front_cut_revolve_shift(model, sketch_name, t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3):
+def create_sketch_front_outer_offset(model, sketch_name, t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
     geom_list = []
     geom_list.append(s.Line(point1=(p0[0], x0), point2=p0))
@@ -614,7 +614,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_front_cut_revolve_shift = create_sketch_front_cut_revolve_shift(model, 'SKETCH-FRONT-CUT-REVOLVE-SHIFT', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_front_cut_revolve_shift = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-CUT-REVOLVE-SHIFT', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for g in s_front_cut_revolve_shift.geometry.values()[:6]:
@@ -892,7 +892,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_shift = create_sketch_front_cut_revolve_shift(model, 'SKETCH-FRONT-CUT-REVOLVE-SHIFT', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_block_cut_revolve_shift = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-CUT-REVOLVE-SHIFT', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
@@ -1293,16 +1293,16 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_cut_revolve, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_behind_cut_revolve(model, 'SKETCH-BEHIND-CUT-REVOLVE', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen)
+    s_behind_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_behind_outer(model, 'SKETCH-BEHIND-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen)
 
-    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_outer, angle=360.0, flipRevolveDirection=ON)
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_cut_revolve_shift = create_sketch_behind_cut_revolve_shift(model, 'SKETCH-BEHIND-CUT-REVOLVE-SHIFT', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_behind_outer_offset = create_sketch_behind_outer_offset(model, 'SKETCH-BEHIND-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for g in s_behind_cut_revolve_shift.geometry.values()[:6]:
+    for g in s_behind_outer_offset.geometry.values()[:6]:
         z, x = g.pointOn
         point = (x, 0.0, z)
         angle = degrees_to_radians(180.0 / n / 2.0)
@@ -1312,23 +1312,23 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
-    g = s_behind_cut_revolve_shift.geometry
+    g = s_behind_outer_offset.geometry
     faces_xz_plane = {}
     for i in range(1, index_r):
         faces_xz_plane[i] = []
         for j in [2, 3, 4, 5, 6, 7]:
             pa = (np.array(g[j + 6 * (i - 1)].pointOn) + np.array(g[j + 6 * i].pointOn)) / 2.0
             faces_xz_plane[i].append(pa)
-            s_behind_cut_revolve_shift.Spot(point=pa)
+            s_behind_outer_offset.Spot(point=pa)
 
     for i in range(1, index_r):
         for j in [3, 4, 5, 6, 7]:
             pa = g[6 * (i - 1) + j].getVertices()[0].coords
             pb = g[6 * i + j].getVertices()[0].coords
-            s_behind_cut_revolve_shift.Line(point1=pa, point2=pb)
+            s_behind_outer_offset.Line(point1=pa, point2=pb)
 
     p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, tol, pen)
-    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_behind_cut_revolve_shift)
+    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_behind_outer_offset)
 
     # 基于p4点所在的半径拾取sweep_edge
     x, y = polar_to_cartesian(p4[1], tol)
@@ -1337,7 +1337,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 拾取主体弧线
     partition_edges = []
-    for g in s_behind_cut_revolve_shift.geometry.values()[2:index_r * 6]:
+    for g in s_behind_outer_offset.geometry.values()[2:index_r * 6]:
         z, x = g.pointOn
         # p.DatumPointByCoordinate(coords=(x, 0.0, z))
         edge_sequence = p.edges.findAt((x, 0.0, z))
@@ -1352,7 +1352,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 拾取分段连线
     partition_edges = []
-    for g in s_behind_cut_revolve_shift.geometry.values()[index_r * 6:]:
+    for g in s_behind_outer_offset.geometry.values()[index_r * 6:]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
@@ -1522,13 +1522,13 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_cut_revolve, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_behind_cut_revolve(model, 'SKETCH-BEHIND-CUT-REVOLVE', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen)
+    s_behind_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_behind_outer(model, 'SKETCH-BEHIND-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen)
 
-    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_outer, angle=360.0, flipRevolveDirection=ON)
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_shift = create_sketch_behind_cut_revolve_shift(model, 'SKETCH-BEHIND-CUT-REVOLVE-SHIFT', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_block_cut_revolve_shift = create_sketch_behind_outer_offset(model, 'SKETCH-BEHIND-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
@@ -1536,7 +1536,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
 
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=ON)
 
-    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_outer, angle=360.0, flipRevolveDirection=ON)
 
     # Partition
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z1.id], cells=p.cells)
