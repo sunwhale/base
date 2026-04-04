@@ -43,6 +43,9 @@ from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_a
     combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set, get_faces_of_p_remove_given_surface_names, \
     get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces, rotate_point_around_axis
 
+PEN = 1e4
+TOL = 1e-6
+
 
 def create_sketch_cross_section(model, sketch_name, points, index_r, index_t):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
@@ -55,13 +58,13 @@ def create_sketch_cross_section(model, sketch_name, points, index_r, index_t):
     return s
 
 
-def create_sketch_burn_x0(model, sketch_name, x0, pen, burn_offset=0.0):
+def create_sketch_burn_x0(model, sketch_name, x0, PEN, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
 
     p1 = [0.0, 0.0]
     p2 = [x0 + burn_offset, 0.0]
-    p3 = [x0 + burn_offset, pen]
-    p4 = [0, pen]
+    p3 = [x0 + burn_offset, PEN]
+    p4 = [0, PEN]
 
     s.Line(point1=p1, point2=p2)
     s.Line(point1=p2, point2=p3)
@@ -113,7 +116,7 @@ def create_sketch_slot(model, sketch_name, x0, deep, a, b, angle_demolding_1, n,
     return s, p1p, p2p
 
 
-def create_sketch_front_outer(model, sketch_name, t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen):
+def create_sketch_front_outer(model, sketch_name, t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, PEN):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
     result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
@@ -122,7 +125,7 @@ def create_sketch_front_outer(model, sketch_name, t, points, index_r, index_t, p
     l3 = Line2D((z_list[-1], 0.0), (z_list[-1], 1.0))
     if l1.get_intersection(l2)[0] > l1.get_intersection(l3)[0]:
         p4 = l1.get_intersection(l3)
-        p5 = (pen, p4[1])
+        p5 = (PEN, p4[1])
     else:
         p4 = l1.get_intersection(l2)
         p5 = (z_list[-1], p4[1])
@@ -140,19 +143,19 @@ def create_sketch_front_outer(model, sketch_name, t, points, index_r, index_t, p
     s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
     s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
     s.Line(point1=p0, point2=(p0[0], 1))
-    s.Line(point1=(p0[0], 1), point2=(-pen, 1))
-    s.Line(point1=(-pen, 1), point2=(-pen, pen))
-    s.Line(point1=(-pen, pen), point2=(p5[0], pen))
-    s.Line(point1=(p5[0], pen), point2=p5)
+    s.Line(point1=(p0[0], 1), point2=(-PEN, 1))
+    s.Line(point1=(-PEN, 1), point2=(-PEN, PEN))
+    s.Line(point1=(-PEN, PEN), point2=(p5[0], PEN))
+    s.Line(point1=(p5[0], PEN), point2=p5)
     s.Line(point1=p5, point2=p4)
     s.Line(point1=p3, point2=p4)
-    center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
+    center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(PEN, 0.0))
     s.assignCenterline(line=center_line)
 
     return s, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3
 
 
-def create_sketch_behind_outer(model, sketch_name, t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen):
+def create_sketch_behind_outer(model, sketch_name, t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, PEN):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
     result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
@@ -161,7 +164,7 @@ def create_sketch_behind_outer(model, sketch_name, t, points, index_r, index_t, 
     l3 = Line2D((-z_list[-1], 0.0), (-z_list[-1], 1.0))
     if l1.get_intersection(l2)[0] < l1.get_intersection(l3)[0]:
         p4 = l1.get_intersection(l3)
-        p5 = (-pen, p4[1])
+        p5 = (-PEN, p4[1])
     else:
         p4 = l1.get_intersection(l2)
         p5 = (-z_list[-1], p4[1])
@@ -179,13 +182,13 @@ def create_sketch_behind_outer(model, sketch_name, t, points, index_r, index_t, 
     s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
     s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
     s.Line(point1=p0, point2=(p0[0], 1))
-    s.Line(point1=(p0[0], 1), point2=(pen, 1))
-    s.Line(point1=(pen, 1), point2=(pen, pen))
-    s.Line(point1=(pen, pen), point2=(p5[0], pen))
-    s.Line(point1=(p5[0], pen), point2=p5)
+    s.Line(point1=(p0[0], 1), point2=(PEN, 1))
+    s.Line(point1=(PEN, 1), point2=(PEN, PEN))
+    s.Line(point1=(PEN, PEN), point2=(p5[0], PEN))
+    s.Line(point1=(p5[0], PEN), point2=p5)
     s.Line(point1=p5, point2=p4)
     s.Line(point1=p3, point2=p4)
-    center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
+    center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(PEN, 0.0))
     s.assignCenterline(line=center_line)
 
     return s, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3
@@ -222,7 +225,7 @@ def create_sketch_front_outer_offset(model, sketch_name, t, points, x0, index_r,
     return s
 
 
-def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen):
+def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, PEN):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
     p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], x0 + deep + b - 1.0]
@@ -239,26 +242,26 @@ def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_
     s.Line(point1=p3, point2=p4)
     s.Line(point1=p4, point2=p0)
 
-    center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
+    center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(PEN, 0.0))
     s.assignCenterline(line=center_line)
 
     return s
 
 
-def create_sketch_behind_inner(model, sketch_name, t, x0, deep, a, b, pen, burn_offset=0.0):
+def create_sketch_behind_inner(model, sketch_name, t, x0, deep, a, b, PEN, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
-    p1 = [-pen, x0 + deep + b + burn_offset]
-    p2 = [pen, x0 + deep + b + burn_offset]
-    p3 = [pen, 0]
-    p4 = [-pen, 0]
+    p1 = [-PEN, x0 + deep + b + burn_offset]
+    p2 = [PEN, x0 + deep + b + burn_offset]
+    p3 = [PEN, 0]
+    p4 = [-PEN, 0]
 
     s.Line(point1=p1, point2=p2)
     s.Line(point1=p2, point2=p3)
     s.Line(point1=p3, point2=p4)
     s.Line(point1=p4, point2=p1)
 
-    center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(pen, 0.0))
+    center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(PEN, 0.0))
     s.assignCenterline(line=center_line)
 
     return s
@@ -331,12 +334,6 @@ def get_local_variables(dimension):
     element_size = dimension['element_size']
     insert_czm = dimension['insert_czm']
     burn_offset = dimension['burn_offset']
-    origin = (0.0, 0.0, 0.0)
-    length = z_list[-1] * 2.0
-    pen = 1e4
-    tol = 1e-6
-    z = np.array(z_list)
-    z_centers = (z[:-1] + z[1:]) / 2.0
 
     return (z_list,
             deep,
@@ -353,13 +350,7 @@ def get_local_variables(dimension):
             index_t,
             element_size,
             insert_czm,
-            burn_offset,
-            origin,
-            length,
-            pen,
-            tol,
-            z,
-            z_centers)
+            burn_offset)
 
 
 def create_part_base(model, part_name, s_cross_section, length):
@@ -379,7 +370,12 @@ def create_part_base(model, part_name, s_cross_section, length):
 
 
 def create_part_block(model, part_name, points, lines, faces, dimension):
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset, origin, length, pen, tol, z, z_centers = get_local_variables(dimension)
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+
+    origin = (0.0, 0.0, 0.0)
+    length = z_list[-1] * 2.0
+    z = np.array(z_list)
+    z_centers = (z[:-1] + z[1:]) / 2.0
 
     s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
@@ -397,7 +393,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
         geom_list.append(s_cross_section_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
 
     # Partition
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, pen, pen, tol)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, PEN, PEN, TOL)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_cross_section_partition)
 
     # 拾取被切割平面上的线段，同一个r
@@ -440,7 +436,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
     set_names = create_block_sets_common(p, faces, dimension)
 
-    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
+    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
 
     # Mirror
     if size == '1':
@@ -507,8 +503,8 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     burn_offset = dimension['burn_offset']
     origin = (0.0, 0.0, 0.0)
     length = z_list[-2] * 2.0
-    pen = 1e4
-    tol = 1e-6
+    PEN = 1e4
+    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
@@ -540,7 +536,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     )
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
-    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
+    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
 
     # Mirror
     if size == '1':
@@ -561,7 +557,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     p1 = [x0 + deep + b, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, tol, 0, x1 * 1.1, y1, z_list[-1])
+    p_faces = p.faces.getByBoundingBox(0, TOL, 0, x1 * 1.1, y1, z_list[-1])
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
@@ -616,8 +612,8 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
-    pen = 1e4
-    tol = 1e-6
+    PEN = 1e4
+    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
@@ -640,7 +636,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_front_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_front_outer(model, 'SKETCH-FRONT-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen)
+    s_front_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_front_outer(model, 'SKETCH-FRONT-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, PEN)
 
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_front_outer, angle=360.0, flipRevolveDirection=ON)
 
@@ -674,7 +670,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
             pb = g[6 * i + j].getVertices()[0].coords
             s_front_outer_offset.Line(point1=pa, point2=pb)
 
-    p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, tol, pen)
+    p_faces = p.faces.getByBoundingBox(0, 0, -PEN, PEN, TOL, PEN)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_front_outer_offset)
 
     # print(beta)
@@ -682,7 +678,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # return p
 
     # 基于p4点所在的半径拾取sweep_edge
-    x, y = polar_to_cartesian(p4[1], tol)
+    x, y = polar_to_cartesian(p4[1], TOL)
     # x = min(x, points[index_r, 0][0])
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
 
@@ -697,7 +693,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # 基于p4点所在的半径拾取sweep_edge
-    x, y = polar_to_cartesian(p4[1], tol)
+    x, y = polar_to_cartesian(p4[1], TOL)
     x = min(x, points[index_r, 0][0])
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
 
@@ -724,7 +720,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         geom_list.append(s_cross_section_partition.Line(point1=points[0, i], point2=points[index_r, i]))
 
     # Partition
-    # p_faces = p.faces.getByBoundingBox(0, 0, z_list[-1], pen, pen, pen)
+    # p_faces = p.faces.getByBoundingBox(0, 0, z_list[-1], PEN, PEN, PEN)
     # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_cross_section_partition)
 
     # 建立平面，通过三个点：同一个theta的两个点和z方向上偏移1.0的点，保证平面法向量朝外，用该平面切割p.cells
@@ -766,7 +762,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
 
     # SKETCH-BURN-X0
-    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, pen, burn_offset)
+    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, PEN, burn_offset)
     # x0方向燃面退移
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
@@ -809,7 +805,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     point2 = (x0 + deep - r_cut, 1.0)
     point3 = rotate_point_around_origin_2d(point1, beta / 2.0)
     point4 = rotate_point_around_origin_2d(point2, beta / 2.0)
-    point5 = rotate_point_around_axis((p1p[0], p1p[1], 0.0), (point3[0], point3[1], 0.0), (point4[0], point4[1], 0.0), tol)
+    point5 = rotate_point_around_axis((p1p[0], p1p[1], 0.0), (point3[0], point3[1], 0.0), (point4[0], point4[1], 0.0), TOL)
     p.DatumPointByCoordinate(coords=point5)
 
     edge = p.edges.findAt(point5)
@@ -824,7 +820,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p1 = [x0 + deep + b, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, tol, -r_cut - b, x1 * 1.1, y1, length / 2.0)
+    p_faces = p.faces.getByBoundingBox(0, TOL, -r_cut - b, x1 * 1.1, y1, length / 2.0)
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
@@ -893,8 +889,8 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     origin = (0.0, 0.0, 0.0)
     length = z_list[-2] * 2.0
-    pen = 1e4
-    tol = 1e-6
+    PEN = 1e4
+    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
@@ -918,7 +914,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # SKETCH-BLOCK-CUT-REVOLVE
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_front_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_front_outer(model, 'SKETCH-FRONT-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen)
+    s_front_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_front_outer(model, 'SKETCH-FRONT-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, PEN)
     # 旋转切割头部外轮廓
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_front_outer, angle=360.0, flipRevolveDirection=ON)
 
@@ -952,7 +948,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
 
     # SKETCH-BURN-X0
-    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, pen, burn_offset)
+    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, PEN, burn_offset)
     # x0方向燃面退移
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
@@ -973,7 +969,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p1 = [x0 + deep + b, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, tol, -r_cut - b, x1 * 1.1, y1, z_list[-1])
+    p_faces = p.faces.getByBoundingBox(0, TOL, -r_cut - b, x1 * 1.1, y1, z_list[-1])
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
@@ -993,11 +989,11 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p1 = [x0 + deep, -a]
     offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
     yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
-    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells.getByBoundingBox(0, -pen, 0, pen, pen, pen))
+    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells.getByBoundingBox(0, -PEN, 0, PEN, PEN, PEN))
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 拓扑层面忽略外表面的公共边
-    p_faces = p.surfaces['SURFACE-OUTER'].faces.getByBoundingBox(0, -pen, -pen, pen, pen, 0)
+    p_faces = p.surfaces['SURFACE-OUTER'].faces.getByBoundingBox(0, -PEN, -PEN, PEN, PEN, 0)
     ignore_common_edges_of_faces(p, p_faces)
 
     set_name = 'SET-CELL-GLUE-A'
@@ -1031,8 +1027,8 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     burn_offset = dimension['burn_offset']
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
-    pen = 1e4
-    tol = 1e-6
+    PEN = 1e4
+    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
@@ -1063,7 +1059,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
         geom_list.append(s_cross_section_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
 
     # Partition
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, pen, pen, tol)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, PEN, PEN, TOL)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_cross_section_partition)
 
     # 拾取被切割平面上的线段，同一个r
@@ -1106,7 +1102,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     set_names = create_block_sets_common(p, faces, dimension)
 
-    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
+    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
 
     # Mirror
     if size == '1':
@@ -1129,7 +1125,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     p1 = [x0 + deep + b, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, tol, 0, x1 * 1.1, y1, length / 2.0)
+    p_faces = p.faces.getByBoundingBox(0, TOL, 0, x1 * 1.1, y1, length / 2.0)
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
@@ -1140,7 +1136,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen)
+    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, PEN)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_inner, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
@@ -1183,8 +1179,8 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     burn_offset = dimension['burn_offset']
     origin = (0.0, 0.0, 0.0)
     length = z_list[-2] * 2.0
-    pen = 1e4
-    tol = 1e-6
+    PEN = 1e4
+    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
@@ -1216,7 +1212,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     )
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
-    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
+    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
 
     # Mirror
     if size == '1':
@@ -1237,7 +1233,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     p1 = [x0 + deep + b, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, tol, 0, x1 * 1.1, y1, z_list[-1])
+    p_faces = p.faces.getByBoundingBox(0, TOL, 0, x1 * 1.1, y1, z_list[-1])
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
@@ -1251,7 +1247,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen)
+    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, PEN)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_inner, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
@@ -1301,8 +1297,8 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
-    pen = 1e4
-    tol = 1e-6
+    PEN = 1e4
+    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
@@ -1325,7 +1321,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_behind_outer(model, 'SKETCH-BEHIND-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen)
+    s_behind_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_behind_outer(model, 'SKETCH-BEHIND-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, PEN)
 
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_outer, angle=360.0, flipRevolveDirection=ON)
 
@@ -1359,11 +1355,11 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
             pb = g[6 * i + j].getVertices()[0].coords
             s_behind_outer_offset.Line(point1=pa, point2=pb)
 
-    p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, tol, pen)
+    p_faces = p.faces.getByBoundingBox(0, 0, -PEN, PEN, TOL, PEN)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_behind_outer_offset)
 
     # 基于p4点所在的半径拾取sweep_edge
-    x, y = polar_to_cartesian(p4[1], tol)
+    x, y = polar_to_cartesian(p4[1], TOL)
     # x = min(x, points[index_r, 0][0])
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
 
@@ -1378,7 +1374,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # 基于p4点所在的半径拾取sweep_edge
-    x, y = polar_to_cartesian(p4[1], tol)
+    x, y = polar_to_cartesian(p4[1], TOL)
     x = min(x, points[index_r, 0][0])
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
 
@@ -1405,7 +1401,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
         geom_list.append(s_cross_section_partition.Line(point1=points[0, i], point2=points[index_r, i]))
 
     # Partition
-    # p_faces = p.faces.getByBoundingBox(0, 0, z_list[-1], pen, pen, pen)
+    # p_faces = p.faces.getByBoundingBox(0, 0, z_list[-1], PEN, PEN, PEN)
     # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_cross_section_partition)
 
     # 建立平面，通过三个点：同一个theta的两个点和z方向上偏移1.0的点，保证平面法向量朝外，用该平面切割p.cells
@@ -1474,7 +1470,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_inner = create_sketch_behind_inner(model, 'SKETCH-BEHIND-INNER', t, x0, deep, a, b, pen, burn_offset)
+    s_behind_inner = create_sketch_behind_inner(model, 'SKETCH-BEHIND-INNER', t, x0, deep, a, b, PEN, burn_offset)
 
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_inner, angle=360.0, flipRevolveDirection=ON)
 
@@ -1529,8 +1525,8 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
 
     origin = (0.0, 0.0, 0.0)
     length = z_list[-2] * 2.0
-    pen = 1e4
-    tol = 1e-6
+    PEN = 1e4
+    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
@@ -1554,7 +1550,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_behind_outer(model, 'SKETCH-BEHIND-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen)
+    s_behind_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_behind_outer(model, 'SKETCH-BEHIND-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, PEN)
 
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_outer, angle=360.0, flipRevolveDirection=ON)
 
@@ -1601,7 +1597,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_inner = create_sketch_behind_inner(model, 'SKETCH-BEHIND-INNER', t, x0, deep, a, b, pen, burn_offset)
+    s_behind_inner = create_sketch_behind_inner(model, 'SKETCH-BEHIND-INNER', t, x0, deep, a, b, PEN, burn_offset)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_inner, angle=360.0, flipRevolveDirection=ON)
 
     # 通过排除法确定内表面
@@ -1639,7 +1635,7 @@ def partition_p1p(p, d, p1p):
         p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
 
 
-def cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis):
+def cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis):
     r_cut = x0 + deep
     # SKETCH-SLOT
     s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
@@ -1648,7 +1644,7 @@ def cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_pl
     # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=OFF)
 
     # SKETCH-BURN-X0
-    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, pen, burn_offset)
+    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, PEN, burn_offset)
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
     # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
