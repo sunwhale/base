@@ -614,10 +614,10 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_front_cut_revolve_shift = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-CUT-REVOLVE-SHIFT', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_front_outer_offset = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for g in s_front_cut_revolve_shift.geometry.values()[:6]:
+    for g in s_front_outer_offset.geometry.values()[:6]:
         z, x = g.pointOn
         point = (x, 0.0, z)
         angle = beta / 2.0
@@ -627,23 +627,23 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
-    g = s_front_cut_revolve_shift.geometry
+    g = s_front_outer_offset.geometry
     faces_xz_plane = {}
     for i in range(1, index_r):
         faces_xz_plane[i] = []
         for j in [2, 3, 4, 5, 6, 7]:
             pa = (np.array(g[j + 6 * (i - 1)].pointOn) + np.array(g[j + 6 * i].pointOn)) / 2.0
             faces_xz_plane[i].append(pa)
-            s_front_cut_revolve_shift.Spot(point=pa)
+            s_front_outer_offset.Spot(point=pa)
 
     for i in range(1, index_r):
         for j in [3, 4, 5, 6, 7]:
             pa = g[6 * (i - 1) + j].getVertices()[0].coords
             pb = g[6 * i + j].getVertices()[0].coords
-            s_front_cut_revolve_shift.Line(point1=pa, point2=pb)
+            s_front_outer_offset.Line(point1=pa, point2=pb)
 
     p_faces = p.faces.getByBoundingBox(0, 0, -pen, pen, tol, pen)
-    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_front_cut_revolve_shift)
+    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_front_outer_offset)
 
     # print(beta)
     # print(180.0 / n / 2.0)
@@ -656,7 +656,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 拾取主体弧线
     partition_edges = []
-    for g in s_front_cut_revolve_shift.geometry.values()[2:index_r * 6]:
+    for g in s_front_outer_offset.geometry.values()[2:index_r * 6]:
         z, x = g.pointOn
         # p.DatumPointByCoordinate(coords=(x, 0.0, z))
         edge_sequence = p.edges.findAt((x, 0.0, z))
@@ -671,7 +671,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 拾取分段连线
     partition_edges = []
-    for g in s_front_cut_revolve_shift.geometry.values()[index_r * 6:]:
+    for g in s_front_outer_offset.geometry.values()[index_r * 6:]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
@@ -892,7 +892,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_shift = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-CUT-REVOLVE-SHIFT', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_front_outer_offset = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
@@ -1528,7 +1528,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_block_cut_revolve_shift = create_sketch_behind_outer_offset(model, 'SKETCH-BEHIND-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_behind_outer_offset = create_sketch_behind_outer_offset(model, 'SKETCH-BEHIND-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
