@@ -353,11 +353,11 @@ def get_local_variables(dimension):
             burn_offset)
 
 
-def create_part_base(model, part_name, s_cross_section, length):
+def create_part_base(model, part_name, sketch, length):
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
 
-    p.BaseSolidExtrude(sketch=s_cross_section, depth=length / 2.0)
+    p.BaseSolidExtrude(sketch=sketch, depth=length / 2.0)
 
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
@@ -439,16 +439,16 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
     
-    # 截面草图
+    # SKETCH-CROSS-SECTION
     s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
     
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_cross_section, length)
     
-    # 截面分割
+    # 截面剖分
     part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r)
     
-    # z分割
+    # z剖分
     part_partition_z(p, d, z_list)
     
     # 创建集合（体）
@@ -494,18 +494,17 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
     
-    # 
+    # 剖分
     part_partition_p1p(p, d, p1p)
     
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
-    
-    
+
     # 插入内聚力单元
     if insert_czm:
         insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
     
-    # 赋予界面属性
+    # 赋予SECTION属性
     set_section_common(p)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
@@ -514,8 +513,10 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
 
 def create_part_gap(model, part_name, points, lines, faces, dimension):
+    # 变量赋值
     z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
 
+    # 基本参数
     origin = (0.0, 0.0, 0.0)
     length = z_list[-2] * 2.0
     z = np.array(z_list)
@@ -524,34 +525,27 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     # SKETCH-GAP-Z
     s_gap_z = create_sketch_gap_z(model, 'SKETCH-GAP-Z', points)
 
-    # Extrude
-    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    p.BaseSolidExtrude(sketch=s_gap_z, depth=length / 2.0)
-    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-    yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
-    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-    xy_plane_z1 = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=length / 2.0)
-    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
-    y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
-    z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
-    d = p.datums
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_gap_z, length)
 
-    # SKETCH-GAP
+    # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
     s_gap_t = create_sketch_gap_t(model, 'SKETCH-GAP-T', t, points)
 
+    # 生成基础体
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=OFF)
 
-    # Partition
+    # z剖分
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z1.id], cells=p.cells)
     cut_edges = (
         p.edges.findAt((lines['02-12'][3][0], lines['02-12'][3][1], length / 2.0)),
     )
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
+    # 星槽切割
     p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
 
-    # Mirror
+    # 镜像
     if size == '1':
         p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
         p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
@@ -565,6 +559,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
 
+    # 创建面
     create_gap_surface_common(p, points, dimension)
 
     p1 = [x0 + deep + b, 0.0]
@@ -578,15 +573,20 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
 
+    # 创建集合（面）
     create_face_set_from_surface(p)
 
+    # 创建集合（体）
     set_name = 'SET-CELL-GLUE-A'
     p.Set(cells=p.cells, name=set_name)
 
+    # 剖分
     part_partition_p1p(p, d, p1p)
 
+    # 生成网格
     generate_part_mesh(p, element_size=element_size)
 
+    # 赋予SECTION属性
     set_section_common(p)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
