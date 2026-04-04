@@ -430,26 +430,34 @@ def part_partition_z(p, d, z_list):
 
 
 def create_part_block(model, part_name, points, lines, faces, dimension):
+    # 变量赋值
     z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
-
+    
+    # 基本参数
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
     
+    # 截面草图
     s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
-
+    
+    # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_cross_section, length)
-
+    
+    # 截面分割
     part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r)
-
+    
+    # z分割
     part_partition_z(p, d, z_list)
-
+    
+    # 创建集合（体）
     set_names = create_block_sets_common(p, faces, dimension)
-
+    
+    # 星槽切割
     p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
 
-    # Mirror
+    # 镜像
     if size == '1':
         p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
         p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
@@ -462,9 +470,10 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
         pass
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
-
+    
+    # 创建面
     create_block_surface_common(p, points, dimension)
-
+    
     p1 = [x0 + deep + b + burn_offset, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
@@ -476,19 +485,27 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
 
+    # 创建集合（面）
     create_face_set_from_surface(p)
-
+    
+    # 更新集合（体），处理镜像
     create_block_sets_same_volume(p)
 
+    # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
-
-    partition_p1p(p, d, p1p)
-
+    
+    # 
+    part_partition_p1p(p, d, p1p)
+    
+    # 生成网格
     generate_part_mesh(p, element_size=element_size)
-
+    
+    
+    # 插入内聚力单元
     if insert_czm:
         insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
-
+    
+    # 赋予界面属性
     set_section_common(p)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
@@ -566,7 +583,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     set_name = 'SET-CELL-GLUE-A'
     p.Set(cells=p.cells, name=set_name)
 
-    partition_p1p(p, d, p1p)
+    part_partition_p1p(p, d, p1p)
 
     generate_part_mesh(p, element_size=element_size)
 
@@ -1128,7 +1145,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
-    partition_p1p(p, d, p1p)
+    part_partition_p1p(p, d, p1p)
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -1239,7 +1256,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     set_name = 'SET-CELL-GLUE-A'
     p.Set(cells=p.cells, name=set_name)
 
-    partition_p1p(p, d, p1p)
+    part_partition_p1p(p, d, p1p)
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -1621,7 +1638,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     return p
 
 
-def partition_p1p(p, d, p1p):
+def part_partition_p1p(p, d, p1p):
     # Partition
     # p1 = [x0 + deep, -a]
     # offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
