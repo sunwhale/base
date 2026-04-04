@@ -55,7 +55,7 @@ def create_sketch_cross_section(model, sketch_name, points, index_r, index_t):
     return s
 
 
-def create_sketch_x0_burn(model, sketch_name, x0, pen, burn_offset=0.0):
+def create_sketch_burn_x0(model, sketch_name, x0, pen, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
 
     p1 = [0.0, 0.0]
@@ -733,11 +733,11 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
 
-    # SKETCH-X0-BURN
-    s_x0_burn = create_sketch_x0_burn(model, 'SKETCH-X0-BURN', x0, pen, burn_offset)
+    # SKETCH-BURN-X0
+    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, pen, burn_offset)
     # x0方向燃面退移
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_x0_burn, flipExtrudeDirection=ON)
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_x0_burn, flipExtrudeDirection=OFF)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
 
     for i in range(1, len(z_list) - 1):
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
@@ -867,7 +867,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-GAP-Z
-    s_gap_z = create_sketch_gap_z_front_behind(model, 'SKETCH-GAP-Z', points)
+    s_gap_z = create_sketch_gap_z_front_behind(model, 'SKETCH-GAP-Z-FRONT-BEHIND', points)
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
@@ -896,7 +896,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
-    s_gap_t = create_sketch_gap_t_front_behind(model, 'SKETCH-GAP-T', t, points)
+    s_gap_t = create_sketch_gap_t_front_behind(model, 'SKETCH-GAP-T-FRONT-BEHIND', t, points)
 
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=OFF)
 
@@ -919,11 +919,11 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
 
-    # SKETCH-X0-BURN
-    s_x0_burn = create_sketch_x0_burn(model, 'SKETCH-X0-BURN', x0, pen, burn_offset)
+    # SKETCH-BURN-X0
+    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, pen, burn_offset)
     # x0方向燃面退移
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_x0_burn, flipExtrudeDirection=ON)
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_x0_burn, flipExtrudeDirection=OFF)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
 
     # Mirror
     if size == '1':
@@ -1503,7 +1503,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-GAP-Z
-    s_gap_z = create_sketch_gap_z_front_behind(model, 'SKETCH-GAP-Z', points)
+    s_gap_z = create_sketch_gap_z_front_behind(model, 'SKETCH-GAP-Z-FRONT-BEHIND', points)
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
@@ -1532,7 +1532,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
 
     # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
-    s_gap_t = create_sketch_gap_t_front_behind(model, 'SKETCH-GAP-T', t, points)
+    s_gap_t = create_sketch_gap_t_front_behind(model, 'SKETCH-GAP-T-FRONT-BEHIND', t, points)
 
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=ON)
 
@@ -1615,11 +1615,11 @@ def cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_pl
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
     # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=OFF)
 
-    # SKETCH-X0-BURN
-    s_x0_burn = create_sketch_x0_burn(model, 'SKETCH-X0-BURN', x0, pen, burn_offset)
+    # SKETCH-BURN-X0
+    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, pen, burn_offset)
     # CutExtrude
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_x0_burn, flipExtrudeDirection=ON)
-    # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_x0_burn, flipExtrudeDirection=OFF)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
+    # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
 
     return p1p
 
