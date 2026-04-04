@@ -222,7 +222,7 @@ def create_sketch_front_outer_offset(model, sketch_name, t, points, x0, index_r,
     return s
 
 
-def create_sketch_penult_cut_revolve(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen):
+def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
     p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], x0 + deep + b - 1.0]
@@ -1108,8 +1108,8 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_cut_revolve = create_sketch_penult_cut_revolve(model, 'SKETCH-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen)
-    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen)
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_inner, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
@@ -1219,8 +1219,8 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_cut_revolve = create_sketch_penult_cut_revolve(model, 'SKETCH-PENULT-CUT-REVOLVE', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen)
-    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_cut_revolve, angle=360.0, flipRevolveDirection=ON)
+    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, pen)
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_inner, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
