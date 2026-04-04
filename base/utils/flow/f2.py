@@ -314,7 +314,7 @@ def create_sketch_gap_t(model, sketch_name, t, points):
     return s
 
 
-def create_part_block(model, part_name, points, lines, faces, dimension):
+def get_local_variables(dimension):
     z_list = dimension['z_list']
     deep = dimension['deep']
     x0 = dimension['x0']
@@ -338,20 +338,52 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
-    # SKETCH-BLOCK
-    s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
+    return (z_list,
+            deep,
+            x0,
+            length_up,
+            width,
+            angle_demolding_1,
+            angle_demolding_2,
+            fillet_radius,
+            a,
+            b,
+            size,
+            index_r,
+            index_t,
+            element_size,
+            insert_czm,
+            burn_offset,
+            origin,
+            length,
+            pen,
+            tol,
+            z,
+            z_centers)
 
-    # Extrude
+
+def create_part_base(model, part_name, s_cross_section, length):
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
 
     p.BaseSolidExtrude(sketch=s_cross_section, depth=length / 2.0)
+
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
     xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
     x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
     y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
     z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
+
+    return p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis
+
+
+def create_part_block(model, part_name, points, lines, faces, dimension):
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset, origin, length, pen, tol, z, z_centers = get_local_variables(dimension)
+
+    s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
+
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base(model, part_name, s_cross_section, length)
 
     # SKETCH-CROSS-SECTION-PARTITION
     s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0)
