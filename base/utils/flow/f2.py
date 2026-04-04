@@ -395,20 +395,20 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
     z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
 
-    # SKETCH-BLOCK-PARTITION
-    s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0)
+    # SKETCH-CROSS-SECTION-PARTITION
+    s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0)
     center = (0, 0)
     geom_list = []
     # 拾取被切割平面上的线段，同一个theta
     for i in range(1, index_t):
-        geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
+        geom_list.append(s_cross_section_partition.Line(point1=points[0, i], point2=points[index_r, i]))
     # 拾取被切割平面上的线段，同一个r
     for i in range(1, index_r):
-        geom_list.append(s_block_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
+        geom_list.append(s_cross_section_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
 
     # Partition
     p_faces = p.faces.getByBoundingBox(0, 0, 0, pen, pen, tol)
-    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_block_partition)
+    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_cross_section_partition)
 
     # 拾取被切割平面上的线段，同一个r
     partition_edges = []
@@ -725,17 +725,17 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     for i in range(1, len(z_list)):
         xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
 
-    # SKETCH-BLOCK-PARTITION
+    # SKETCH-CROSS-SECTION-PARTITION
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z[len(z_list) - 1].id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[-1]))
-    s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0, transform=t)
+    s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0, transform=t)
     geom_list = []
     # 拾取被切割平面上的线段，同一个theta
     for i in range(1, index_t):
-        geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
+        geom_list.append(s_cross_section_partition.Line(point1=points[0, i], point2=points[index_r, i]))
 
     # Partition
     # p_faces = p.faces.getByBoundingBox(0, 0, z_list[-1], pen, pen, pen)
-    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
+    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_cross_section_partition)
 
     # 建立平面，通过三个点：同一个theta的两个点和z方向上偏移1.0的点，保证平面法向量朝外，用该平面切割p.cells
     t_planes = []
@@ -1061,20 +1061,20 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
     z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
 
-    # SKETCH-BLOCK-PARTITION
-    s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0)
+    # SKETCH-CROSS-SECTION-PARTITION
+    s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0)
     center = (0, 0)
     geom_list = []
     # 拾取被切割平面上的线段，同一个theta
     for i in range(1, index_t):
-        geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
+        geom_list.append(s_cross_section_partition.Line(point1=points[0, i], point2=points[index_r, i]))
     # 拾取被切割平面上的线段，同一个r
     for i in range(1, index_r):
-        geom_list.append(s_block_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
+        geom_list.append(s_cross_section_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
 
     # Partition
     p_faces = p.faces.getByBoundingBox(0, 0, 0, pen, pen, tol)
-    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_block_partition)
+    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_cross_section_partition)
 
     # 拾取被切割平面上的线段，同一个r
     partition_edges = []
@@ -1406,17 +1406,17 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     for i in range(1, len(z_list)):
         xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=-z_list[i])
 
-    # SKETCH-BLOCK-PARTITION
+    # SKETCH-CROSS-SECTION-PARTITION
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z[len(z_list) - 1].id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, -z_list[-1]))
-    s_block_partition = model.ConstrainedSketch(name='SKETCH-BLOCK-PARTITION', sheetSize=200.0, transform=t)
+    s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0, transform=t)
     geom_list = []
     # 拾取被切割平面上的线段，同一个theta
     for i in range(1, index_t):
-        geom_list.append(s_block_partition.Line(point1=points[0, i], point2=points[index_r, i]))
+        geom_list.append(s_cross_section_partition.Line(point1=points[0, i], point2=points[index_r, i]))
 
     # Partition
     # p_faces = p.faces.getByBoundingBox(0, 0, z_list[-1], pen, pen, pen)
-    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_partition)
+    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_cross_section_partition)
 
     # 建立平面，通过三个点：同一个theta的两个点和z方向上偏移1.0的点，保证平面法向量朝外，用该平面切割p.cells
     t_planes = []
