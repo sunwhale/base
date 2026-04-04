@@ -71,16 +71,17 @@ def create_sketch_x0_burn(model, sketch_name, x0, pen, burn_offset=0.0):
     return s
 
 
-def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, burn_offset=0.0):
+def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = [x0 + deep, 0.0]
     p1 = [x0 + deep, -a]
     p2 = [x0 + deep + b, 0.0]
     e1 = s.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
     l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
-    l2 = Line2D([0.0, 0.0], [0.0, 1.0])
+    l2 = Line2D([x0 + deep - r_cut, 0.0], [x0 + deep - r_cut, 1.0])
     p3 = l1.get_intersection(l2)
     p4 = [p3[0], 0.0]
+
     s.Line(point1=p1, point2=p3)
     s.Line(point1=p3, point2=p4)
     s.Line(point1=center, point2=p2)
@@ -93,10 +94,12 @@ def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, 
         s.Line(point1=s.vertices[5].coords, point2=s.vertices[8].coords)
         s.delete(objectList=(s.geometry[4], s.geometry[7]))
 
+    center_line = s.ConstructionLine(point1=(x0 + deep - r_cut, -1e4), point2=(x0 + deep - r_cut, 1e4))
     geom_list = []
     for g in s.geometry.values():
         geom_list.append(g)
     s.rotate(centerPoint=(0.0, 0.0), angle=180.0 / n, objectList=geom_list)
+    s.assignCenterline(line=center_line)
 
     if burn_offset > 0:
         p1p = s.vertices[6].coords
@@ -766,7 +769,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
     # SKETCH-FRONT-CUT
-    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
+    s_cut, p1p, p2p = create_sketch_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
 
     # 切割头部燃道
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -952,7 +955,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByDatumPlane(datumPlane=d[partition_plane.id], cells=p.cells)
 
     # SKETCH-FRONT-CUT
-    s_cut, p1p = create_sketch_front_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
+    s_cut, p1p, p2p = create_sketch_cut(model, 'SKETCH-FRONT-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
 
     # 切割头部燃道
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
@@ -1646,9 +1649,10 @@ def partition_p1p(p, d, p1p):
         p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
 
 
-def cut_extrude(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis):
+def cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis):
+    r_cut = x0 + deep
     # SKETCH-CUT
-    s_cut, p1p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n, burn_offset)
+    s_cut, p1p, p2p = create_sketch_cut(model, 'SKETCH-CUT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
     # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=ON)
     # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cut, flipExtrudeDirection=OFF)
