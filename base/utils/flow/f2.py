@@ -44,7 +44,7 @@ from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_a
     get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces, rotate_point_around_axis
 
 
-def create_sketch_block(model, sketch_name, points, index_r, index_t):
+def create_sketch_cross_section(model, sketch_name, points, index_r, index_t):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = (0, 0)
     geom_list = []
@@ -381,13 +381,13 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-BLOCK
-    s_block = create_sketch_block(model, 'SKETCH-BLOCK', points, index_r, index_t)
+    s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
 
-    p.BaseSolidExtrude(sketch=s_block, depth=length / 2.0)
+    p.BaseSolidExtrude(sketch=s_cross_section, depth=length / 2.0)
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
     xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
@@ -450,7 +450,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
     set_names = create_block_sets_common(p, faces, dimension)
 
-    p1p = cut_extrude(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
+    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
 
     # Mirror
     if size == '1':
@@ -550,7 +550,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     )
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
-    p1p = cut_extrude(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
+    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
 
     # Mirror
     if size == '1':
@@ -632,11 +632,11 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-BLOCK
-    s_block = create_sketch_block(model, 'SKETCH-BLOCK', points, index_r, index_t)
+    s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    p.BaseSolidExtrude(sketch=s_block, depth=length / 2.0)
+    p.BaseSolidExtrude(sketch=s_cross_section, depth=length / 2.0)
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
     xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
@@ -646,7 +646,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     d = p.datums
 
     # 头部药块额外拉伸
-    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block, depth=length_front, flipExtrudeDirection=ON)
+    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cross_section, depth=length_front, flipExtrudeDirection=ON)
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -1047,13 +1047,13 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-BLOCK
-    s_block = create_sketch_block(model, 'SKETCH-BLOCK', points, index_r, index_t)
+    s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
 
-    p.BaseSolidExtrude(sketch=s_block, depth=length / 2.0)
+    p.BaseSolidExtrude(sketch=s_cross_section, depth=length / 2.0)
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
     xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
@@ -1116,7 +1116,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     set_names = create_block_sets_common(p, faces, dimension)
 
-    p1p = cut_extrude(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
+    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
 
     # Mirror
     if size == '1':
@@ -1226,7 +1226,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     )
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
-    p1p = cut_extrude(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
+    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, pen, xy_plane, y_axis)
 
     # Mirror
     if size == '1':
@@ -1317,7 +1317,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-BLOCK
-    s_block = create_sketch_block(model, 'SKETCH-BLOCK', points, index_r, index_t)
+    s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
     # Extrude
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
@@ -1328,10 +1328,10 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
     z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
     d = p.datums
-    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block, depth=length / 2.0, flipExtrudeDirection=ON)
+    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cross_section, depth=length / 2.0, flipExtrudeDirection=ON)
 
     # 头部药块额外拉伸
-    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block, depth=length_behind, flipExtrudeDirection=OFF)
+    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cross_section, depth=length_behind, flipExtrudeDirection=OFF)
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
