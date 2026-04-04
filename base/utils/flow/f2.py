@@ -100,11 +100,14 @@ def create_sketch_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, 
 
     if burn_offset > 0:
         p1p = s.vertices[6].coords
+        p2p = s.vertices[8].coords
     else:
         p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
+        p2p = rotate_point_around_origin_2d(p2, degrees_to_radians(180.0 / n))
     s.Spot(point=p1p)
+    s.Spot(point=p2p)
 
-    return s, p1p
+    return s, p1p, p2p
 
 
 def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset=0.0):
@@ -139,11 +142,14 @@ def create_sketch_front_cut(model, sketch_name, x0, deep, a, b, angle_demolding_
 
     if burn_offset > 0:
         p1p = s.vertices[6].coords
+        p2p = s.vertices[8].coords
     else:
         p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(180.0 / n))
+        p2p = rotate_point_around_origin_2d(p2, degrees_to_radians(180.0 / n))
     s.Spot(point=p1p)
+    s.Spot(point=p2p)
 
-    return s, p1p
+    return s, p1p, p2p
 
 
 def create_sketch_front_cut_revolve(model, sketch_name, t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, pen):
@@ -2217,7 +2223,7 @@ if __name__ == "__main__":
     fillet_radius = 50.0
     angle_demolding_1 = 1.5
 
-    burn_offset = 100.0
+    burn_offset = 0.0
 
     element_size = 40
     insert_czm = False
