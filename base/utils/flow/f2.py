@@ -365,26 +365,17 @@ def create_part_base(model, part_name, s_cross_section, length):
     x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
     y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
     z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
+    xy_plane_z1 = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=length / 2.0)
 
-    return p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis
+    return p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1
 
 
-def create_part_block(model, part_name, points, lines, faces, dimension):
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
-
-    origin = (0.0, 0.0, 0.0)
-    length = z_list[-1] * 2.0
-    z = np.array(z_list)
-    z_centers = (z[:-1] + z[1:]) / 2.0
-
-    s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
-
-    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base(model, part_name, s_cross_section, length)
-
-    # SKETCH-CROSS-SECTION-PARTITION
+def part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r, z_list):
     s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0)
     center = (0, 0)
     geom_list = []
+
+    # 面切割
     # 拾取被切割平面上的线段，同一个theta
     for i in range(1, index_t):
         geom_list.append(s_cross_section_partition.Line(point1=points[0, i], point2=points[index_r, i]))
@@ -392,10 +383,10 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     for i in range(1, index_r):
         geom_list.append(s_cross_section_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
 
-    # Partition
     p_faces = p.faces.getByBoundingBox(0, 0, 0, PEN, PEN, TOL)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_cross_section_partition)
 
+    # 体切割
     # 拾取被切割平面上的线段，同一个r
     partition_edges = []
     line_keys = []
@@ -429,10 +420,26 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
             partition_edges.append(edge_sequence[0])
     p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
 
+
+def part_partition_z(p, d, z_list):
     xy_plane_z = {}
     for i in range(1, len(z_list) - 1):
         xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
+    return xy_plane_z
+
+
+def create_part_block(model, part_name, points, lines, faces, dimension):
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+
+    origin = (0.0, 0.0, 0.0)
+    length = z_list[-1] * 2.0
+    z = np.array(z_list)
+    z_centers = (z[:-1] + z[1:]) / 2.0
+
+    s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
+
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_cross_section, length)
 
     set_names = create_block_sets_common(p, faces, dimension)
 
@@ -486,25 +493,10 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
 
 def create_part_gap(model, part_name, points, lines, faces, dimension):
-    z_list = dimension['z_list']
-    deep = dimension['deep']
-    x0 = dimension['x0']
-    length_up = dimension['length_up']
-    width = dimension['width']
-    angle_demolding_1 = dimension['angle_demolding_1']
-    angle_demolding_2 = dimension['angle_demolding_2']
-    fillet_radius = dimension['fillet_radius']
-    a = dimension['a']
-    b = dimension['b']
-    size = dimension['size']
-    index_r = dimension['index_r']
-    index_t = dimension['index_t']
-    element_size = dimension['element_size']
-    burn_offset = dimension['burn_offset']
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+
     origin = (0.0, 0.0, 0.0)
     length = z_list[-2] * 2.0
-    PEN = 1e4
-    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
