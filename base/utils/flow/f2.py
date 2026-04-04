@@ -631,7 +631,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
-    # SKETCH-BLOCK
+    # SKETCH-CROSS-SECTION
     s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
     # Extrude
@@ -1046,7 +1046,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
-    # SKETCH-BLOCK
+    # SKETCH-CROSS-SECTION
     s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
     # Extrude
@@ -1316,7 +1316,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
-    # SKETCH-BLOCK
+    # SKETCH-CROSS-SECTION
     s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
     # Extrude
