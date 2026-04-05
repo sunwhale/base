@@ -500,16 +500,8 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     # 创建面
     create_block_surface_common(p, points, dimension)
 
-    p1 = [x0 + deep + b + burn_offset, 0.0]
-    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
-    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, x1 * 1.1, y1, length / 2.0)
-    p_faces = get_same_area_faces(p, p_faces)
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
-
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
-    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
+    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -594,10 +586,10 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     p_faces = p.faces.getByBoundingBox(0, TOL, 0, x1 * 1.1, y1, z_list[-1])
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
+        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
-    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
+    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -634,16 +626,8 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # SKETCH-CROSS-SECTION
     s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
-    # Extrude
-    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    p.BaseSolidExtrude(sketch=s_cross_section, depth=length / 2.0)
-    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-    yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
-    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
-    y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
-    z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
-    d = p.datums
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_cross_section, length)
 
     # 头部药块额外拉伸
     p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cross_section, depth=length_front, flipExtrudeDirection=ON)
@@ -651,13 +635,13 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_front_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_front_outer(model, 'SKETCH-FRONT-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, PEN)
-
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_front_outer, angle=360.0, flipRevolveDirection=ON)
 
     # 草图切割环向面
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_front_outer_offset = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
+    # 创建面SURFACE-OUTER
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for g in s_front_outer_offset.geometry.values()[:6]:
         z, x = g.pointOn
@@ -665,10 +649,10 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         angle = beta / 2.0
         point_rot = rotate_point_around_vector(point, [0, 0, 1], angle)
         p_faces += p.faces.findAt((point_rot,))
-        # p.DatumPointByCoordinate(coords=point_rot)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
+    # 面切割
     g = s_front_outer_offset.geometry
     faces_xz_plane = {}
     for i in range(1, index_r):
@@ -686,10 +670,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     p_faces = p.faces.getByBoundingBox(0, 0, -PEN, PEN, TOL, PEN)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_front_outer_offset)
-
-    # print(beta)
-    # print(180.0 / n / 2.0)
-    # return p
 
     # 基于p4点所在的半径拾取sweep_edge
     x, y = polar_to_cartesian(p4[1], TOL)
@@ -768,8 +748,10 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
-    # SKETCH-FRONT-CUT
+    # 星槽切割
     s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-FRONT-SLOT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
+
+    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
 
     # 切割头部燃道
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
@@ -837,7 +819,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p_faces = p.faces.getByBoundingBox(0, TOL, -r_cut - b, x1 * 1.1, y1, length / 2.0)
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
+        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
 
     # xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n / 2.0)
     # p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
@@ -855,7 +837,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
-    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
+    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
     create_face_set_from_surface(p)
 
@@ -986,7 +968,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p_faces = p.faces.getByBoundingBox(0, TOL, -r_cut - b, x1 * 1.1, y1, z_list[-1])
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
+        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
 
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
@@ -995,7 +977,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
-    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT'], 'SURFACE-INNER')
+    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
     create_face_set_from_surface(p)
 
@@ -1142,7 +1124,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     p_faces = p.faces.getByBoundingBox(0, TOL, 0, x1 * 1.1, y1, length / 2.0)
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
+        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
@@ -1156,8 +1138,8 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     given_surface_names = list(p.surfaces.keys())
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
     if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-CUT-2')
-    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT', 'SURFACE-CUT-2'], 'SURFACE-INNER')
+        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT-2')
+    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT', 'SURFACE-SLOT-2'], 'SURFACE-INNER')
 
     create_face_set_from_surface(p)
 
@@ -1250,7 +1232,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     p_faces = p.faces.getByBoundingBox(0, TOL, 0, x1 * 1.1, y1, z_list[-1])
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-CUT')
+        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
@@ -1267,8 +1249,8 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     given_surface_names = list(p.surfaces.keys())
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
     if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-CUT-2')
-    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-CUT', 'SURFACE-CUT-2'], 'SURFACE-INNER')
+        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT-2')
+    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT', 'SURFACE-SLOT-2'], 'SURFACE-INNER')
 
     create_face_set_from_surface(p)
 
@@ -1651,11 +1633,8 @@ def part_partition_p1p(p, d, p1p):
 
 def cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis):
     r_cut = x0 + deep
-    # SKETCH-SLOT
     s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
-    # CutExtrude
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
-    # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=OFF)
 
     # SKETCH-BURN-X0
     s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, PEN, burn_offset)
@@ -1752,6 +1731,7 @@ def create_block_surface_common(p, points, dimension):
     z_list = dimension['z_list']
     index_r = dimension['index_r']
     index_t = dimension['index_t']
+    deep = dimension['deep']
     burn_offset = dimension['burn_offset']
     length = z_list[-1] * 2.0
 
@@ -1839,6 +1819,14 @@ def create_block_surface_common(p, points, dimension):
             p_faces += p.faces[face_id:face_id + 1]
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
+
+    p1 = [x0 + deep + b + burn_offset, 0.0]
+    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
+    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, x1 * 1.1, y1, length / 2.0)
+    p_faces = get_same_area_faces(p, p_faces)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
 
 
 def create_gap_surface_common(p, points, dimension):
