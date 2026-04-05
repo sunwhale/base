@@ -1049,11 +1049,14 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=OFF)
 
     # z剖分
-    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z1.id], cells=p.cells)
-    cut_edges = (
-        p.edges.findAt((lines['02-12'][3][0], lines['02-12'][3][1], length / 2.0)),
-    )
-    p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
+    part_partition_z(p, d, z_list)
+
+    # theta剖分
+    point1 = p.DatumPointByCoordinate(coords=(lines['02-12'][1][0], lines['02-12'][1][1], length / 2.0))
+    point2 = p.DatumPointByCoordinate(coords=(lines['02-12'][2][0], lines['02-12'][2][1], length / 2.0))
+    point3 = p.DatumPointByCoordinate(coords=(lines['02-12'][1][0], lines['02-12'][1][1], 0.0))
+    partition_plane = p.DatumPlaneByThreePoints(point1=d[point1.id], point2=d[point2.id], point3=d[point3.id])
+    p.PartitionCellByDatumPlane(datumPlane=d[partition_plane.id], cells=p.cells)
 
     # 星槽切割
     r_cut = x0 + deep
@@ -1078,16 +1081,9 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
 
+    # 创建面
     create_gap_surface_common(p, points, dimension)
-
-    p1 = [x0 + deep + b, 0.0]
-    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
-    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, TOL, 0, x1 * 1.1, y1, z_list[-1])
-    p_faces = get_same_area_faces(p, p_faces)
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
-
+    create_surface_slot(p, p2p, 0.0, z_list[-1])
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
     # 旋转切割内燃道
@@ -1098,8 +1094,8 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     given_surface_names = list(p.surfaces.keys())
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
     if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT-2')
-    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT', 'SURFACE-SLOT-2'], 'SURFACE-INNER')
+        p.Surface(side1Faces=p_faces, name='SURFACE-REVOLVE')
+    combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT', 'SURFACE-REVOLVE'], 'SURFACE-INNER')
 
     # 创建集合（面）
     create_face_set_from_surface(p)
