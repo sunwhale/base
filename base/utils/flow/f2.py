@@ -642,15 +642,18 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_cross_section, length)
 
-    # 头部药块额外拉伸
+    # 生成额外基础体，z方向长度length_front
     p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cross_section, depth=length_front, flipExtrudeDirection=ON)
+
+    # z剖分
+    part_partition_z(p, d, z_list)
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_front_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_front_outer(model, 'SKETCH-FRONT-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, PEN)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_front_outer, angle=360.0, flipRevolveDirection=ON)
 
-    # 草图切割环向面
+    # OUTER-OFFSET
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_front_outer_offset = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
@@ -665,7 +668,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # if p_faces:
     #     p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
-    # 面切割
+    # 面剖分OUTER-OFFSET
     g = s_front_outer_offset.geometry
     faces_xz_plane = {}
     for i in range(1, index_r):
@@ -712,23 +715,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
             partition_edges.append(edge_sequence)
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
-    # 建立不同z的xy_plane
-    xy_plane_z = {}
-    for i in range(1, len(z_list)):
-        xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
-
-    # SKETCH-CROSS-SECTION-PARTITION
-    t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z[len(z_list) - 1].id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, z_list[-1]))
-    s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0, transform=t)
-    geom_list = []
-    # 拾取被切割平面上的线段，同一个theta
-    for i in range(1, index_t):
-        geom_list.append(s_cross_section_partition.Line(point1=points[0, i], point2=points[index_r, i]))
-
-    # Partition
-    # p_faces = p.faces.getByBoundingBox(0, 0, z_list[-1], PEN, PEN, PEN)
-    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_cross_section_partition)
-
+    # theta剖分
     # 建立平面，通过三个点：同一个theta的两个点和z方向上偏移1.0的点，保证平面法向量朝外，用该平面切割p.cells
     t_planes = []
     for j in range(1, index_t):
@@ -745,18 +732,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     cells = get_same_volume_cells(p, cells)
     for pa in faces_xz_plane[index_r - 1]:
         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
-        # center = (0.0, 0.0, pa[0])
-        # p.DatumPointByCoordinate(coords=center)
-        # plane_1 = Plane(center, (0.0, 0.0, 1.0))
-        # circle = Circle3D(center, abs(pa[1]), plane_1)
-        # for j in [1]:
-        #     plane_2 = Plane(center, (0.0, 1.0, 0.0))
-        #     pb = plane_2.intersection_with_circle(circle)
-        #     if pb:
-        #         p.DatumPointByCoordinate(coords=pb[0])
-        #         p.DatumPointByCoordinate(coords=pb[1])
-        # c = p.cells.findAt((pb[0],))
-        # cells += c
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
@@ -769,9 +744,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, PEN, burn_offset)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
-
-    for i in range(1, len(z_list) - 1):
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
 
     # 创建集合（体），SET-CELL-INSULATION
     cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-GRAIN', ['SET-CELL-GRAIN'])
@@ -2214,7 +2186,7 @@ if __name__ == "__main__":
     element_size = 40
     insert_czm = False
 
-    size = '1'
+    size = '1/2'
 
     front_ref_length = 509.0
     behind_ref_length = 500.0
