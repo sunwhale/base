@@ -655,15 +655,15 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     s_front_outer_offset = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     # 创建面SURFACE-OUTER
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for g in s_front_outer_offset.geometry.values()[:6]:
-        z, x = g.pointOn
-        point = (x, 0.0, z)
-        angle = beta / 2.0
-        point_rot = rotate_point_around_vector(point, [0, 0, 1], angle)
-        p_faces += p.faces.findAt((point_rot,))
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
+    # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    # for g in s_front_outer_offset.geometry.values()[:6]:
+    #     z, x = g.pointOn
+    #     point = (x, 0.0, z)
+    #     angle = beta / 2.0
+    #     point_rot = rotate_point_around_vector(point, [0, 0, 1], angle)
+    #     p_faces += p.faces.findAt((point_rot,))
+    # if p_faces:
+    #     p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
     # 面切割
     g = s_front_outer_offset.geometry
@@ -693,7 +693,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     partition_edges = []
     for g in s_front_outer_offset.geometry.values()[2:index_r * 6]:
         z, x = g.pointOn
-        # p.DatumPointByCoordinate(coords=(x, 0.0, z))
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
             partition_edges.append(edge_sequence)
@@ -701,7 +700,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 基于p4点所在的半径拾取sweep_edge
     x, y = polar_to_cartesian(p4[1], TOL)
-    x = min(x, points[index_r, 0][0])
+    # x = min(x, points[index_r, 0][0])
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))
 
     # 拾取分段连线
@@ -763,16 +762,11 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 星槽切割
     s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-FRONT-SLOT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
-
-    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
-
-    # 切割头部燃道
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
 
-    # SKETCH-BURN-X0
+    # 燃面退移x0
     s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, PEN, burn_offset)
-    # x0方向燃面退移
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
 
@@ -802,34 +796,30 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
-    # 拾取内部切割后的轮廓曲线
+    # 拾取星槽切割后的轮廓曲线
     p_edges = []
     for z_center in z_centers:
         edge = p.edges.findAt((p1p[0], p1p[1], z_center))
         if edge is not None:
             p_edges.append(edge)
-        p.DatumPointByCoordinate(coords=(p1p[0], p1p[1], z_center))
-
+        # p.DatumPointByCoordinate(coords=(p1p[0], p1p[1], z_center))
     point1 = (x0 + deep - r_cut, 0.0)
     point2 = (x0 + deep - r_cut, 1.0)
     point3 = rotate_point_around_origin_2d(point1, beta / 2.0)
     point4 = rotate_point_around_origin_2d(point2, beta / 2.0)
     point5 = rotate_point_around_axis((p1p[0], p1p[1], 0.0), (point3[0], point3[1], 0.0), (point4[0], point4[1], 0.0), TOL)
-    p.DatumPointByCoordinate(coords=point5)
-
+    # p.DatumPointByCoordinate(coords=point5)
     edge = p.edges.findAt(point5)
     if edge is not None:
         p_edges.append(edge)
 
+    # 星槽剖分
     if p_edges:
         p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
     # 创建面
     create_surface_common(p, points, dimension)
-    create_surface_slot(p, p2p, -r_cut - b, z_list[-1])
-
-    # xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n / 2.0)
-    # p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
+    create_surface_slot(p, p2p, -r_cut - b - burn_offset, z_list[-1])
 
     if size == '1':
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
@@ -852,10 +842,10 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
 
-    generate_part_mesh(p, element_size=element_size)
-
-    if insert_czm:
-        insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
+    # generate_part_mesh(p, element_size=element_size)
+    #
+    # if insert_czm:
+    #     insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
 
     set_section_common(p)
     p.setValues(geometryRefinement=EXTRA_FINE)
@@ -2214,7 +2204,7 @@ if __name__ == "__main__":
     fillet_radius = 50.0
     angle_demolding_1 = 1.5
 
-    burn_offset = 0.0
+    burn_offset = 100.0
 
     element_size = 40
     insert_czm = False
@@ -2317,7 +2307,7 @@ if __name__ == "__main__":
     # is_create_p_block_penult = True
     # is_create_p_gap_penult = True
     is_create_p_block_front = True
-    is_create_p_gap_front = True
+    # is_create_p_gap_front = True
     # is_create_p_block_behind = True
     # is_create_p_gap_behind = True
     # is_assemble = True
