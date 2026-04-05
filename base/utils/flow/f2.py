@@ -455,11 +455,11 @@ def part_partition_z(p, d, z_list):
     return xy_plane_z
 
 
-def create_surface_slot(p, p2p, length):
-    x1 = p2p[0]
-    y1 = p2p[1]
-
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, x1 * 1.1, y1, length / 2.0)
+def create_surface_slot(p, ref_point, z_length):
+    x1 = ref_point[0]
+    y1 = ref_point[1]
+    z1 = z_length
+    p_faces = p.faces.getByBoundingBox(0, TOL, 0, x1 * 1.1, y1, z1)
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
@@ -515,7 +515,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_surface_common(p, points, dimension)
-    create_surface_slot(p, p2p, length)
+    create_surface_slot(p, p2p, length / 2.0)
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
@@ -577,7 +577,13 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
     # 星槽切割
-    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
+    r_cut = x0 + deep
+    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
+
+    # 燃面退移x0
+    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, PEN, burn_offset)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
 
     # 镜像
     if size == '1':
@@ -595,15 +601,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_gap_surface_common(p, points, dimension)
-
-    p1 = [x0 + deep + b, 0.0]
-    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
-    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, TOL, 0, x1 * 1.1, y1, z_list[-1])
-    p_faces = get_same_area_faces(p, p_faces)
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
-
+    create_surface_slot(p, p2p, z_list[-1])
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
