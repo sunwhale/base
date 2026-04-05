@@ -889,15 +889,9 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
 
+    # 创建面
     create_gap_surface_common(p, points, dimension)
-
-    p1 = [x0 + deep + b, 0.0]
-    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
-    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, TOL, -r_cut - b, x1 * 1.1, y1, z_list[-1])
-    p_faces = get_same_area_faces(p, p_faces)
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
+    create_surface_slot(p, p2p, -r_cut - b - burn_offset, z_list[-1])
 
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
@@ -908,6 +902,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
+    # 创建集合（面）
     create_face_set_from_surface(p)
 
     # 星槽剖分
@@ -917,15 +912,18 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_slot.id], cells=p.cells.getByBoundingBox(0, -PEN, 0, PEN, PEN, PEN))
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
+    # 创建集合（体），SET-CELL-GLUE-A
+    set_name = 'SET-CELL-GLUE-A'
+    p.Set(cells=p.cells, name=set_name)
+
     # 拓扑层面忽略外表面的公共边
     p_faces = p.surfaces['SURFACE-OUTER'].faces.getByBoundingBox(0, -PEN, -PEN, PEN, PEN, 0)
     ignore_common_edges_of_faces(p, p_faces)
 
-    set_name = 'SET-CELL-GLUE-A'
-    p.Set(cells=p.cells, name=set_name)
+    # 生成网格
+    generate_part_mesh(p, element_size=element_size)
 
-    # generate_part_mesh(p, element_size=element_size)
-
+    # 赋予SECTION属性
     set_section_common(p)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
