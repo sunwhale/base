@@ -527,7 +527,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
 
-    # 剖分
+    # 星槽剖分
     part_partition_p1p(p, d, p1p)
 
     # 生成网格
@@ -611,7 +611,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     set_name = 'SET-CELL-GLUE-A'
     p.Set(cells=p.cells, name=set_name)
 
-    # 剖分
+    # 星槽剖分
     part_partition_p1p(p, d, p1p)
 
     # 生成网格
@@ -827,95 +827,54 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
 
 def create_part_gap_front(model, part_name, points, lines, faces, dimension):
-    z_list = dimension['z_list']
-    deep = dimension['deep']
-    x0 = dimension['x0']
-    length_up = dimension['length_up']
-    width = dimension['width']
-    angle_demolding_1 = dimension['angle_demolding_1']
-    angle_demolding_2 = dimension['angle_demolding_2']
-    fillet_radius = dimension['fillet_radius']
-    a = dimension['a']
-    b = dimension['b']
-    size = dimension['size']
-    index_r = dimension['index_r']
-    index_t = dimension['index_t']
-    element_size = dimension['element_size']
-    burn_offset = dimension['burn_offset']
-    r_cut = dimension['r_cut']
-    length_front = dimension['length_front']
-    p0 = dimension['p0']
-    theta0_deg = dimension['theta0_deg']
-    p3 = dimension['p3']
-    theta3_deg = dimension['theta3_deg']
-    theta_in_deg = dimension['theta_in_deg']
-    r1 = dimension['r1']
-    r2 = dimension['r2']
-    r3 = dimension['r3']
+    # 变量赋值
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+    r_cut, length_front, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_front(dimension)
 
+    # 基本参数
     origin = (0.0, 0.0, 0.0)
     length = z_list[-2] * 2.0
-    PEN = 1e4
-    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-GAP-Z
     s_gap_z = create_sketch_gap_z_front_behind(model, 'SKETCH-GAP-Z-FRONT-BEHIND', points)
 
-    # Extrude
-    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    p.BaseSolidExtrude(sketch=s_gap_z, depth=length / 2.0)
-    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-    yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
-    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-    xy_plane_z1 = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=length / 2.0)
-    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
-    y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
-    z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
-    d = p.datums
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_gap_z, length)
 
-    # 头部药块额外拉伸
+    # 生成额外基础体，z方向长度length_front
     p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_z, depth=length_front, flipExtrudeDirection=ON)
-
-    # SKETCH-BLOCK-CUT-REVOLVE
-    t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_front_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_front_outer(model, 'SKETCH-FRONT-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, PEN)
-    # 旋转切割头部外轮廓
-    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_front_outer, angle=360.0, flipRevolveDirection=ON)
-
-    # 草图切割环向面
-    t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_front_outer_offset = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
     s_gap_t = create_sketch_gap_t_front_behind(model, 'SKETCH-GAP-T-FRONT-BEHIND', t, points)
 
+    # 生成额外基础体，z方向长度（z_list[-1] - z_list[-2]）
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=OFF)
 
     # 旋转切割头部外轮廓
+    t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s_front_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_front_outer(model, 'SKETCH-FRONT-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, PEN)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_front_outer, angle=360.0, flipRevolveDirection=ON)
 
-    # Partition
-    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z1.id], cells=p.cells)
+    # z剖分
+    part_partition_z(p, d, z_list)
 
+    # theta剖分
     point1 = p.DatumPointByCoordinate(coords=(lines['02-12'][1][0], lines['02-12'][1][1], length / 2.0))
     point2 = p.DatumPointByCoordinate(coords=(lines['02-12'][2][0], lines['02-12'][2][1], length / 2.0))
     point3 = p.DatumPointByCoordinate(coords=(lines['02-12'][1][0], lines['02-12'][1][1], 0.0))
     partition_plane = p.DatumPlaneByThreePoints(point1=d[point1.id], point2=d[point2.id], point3=d[point3.id])
     p.PartitionCellByDatumPlane(datumPlane=d[partition_plane.id], cells=p.cells)
 
-    # SKETCH-FRONT-CUT
+    # 星槽切割
     s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-FRONT-SLOT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
-
-    # 切割头部燃道
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
 
-    # SKETCH-BURN-X0
+    # 燃面退移x0
     s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, PEN, burn_offset)
-    # x0方向燃面退移
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
 
@@ -951,11 +910,11 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     create_face_set_from_surface(p)
 
-    # Partition
-    p1 = [x0 + deep, -a]
-    offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
-    yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
-    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells.getByBoundingBox(0, -PEN, 0, PEN, PEN, PEN))
+    # 星槽剖分
+    offset = p1p[0]
+    if offset >= p.cells.getBoundingBox()['low'][0]:
+        yz_plane_slot = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
+        p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_slot.id], cells=p.cells.getByBoundingBox(0, -PEN, 0, PEN, PEN, PEN))
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 拓扑层面忽略外表面的公共边
@@ -965,7 +924,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     set_name = 'SET-CELL-GLUE-A'
     p.Set(cells=p.cells, name=set_name)
 
-    generate_part_mesh(p, element_size=element_size)
+    # generate_part_mesh(p, element_size=element_size)
 
     set_section_common(p)
 
@@ -1592,13 +1551,12 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
 
 
 def part_partition_p1p(p, d, p1p):
-    # Partition
     # p1 = [x0 + deep, -a]
     # offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
     offset = p1p[0]
     if offset >= p.cells.getBoundingBox()['low'][0]:
-        yz_plane_2 = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
-        p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_2.id], cells=p.cells)
+        yz_plane_slot = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
+        p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_slot.id], cells=p.cells)
 
 
 def cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis):
@@ -2276,11 +2234,11 @@ if __name__ == "__main__":
     is_assemble = False
 
     # is_create_p_block = True
-    # is_create_p_gap = True
+    is_create_p_gap = True
     # is_create_p_block_penult = True
     # is_create_p_gap_penult = True
-    is_create_p_block_front = True
-    # is_create_p_gap_front = True
+    # is_create_p_block_front = True
+    is_create_p_gap_front = True
     # is_create_p_block_behind = True
     # is_create_p_gap_behind = True
     # is_assemble = True
