@@ -1026,59 +1026,45 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
 
 def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
-    z_list = dimension['z_list']
-    deep = dimension['deep']
-    x0 = dimension['x0']
-    length_up = dimension['length_up']
-    width = dimension['width']
-    angle_demolding_1 = dimension['angle_demolding_1']
-    angle_demolding_2 = dimension['angle_demolding_2']
-    fillet_radius = dimension['fillet_radius']
-    a = dimension['a']
-    b = dimension['b']
-    size = dimension['size']
-    index_r = dimension['index_r']
-    index_t = dimension['index_t']
-    element_size = dimension['element_size']
-    burn_offset = dimension['burn_offset']
+    # 变量赋值
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+
+    # 基本参数
     origin = (0.0, 0.0, 0.0)
     length = z_list[-2] * 2.0
-    PEN = 1e4
-    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
-    # SKETCH-GAP
+    # SKETCH-GAP-Z
     s_gap_z = create_sketch_gap_z(model, 'SKETCH-GAP-Z', points)
 
-    # Extrude
-    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    p.BaseSolidExtrude(sketch=s_gap_z, depth=length / 2.0)
-    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-    yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
-    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-    xy_plane_z1 = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=length / 2.0)
-    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
-    y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
-    z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
-    d = p.datums
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_gap_z, length)
 
-    # SKETCH-GAP
+    # SKETCH-GAP-T
     t = p.MakeSketchTransform(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, length / 2.0))
     s_gap_t = create_sketch_gap_t(model, 'SKETCH-GAP-T', t, points)
 
+    # 生成基础体
     p.SolidExtrude(sketchPlane=d[xy_plane_z1.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_gap_t, depth=(z_list[-1] - z_list[-2]), flipExtrudeDirection=OFF)
 
-    # Partition
+    # z剖分
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z1.id], cells=p.cells)
     cut_edges = (
         p.edges.findAt((lines['02-12'][3][0], lines['02-12'][3][1], length / 2.0)),
     )
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
-    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
+    # 星槽切割
+    r_cut = x0 + deep
+    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
 
-    # Mirror
+    # 燃面退移x0
+    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, burn_offset)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
+
+    # 镜像
     if size == '1':
         p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
         p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
@@ -1104,11 +1090,6 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
-    set_name = 'SET-CELL-GLUE-A'
-    p.Set(cells=p.cells, name=set_name)
-
-    part_partition_p1p(p, d, p1p)
-
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b)
@@ -1120,10 +1101,20 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
         p.Surface(side1Faces=p_faces, name='SURFACE-SLOT-2')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT', 'SURFACE-SLOT-2'], 'SURFACE-INNER')
 
+    # 创建集合（面）
     create_face_set_from_surface(p)
 
+    # 创建集合（体）
+    set_name = 'SET-CELL-GLUE-A'
+    p.Set(cells=p.cells, name=set_name)
+
+    # 星槽剖分
+    part_partition_p1p(p, d, p1p)
+
+    # 生成网格
     generate_part_mesh(p, element_size=element_size)
 
+    # 赋予SECTION属性
     set_section_common(p)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
@@ -2175,7 +2166,7 @@ if __name__ == "__main__":
     # is_create_p_block = True
     # is_create_p_gap = True
     is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
+    is_create_p_gap_penult = True
     # is_create_p_block_front = True
     # is_create_p_gap_front = True
     # is_create_p_block_behind = True
