@@ -796,6 +796,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
+    # 星槽剖分
     # 拾取星槽切割后的轮廓曲线
     p_edges = []
     for z_center in z_centers:
@@ -812,8 +813,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     edge = p.edges.findAt(point5)
     if edge is not None:
         p_edges.append(edge)
-
-    # 星槽剖分
     if p_edges:
         p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
@@ -836,18 +835,25 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
+    # 创建集合（面）
     create_face_set_from_surface(p)
 
+    # 更新集合（体），处理镜像
     create_block_sets_same_volume(p)
 
+    # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
 
-    # generate_part_mesh(p, element_size=element_size)
-    #
-    # if insert_czm:
-    #     insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
+    # 生成网格
+    generate_part_mesh(p, element_size=element_size)
 
+    # 插入内聚力单元
+    if insert_czm:
+        insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
+
+    # 赋予SECTION属性
     set_section_common(p)
+
     p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
