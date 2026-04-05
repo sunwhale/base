@@ -353,6 +353,32 @@ def get_local_variables(dimension):
             burn_offset)
 
 
+def get_local_variables_front(dimension):
+    r_cut = dimension['r_cut']
+    length_front = dimension['length_front']
+    p0 = dimension['p0']
+    theta0_deg = dimension['theta0_deg']
+    p3 = dimension['p3']
+    theta3_deg = dimension['theta3_deg']
+    theta_in_deg = dimension['theta_in_deg']
+    beta = dimension['beta']
+    r1 = dimension['r1']
+    r2 = dimension['r2']
+    r3 = dimension['r3']
+
+    return (r_cut,
+            length_front,
+            p0,
+            theta0_deg,
+            p3,
+            theta3_deg,
+            theta_in_deg,
+            beta,
+            r1,
+            r2,
+            r3)
+
+
 def create_part_base(model, part_name, sketch, length):
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
@@ -432,28 +458,28 @@ def part_partition_z(p, d, z_list):
 def create_part_block(model, part_name, points, lines, faces, dimension):
     # 变量赋值
     z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
-    
+
     # 基本参数
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
-    
+
     # SKETCH-CROSS-SECTION
     s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
-    
+
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_cross_section, length)
-    
+
     # 截面剖分
     part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r)
-    
+
     # z剖分
     part_partition_z(p, d, z_list)
-    
+
     # 创建集合（体）
     set_names = create_block_sets_common(p, faces, dimension)
-    
+
     # 星槽切割
     p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
 
@@ -470,10 +496,10 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
         pass
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
-    
+
     # 创建面
     create_block_surface_common(p, points, dimension)
-    
+
     p1 = [x0 + deep + b + burn_offset, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
     y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
@@ -487,23 +513,23 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
     # 创建集合（面）
     create_face_set_from_surface(p)
-    
+
     # 更新集合（体），处理镜像
     create_block_sets_same_volume(p)
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
-    
+
     # 剖分
     part_partition_p1p(p, d, p1p)
-    
+
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
 
     # 插入内聚力单元
     if insert_czm:
         insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
-    
+
     # 赋予SECTION属性
     set_section_common(p)
 
@@ -595,38 +621,13 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
 
 
 def create_part_block_front(model, part_name, points, lines, faces, dimension):
-    z_list = dimension['z_list']
-    deep = dimension['deep']
-    x0 = dimension['x0']
-    length_up = dimension['length_up']
-    width = dimension['width']
-    angle_demolding_1 = dimension['angle_demolding_1']
-    angle_demolding_2 = dimension['angle_demolding_2']
-    fillet_radius = dimension['fillet_radius']
-    a = dimension['a']
-    b = dimension['b']
-    size = dimension['size']
-    index_r = dimension['index_r']
-    index_t = dimension['index_t']
-    element_size = dimension['element_size']
-    insert_czm = dimension['insert_czm']
-    burn_offset = dimension['burn_offset']
-    r_cut = dimension['r_cut']
-    length_front = dimension['length_front']
-    p0 = dimension['p0']
-    theta0_deg = dimension['theta0_deg']
-    p3 = dimension['p3']
-    theta3_deg = dimension['theta3_deg']
-    theta_in_deg = dimension['theta_in_deg']
-    beta = dimension['beta']
-    r1 = dimension['r1']
-    r2 = dimension['r2']
-    r3 = dimension['r3']
+    # 变量赋值
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+    r_cut, length_front, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_front(dimension)
 
+    # 基本参数
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
-    PEN = 1e4
-    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
