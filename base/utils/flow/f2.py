@@ -47,6 +47,9 @@ PEN = 1e4
 TOL = 1e-6
 
 
+# p.DatumPointByCoordinate(coords=(0, 0, 0))
+
+
 def create_sketch_cross_section(model, sketch_name, points, index_r, index_t):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
     center = (0, 0)
@@ -458,7 +461,7 @@ def part_partition_z(p, d, z_list):
 def create_surface_slot(p, ref_point, z_begin, z_end):
     x1 = ref_point[0]
     y1 = ref_point[1]
-    p_faces = p.faces.getByBoundingBox(0, TOL, z_begin, x1 * 1.1, y1, z_end)
+    p_faces = p.faces.getByBoundingBox(0, TOL, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
@@ -932,102 +935,40 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
 
 def create_part_block_penult(model, part_name, points, lines, faces, dimension):
-    z_list = dimension['z_list']
-    deep = dimension['deep']
-    x0 = dimension['x0']
-    length_up = dimension['length_up']
-    width = dimension['width']
-    angle_demolding_1 = dimension['angle_demolding_1']
-    angle_demolding_2 = dimension['angle_demolding_2']
-    fillet_radius = dimension['fillet_radius']
-    a = dimension['a']
-    b = dimension['b']
-    size = dimension['size']
-    index_r = dimension['index_r']
-    index_t = dimension['index_t']
-    element_size = dimension['element_size']
-    insert_czm = dimension['insert_czm']
-    burn_offset = dimension['burn_offset']
+    # 变量赋值
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+
+    # 基本参数
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
-    PEN = 1e4
-    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-CROSS-SECTION
     s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
-    # Extrude
-    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    d = p.datums
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_cross_section, length)
 
-    p.BaseSolidExtrude(sketch=s_cross_section, depth=length / 2.0)
-    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-    yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
-    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
-    y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
-    z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
+    # 截面剖分
+    part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r)
 
-    # SKETCH-CROSS-SECTION-PARTITION
-    s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0)
-    center = (0, 0)
-    geom_list = []
-    # 拾取被切割平面上的线段，同一个theta
-    for i in range(1, index_t):
-        geom_list.append(s_cross_section_partition.Line(point1=points[0, i], point2=points[index_r, i]))
-    # 拾取被切割平面上的线段，同一个r
-    for i in range(1, index_r):
-        geom_list.append(s_cross_section_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
+    # z剖分
+    part_partition_z(p, d, z_list)
 
-    # Partition
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, PEN, PEN, TOL)
-    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_cross_section_partition)
-
-    # 拾取被切割平面上的线段，同一个r
-    partition_edges = []
-    line_keys = []
-    for i in range(1, index_r):
-        for j in range(0, index_t):
-            line_key = '%s%s-%s%s' % (i, j, i, j + 1)
-            line_keys.append(line_key)
-
-    for line_key in line_keys:
-        line_middle_point = lines[line_key][3]
-        x, y = line_middle_point
-        edge_sequence = p.edges.findAt(((x, y, 0),))
-        if len(edge_sequence) > 0:
-            partition_edges.append(edge_sequence[0])
-    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
-
-    # 拾取被切割平面上的线段，同一个theta
-    partition_edges = []
-    line_keys = []
-
-    for j in range(1, index_t):
-        for i in range(0, index_r):
-            line_key = '%s%s-%s%s' % (i, j, i + 1, j)
-            line_keys.append(line_key)
-
-    for line_key in line_keys:
-        line_middle_point = lines[line_key][3]
-        x, y = line_middle_point
-        edge_sequence = p.edges.findAt(((x, y, 0),))
-        if len(edge_sequence) > 0:
-            partition_edges.append(edge_sequence[0])
-    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
-
-    xy_plane_z = {}
-    for i in range(1, len(z_list) - 1):
-        xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
-
+    # 创建集合（体）
     set_names = create_block_sets_common(p, faces, dimension)
 
-    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
+    # 星槽切割
+    r_cut = x0 + deep
+    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
 
-    # Mirror
+    # 燃面退移x0
+    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, PEN, burn_offset)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
+
+    # 镜像
     if size == '1':
         p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
         p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
@@ -1041,21 +982,13 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
 
+    # 更新集合（体），处理镜像
     create_block_sets_same_volume(p)
 
+    # 创建面
     create_surface_common(p, points, dimension)
-
-    p1 = [x0 + deep + b, 0.0]
-    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
-    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, TOL, 0, x1 * 1.1, y1, length / 2.0)
-    p_faces = get_same_area_faces(p, p_faces)
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
-
+    create_surface_slot(p, p2p, 0.0, z_list[-1])
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
-
-    part_partition_p1p(p, d, p1p)
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -1068,15 +1001,23 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
         p.Surface(side1Faces=p_faces, name='SURFACE-SLOT-2')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT', 'SURFACE-SLOT-2'], 'SURFACE-INNER')
 
+    # 创建集合（面）
     create_face_set_from_surface(p)
 
+    # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
 
+    # 星槽剖分
+    part_partition_p1p(p, d, p1p)
+
+    # 生成网格
     generate_part_mesh(p, element_size=element_size)
 
+    # 插入内聚力单元
     if insert_czm:
         insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
 
+    # 赋予SECTION属性
     set_section_common(p)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
@@ -2152,7 +2093,7 @@ if __name__ == "__main__":
     r1_front = 929.4
     r2_front = 1524.0
     r3_front = 655.2
-    theta_in_deg_front = 1.6
+    theta_in_deg_front = 0.16
 
     r_cut_behind = 460.0
     length_behind = 1500.0
@@ -2232,11 +2173,11 @@ if __name__ == "__main__":
     is_assemble = False
 
     # is_create_p_block = True
-    is_create_p_gap = True
-    # is_create_p_block_penult = True
+    # is_create_p_gap = True
+    is_create_p_block_penult = True
     # is_create_p_gap_penult = True
     # is_create_p_block_front = True
-    is_create_p_gap_front = True
+    # is_create_p_gap_front = True
     # is_create_p_block_behind = True
     # is_create_p_gap_behind = True
     # is_assemble = True
