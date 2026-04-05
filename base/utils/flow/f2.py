@@ -736,7 +736,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     for t_plane in t_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[t_plane.id], cells=p.cells)
 
-    # 建立GRAIN集合
+    # 创建集合（体），SET-CELL-GRAIN
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
         [0, 0, 0]
@@ -773,20 +773,19 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     for i in range(1, len(z_list) - 1):
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
 
-    # 建立INSULATION集合
+    # 创建集合（体），SET-CELL-INSULATION
     cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-GRAIN', ['SET-CELL-GRAIN'])
     if cells:
         p.Set(cells=cells, name='SET-CELL-INSULATION')
 
-    # 建立GLUE集合
+    # 创建集合（体），SET-CELL-GLUE-A
     cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-INSULATION', ['SET-CELL-GRAIN', 'SET-CELL-INSULATION'])
     if cells:
         p.Set(cells=cells, name='SET-CELL-GLUE-A')
 
-    # Mirror
+    # 镜像
     if size == '1':
         p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
-        # p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
     elif size == '1/2':
         pass
     elif size == '1/4':
