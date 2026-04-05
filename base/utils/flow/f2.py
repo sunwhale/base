@@ -455,6 +455,16 @@ def part_partition_z(p, d, z_list):
     return xy_plane_z
 
 
+def create_surface_slot(p, p2p, length):
+    x1 = p2p[0]
+    y1 = p2p[1]
+
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, x1 * 1.1, y1, length / 2.0)
+    p_faces = get_same_area_faces(p, p_faces)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
+
+
 def create_part_block(model, part_name, points, lines, faces, dimension):
     # 变量赋值
     z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
@@ -481,7 +491,13 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     set_names = create_block_sets_common(p, faces, dimension)
 
     # 星槽切割
-    p1p = cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis)
+    r_cut = x0 + deep
+    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
+
+    # 燃面退移x0
+    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, PEN, burn_offset)
+    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
 
     # 镜像
     if size == '1':
@@ -498,8 +514,8 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
         raise NotImplementedError('Unsupported size {}'.format(size))
 
     # 创建面
-    create_block_surface_common(p, points, dimension)
-
+    create_surface_common(p, points, dimension)
+    create_surface_slot(p, p2p, length)
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
@@ -811,7 +827,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     if p_edges:
         p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
-    create_block_surface_common(p, points, dimension)
+    create_surface_common(p, points, dimension)
 
     p1 = [x0 + deep + b, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
@@ -1116,7 +1132,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     create_block_sets_same_volume(p)
 
-    create_block_surface_common(p, points, dimension)
+    create_surface_common(p, points, dimension)
 
     p1 = [x0 + deep + b, 0.0]
     x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
@@ -1445,7 +1461,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
-    create_block_surface_common(p, points, dimension)
+    create_surface_common(p, points, dimension)
 
     xz_plane_rot = p.DatumPlaneByRotation(plane=d[xz_plane.id], axis=d[z_axis.id], angle=180.0 / n / 2.0)
     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_rot.id], cells=p.cells)
@@ -1727,7 +1743,7 @@ def create_block_sets_same_volume(p):
             p.Set(cells=p_cells, name=set_name)
 
 
-def create_block_surface_common(p, points, dimension):
+def create_surface_common(p, points, dimension):
     z_list = dimension['z_list']
     index_r = dimension['index_r']
     index_t = dimension['index_t']
@@ -1819,14 +1835,6 @@ def create_block_surface_common(p, points, dimension):
             p_faces += p.faces[face_id:face_id + 1]
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
-
-    p1 = [x0 + deep + b + burn_offset, 0.0]
-    x1 = p1[0] * np.cos(degrees_to_radians(180.0 / n))
-    y1 = p1[0] * np.sin(degrees_to_radians(180.0 / n))
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, x1 * 1.1, y1, length / 2.0)
-    p_faces = get_same_area_faces(p, p_faces)
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
 
 
 def create_gap_surface_common(p, points, dimension):
