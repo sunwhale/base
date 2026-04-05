@@ -1119,56 +1119,24 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
 
 def create_part_block_behind(model, part_name, points, lines, faces, dimension):
-    z_list = dimension['z_list']
-    deep = dimension['deep']
-    x0 = dimension['x0']
-    length_up = dimension['length_up']
-    width = dimension['width']
-    angle_demolding_1 = dimension['angle_demolding_1']
-    angle_demolding_2 = dimension['angle_demolding_2']
-    fillet_radius = dimension['fillet_radius']
-    a = dimension['a']
-    b = dimension['b']
-    size = dimension['size']
-    index_r = dimension['index_r']
-    index_t = dimension['index_t']
-    element_size = dimension['element_size']
-    insert_czm = dimension['insert_czm']
-    burn_offset = dimension['burn_offset']
-    r_cut = dimension['r_cut']
-    length_behind = dimension['length_behind']
-    p0 = dimension['p0']
-    theta0_deg = dimension['theta0_deg']
-    p3 = dimension['p3']
-    theta3_deg = dimension['theta3_deg']
-    theta_in_deg = dimension['theta_in_deg']
-    r1 = dimension['r1']
-    r2 = dimension['r2']
-    r3 = dimension['r3']
+    # 变量赋值
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+    r_cut, length_front, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_front(dimension)
 
+    # 基本参数
     origin = (0.0, 0.0, 0.0)
     length = z_list[-1] * 2.0
-    PEN = 1e4
-    TOL = 1e-6
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-CROSS-SECTION
     s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
 
-    # Extrude
-    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-    yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
-    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
-    y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
-    z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
-    d = p.datums
-    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cross_section, depth=length / 2.0, flipExtrudeDirection=ON)
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_cross_section, length)
 
-    # 头部药块额外拉伸
-    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cross_section, depth=length_behind, flipExtrudeDirection=OFF)
+    # 生成额外基础体，z方向长度length_front
+    p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cross_section, depth=length_front, flipExtrudeDirection=ON)
 
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -1483,20 +1451,6 @@ def part_partition_p1p(p, d, p1p):
     if offset >= p.cells.getBoundingBox()['low'][0]:
         yz_plane_slot = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
         p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_slot.id], cells=p.cells)
-
-
-def cut_slot(p, d, x0, deep, a, b, angle_demolding_1, n, burn_offset, PEN, xy_plane, y_axis):
-    r_cut = x0 + deep
-    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, deep, a, b, angle_demolding_1, n, r_cut, burn_offset)
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
-
-    # SKETCH-BURN-X0
-    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, burn_offset)
-    # CutExtrude
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
-    # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
-
-    return p1p
 
 
 def create_block_sets_common(p, faces, dimension):
@@ -2161,12 +2115,12 @@ if __name__ == "__main__":
 
     # is_create_p_block = True
     # is_create_p_gap = True
-    is_create_p_block_penult = True
-    is_create_p_gap_penult = True
+    # is_create_p_block_penult = True
+    # is_create_p_gap_penult = True
     # is_create_p_block_front = True
     # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
     # is_assemble = True
 
     if not ABAQUS_ENV:
