@@ -645,9 +645,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # 生成额外基础体，z方向长度length_front
     p.SolidExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_cross_section, depth=length_front, flipExtrudeDirection=ON)
 
-    # z剖分
-    part_partition_z(p, d, z_list)
-
     # 旋转切割头部外轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_front_outer, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3 = create_sketch_front_outer(model, 'SKETCH-FRONT-OUTER', t, points, index_r, index_t, p0, theta0_deg, p3, theta3_deg, theta_in_deg, r1, r2, r3, z_list, PEN)
@@ -677,21 +674,18 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
             pa = (np.array(g[j + 6 * (i - 1)].pointOn) + np.array(g[j + 6 * i].pointOn)) / 2.0
             faces_xz_plane[i].append(pa)
             s_front_outer_offset.Spot(point=pa)
-
     for i in range(1, index_r):
         for j in [3, 4, 5, 6, 7]:
             pa = g[6 * (i - 1) + j].getVertices()[0].coords
             pb = g[6 * i + j].getVertices()[0].coords
             s_front_outer_offset.Line(point1=pa, point2=pb)
-
     p_faces = p.faces.getByBoundingBox(0, 0, -PEN, PEN, TOL, PEN)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_front_outer_offset)
 
-    # 基于p4点所在的半径拾取sweep_edge
+    # 弧线轮廓剖分
     x, y = polar_to_cartesian(p4[1], TOL)
     # x = min(x, points[index_r, 0][0])
-    sweep_edge = p.edges.findAt((x, y, z_list[-1]))
-
+    sweep_edge = p.edges.findAt((x, y, z_list[-1]))  # 基于p4点所在的半径拾取sweep_edge
     # 拾取主体弧线
     partition_edges = []
     for g in s_front_outer_offset.geometry.values()[2:index_r * 6]:
@@ -701,11 +695,10 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
             partition_edges.append(edge_sequence)
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
-    # 基于p4点所在的半径拾取sweep_edge
+    # 连接线段剖分
     x, y = polar_to_cartesian(p4[1], TOL)
     # x = min(x, points[index_r, 0][0])
-    sweep_edge = p.edges.findAt((x, y, z_list[-1]))
-
+    sweep_edge = p.edges.findAt((x, y, z_list[-1]))  # 基于p4点所在的半径拾取sweep_edge
     # 拾取分段连线
     partition_edges = []
     for g in s_front_outer_offset.geometry.values()[index_r * 6:]:
@@ -715,10 +708,13 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
             partition_edges.append(edge_sequence)
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
+    # z剖分
+    part_partition_z(p, d, z_list)
+
     # theta剖分
-    # 建立平面，通过三个点：同一个theta的两个点和z方向上偏移1.0的点，保证平面法向量朝外，用该平面切割p.cells
     t_planes = []
     for j in range(1, index_t):
+        # 建立平面，通过三个点：同一个theta的两个点和z方向上偏移1.0的点，保证平面法向量朝外，用该平面切割p.cells
         t_planes.append(p.DatumPlaneByThreePoints(point1=(points[0, j, 0], points[0, j, 1], 0.0), point2=(points[-1, j, 0], points[-1, j, 1], 0.0), point3=(points[0, j, 0], points[0, j, 1], 1.0)))
     for t_plane in t_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[t_plane.id], cells=p.cells)
