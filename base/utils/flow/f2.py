@@ -1344,7 +1344,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
-    length = z_list[-1] * 2.0
+    length = z_list[-2] * 2.0
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
@@ -1388,7 +1388,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     partition_plane = p.DatumPlaneByThreePoints(point1=d[point1.id], point2=d[point2.id], point3=d[point3.id])
     p.PartitionCellByDatumPlane(datumPlane=d[partition_plane.id], cells=p.cells)
 
-    # Mirror
+    # 镜像
     if size == '1':
         p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
@@ -1399,6 +1399,10 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
 
+    # XY面剖分
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+
+    # 创建面
     create_gap_surface_common(p, points, dimension)
 
     # 通过排除法确定外表面
@@ -1419,18 +1423,17 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
-    for name in p.surfaces.keys():
-        p.Set(faces=p.surfaces[name].faces, name='SET-' + name)
-
+    # 创建集合（面）
     create_face_set_from_surface(p)
 
-    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-
+    # 创建集合（体），SET-CELL-GLUE-A
     set_name = 'SET-CELL-GLUE-A'
     p.Set(cells=p.cells, name=set_name)
 
+    # 生成网格
     generate_part_mesh(p, element_size=element_size)
 
+    # 赋予SECTION属性
     set_section_common(p)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
@@ -2113,7 +2116,7 @@ if __name__ == "__main__":
     # is_create_p_gap_penult = True
     # is_create_p_block_front = True
     # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
+    is_create_p_block_behind = True
     is_create_p_gap_behind = True
     # is_assemble = True
 
@@ -2225,24 +2228,24 @@ if __name__ == "__main__":
         if is_create_p_gap_behind:
             p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
 
-        block_types = get_block_types(block)
-        ties_types = get_tie_types(block)
-
-        block_dict = {
-            'FRONT': p_block_front,
-            'PENULT': p_block_penult,
-            'BEHIND': p_block_behind,
-            'MIDDLE': p_block
-        }
-
-        gap_dict = {
-            'FRONT': p_gap_front,
-            'PENULT': p_gap_penult,
-            'BEHIND': p_gap_behind,
-            'MIDDLE': p_gap
-        }
-
         if is_assemble:
+            block_types = get_block_types(block)
+            ties_types = get_tie_types(block)
+
+            block_dict = {
+                'FRONT': p_block_front,
+                'PENULT': p_block_penult,
+                'BEHIND': p_block_behind,
+                'MIDDLE': p_block
+            }
+
+            gap_dict = {
+                'FRONT': p_gap_front,
+                'PENULT': p_gap_penult,
+                'BEHIND': p_gap_behind,
+                'MIDDLE': p_gap
+            }
+
             a = model.rootAssembly
             a.DatumCsysByDefault(CARTESIAN)
             cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
