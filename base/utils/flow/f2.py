@@ -231,9 +231,11 @@ def create_sketch_front_outer_offset(model, sketch_name, t, points, x0, index_r,
 def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
-    p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], x0 + deep + b - 1.0]
-    p1 = [block_length / 2.0, x0 + deep + b - 1.0]
-    p2 = [block_length / 2.0 - block_insulation_thickness_z, x0 + deep + b - 1.0]
+    r = x0 + deep + b
+
+    p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], r]
+    p1 = [block_length / 2.0, r]
+    p2 = [block_length / 2.0 - block_insulation_thickness_z, r]
     l1 = Line2D(p2, np.tan(degrees_to_radians(45.0)))
     l2 = Line2D([0.0, 0.0], [1.0, 0.0])
     p3 = l1.get_intersection(l2)
@@ -1959,7 +1961,7 @@ def print_sketch(session, model, viewport, sketch_name):
     s.setPrimaryObject(option=STANDALONE)
     s.Spot(point=(0, 0))
     s.sketchOptions.setValues(grid=OFF)
-    if 'REVOLVE' in sketch_name:
+    if 'OUTER' in sketch_name or 'INNER' in sketch_name:
         viewport.view.rotate(xAngle=90, yAngle=90, zAngle=0, mode=MODEL)
     viewport.view.fitView()
     session.printToFile(fileName=sketch_name + '.png', format=PNG, canvasObjects=(viewport,))
@@ -2012,7 +2014,7 @@ if __name__ == "__main__":
     fillet_radius = 50.0
     angle_demolding_1 = 1.5
 
-    burn_offset = 100.0
+    burn_offset = 0.0
 
     element_size = 40
     insert_czm = False
@@ -2110,15 +2112,15 @@ if __name__ == "__main__":
     is_create_p_gap_behind = False
     is_assemble = False
 
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
     is_create_p_block_behind = True
     is_create_p_gap_behind = True
-    # is_assemble = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2335,12 +2337,17 @@ if __name__ == "__main__":
 
                 if i == 0:
                     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T1'
+                    set_name = 'SET-SURFACE-T0'
                     bc_name = 'BC-' + instance_name + '-' + set_name
                     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
                     instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
                     set_name = 'SET-SURFACE-T2'
+                    bc_name = 'BC-' + instance_name + '-' + set_name
+                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    set_name = 'SET-SURFACE-T0'
                     bc_name = 'BC-' + instance_name + '-' + set_name
                     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
