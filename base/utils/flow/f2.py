@@ -945,7 +945,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # 星槽剖分
     offset = p1p[0]
-    if offset >= p.cells.getBoundingBox()['low'][0]:
+    if offset >= p.cells.getBoundingBox()['low'][0] and offset <= x0 + burn_offset:
         yz_plane_slot = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
         p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_slot.id], cells=p.cells.getByBoundingBox(0, -PEN, 0, PEN, PEN, PEN))
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
@@ -2018,7 +2018,7 @@ if __name__ == "__main__":
     fillet_radius = 50.0
     angle_demolding_1 = 1.5
 
-    burn_offset = 100.0
+    burn_offset = 400.0
 
     element_size = 40
     insert_czm = False
