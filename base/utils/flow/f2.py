@@ -27,8 +27,12 @@ try:
 except ImportError as e:
     print(e)
 
-FLOW_PATH = r'F:\Github\base\base\utils\flow'
-# FLOW_PATH = r'/home/dell/base/base/utils/flow'
+# SQLite URI compatible
+WIN = sys.platform.startswith('win')
+if WIN:
+    FLOW_PATH = r'F:\Github\base\base\utils\flow'
+else:
+    FLOW_PATH = r'/home/dell/base/base/utils/flow'
 
 try:
     if os.path.isfile(sys.argv[3]):
@@ -547,7 +551,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
         raise NotImplementedError('Unsupported size {}'.format(size))
 
     # 创建面
-    create_surface_common(p, points, dimension)
+    create_block_surface_common(p, points, dimension)
     create_surface_slot(p, p2p, 0.0, z_list[-1])
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
@@ -818,7 +822,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
     # 创建面
-    create_surface_common(p, points, dimension)
+    create_block_surface_common(p, points, dimension)
     create_surface_slot(p, p2p, -r_cut - b - burn_offset, z_list[-1])
 
     if size == '1':
@@ -1017,7 +1021,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     create_block_sets_same_volume(p)
 
     # 创建面
-    create_surface_common(p, points, dimension)
+    create_block_surface_common(p, points, dimension)
     create_surface_slot(p, p2p, 0.0, z_list[-1])
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
@@ -1288,7 +1292,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 创建面
-    create_surface_common(p, points, dimension)
+    create_block_surface_common(p, points, dimension)
 
     if size == '1':
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
@@ -1534,7 +1538,7 @@ def create_block_sets_same_volume(p):
             p.Set(cells=p_cells, name=set_name)
 
 
-def create_surface_common(p, points, dimension):
+def create_block_surface_common(p, points, dimension):
     z_list = dimension['z_list']
     index_r = dimension['index_r']
     index_t = dimension['index_t']
