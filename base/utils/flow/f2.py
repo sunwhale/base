@@ -232,10 +232,10 @@ def create_sketch_front_outer_offset(model, sketch_name, t, points, x0, index_r,
     return s
 
 
-def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b):
+def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
-    r = x0 + deep + b
+    r = x0 + deep + b + burn_offset
 
     p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], r]
     p1 = [block_length / 2.0, r]
@@ -326,7 +326,7 @@ def create_sketch_gap_t(model, sketch_name, t, points):
     return s
 
 
-def get_local_variables(dimension):
+def get_local_variables_common(dimension):
     z_list = dimension['z_list']
     deep = dimension['deep']
     x0 = dimension['x0']
@@ -504,7 +504,7 @@ def create_surface_slot(p, ref_point, z_begin, z_end):
 
 def create_part_block(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -585,7 +585,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -665,7 +665,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_front, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_front(dimension)
 
     # 基本参数
@@ -866,7 +866,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_front, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_front(dimension)
 
     # 基本参数
@@ -971,7 +971,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -1027,7 +1027,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b)
+    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, burn_offset)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_inner, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
@@ -1062,7 +1062,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -1123,7 +1123,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b)
+    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, burn_offset)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_inner, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
@@ -1155,7 +1155,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_behind, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_behind(dimension)
 
     # 基本参数
@@ -1345,7 +1345,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables(dimension)
+    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_behind, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_behind(dimension)
 
     # 基本参数
@@ -2018,7 +2018,7 @@ if __name__ == "__main__":
     fillet_radius = 50.0
     angle_demolding_1 = 1.5
 
-    burn_offset = 0.0
+    burn_offset = 100.0
 
     element_size = 40
     insert_czm = False
