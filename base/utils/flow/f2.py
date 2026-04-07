@@ -232,6 +232,31 @@ def create_sketch_front_outer_offset(model, sketch_name, t, points, x0, index_r,
     return s
 
 
+# def create_sketch_penult_inner_0(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, burn_offset=0.0):
+#     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
+#
+#     r = x0 + deep + b + burn_offset
+#
+#     p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], r]
+#     p1 = [block_length / 2.0, r]
+#     p2 = [block_length / 2.0 - block_insulation_thickness_z, r]
+#     l1 = Line2D(p2, np.tan(degrees_to_radians(45.0)))
+#     l2 = Line2D([0.0, 0.0], [1.0, 0.0])
+#     p3 = l1.get_intersection(l2)
+#     p4 = [block_length / 2.0 + z_list[-1] - z_list[-2], 0.0]
+#
+#     s.Line(point1=p0, point2=p1)
+#     s.Line(point1=p1, point2=p2)
+#     s.Line(point1=p2, point2=p3)
+#     s.Line(point1=p3, point2=p4)
+#     s.Line(point1=p4, point2=p0)
+#
+#     center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(PEN, 0.0))
+#     s.assignCenterline(line=center_line)
+#
+#     return s
+
+
 def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
@@ -240,21 +265,28 @@ def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_
     p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], r]
     p1 = [block_length / 2.0, r]
     p2 = [block_length / 2.0 - block_insulation_thickness_z, r]
-    l1 = Line2D(p2, np.tan(degrees_to_radians(45.0)))
-    l2 = Line2D([0.0, 0.0], [1.0, 0.0])
+    l1 = Line2D(p2, np.tan(degrees_to_radians(22.5)))
+    l2 = Line2D([p2[0] - 2.0 * b, 0.0], [p2[0] - 2.0 * b, 1.0])
     p3 = l1.get_intersection(l2)
-    p4 = [block_length / 2.0 + z_list[-1] - z_list[-2], 0.0]
+
+    l3 = Line2D(p3, np.tan(degrees_to_radians(45.0)))
+    l4 = Line2D([0.0, 0.0], [1.0, 0.0])
+    p4 = l3.get_intersection(l4)
+    p5 = [block_length / 2.0 + z_list[-1] - z_list[-2], 0.0]
 
     s.Line(point1=p0, point2=p1)
     s.Line(point1=p1, point2=p2)
     s.Line(point1=p2, point2=p3)
     s.Line(point1=p3, point2=p4)
-    s.Line(point1=p4, point2=p0)
+    s.Line(point1=p4, point2=p5)
+    s.Line(point1=p5, point2=p0)
+
+    s.Spot(point=p3)
 
     center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(PEN, 0.0))
     s.assignCenterline(line=center_line)
 
-    return s
+    return s, p3
 
 
 def create_sketch_behind_inner(model, sketch_name, t, x0, deep, a, b, burn_offset=0.0):
@@ -1027,7 +1059,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, burn_offset)
+    s_penult_inner, ref_point = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, burn_offset)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_inner, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
@@ -1035,6 +1067,10 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-REVOLVE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT', 'SURFACE-REVOLVE'], 'SURFACE-INNER')
+
+    # 倒角剖分
+    xy_plane_inner = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=ref_point[0])
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_inner.id], cells=p.cells)
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -1123,7 +1159,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_inner = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, burn_offset)
+    s_penult_inner, ref_point = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, burn_offset)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_inner, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
@@ -1141,6 +1177,8 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 星槽剖分
     part_partition_p1p(p, d, p1p)
+
+    del p.features['Partition cell-1']
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
