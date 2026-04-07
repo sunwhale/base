@@ -340,6 +340,271 @@ class Line2D:
         return "Line2D(A={:.4f}, B={:.4f}, C={:.4f})".format(self.A, self.B, self.C)
 
 
+class Ellipse:
+    """椭圆类，支持任意中心位置的椭圆（无旋转）"""
+
+    def __init__(self, center_x, center_y, a, b, long_axis='x'):
+        """
+        初始化椭圆参数
+
+        参数：
+        center_x, center_y: 椭圆中心坐标
+        a: 长半轴长度
+        b: 短半轴长度
+        long_axis: 长轴方向，'x' 或 'y'，默认为 'x'
+        """
+        self.center_x = center_x
+        self.center_y = center_y
+        self.a = a  # 长半轴
+        self.b = b  # 短半轴
+        self.long_axis = long_axis.lower()
+
+    def y_from_x(self, x):
+        """
+        计算椭圆上给定 x 对应的 y 值
+
+        返回：
+        (y1, y2): 两个 y 值（椭圆上下两点），如果 x 超出范围则返回 None
+        """
+        # 计算相对于中心的x坐标
+        x_rel = x - self.center_x
+
+        if self.long_axis == 'x':
+            # 长轴在 x 轴：(x-h)²/a² + (y-k)²/b² = 1
+            if abs(x_rel) > self.a + 1e-12:  # 加上小容差处理浮点误差
+                return None
+            factor = 1 - (x_rel ** 2) / (self.a ** 2)
+            if factor < 0:
+                factor = 0  # 处理浮点误差
+            y_value = self.b * math.sqrt(factor)
+            return self.center_y + y_value, self.center_y - y_value
+        else:
+            # 长轴在 y 轴：(x-h)²/b² + (y-k)²/a² = 1
+            if abs(x_rel) > self.b + 1e-12:
+                return None
+            factor = 1 - (x_rel ** 2) / (self.b ** 2)
+            if factor < 0:
+                factor = 0
+            y_value = self.a * math.sqrt(factor)
+            return self.center_y + y_value, self.center_y - y_value
+
+    def x_from_y(self, y):
+        """
+        计算椭圆上给定 y 对应的 x 值
+
+        返回：
+        (x1, x2): 两个 x 值（椭圆左右两点），如果 y 超出范围则返回 None
+        """
+        # 计算相对于中心的y坐标
+        y_rel = y - self.center_y
+
+        if self.long_axis == 'x':
+            # 长轴在 x 轴
+            if abs(y_rel) > self.b + 1e-12:
+                return None
+            factor = 1 - (y_rel ** 2) / (self.b ** 2)
+            if factor < 0:
+                factor = 0
+            x_value = self.a * math.sqrt(factor)
+            return self.center_x + x_value, self.center_x - x_value
+        else:
+            # 长轴在 y 轴
+            if abs(y_rel) > self.a + 1e-12:
+                return None
+            factor = 1 - (y_rel ** 2) / (self.a ** 2)
+            if factor < 0:
+                factor = 0
+            x_value = self.b * math.sqrt(factor)
+            return self.center_x + x_value, self.center_x - x_value
+
+    def point_at_angle(self, theta):
+        """
+        根据参数角获取椭圆上的点
+
+        参数：
+        theta: 参数角（弧度制），从长轴开始
+
+        返回：
+        (x, y): 椭圆上的点坐标
+        """
+        cos_theta = math.cos(theta)
+        sin_theta = math.sin(theta)
+
+        if self.long_axis == 'x':
+            x = self.center_x + self.a * cos_theta
+            y = self.center_y + self.b * sin_theta
+        else:
+            # 如果长轴在y轴，a对应y轴
+            x = self.center_x + self.b * cos_theta
+            y = self.center_y + self.a * sin_theta
+
+        return x, y
+
+    def is_point_on_ellipse(self, x, y, tolerance=1e-6):
+        """
+        判断点是否在椭圆上（考虑容差）
+        """
+        # 计算相对于中心的坐标
+        x_rel = x - self.center_x
+        y_rel = y - self.center_y
+
+        if self.long_axis == 'x':
+            value = (x_rel ** 2) / (self.a ** 2) + (y_rel ** 2) / (self.b ** 2)
+        else:
+            value = (x_rel ** 2) / (self.b ** 2) + (y_rel ** 2) / (self.a ** 2)
+
+        return abs(value - 1) < tolerance
+
+    def point_along_ellipse_normal(self, x1, y1, l, tol=1e-10):
+        """
+        计算椭圆上某点沿法线方向移动指定距离后的新点
+
+        参数：
+        x1, y1: 椭圆上的点坐标
+        l: 沿法线方向移动的距离（正负表示方向）
+        tol: 容差，判断点是否在椭圆上
+
+        返回：
+        tuple: (新点坐标, 单位法向量, 状态信息)
+        """
+        # 根据长轴方向调整椭圆方程参数
+        if self.long_axis == 'x':
+            # 长轴在x轴方向：方程 (x-x0)²/a² + (y-y0)²/b² = 1
+            a_axis = self.a
+            b_axis = self.b
+        else:
+            # 长轴在y轴方向：方程 (x-x0)²/b² + (y-y0)²/a² = 1
+            a_axis = self.b
+            b_axis = self.a
+
+        # 验证点是否在椭圆上
+        value = ((x1 - self.center_x) ** 2 / a_axis ** 2) + \
+                ((y1 - self.center_y) ** 2 / b_axis ** 2)
+
+        if abs(value - 1) > tol:
+            print("点({:.6f}, {:.6f})不在椭圆上，椭圆方程值为: {:.6f}".format(x1, y1, value))
+            return None
+
+        # 计算梯度（法线方向）
+        grad_x = 2 * (x1 - self.center_x) / a_axis ** 2
+        grad_y = 2 * (y1 - self.center_y) / b_axis ** 2
+
+        norm = math.sqrt(grad_x ** 2 + grad_y ** 2)
+        if norm < tol:
+            print("法线向量长度为零")
+            return None
+
+        # 单位法向量
+        unit_normal = [grad_x / norm, grad_y / norm]
+
+        # 计算新点
+        new_point = [x1 + l * unit_normal[0], y1 + l * unit_normal[1]]
+
+        return new_point
+
+    def intersect_with_line(self, line, tol=1e-12):
+        """
+        计算椭圆与直线的交点
+
+        参数：
+            line: Line2D 对象，表示直线
+            tol: 浮点误差容差
+
+        返回：
+            list of tuple: 交点列表，每个交点为 (x, y) 坐标；若无交点则返回空列表
+        """
+        import math
+
+        # 1. 根据长轴方向确定椭圆的标准方程半轴
+        if self.long_axis == 'x':
+            A_axis = self.a  # x 方向半轴（长半轴）
+            B_axis = self.b  # y 方向半轴（短半轴）
+        else:  # long_axis == 'y'
+            A_axis = self.b  # x 方向半轴（短半轴）
+            B_axis = self.a  # y 方向半轴（长半轴）
+
+        # 2. 获取直线一般式系数 (A, B, C) 并平移至椭圆中心
+        A, B, C = line.A, line.B, line.C
+        cx, cy = self.center_x, self.center_y
+        C_prime = A * cx + B * cy + C  # 平移后的常数项
+
+        # 3. 特殊情况：直线垂直于 x 轴 (B ≈ 0)
+        if abs(B) < tol:
+            if abs(A) < tol:  # 无效直线，理论上不会出现
+                return []
+            x_prime = -C_prime / A  # 固定 x' 值
+            # 检查 x' 是否在椭圆 x 方向范围内
+            if abs(x_prime) > A_axis + tol:
+                return []
+            # 解 y'^2
+            y2 = B_axis * B_axis * (1 - (x_prime * x_prime) / (A_axis * A_axis))
+            if y2 < -tol:
+                return []
+            if y2 < 0:
+                y2 = 0.0
+            y_prime = math.sqrt(y2)
+            points = [(x_prime + cx, y_prime + cy)]
+            if y_prime > tol:
+                points.append((x_prime + cx, -y_prime + cy))
+            return points
+
+        # 4. 特殊情况：直线平行于 x 轴 (A ≈ 0)
+        if abs(A) < tol:
+            y_prime = -C_prime / B
+            if abs(y_prime) > B_axis + tol:
+                return []
+            x2 = A_axis * A_axis * (1 - (y_prime * y_prime) / (B_axis * B_axis))
+            if x2 < -tol:
+                return []
+            if x2 < 0:
+                x2 = 0.0
+            x_prime = math.sqrt(x2)
+            points = [(x_prime + cx, y_prime + cy)]
+            if x_prime > tol:
+                points.append((-x_prime + cx, y_prime + cy))
+            return points
+
+        # 5. 一般情况：直线有斜率，解二次方程
+        # 从直线方程解 y' = (-A*x' - C_prime) / B
+        # 代入椭圆方程得到关于 x' 的二次方程：a_coef * x'^2 + b_coef * x' + c_coef = 0
+        a_coef = 1 / (A_axis * A_axis) + (A * A) / (B * B * B_axis * B_axis)
+        b_coef = (2 * A * C_prime) / (B * B * B_axis * B_axis)
+        c_coef = (C_prime * C_prime) / (B * B * B_axis * B_axis) - 1
+
+        # 判别式
+        disc = b_coef * b_coef - 4 * a_coef * c_coef
+        if disc < -tol:
+            return []
+        if disc < 0:
+            disc = 0.0
+        sqrt_disc = math.sqrt(disc)
+
+        x1_prime = (-b_coef - sqrt_disc) / (2 * a_coef)
+        x2_prime = (-b_coef + sqrt_disc) / (2 * a_coef)
+
+        # 根据 x' 计算对应的 y' 并转换回原始坐标系
+        points = []
+        for x_prime in (x1_prime, x2_prime):
+            y_prime = (-A * x_prime - C_prime) / B
+            # 可选：验证点是否在椭圆上（因代数推导，通常精确）
+            # 如果由于浮点误差偏离太大，可跳过
+            x_rel = x_prime
+            y_rel = y_prime
+            val = (x_rel * x_rel) / (A_axis * A_axis) + (y_rel * y_rel) / (B_axis * B_axis)
+            if abs(val - 1) > 1e-6:
+                # 浮点误差较大时仍返回，但可加打印
+                pass
+            points.append((x_prime + cx, y_prime + cy))
+
+        # 去除因切点造成的重复点
+        if len(points) == 2:
+            p1, p2 = points[0], points[1]
+            if math.hypot(p1[0] - p2[0], p1[1] - p2[1]) < tol:
+                points = points[:1]
+
+        return points
+
+
 class Plane:
     """平面类"""
 
@@ -1686,6 +1951,13 @@ if __name__ == "__main__":
 
     if not ABAQUS_ENV:
         print(dir())
+        # 创建椭圆（中心在 (2,3)，长半轴5，短半轴3，长轴沿x方向）
+        ellipse = Ellipse(2, 3, 5, 3, 'x')
+        # 创建直线：y = x + 1
+        line = Line2D(1, -1, 1)  # x - y + 1 = 0
+        intersections = ellipse.intersect_with_line(line)
+        for p in intersections:
+            print(f"交点: ({p[0]:.4f}, {p[1]:.4f})")
 
     if ABAQUS_ENV:
         pass
