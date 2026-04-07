@@ -49,6 +49,7 @@ from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_a
 
 PEN = 1e4
 TOL = 1e-6
+PENULT_CORRECTION = 1.0
 
 
 # p.DatumPointByCoordinate(coords=(0, 0, 0))
@@ -260,7 +261,7 @@ def create_sketch_front_outer_offset(model, sketch_name, t, points, x0, index_r,
 def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, a, b, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
-    r = x0 + deep + b + burn_offset
+    r = x0 + deep + b + burn_offset + PENULT_CORRECTION
 
     p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], r]
     p1 = [block_length / 2.0, r]
@@ -292,8 +293,10 @@ def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_
 def create_sketch_behind_inner(model, sketch_name, t, x0, deep, a, b, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
-    p1 = [-PEN, x0 + deep + b + burn_offset]
-    p2 = [PEN, x0 + deep + b + burn_offset]
+    r = x0 + deep + b + burn_offset + PENULT_CORRECTION
+
+    p1 = [-PEN, r]
+    p2 = [PEN, r]
     p3 = [PEN, 0]
     p4 = [-PEN, 0]
 
@@ -980,9 +983,12 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # 星槽剖分
     offset = p1p[0]
-    if offset >= p.cells.getBoundingBox()['low'][0] and offset <= x0 + burn_offset:
+    if offset >= p.cells.getBoundingBox()['low'][0]:
         yz_plane_slot = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
-        p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_slot.id], cells=p.cells.getByBoundingBox(0, -PEN, 0, PEN, PEN, PEN))
+        try:
+            p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_slot.id], cells=p.cells.getByBoundingBox(0, -PEN, 0, PEN, PEN, PEN))
+        except:
+            pass
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 创建集合（体），SET-CELL-GLUE-A
@@ -1124,7 +1130,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # z剖分
     part_partition_z(p, d, z_list)
-    del p.features['Partition cell-1']
+    # del p.features['Partition cell-1']
 
     # theta剖分
     point1 = p.DatumPointByCoordinate(coords=(lines['02-12'][1][0], lines['02-12'][1][1], length / 2.0))
@@ -1160,6 +1166,11 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     create_gap_surface_common(p, points, dimension)
     create_surface_slot(p, p1p, p2p, 0.0, z_list[-1])
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
+
+    # 捕捉倒角参考点
+    p.DatumPointByCoordinate(coords=(p2p[0], p2p[1], 0))
+    p_edge = p.edges.getByBoundingSphere((p2p[0], p2p[1], 0), 10.0)
+    p_edge.getBoundingBox()
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
@@ -2060,7 +2071,7 @@ if __name__ == "__main__":
 
     burn_offset = 400.0
 
-    element_size = 40
+    element_size = 20
     insert_czm = False
 
     size = '1/2'
@@ -2156,15 +2167,15 @@ if __name__ == "__main__":
     is_create_p_gap_behind = False
     is_assemble = False
 
-    is_create_p_block = True
-    is_create_p_gap = True
-    is_create_p_block_penult = True
-    is_create_p_gap_penult = True
+    # is_create_p_block = True
+    # is_create_p_gap = True
+    # is_create_p_block_penult = True
+    # is_create_p_gap_penult = True
     is_create_p_block_front = True
-    is_create_p_gap_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap_behind = True
-    is_assemble = True
+    # is_create_p_gap_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_gap_behind = True
+    # is_assemble = True
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
