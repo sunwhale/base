@@ -525,10 +525,13 @@ def part_partition_z(p, d, z_list, is_minus=False):
     return xy_plane_z
 
 
-def create_surface_slot(p, ref_point, z_begin, z_end):
-    x1 = ref_point[0]
-    y1 = ref_point[1]
-    p_faces = p.faces.getByBoundingBox(0, TOL, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
+def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end):
+    x1 = ref_point_2[0]
+    y1 = ref_point_2[1]
+    if ref_point_1[1] > 0.0:
+        p_faces = p.faces.getByBoundingBox(0, TOL, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
+    else:
+        p_faces = p.faces.getByBoundingBox(0, 0, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
     p_faces = get_same_area_faces(p, p_faces)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
@@ -584,7 +587,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_block_surface_common(p, points, dimension)
-    create_surface_slot(p, p2p, 0.0, z_list[-1])
+    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1])
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
@@ -670,7 +673,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_gap_surface_common(p, points, dimension)
-    create_surface_slot(p, p2p, 0.0, z_list[-1])
+    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1])
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
@@ -855,7 +858,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_block_surface_common(p, points, dimension)
-    create_surface_slot(p, p2p, -r_cut - b - burn_offset, z_list[-1])
+    create_surface_slot(p, p1p, p2p, -r_cut - b - burn_offset, z_list[-1])
 
     if size == '1':
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
@@ -961,7 +964,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_gap_surface_common(p, points, dimension)
-    create_surface_slot(p, p2p, -r_cut - b - burn_offset, z_list[-1])
+    create_surface_slot(p, p1p, p2p, -r_cut - b - burn_offset, z_list[-1])
 
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
@@ -1054,7 +1057,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_block_surface_common(p, points, dimension)
-    create_surface_slot(p, p2p, 0.0, z_list[-1])
+    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1])
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
     # 旋转切割内燃道
@@ -1121,6 +1124,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # z剖分
     part_partition_z(p, d, z_list)
+    del p.features['Partition cell-1']
 
     # theta剖分
     point1 = p.DatumPointByCoordinate(coords=(lines['02-12'][1][0], lines['02-12'][1][1], length / 2.0))
@@ -1154,7 +1158,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_gap_surface_common(p, points, dimension)
-    create_surface_slot(p, p2p, 0.0, z_list[-1])
+    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1])
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
     # 旋转切割内燃道
@@ -1177,8 +1181,6 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 星槽剖分
     part_partition_p1p(p, d, p1p)
-
-    del p.features['Partition cell-1']
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
