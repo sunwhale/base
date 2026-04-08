@@ -1449,7 +1449,7 @@ def solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3, tol=1e-6):
         return None
 
 
-def plot_three_arcs(result, p0, p3, figsize=(10, 8)):
+def plot_three_arcs(result, p0, p3, figsize=(10, 8), is_show=True, is_save=True, save_path='three_arcs.png'):
     """
     绘制三段圆弧及其几何要素
     """
@@ -1552,7 +1552,11 @@ def plot_three_arcs(result, p0, p3, figsize=(10, 8)):
     ax.set_ylim(min(y_vals) - y_margin, max(y_vals) + y_margin)
 
     plt.tight_layout()
-    plt.show()
+    if is_save:
+        plt.savefig(save_path, dpi=300)
+
+    if is_show:
+        plt.show()
 
     # 打印结果摘要
     print('=' * 50)

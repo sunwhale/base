@@ -487,6 +487,14 @@ def f2():
         }
         dump_json(setting_file, message)
 
+        base_path = current_app.config['BASE_PATH']
+
+        if os.path.exists(flow_path):
+            p = Preproc(flow_path)
+            p.script_abspath = os.path.join(base_path, 'utils', 'flow', f'f{flow_id}.py')
+            if p.check_setting_files():
+                proc = p.run_with_python_interpreter()
+
         material_id = int(form.material_tool.data.split('_')[0])
         material_json_path = os.path.join(materials_path, str(material_id), 'material.json')
         shutil.copy(material_json_path, os.path.join(flow_path, 'material_tool.json'))

@@ -143,3 +143,4 @@ else:
 ABAQUS = message['ABAQUS']
 ABAQUS_FORTRAN = message['ABAQUS_FORTRAN']
 MAX_CPUS = int(message['MAX_CPUS'])
+PYTHON_INTERPRETER = 'python'

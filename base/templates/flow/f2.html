@@ -136,6 +136,10 @@
                         <div class="col-12">
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                           <hr>
+                          <div class="col-12">
+                            <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='three_arcs_front.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                          </div>
+                          <hr>
                           {{ render_form_row([form.front_ref_length, form.r_cut_front, form.length_front]) }}
                           {{ render_form_row([form.p0_x_front, form.p0_y_front, form.theta0_deg_front]) }}
                           {{ render_form_row([form.p3_x_front, form.p3_y_front, form.theta3_deg_front]) }}

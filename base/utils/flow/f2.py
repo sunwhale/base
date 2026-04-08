@@ -2194,20 +2194,21 @@ if __name__ == "__main__":
         # points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         # plot_geometries(points, lines, faces)
 
-        r_cut_front = 460.0
-        length_front = 1500.0
-        p0_front = (-1207.5, 794)
-        theta0_deg_front = 90.0
-        p3_front = (-350, 1762.5)
-        theta3_deg_front = 0.0
-        r1_front = 929.4
-        r2_front = 1524.0
-        r3_front = 655.2
-        theta_in_deg_front = 0.16
+        # r_cut_front = 460.0
+        # length_front = 1500.0
+        # p0_front = (-1207.5, 794)
+        # theta0_deg_front = 90.0
+        # p3_front = (-350, 1762.5)
+        # theta3_deg_front = 0.0
+        # r1_front = 929.4
+        # r2_front = 1524.0
+        # r3_front = 655.2
+        # theta_in_deg_front = 0.16
+        
         result = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
-        plot_three_arcs(result, p0_front, p3_front)
+        plot_three_arcs(result, p0_front, p3_front, is_show=False, save_path='three_arcs_front.png')
 
-        draw_map(block)
+        # draw_map(block)
 
     if ABAQUS_ENV:
         Mdb()

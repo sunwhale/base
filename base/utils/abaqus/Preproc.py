@@ -8,7 +8,7 @@ import os
 import subprocess
 import threading
 
-from base.settings import ABAQUS
+from base.settings import ABAQUS, PYTHON_INTERPRETER
 
 
 def is_number(s):
@@ -115,6 +115,20 @@ class Preproc:
         print(cmd)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path)
         logfile = 'run.log'
+        thread = threading.Thread(target=write_log, args=(proc, logfile))
+        thread.start()
+        return proc
+
+    def run_with_python_interpreter(self):
+        os.chdir(self.path)
+        if self.script_abspath is None:
+            py_file = os.path.join(self.path, self.script)
+        else:
+            py_file = self.script_abspath
+        cmd = '%s %s' % (PYTHON_INTERPRETER, py_file)
+        print(cmd)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True, cwd=self.path)
+        logfile = 'run_with_python_interpreter.log'
         thread = threading.Thread(target=write_log, args=(proc, logfile))
         thread.start()
         return proc
