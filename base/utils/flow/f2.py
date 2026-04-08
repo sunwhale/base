@@ -2115,47 +2115,59 @@ if __name__ == "__main__":
     # block[:, 1] = True
     # block[:, 8] = True
 
-    # setting_file = 'setting.json'
-    # message = load_json(setting_file)
-    #
-    # n = message['n']
-    # d = message['d']
-    # x0 = message['x0']
-    # block_length = message['block_length']
-    # block_insulation_thickness_z = message['block_insulation_thickness_z']
-    # block_insulation_thickness_t = message['block_insulation_thickness_t']
-    # block_insulation_thickness_r = message['block_insulation_thickness_r']
-    # block_gap_z = message['block_gap_z']
-    # block_gap_t = message['block_gap_t']
-    # a = message['a']
-    # b = message['b']
-    # fillet_radius = message['fillet_radius']
-    # angle_demolding_1 = message['angle_demolding_1']
-    # element_size = message['element_size']
-    # insert_czm = message['insert_czm']
-    # size = message['size']
-    # front_ref_length = message['front_ref_length']
-    # behind_ref_length = message['behind_ref_length']
-    # r_cut_front = message['r_cut_front']
-    # length_front = message['length_front']
-    # p0_front = message['p0_front']
-    # theta0_deg_front = message['theta0_deg_front']
-    # p3_front = message['p3_front']
-    # theta3_deg_front = message['theta3_deg_front']
-    # r1_front = message['r1_front']
-    # r2_front = message['r2_front']
-    # r3_front = message['r3_front']
-    # theta_in_deg_front = message['theta_in_deg_front']
-    # r_cut_behind = message['r_cut_behind']
-    # length_behind = message['length_behind']
-    # p0_behind = message['p0_behind']
-    # theta0_deg_behind = message['theta0_deg_behind']
-    # p3_behind = message['p3_behind']
-    # theta3_deg_behind = message['theta3_deg_behind']
-    # r1_behind = message['r1_behind']
-    # r2_behind = message['r2_behind']
-    # r3_behind = message['r3_behind']
-    # theta_in_deg_behind = message['theta_in_deg_behind']
+    setting_file = 'setting.json'
+    message = load_json(setting_file)
+
+    n = message['n']
+    d = message['d']
+    x0 = message['x0']
+    block_length = message['block_length']
+    block_insulation_thickness_z = message['block_insulation_thickness_z']
+    block_insulation_thickness_t = message['block_insulation_thickness_t']
+    block_insulation_thickness_r = message['block_insulation_thickness_r']
+    block_gap_z = message['block_gap_z']
+    block_gap_t = message['block_gap_t']
+    a = message['a']
+    b = message['b']
+    fillet_radius = message['fillet_radius']
+    angle_demolding_1 = message['angle_demolding_1']
+    burn_offset = message['burn_offset']
+    front_partition_offset = message['front_partition_offset']
+    element_size = message['element_size']
+    insert_czm = message['insert_czm']
+    size = message['size']
+    front_ref_length = message['front_ref_length']
+    behind_ref_length = message['behind_ref_length']
+    r_cut_front = message['r_cut_front']
+    length_front = message['length_front']
+    p0_x_front = message['p0_x_front']
+    p0_y_front = message['p0_y_front']
+    theta0_deg_front = message['theta0_deg_front']
+    p3_x_front = message['p3_x_front']
+    p3_y_front = message['p3_y_front']
+    theta3_deg_front = message['theta3_deg_front']
+    r1_front = message['r1_front']
+    r2_front = message['r2_front']
+    r3_front = message['r3_front']
+    theta_in_deg_front = message['theta_in_deg_front']
+    r_cut_behind = message['r_cut_behind']
+    length_behind = message['length_behind']
+    p0_x_behind = message['p0_x_behind']
+    p0_y_behind = message['p0_y_behind']
+    theta0_deg_behind = message['theta0_deg_behind']
+    p3_x_behind = message['p3_x_behind']
+    p3_y_behind = message['p3_y_behind']
+    theta3_deg_behind = message['theta3_deg_behind']
+    r1_behind = message['r1_behind']
+
+    p0_front = (p0_x_front, p0_y_front)
+    p3_front = (p3_x_front, p3_y_front)
+
+    p0_behind = (p0_x_behind, p0_y_behind)
+    p3_behind = (p3_x_behind, p3_y_behind)
+
+    print(p0_front)
+    print(p3_front, r1_front, r2_front, r3_front)
 
     beta = math.pi / n
 

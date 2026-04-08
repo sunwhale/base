@@ -168,7 +168,7 @@ class Preproc:
         logs = self.get_rpy()
         if 'done' in logs:
             preproc_status = 'Completed'
-        elif 'Error' in logs:
+        elif 'Error' in logs or 'failed' in logs:
             preproc_status = 'Stopped'
 
         run_logs = self.get_run_log()
