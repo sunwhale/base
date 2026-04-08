@@ -1957,7 +1957,7 @@ if __name__ == "__main__":
         line = Line2D(1, -1, 1)  # x - y + 1 = 0
         intersections = ellipse.intersect_with_line(line)
         for p in intersections:
-            print(f"交点: ({p[0]:.4f}, {p[1]:.4f})")
+            print(p)
 
     if ABAQUS_ENV:
         pass
