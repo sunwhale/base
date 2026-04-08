@@ -457,7 +457,7 @@ def f2():
             'fillet_radius': form.fillet_radius.data,
             'angle_demolding_1': form.angle_demolding_1.data,
             'burn_offset': form.burn_offset.data,
-            'front_partition_offset': form.front_partition_offset.data,
+            'outer_partition_offset': form.outer_partition_offset.data,
             'element_size': form.element_size.data,
             'insert_czm': form.insert_czm.data,
             'size': form.size.data,
@@ -527,7 +527,7 @@ def f2():
             form.fillet_radius.data = message['fillet_radius']
             form.angle_demolding_1.data = message['angle_demolding_1']
             form.burn_offset.data = message['burn_offset']
-            form.front_partition_offset.data = message['front_partition_offset']
+            form.outer_partition_offset.data = message['outer_partition_offset']
             form.element_size.data = message['element_size']
             form.insert_czm.data = message['insert_czm']
             form.size.data = message['size']

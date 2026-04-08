@@ -100,7 +100,7 @@
                 <div class="col-12">
                   <div class="card card-primary" data-card-id="card-3">
                     <div class="card-header">
-                      <h3 class="card-title">铣刀零件参数</h3>
+                      <h3 class="card-title">全局几何参数</h3>
                     </div>
                     <div class="card-body">
                       <div class="row">
@@ -108,18 +108,9 @@
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                           <hr>
                           {{ render_form_row([form.n, form.d, form.x0]) }}
-                          {{ render_form_row([form.block_length, form.block_insulation_thickness_z, form.block_insulation_thickness_t, form.block_insulation_thickness_r]) }}
-                          {{ render_form_row([form.block_gap_z, form.block_gap_t]) }}
-                          {{ render_form_row([form.a, form.b, form.fillet_radius, form.angle_demolding_1]) }}
-                          {{ render_form_row([form.burn_offset, form.front_partition_offset]) }}
+                          {{ render_form_row([form.burn_offset, form.outer_partition_offset]) }}
                           {{ render_form_row([form.element_size, form.size]) }}
                           {{ render_form_row([form.insert_czm]) }}
-
-                          {{ render_form_row([form.behind_ref_length, form.r_cut_behind, form.length_behind]) }}
-                          {{ render_form_row([form.p0_x_behind, form.p0_y_behind, form.theta0_deg_behind]) }}
-                          {{ render_form_row([form.p3_x_behind, form.p3_y_behind, form.theta3_deg_behind]) }}
-                          {{ render_form_row([form.r1_behind, form.r2_behind, form.r3_behind]) }}
-                          {{ render_form_row([form.theta_in_deg_behind]) }}
                         </div>
                       </div>
                     </div>
@@ -128,6 +119,61 @@
 
                 <div class="col-12">
                   <div class="card card-primary" data-card-id="card-3">
+                    <div class="card-header">
+                      <h3 class="card-title">星槽几何参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.a, form.b, form.angle_demolding_1]) }}
+                          <div class="col-12">
+                            <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-SLOT.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-4">
+                    <div class="card-header">
+                      <h3 class="card-title">药块通用几何参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.block_length, form.block_insulation_thickness_z]) }}
+                          {{ render_form_row([form.block_insulation_thickness_t, form.block_insulation_thickness_r]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-4">
+                    <div class="card-header">
+                      <h3 class="card-title">缝隙几何参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.block_gap_z, form.block_gap_t]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-5">
                     <div class="card-header">
                       <h3 class="card-title">头部药块几何参数</h3>
                     </div>
@@ -144,6 +190,31 @@
                           <hr>
                           <div class="col-12">
                             <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='three_arcs_front.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-6">
+                    <div class="card-header">
+                      <h3 class="card-title">尾部药块几何参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.behind_ref_length, form.r_cut_behind, form.length_behind]) }}
+                          {{ render_form_row([form.p0_x_behind, form.p0_y_behind, form.theta0_deg_behind]) }}
+                          {{ render_form_row([form.p3_x_behind, form.p3_y_behind, form.theta3_deg_behind]) }}
+                          {{ render_form_row([form.r1_behind, form.r2_behind, form.r3_behind]) }}
+                          {{ render_form_row([form.theta_in_deg_behind]) }}
+                          <hr>
+                          <div class="col-12">
+                            <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='three_arcs_behind.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
                           </div>
                         </div>
                       </div>
@@ -184,7 +255,7 @@
               <div class="col-12">
                 <div class="card card-primary" data-card-id="card-9">
                   <div class="card-header">
-                    <h3 class="card-title">求解状态</h3>
+                    <h3 class="card-title">前处理状态</h3>
                   </div>
                   <div class="card-body">
                     <ul class="nav nav-pills ml-auto p-2">

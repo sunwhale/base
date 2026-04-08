@@ -1492,9 +1492,9 @@ def plot_three_arcs(result, p0, p3, figsize=(10, 8), is_show=True, is_save=True,
 
     # 绘制起点、终点和切点
     ax.plot(p0[0], p0[1], 'ks', markersize=10, label='Start p0')
-    ax.plot(p3[0], p3[1], 'k^', markersize=10, label='End p3')
     ax.plot(p1[0], p1[1], 'mo', markersize=8, label='Tangent p1')
     ax.plot(p2[0], p2[1], 'co', markersize=8, label='Tangent p2')
+    ax.plot(p3[0], p3[1], 'k^', markersize=10, label='End p3')
 
     # 绘制圆心到切点的连线
     ax.plot([c1[0], p0[0]], [c1[1], p0[1]], 'r--', alpha=0.5)
