@@ -2166,9 +2166,6 @@ if __name__ == "__main__":
     p0_behind = (p0_x_behind, p0_y_behind)
     p3_behind = (p3_x_behind, p3_y_behind)
 
-    print(p0_front)
-    print(p3_front, r1_front, r2_front, r3_front)
-
     beta = math.pi / n
 
     is_create_p_block = False
@@ -2192,11 +2189,23 @@ if __name__ == "__main__":
     is_assemble = True
 
     if not ABAQUS_ENV:
-        points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
+        # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
+        # plot_geometries(points, lines, faces)
+        # points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         # plot_geometries(points, lines, faces)
 
-        points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
-        print(points)
+        r_cut_front = 460.0
+        length_front = 1500.0
+        p0_front = (-1207.5, 794)
+        theta0_deg_front = 90.0
+        p3_front = (-350, 1762.5)
+        theta3_deg_front = 0.0
+        r1_front = 929.4
+        r2_front = 1524.0
+        r3_front = 655.2
+        theta_in_deg_front = 0.16
+        result = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
+        plot_three_arcs(result, p0_front, p3_front)
 
     if ABAQUS_ENV:
         Mdb()
