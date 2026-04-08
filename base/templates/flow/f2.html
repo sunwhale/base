@@ -115,12 +115,6 @@
                           {{ render_form_row([form.element_size, form.size]) }}
                           {{ render_form_row([form.insert_czm]) }}
 
-                          {{ render_form_row([form.front_ref_length, form.r_cut_front, form.length_front]) }}
-                          {{ render_form_row([form.p0_x_front, form.p0_y_front, form.theta0_deg_front]) }}
-                          {{ render_form_row([form.p3_x_front, form.p3_y_front, form.theta3_deg_front]) }}
-                          {{ render_form_row([form.r1_front, form.r2_front, form.r3_front]) }}
-                          {{ render_form_row([form.theta_in_deg_front]) }}
-
                           {{ render_form_row([form.behind_ref_length, form.r_cut_behind, form.length_behind]) }}
                           {{ render_form_row([form.p0_x_behind, form.p0_y_behind, form.theta0_deg_behind]) }}
                           {{ render_form_row([form.p3_x_behind, form.p3_y_behind, form.theta3_deg_behind]) }}
@@ -131,6 +125,28 @@
                     </div>
                   </div>
                 </div>
+
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-3">
+                    <div class="card-header">
+                      <h3 class="card-title">头部药块几何参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.front_ref_length, form.r_cut_front, form.length_front]) }}
+                          {{ render_form_row([form.p0_x_front, form.p0_y_front, form.theta0_deg_front]) }}
+                          {{ render_form_row([form.p3_x_front, form.p3_y_front, form.theta3_deg_front]) }}
+                          {{ render_form_row([form.r1_front, form.r2_front, form.r3_front]) }}
+                          {{ render_form_row([form.theta_in_deg_front]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <div class="col-12">
                   <div class="card card-primary" data-card-id="card-7">
                     <div class="card-header">
