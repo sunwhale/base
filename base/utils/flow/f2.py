@@ -2207,6 +2207,8 @@ if __name__ == "__main__":
         result = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
         plot_three_arcs(result, p0_front, p3_front)
 
+        draw_map(block)
+
     if ABAQUS_ENV:
         Mdb()
         model = mdb.models['Model-1']
