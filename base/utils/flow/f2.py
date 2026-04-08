@@ -2069,7 +2069,9 @@ if __name__ == "__main__":
     fillet_radius = 50.0
     angle_demolding_1 = 1.5
 
-    burn_offset = 400.0
+    burn_offset = 0.0
+
+    front_partition_offset = 300.0
 
     element_size = 20
     insert_czm = False
@@ -2167,15 +2169,15 @@ if __name__ == "__main__":
     is_create_p_gap_behind = False
     is_assemble = False
 
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
     is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_assemble = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2240,7 +2242,7 @@ if __name__ == "__main__":
         if is_create_p_gap_penult:
             p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
 
-        points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, 300], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, front_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
 
         first_block_dimension = deepcopy(block_dimension)
         first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z]
