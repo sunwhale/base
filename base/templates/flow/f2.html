@@ -128,8 +128,12 @@
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                           <hr>
                           {{ render_form_row([form.a, form.b, form.angle_demolding_1]) }}
-                          <div class="col-12">
-                            <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-SLOT.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                          <div class="col-6">
+                            <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-SLOT.png') }}"
+                                 style="width: 100%; height: auto; cursor: pointer;"
+                                 onerror="this.style.display='none'"
+                                 alt="描述文字"
+                                 onclick="openImagePreview(this.src)">
                           </div>
                         </div>
                       </div>
@@ -188,8 +192,12 @@
                           {{ render_form_row([form.r1_front, form.r2_front, form.r3_front]) }}
                           {{ render_form_row([form.theta_in_deg_front]) }}
                           <hr>
-                          <div class="col-12">
-                            <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='three_arcs_front.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                          <div class="col-6">
+                            <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='three_arcs_front.png') }}"
+                                 style="width: 100%; height: auto; cursor: pointer;"
+                                 onerror="this.style.display='none'"
+                                 alt="描述文字"
+                                 onclick="openImagePreview(this.src)">
                           </div>
                         </div>
                       </div>
@@ -213,8 +221,12 @@
                           {{ render_form_row([form.r1_behind, form.r2_behind, form.r3_behind]) }}
                           {{ render_form_row([form.theta_in_deg_behind]) }}
                           <hr>
-                          <div class="col-12">
-                            <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='three_arcs_behind.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                          <div class="col-6">
+                            <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='three_arcs_behind.png') }}"
+                                 style="width: 100%; height: auto; cursor: pointer;"
+                                 onerror="this.style.display='none'"
+                                 alt="描述文字"
+                                 onclick="openImagePreview(this.src)">
                           </div>
                         </div>
                       </div>
