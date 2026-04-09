@@ -293,6 +293,15 @@
                       </div>
 
                       <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">装配预览</h6>
+                        <img src=""
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
                         <h6 class="text">头部药块</h6>
                         <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-BLOCK-FRONT_iso.png') }}"
                              style="width: 100%; height: auto; cursor: pointer;"
@@ -322,6 +331,42 @@
                       <div class="col-6" style="border: 1px solid black">
                         <h6 class="text">尾部药块</h6>
                         <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-BLOCK-BEHIND_iso.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">头部药块随动胶</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-GAP-FRONT_iso.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">中部药块随动胶</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-GAP_iso.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">过渡区药块随动胶</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-GAP-PENULT_iso.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">尾部药块随动胶</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-GAP-BEHIND_iso.png') }}"
                              style="width: 100%; height: auto; cursor: pointer;"
                              onerror="this.style.display='none'"
                              alt="描述文字"
