@@ -102,9 +102,9 @@ class F1Form(FlaskForm):
 
 
 class F2Form(FlaskForm):
-    n = IntegerField('n，环向等分数', default=9, validators=[DataRequired()])
-    d = FloatField('d，mm', default=3529.0)
-    x0 = FloatField('x0，mm', default=500.0)
+    n = IntegerField('环向等分数 n', default=9, validators=[DataRequired()])
+    d = FloatField('药柱直径 d，mm', default=3529.0)
+    x0 = FloatField('内轮廓距离 x0，mm', default=500.0)
     block_length = FloatField('药块长度，mm', default=1229.0)
     block_insulation_thickness_z = FloatField('z方向绝热层厚度，mm', default=3.0)
     block_insulation_thickness_r = FloatField('r方向绝热层厚度，mm', default=3.0)
@@ -118,7 +118,7 @@ class F2Form(FlaskForm):
     burn_offset = FloatField('燃面退移量，mm', default=0.0)
     outer_partition_offset = FloatField('外轮廓剖分偏移量，mm', default=300.0)
     element_size = FloatField('单元尺寸，mm', default=40.0)
-    insert_czm = BooleanField('是否插入内聚力单元，mm', default=False)
+    insert_czm = BooleanField('是否插入内聚力单元', default=False)
     size = SelectField('对称性', coerce=str)
 
     front_ref_length = FloatField('头部参考长度，mm', default=509.0)

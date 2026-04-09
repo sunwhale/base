@@ -101,6 +101,7 @@ class Preproc:
         exts = [
             '*.rpy',
             '*.rpy.*',
+            '*.rec',
         ]
         for ext in exts:
             remove_files(self.path, ext)
