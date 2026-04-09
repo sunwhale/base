@@ -284,12 +284,20 @@
                     <hr>
                     <div class="row" id="imageContainer">
                       <div class="col-6" style="border: 1px solid black">
-                        <h6 class="text">刀具网格</h6>
-                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                        <h6 class="text">装配预览</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='assembly_iso.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
                       </div>
                       <div class="col-6" style="border: 1px solid black">
                         <h6 class="text">平板网格</h6>
-                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-BLOCK-FRONT_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-BLOCK-FRONT_iso.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
                       </div>
 
                       <div class="col-6" style="border: 1px solid black">
@@ -353,6 +361,29 @@
         </div>
       </div>
     </section>
+
+    <!-- Bootstrap 4 模态框 -->
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1" role="dialog" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">图片预览</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body text-center" style="overflow: hidden; max-height: 80vh; cursor: grab;" id="modalBody">
+            <!-- 缩放/平移容器 -->
+            <div id="imageTransformContainer" style="display: inline-block; transform-origin: center center;">
+              <img id="previewImg" src="" alt="预览图" style="max-height: 70vh; pointer-events: none;">
+            </div>
+            <div class="mt-2 text-muted small">
+              💡 提示：鼠标滚轮缩放 | 按住图片拖拽平移 | 点击关闭按钮或背景退出
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
 {% endblock content %}
 
@@ -557,6 +588,143 @@
   //     }
   //   });
   // })
+
+  (function () {
+    // DOM 元素
+    var transformContainer = document.getElementById('imageTransformContainer');
+    var previewImg = document.getElementById('previewImg');
+    var modalElement = document.getElementById('imagePreviewModal');
+    var modalBody = document.getElementById('modalBody');
+
+    // 缩放变量
+    var currentScale = 1;
+    var MIN_SCALE = 0.5;
+    var MAX_SCALE = 3;
+
+    // 平移变量
+    var translateX = 0;
+    var translateY = 0;
+    var isDragging = false;
+    var startX = 0, startY = 0;
+    var startTranslateX = 0, startTranslateY = 0;
+
+    // 更新变换（平移 + 缩放）
+    function updateTransform() {
+      transformContainer.style.transform = 'translate(' + translateX + 'px, ' + translateY + 'px) scale(' + currentScale + ')';
+    }
+
+    // 重置缩放和平移
+    function resetTransform() {
+      currentScale = 1;
+      translateX = 0;
+      translateY = 0;
+      updateTransform();
+    }
+
+    // 滚轮缩放
+    function handleWheel(e) {
+      e.preventDefault();
+      var delta = e.deltaY > 0 ? -0.1 : 0.1;
+      var newScale = currentScale + delta;
+      if (newScale < MIN_SCALE) newScale = MIN_SCALE;
+      if (newScale > MAX_SCALE) newScale = MAX_SCALE;
+      if (newScale !== currentScale) {
+        currentScale = newScale;
+        updateTransform();
+      }
+    }
+
+    // 拖拽平移 - 开始
+    function onMouseDown(e) {
+      // 只响应鼠标左键 (button === 0)
+      if (e.button !== 0) return;
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startTranslateX = translateX;
+      startTranslateY = translateY;
+      modalBody.style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+
+    // 拖拽平移 - 移动
+    function onMouseMove(e) {
+      if (!isDragging) return;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      translateX = startTranslateX + dx;
+      translateY = startTranslateY + dy;
+      updateTransform();
+    }
+
+    // 拖拽平移 - 结束
+    function onMouseUp(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      modalBody.style.cursor = 'grab';
+    }
+
+    // 绑定/解绑滚轮事件
+    var wheelHandler = null;
+
+    function bindWheel() {
+      if (wheelHandler) return;
+      wheelHandler = handleWheel;
+      transformContainer.addEventListener('wheel', wheelHandler, {passive: false});
+    }
+
+    function unbindWheel() {
+      if (wheelHandler) {
+        transformContainer.removeEventListener('wheel', wheelHandler);
+        wheelHandler = null;
+      }
+    }
+
+    // 绑定/解绑拖拽事件
+    function bindDrag() {
+      transformContainer.addEventListener('mousedown', onMouseDown);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    }
+
+    function unbindDrag() {
+      transformContainer.removeEventListener('mousedown', onMouseDown);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+      // 确保光标恢复
+      if (modalBody) modalBody.style.cursor = 'grab';
+      isDragging = false;
+    }
+
+    // 打开预览（全局函数）
+    window.openImagePreview = function (imgSrc) {
+      previewImg.src = imgSrc;
+      resetTransform();
+      // 显示模态框
+      $('#imagePreviewModal').modal('show');
+      // 模态框显示后绑定滚轮和拖拽
+      $(modalElement).off('shown.bs.modal').on('shown.bs.modal', function () {
+        bindWheel();
+        bindDrag();
+      });
+      // 模态框隐藏时解绑所有事件并重置
+      $(modalElement).off('hidden.bs.modal').on('hidden.bs.modal', function () {
+        unbindWheel();
+        unbindDrag();
+        resetTransform();
+      });
+    };
+
+    // 额外保险：模态框隐藏时手动清理（使用 Bootstrap 4 事件）
+    $('#imagePreviewModal').on('hide.bs.modal', function () {
+      unbindWheel();
+      unbindDrag();
+      resetTransform();
+    });
+
+    // 初始化光标样式
+    modalBody.style.cursor = 'grab';
+  })();
 
   document.addEventListener('DOMContentLoaded', function () {
     const radioButtons = document.querySelectorAll('[name="tool_option"]');
