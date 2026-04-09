@@ -291,8 +291,9 @@
                              alt="描述文字"
                              onclick="openImagePreview(this.src)">
                       </div>
+
                       <div class="col-6" style="border: 1px solid black">
-                        <h6 class="text">平板网格</h6>
+                        <h6 class="text">头部药块</h6>
                         <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-BLOCK-FRONT_iso.png') }}"
                              style="width: 100%; height: auto; cursor: pointer;"
                              onerror="this.style.display='none'"
@@ -301,22 +302,167 @@
                       </div>
 
                       <div class="col-6" style="border: 1px solid black">
-                        <h6 class="text">Iso视图</h6>
-                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-BLOCK_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
-                      </div>
-                      <div class="col-6" style="border: 1px solid black">
-                        <h6 class="text">Bottom视图</h6>
-                         <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-BLOCK-PENULT_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                        <h6 class="text">中部药块</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-BLOCK_iso.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
                       </div>
 
                       <div class="col-6" style="border: 1px solid black">
-                        <h6 class="text">Front视图</h6>
-                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-BLOCK-BEHIND_iso.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                        <h6 class="text">过渡区药块</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-BLOCK-PENULT_iso.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
                       </div>
+
                       <div class="col-6" style="border: 1px solid black">
-                        <h6 class="text">刀具路径</h6>
-                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-FRONT-CUT-REVOLVE.png') }}" style="width: 100%; height: auto;" onerror="this.style.display='none'" alt="描述文字">
+                        <h6 class="text">尾部药块</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='PART-BLOCK-BEHIND_iso.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
                       </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-BEHIND-INNER</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-BEHIND-INNER.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-BEHIND-OUTER-OFFSET</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-BEHIND-OUTER-OFFSET.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-BEHIND-OUTER</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-BEHIND-OUTER.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-BURN-X0</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-BURN-X0.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-CROSS-SECTION-PARTITION</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-CROSS-SECTION-PARTITION.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-CROSS-SECTION</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-CROSS-SECTION.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-FRONT-OUTER-OFFSET</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-FRONT-OUTER-OFFSET.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-FRONT-OUTER</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-FRONT-OUTER.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-FRONT-SLOT</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-FRONT-SLOT.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-GAP-T-FRONT-BEHIND</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-GAP-T-FRONT-BEHIND.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-GAP-T</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-GAP-T.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-GAP-Z-FRONT-BEHIND</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-GAP-Z-FRONT-BEHIND.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-GAP-Z</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-GAP-Z.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-PENULT-INNER</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-PENULT-INNER.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
+                      <div class="col-6" style="border: 1px solid black">
+                        <h6 class="text">SKETCH-SLOT</h6>
+                        <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-SLOT.png') }}"
+                             style="width: 100%; height: auto; cursor: pointer;"
+                             onerror="this.style.display='none'"
+                             alt="描述文字"
+                             onclick="openImagePreview(this.src)">
+                      </div>
+
                     </div>
                   </div>
                 </div>
@@ -384,7 +530,6 @@
         </div>
       </div>
     </div>
-
 {% endblock content %}
 
 {% block script %}
