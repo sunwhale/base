@@ -1838,7 +1838,7 @@ def set_section_common(p):
         p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-CZM', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
 
-def draw_map(block):
+def plot_blocks_map(block, figsize=(8, 8), is_show=True, is_save=True, save_path='blocks.png'):
     """
     根据布尔矩阵 block 绘制 blocks 地图。
     参数:
@@ -1859,7 +1859,7 @@ def draw_map(block):
         data[i, block[i, :]] = 4
 
     # 绘图
-    fig, ax = plt.subplots(figsize=(8, 8))
+    fig, ax = plt.subplots(figsize=figsize)
 
     # 颜色映射
     cmap = plt.cm.colors.ListedColormap(['white', '#FF6B6B', '#98FB98', '#4ECDC4', '#FFE66D'])
@@ -1919,7 +1919,11 @@ def draw_map(block):
 
     ax.set_title('BLOCKS MAP')
     plt.tight_layout()
-    plt.show()
+    if is_save:
+        plt.savefig(save_path, dpi=300)
+
+    if is_show:
+        plt.show()
 
 
 def get_tie_types(block):
@@ -2028,6 +2032,7 @@ def print_part(session, model, viewport, part_name):
     p = model.parts[part_name]
     viewport.setValues(displayedObject=p)
     viewport.view.setValues(session.views['Iso'])
+    viewport.view.rotate(xAngle=0, yAngle=0, zAngle=-90, mode=MODEL)
     cmap = viewport.colorMappings['Material']
     viewport.setColor(colorMapping=cmap)
     session.printToFile(fileName=part_name + '_iso.png', format=PNG, canvasObjects=(viewport,))
@@ -2071,7 +2076,7 @@ if __name__ == "__main__":
 
     burn_offset = 0.0
 
-    front_partition_offset = 300.0
+    outer_partition_offset = 300.0
 
     element_size = 20
     insert_czm = False
@@ -2109,7 +2114,7 @@ if __name__ == "__main__":
     if p3_behind[1] > d / 2.0:
         raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
 
-    nl, nt = 6, n
+    nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
     block[:, 0] = True
     # block[:, 1] = True
@@ -2132,7 +2137,7 @@ if __name__ == "__main__":
     fillet_radius = message['fillet_radius']
     angle_demolding_1 = message['angle_demolding_1']
     burn_offset = message['burn_offset']
-    front_partition_offset = message['front_partition_offset']
+    outer_partition_offset = message['outer_partition_offset']
     element_size = message['element_size']
     insert_czm = message['insert_czm']
     size = message['size']
@@ -2204,11 +2209,14 @@ if __name__ == "__main__":
         # r2_front = 1524.0
         # r3_front = 655.2
         # theta_in_deg_front = 0.16
-        
+
         result = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
         plot_three_arcs(result, p0_front, p3_front, is_show=False, save_path='three_arcs_front.png')
 
-        # draw_map(block)
+        result = solve_three_arcs(p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind)
+        plot_three_arcs(result, p0_behind, p3_behind, is_show=False, save_path='three_arcs_behind.png')
+
+        plot_blocks_map(block, is_show=False, save_path='blocks_map.png')
 
     if ABAQUS_ENV:
         Mdb()
@@ -2250,6 +2258,7 @@ if __name__ == "__main__":
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         if is_create_p_block:
             p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
+            print('CREATE PART-BLOCK DONE.')
 
         gap_dimension = deepcopy(block_dimension)
         gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
@@ -2257,16 +2266,19 @@ if __name__ == "__main__":
         gap_dimension['index_t'] = 3
         if is_create_p_gap:
             p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
+            print('CREATE PART-GAP DONE.')
 
         penult_block_dimension = deepcopy(block_dimension)
         if is_create_p_block_penult:
             p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
+            print('CREATE PART-BLOCK-PENULT DONE.')
 
         penult_gap_dimension = deepcopy(gap_dimension)
         if is_create_p_gap_penult:
             p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
+            print('CREATE PART-GAP-PENULT DONE.')
 
-        points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, front_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
 
         first_block_dimension = deepcopy(block_dimension)
         first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z]
@@ -2285,11 +2297,13 @@ if __name__ == "__main__":
         first_block_dimension['theta_in_deg'] = theta_in_deg_front
         if is_create_p_block_front:
             p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
+            print('CREATE PART-BLOCK-FRONT DONE.')
 
         first_gap_dimension = deepcopy(first_block_dimension)
         first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_z / 2]
         if is_create_p_gap_front:
             p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
+            print('CREATE PART-GAP-FRONT DONE.')
 
         behind_block_dimension = deepcopy(first_block_dimension)
         behind_block_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z]
@@ -2305,11 +2319,13 @@ if __name__ == "__main__":
         behind_block_dimension['theta_in_deg'] = theta_in_deg_behind
         if is_create_p_block_behind:
             p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
+            print('CREATE PART-BLOCK-BEHIND DONE.')
 
         behind_gap_dimension = deepcopy(behind_block_dimension)
         behind_gap_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z, behind_ref_length + block_insulation_thickness_z + block_gap_z / 2]
         if is_create_p_gap_behind:
             p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
+            print('CREATE PART-GAP-BEHIND DONE.')
 
         if is_assemble:
             block_types = get_block_types(block)
@@ -2413,35 +2429,35 @@ if __name__ == "__main__":
                 model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
                                      u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
 
-            for block_loc, block_type in block_types.items():
-                l, i = block_loc
-
-                if i == 0:
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T0'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T2'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T0'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                # if i == 8:
-                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                #     set_name = 'SET-SURFACE-T-1'
-                #     bc_name = 'BC-' + instance_name + '-' + set_name
-                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-                #
-                #     instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                #     set_name = 'SET-SURFACE-T-2'
-                #     bc_name = 'BC-' + instance_name + '-' + set_name
-                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            # for block_loc, block_type in block_types.items():
+            #     l, i = block_loc
+            #
+            #     if i == 0:
+            #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #         set_name = 'SET-SURFACE-T0'
+            #         bc_name = 'BC-' + instance_name + '-' + set_name
+            #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #         instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            #         set_name = 'SET-SURFACE-T2'
+            #         bc_name = 'BC-' + instance_name + '-' + set_name
+            #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #         instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            #         set_name = 'SET-SURFACE-T0'
+            #         bc_name = 'BC-' + instance_name + '-' + set_name
+            #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #     if i == 8:
+            #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #         set_name = 'SET-SURFACE-T-1'
+            #         bc_name = 'BC-' + instance_name + '-' + set_name
+            #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #         instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            #         set_name = 'SET-SURFACE-T-2'
+            #         bc_name = 'BC-' + instance_name + '-' + set_name
+            #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             if major_version >= 2022:
                 mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
@@ -2464,7 +2480,7 @@ if __name__ == "__main__":
             viewport.makeCurrent()
             viewport.setValues(width=200)
             viewport.setValues(height=200)
-            # session.pngOptions.setValues(imageSize=(1600, 1600))
+            session.pngOptions.setValues(imageSize=(1600, 1600))
             session.printOptions.setValues(vpDecorations=OFF)
 
             print_assembly(session, model, viewport)
