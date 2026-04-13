@@ -2276,15 +2276,29 @@ def create_part_insulation(model, part_name, dimension):
     ]
     for plane in cut_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-    p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    
+    try:
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    except:
+        pass
+
+    try:
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    except:
+        pass
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
 
+    # 创建集合（体）
+    set_name = 'SET-CELL-INSULATION'
+    p.Set(cells=p.cells, name=set_name)
+
     # 赋予SECTION属性
+    set_section_common(p)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
