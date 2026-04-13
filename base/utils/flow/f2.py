@@ -2078,27 +2078,29 @@ def create_part_insulation(model, part_name, dimension):
     r_front_out_1 = dimension['r_front_out_1']
     r_front_out_2 = dimension['r_front_out_2']
     r_front_out_3 = dimension['r_front_out_3']
-    # r_front_out_4 = dimension['r_front_out_4']
     r_front_out_5 = dimension['r_front_out_5']
     r_front_out_6 = dimension['r_front_out_6']
+
     r_behind_out_1 = dimension['r_behind_out_1']
     r_behind_out_2 = dimension['r_behind_out_2']
     r_behind_out_3 = dimension['r_behind_out_3']
-    # r_behind_out_4 = dimension['r_behind_out_4']
     r_behind_out_5 = dimension['r_behind_out_5']
     r_behind_out_6 = dimension['r_behind_out_6']
 
     l_front_1 = dimension['l_front_1']
     l_front_2 = dimension['l_front_2']
     l_front_3 = dimension['l_front_3']
+
     l_behind_1 = dimension['l_behind_1']
     l_behind_2 = dimension['l_behind_2']
     l_behind_3 = dimension['l_behind_3']
+
     l_points_front = dimension['l_points_front']
     l_points_behind = dimension['l_points_behind']
 
     slope_degree_points_front = dimension['slope_degree_points_front']
     slope_degree_points_behind = dimension['slope_degree_points_behind']
+
     thickness = dimension['thickness']
     rotate_angle_degree = dimension['rotate_angle_degree']
 
@@ -2394,6 +2396,7 @@ if __name__ == "__main__":
 
     beta = math.pi / n
 
+    is_create_p_insulation = False
     is_create_p_block = False
     is_create_p_gap = False
     is_create_p_block_penult = False
@@ -2402,8 +2405,11 @@ if __name__ == "__main__":
     is_create_p_gap_front = False
     is_create_p_block_behind = False
     is_create_p_gap_behind = False
+    is_save_parts_cae = False
+    is_open_parts_cae = False
     is_assemble = False
 
+    # is_create_p_insulation = True
     # is_create_p_block = True
     # is_create_p_gap = True
     # is_create_p_block_penult = True
@@ -2412,7 +2418,9 @@ if __name__ == "__main__":
     # is_create_p_gap_front = True
     # is_create_p_block_behind = True
     # is_create_p_gap_behind = True
-    # is_assemble = True
+    # is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2478,18 +2486,19 @@ if __name__ == "__main__":
             'r_front_out_1': 562.5,
             'r_front_out_2': 844.26,
             'r_front_out_3': 460,
-            # 'r_front_out_4': 556,
             'r_front_out_5': 425,
             'r_front_out_6': 794,
+
             'r_behind_out_1': 942,
             'r_behind_out_2': 1260,
             'r_behind_out_3': 815,
-            # 'r_behind_out_4': 1260,
             'r_behind_out_5': 775,
             'r_behind_out_6': 1109.77,
+
             'l_front_1': 1022.08,
             'l_front_2': 892.58,
             'l_front_3': 857.58,
+
             'l_behind_1': 891.06,
             'l_behind_2': 746.48,
             'l_behind_3': 683.73,
@@ -2518,7 +2527,8 @@ if __name__ == "__main__":
             'r2_behind': 1075.96,
             'r3_behind': 569.38,
         }
-        p_insulation = create_part_insulation(model, 'PART_INSULATION', shell_dimension)
+        if is_create_p_gap_behind:
+            p_insulation = create_part_insulation(model, 'PART-INSULATION', shell_dimension)
 
         block_dimension = {
             'z_list': [0, block_length / 2 - block_insulation_thickness_z, block_length / 2],
@@ -2612,6 +2622,23 @@ if __name__ == "__main__":
             p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
             print('CREATE PART-GAP-BEHIND DONE.')
 
+        if is_save_parts_cae:
+            mdb.saveAs(pathName='f2-parts.cae')
+
+        if is_open_parts_cae:
+            Mdb()
+            openMdb(pathName='f2-parts.cae')
+            model = mdb.models['Model-1']
+            p_block_front = model.parts['PART-BLOCK-FRONT']
+            p_block_penult = model.parts['PART-BLOCK-PENULT']
+            p_block_behind = model.parts['PART-BLOCK-BEHIND']
+            p_block = model.parts['PART-BLOCK']
+            p_gap_front = model.parts['PART-GAP-FRONT']
+            p_gap_penult = model.parts['PART-GAP-PENULT']
+            p_gap_behind = model.parts['PART-GAP-BEHIND']
+            p_gap = model.parts['PART-GAP']
+            p_insulation = model.parts['PART-INSULATION']
+
         if is_assemble:
             block_types = get_block_types(block)
             ties_types = get_tie_types(block)
@@ -2633,6 +2660,11 @@ if __name__ == "__main__":
             a = model.rootAssembly
             a.DatumCsysByDefault(CARTESIAN)
             cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
+
+            a.Instance(name='INSULATION', part=p_insulation, dependent=ON)
+            a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=-90.0)
+            a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=-90.0)
+            a.translate(instanceList=('INSULATION',), vector=(0.0, 0.0, -349.92))
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
@@ -2777,3 +2809,5 @@ if __name__ == "__main__":
                 print_part(session, model, viewport, part_name)
 
             mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
+
+            mdb.saveAs(pathName='f2.cae')
