@@ -2146,15 +2146,15 @@ def create_part_insulation(model, part_name, dimension):
     p_front_out_1 = line1.get_intersection(line2)
     p_front_out_2 = [c_1[0], a_front]
     p_front_out_3 = [ellipse_front.x_from_y(r_front_out_2)[1], r_front_out_2]
-    p_front_out_4 = [ellipse_front.x_from_y(r_front_out_2)[1] + local_offset, r_front_out_2]
-    p_front_out_5 = [c_1[0] - l_front_1, r_front_out_3]
-    p_front_out_6 = [c_1[0] - l_front_2, r_front_out_3]
-    p_front_out_7 = [c_1[0] - l_front_2, r_front_out_1 - thickness]
-    front_offset = ellipse_front.point_along_ellipse_normal(p_front_out_3[0], p_front_out_3[1], -thickness)
-    p_front_out_8 = [c_1[0] - l_front_2 - l_points_front_x, front_offset[1]]
-    p_front_out_9 = [c_1[0] - l_front_1, r_front_out_5]
-    p_front_out_10 = [c_1[0] - l_front_3, r_front_out_5]
-    p_front_out_11 = [c_1[0] - l_front_3, r_front_out_6]
+    # p_front_out_4 = [ellipse_front.x_from_y(r_front_out_2)[1] + local_offset, r_front_out_2]
+    # p_front_out_5 = [c_1[0] - l_front_1, r_front_out_3]
+    # p_front_out_6 = [c_1[0] - l_front_2, r_front_out_3]
+    # p_front_out_7 = [c_1[0] - l_front_2, r_front_out_1 - thickness]
+    # front_offset = ellipse_front.point_along_ellipse_normal(p_front_out_3[0], p_front_out_3[1], -thickness)
+    # p_front_out_8 = [c_1[0] - l_front_2 - l_points_front_x, front_offset[1]]
+    # p_front_out_9 = [c_1[0] - l_front_1, r_front_out_5]
+    # p_front_out_10 = [c_1[0] - l_front_3, r_front_out_5]
+    # p_front_out_11 = [c_1[0] - l_front_3, r_front_out_6]
 
     # 后封头外轮廓
     line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(theta_out_deg_behind)))
@@ -2162,15 +2162,15 @@ def create_part_insulation(model, part_name, dimension):
     p_behind_out_1 = line1.get_intersection(line2)
     p_behind_out_2 = [c_2[0], a_behind]
     p_behind_out_3 = [ellipse_behind.x_from_y(r_behind_out_2)[0], r_behind_out_2]
-    p_behind_out_4 = [ellipse_behind.x_from_y(r_behind_out_2)[0] + local_offset, r_behind_out_2]
-    p_behind_out_5 = [c_2[0] + l_behind_1, r_behind_out_3]
-    p_behind_out_6 = [c_2[0] + l_behind_2, r_behind_out_3]
-    p_behind_out_7 = [c_2[0] + l_behind_2, r_behind_out_1 - thickness]
-    behind_offset = ellipse_behind.point_along_ellipse_normal(p_behind_out_3[0], p_behind_out_3[1], -thickness)
-    p_behind_out_8 = [c_2[0] + l_behind_2 - l_points_behind_x, behind_offset[1]]
-    p_behind_out_9 = [c_2[0] + l_behind_1, r_behind_out_5]
-    p_behind_out_10 = [c_2[0] + l_behind_3, r_behind_out_5]
-    p_behind_out_11 = [c_2[0] + l_behind_3, r_behind_out_6]
+    # p_behind_out_4 = [ellipse_behind.x_from_y(r_behind_out_2)[0] + local_offset, r_behind_out_2]
+    # p_behind_out_5 = [c_2[0] + l_behind_1, r_behind_out_3]
+    # p_behind_out_6 = [c_2[0] + l_behind_2, r_behind_out_3]
+    # p_behind_out_7 = [c_2[0] + l_behind_2, r_behind_out_1 - thickness]
+    # behind_offset = ellipse_behind.point_along_ellipse_normal(p_behind_out_3[0], p_behind_out_3[1], -thickness)
+    # p_behind_out_8 = [c_2[0] + l_behind_2 - l_points_behind_x, behind_offset[1]]
+    # p_behind_out_9 = [c_2[0] + l_behind_1, r_behind_out_5]
+    # p_behind_out_10 = [c_2[0] + l_behind_3, r_behind_out_5]
+    # p_behind_out_11 = [c_2[0] + l_behind_3, r_behind_out_6]
 
     # 前封头内轮廓
     line1 = Line2D((0, a_front_in), math.tan(degrees_to_radians(theta_in_deg_front)))
@@ -2197,8 +2197,8 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_front['c2'], point1=arcs_front['p1'], point2=arcs_front['p2'], direction=get_direction(arcs_front['delta2']))
     s.ArcByCenterEnds(center=arcs_front['c3'], point1=arcs_front['p2'], point2=p3_front, direction=get_direction(arcs_front['delta3']))
 
-    print(front_offset, p_front_out_8, p_front_out_7, p_front_out_6, p_front_out_5, p_front_out_9, p_front_out_10)
-    point_list_front = [p_front_out_3, [-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425], p0_front]
+    # print(front_offset, p_front_out_8, p_front_out_7, p_front_out_6, p_front_out_5, p_front_out_9, p_front_out_10)
+    point_list_front = [p_front_out_3, [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425], p0_front]
     for i in range(len(point_list_front) - 1):
         s.Line(point1=point_list_front[i], point2=point_list_front[i + 1])
 
@@ -2213,8 +2213,8 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_behind['c2'], point1=arcs_behind['p1'], point2=arcs_behind['p2'], direction=get_direction(arcs_behind['delta2']))
     s.ArcByCenterEnds(center=arcs_behind['c3'], point1=arcs_behind['p2'], point2=p3_behind, direction=get_direction(arcs_behind['delta3']))
 
-    print(behind_offset, p_behind_out_8, p_behind_out_7, p_behind_out_6, p_behind_out_5, p_behind_out_9, p_behind_out_10)
-    point_list_behind = [p_behind_out_3, [18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775], [17983.73, 775], p0_behind]
+    # print(behind_offset, p_behind_out_8, p_behind_out_7, p_behind_out_6, p_behind_out_5, p_behind_out_9, p_behind_out_10)
+    point_list_behind = [p_behind_out_3, [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775], [17983.73, 775], p0_behind]
     for i in range(len(point_list_behind) - 1):
         s.Line(point1=point_list_behind[i], point2=point_list_behind[i + 1])
 
@@ -2230,49 +2230,49 @@ def create_part_insulation(model, part_name, dimension):
 
     s.setPrimaryObject(option=STANDALONE)
 
-    # # 生成基础体
-    # p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    # p.BaseSolidRevolve(sketch=s, angle=insulation_rotate_angle_deg, flipRevolveDirection=OFF)
-    #
-    # # 截面剖分
-    # d = p.datums
-    # cut_planes = [
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_out_1[0]),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_1[0]),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c_2[0]),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_out_1[0]),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_in_1[0]),
-    # ]
-    # for plane in cut_planes:
-    #     p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
-    #
-    # xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-    # xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-    #
-    # try:
-    #     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-    # except:
-    #     pass
-    #
-    # try:
-    #     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-    # except:
-    #     pass
-    #
-    # # 生成网格
-    # generate_part_mesh(p, element_size=element_size)
-    #
-    # # 创建集合（体）
-    # set_name = 'SET-CELL-INSULATION'
-    # p.Set(cells=p.cells, name=set_name)
-    #
-    # # 赋予SECTION属性
-    # set_section_common(p)
-    #
-    # p.setValues(geometryRefinement=EXTRA_FINE)
-    #
-    # return p
+    # 生成基础体
+    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    p.BaseSolidRevolve(sketch=s, angle=insulation_rotate_angle_deg, flipRevolveDirection=OFF)
+
+    # 截面剖分
+    d = p.datums
+    cut_planes = [
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_out_1[0]),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_1[0]),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c_2[0]),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_out_1[0]),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_in_1[0]),
+    ]
+    for plane in cut_planes:
+        p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+
+    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
+
+    try:
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    except:
+        pass
+
+    try:
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    except:
+        pass
+
+    # 生成网格
+    generate_part_mesh(p, element_size=element_size)
+
+    # 创建集合（体）
+    set_name = 'SET-CELL-INSULATION'
+    p.Set(cells=p.cells, name=set_name)
+
+    # 赋予SECTION属性
+    set_section_common(p)
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
 
 
 if __name__ == "__main__":
