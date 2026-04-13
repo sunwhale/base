@@ -2060,7 +2060,7 @@ def print_assembly(session, model, viewport):
 def create_part_insulation(model, part_name, dimension):
     # 变量赋值
 
-    l_cylinder = dimension['l_cylinder']
+    l_c1_c2 = dimension['l_c1_c2']
     ellipse_ratio = dimension['ellipse_ratio']
 
     r_in_insulation = dimension['r_in_insulation']
@@ -2108,7 +2108,7 @@ def create_part_insulation(model, part_name, dimension):
 
     # 基本参数
     c_1 = [0.0, 0.0]
-    c_2 = [l_cylinder, 0.0]
+    c_2 = [l_c1_c2, 0.0]
     element_size = 40.0
     local_offset = 1.0
 
@@ -2170,39 +2170,23 @@ def create_part_insulation(model, part_name, dimension):
 
     s = model.ConstrainedSketch(name='SKETCH-INSULATION', sheetSize=2000.0)
 
-    geom_list = []
+
+
+
 
     # 前封头
-    geom_list.append(s.Line(point1=p_front_out_3, point2=p_front_out_4))
-    geom_list.append(s.EllipseByCenterPerimeter(center=c_1, axisPoint1=p_front_out_2, axisPoint2=[c_1[0] + b_front, 0.0]))
-    s.autoTrimCurve(curve1=geom_list[-1], point1=(c_1[0] - b_front, 0.0))
-    curve = s.geometry.findAt(p_front_out_3)
-    s.autoTrimCurve(curve1=curve, point1=p_front_out_3)
-
-    geom_list.append(s.Line(point1=front_offset, point2=p_front_out_3))
-    geom_list.append(s.Line(point1=p_front_out_8, point2=front_offset))
-    geom_list.append(s.Line(point1=p_front_out_7, point2=p_front_out_8))
-    geom_list.append(s.Line(point1=p_front_out_7, point2=p_front_out_6))
-    geom_list.append(s.Line(point1=p_front_out_5, point2=p_front_out_6))
-    geom_list.append(s.Line(point1=p_front_out_9, point2=p_front_out_5))
-    geom_list.append(s.Line(point1=p_front_out_10, point2=p_front_out_9))
-    geom_list.append(s.Line(point1=p_front_out_10, point2=p_front_out_11))
+    l_trim_front = s.Line(point1=p_front_out_3, point2=(p_front_out_3[0] + 1.0, p_front_out_3[1]))
+    ellipse_front = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=p_front_out_2, axisPoint2=[c_1[0] + b_front, 0.0])
+    s.autoTrimCurve(curve1=ellipse_front, point1=(c_1[0] - b_front, 0.0))
+    s.delete(objectList=(s.geometry[l_trim_front.id],))
 
     # 后封头
-    geom_list.append(s.Line(point1=p_behind_out_3, point2=p_behind_out_4))
-    geom_list.append(s.EllipseByCenterPerimeter(center=c_2, axisPoint1=p_behind_out_2, axisPoint2=[c_2[0] + b_behind, 0.0]))
-    s.autoTrimCurve(curve1=geom_list[-1], point1=(c_2[0] + b_behind, 0.0))
-    curve = s.geometry.findAt(p_behind_out_3)
-    s.autoTrimCurve(curve1=curve, point1=p_behind_out_3)
+    l_trim_behind = s.Line(point1=p_behind_out_3, point2=(p_behind_out_3[0] + 1.0, p_behind_out_3[1]))
+    ellipse_behind = s.EllipseByCenterPerimeter(center=c_2, axisPoint1=p_behind_out_2, axisPoint2=[c_2[0] + b_behind, 0.0])
+    s.autoTrimCurve(curve1=ellipse_behind, point1=(c_2[0] + b_behind, 0.0))
+    s.delete(objectList=(s.geometry[l_trim_behind.id],))
 
-    geom_list.append(s.Line(point1=behind_offset, point2=p_behind_out_3))
-    geom_list.append(s.Line(point1=p_behind_out_8, point2=behind_offset))
-    geom_list.append(s.Line(point1=p_behind_out_7, point2=p_behind_out_8))
-    geom_list.append(s.Line(point1=p_behind_out_7, point2=p_behind_out_6))
-    geom_list.append(s.Line(point1=p_behind_out_5, point2=p_behind_out_6))
-    geom_list.append(s.Line(point1=p_behind_out_9, point2=p_behind_out_5))
-    geom_list.append(s.Line(point1=p_behind_out_10, point2=p_behind_out_9))
-    geom_list.append(s.Line(point1=p_behind_out_10, point2=p_behind_out_11))
+
 
     p0 = dimension['p0_front']
     theta0_deg = dimension['theta0_deg_front']
@@ -2227,6 +2211,21 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
     s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
 
+    # geom_list.append(s.Line(point1=p_front_out_3, point2=front_offset))
+    # geom_list.append(s.Line(point1=front_offset, point2=p_front_out_8))
+    # geom_list.append(s.Line(point1=p_front_out_8, point2=p_front_out_7))
+    # geom_list.append(s.Line(point1=p_front_out_7, point2=p_front_out_6))
+    # geom_list.append(s.Line(point1=p_front_out_6, point2=p_front_out_5))
+    # geom_list.append(s.Line(point1=p_front_out_5, point2=p_front_out_9))
+    # geom_list.append(s.Line(point1=p_front_out_9, point2=p_front_out_10))
+    # geom_list.append(s.Line(point1=p_front_out_10, point2=p0))
+    # print(front_offset, p_front_out_8, p_front_out_7, p_front_out_6, p_front_out_5, p_front_out_9, p_front_out_10)
+
+    point_list = [p_front_out_3, [-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425], p0]
+
+    for i in range(len(point_list) - 1):
+        s.Line(point1=point_list[i], point2=point_list[i + 1])
+
     p0 = dimension['p0_behind']
     theta0_deg = dimension['theta0_deg_behind']
     p3 = dimension['p3_behind']
@@ -2250,59 +2249,70 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
     s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
 
+    # s.Line(point1=behind_offset, point2=p_behind_out_3)
+    # s.Line(point1=p_behind_out_8, point2=behind_offset)
+    # s.Line(point1=p_behind_out_7, point2=p_behind_out_8)
+    # s.Line(point1=p_behind_out_7, point2=p_behind_out_6)
+    # s.Line(point1=p_behind_out_5, point2=p_behind_out_6)
+    # s.Line(point1=p_behind_out_9, point2=p_behind_out_5)
+    # s.Line(point1=p_behind_out_10, point2=p_behind_out_9)
+    # s.Line(point1=p_behind_out_10, point2=p_behind_out_11)
+
     # 中段
-    geom_list.append(s.Line(point1=p_front_out_1, point2=p_behind_out_1))
-    geom_list.append(s.Line(point1=p_front_out_1, point2=p_front_out_2))
-    geom_list.append(s.Line(point1=p_behind_out_1, point2=p_behind_out_2))
-    geom_list.append(s.Line(point1=p_front_in_1, point2=p_behind_in_1))
-    geom_list.append(s.Line(point1=p_front_in_1, point2=p_front_in_2))
-    geom_list.append(s.Line(point1=p_behind_in_1, point2=p_behind_in_2))
+    s.Line(point1=p_front_out_1, point2=p_behind_out_1)
+    s.Line(point1=p_front_out_1, point2=p_front_out_2)
+    s.Line(point1=p_behind_out_1, point2=p_behind_out_2)
+    s.Line(point1=p_front_in_1, point2=p_behind_in_1)
+    s.Line(point1=p_front_in_1, point2=p_front_in_2)
+    s.Line(point1=p_behind_in_1, point2=p_behind_in_2)
 
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
-    # 生成基础体
-    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    p.BaseSolidRevolve(sketch=s, angle=insulation_rotate_angle_deg, flipRevolveDirection=OFF)
+    s.setPrimaryObject(option=STANDALONE)
 
-    # 截面剖分
-    d = p.datums
-    cut_planes = [
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0),
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_out_1[0]),
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_1[0]),
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c_2[0]),
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_out_1[0]),
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_in_1[0]),
-    ]
-    for plane in cut_planes:
-        p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
-
-    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-
-    try:
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-    except:
-        pass
-
-    try:
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-    except:
-        pass
-
-    # 生成网格
-    generate_part_mesh(p, element_size=element_size)
-
-    # 创建集合（体）
-    set_name = 'SET-CELL-INSULATION'
-    p.Set(cells=p.cells, name=set_name)
-
-    # 赋予SECTION属性
-    set_section_common(p)
-
-    p.setValues(geometryRefinement=EXTRA_FINE)
-
-    return p
+    # # 生成基础体
+    # p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    # p.BaseSolidRevolve(sketch=s, angle=insulation_rotate_angle_deg, flipRevolveDirection=OFF)
+    #
+    # # 截面剖分
+    # d = p.datums
+    # cut_planes = [
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0),
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_out_1[0]),
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_1[0]),
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c_2[0]),
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_out_1[0]),
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_in_1[0]),
+    # ]
+    # for plane in cut_planes:
+    #     p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+    #
+    # xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    # xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
+    #
+    # try:
+    #     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    # except:
+    #     pass
+    #
+    # try:
+    #     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    # except:
+    #     pass
+    #
+    # # 生成网格
+    # generate_part_mesh(p, element_size=element_size)
+    #
+    # # 创建集合（体）
+    # set_name = 'SET-CELL-INSULATION'
+    # p.Set(cells=p.cells, name=set_name)
+    #
+    # # 赋予SECTION属性
+    # set_section_common(p)
+    #
+    # p.setValues(geometryRefinement=EXTRA_FINE)
+    #
+    # return p
 
 
 if __name__ == "__main__":
@@ -2437,17 +2447,17 @@ if __name__ == "__main__":
     is_assemble = False
 
     is_create_p_insulation = True
-    is_create_p_block = True
-    is_create_p_gap = True
-    is_create_p_block_penult = True
-    is_create_p_gap_penult = True
-    is_create_p_block_front = True
-    is_create_p_gap_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_create_p_block = True
+    # is_create_p_gap = True
+    # is_create_p_block_penult = True
+    # is_create_p_gap_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_gap_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2492,7 +2502,7 @@ if __name__ == "__main__":
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
         shell_dimension = {
-            'l_cylinder': 17300.0,
+            'l_c1_c2': 17300.0,
             'ellipse_ratio': 1.69,
 
             'r_in_insulation': 1764.5,
