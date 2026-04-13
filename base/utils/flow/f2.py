@@ -2197,11 +2197,10 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_front['c2'], point1=arcs_front['p1'], point2=arcs_front['p2'], direction=get_direction(arcs_front['delta2']))
     s.ArcByCenterEnds(center=arcs_front['c3'], point1=arcs_front['p2'], point2=p3_front, direction=get_direction(arcs_front['delta3']))
 
-    # print(front_offset, p_front_out_8, p_front_out_7, p_front_out_6, p_front_out_5, p_front_out_9, p_front_out_10)
-    point_list = [p_front_out_3, [-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425], p0_front]
-
-    for i in range(len(point_list) - 1):
-        s.Line(point1=point_list[i], point2=point_list[i + 1])
+    print(front_offset, p_front_out_8, p_front_out_7, p_front_out_6, p_front_out_5, p_front_out_9, p_front_out_10)
+    point_list_front = [p_front_out_3, [-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425], p0_front]
+    for i in range(len(point_list_front) - 1):
+        s.Line(point1=point_list_front[i], point2=point_list_front[i + 1])
 
     # 后封头
     l_trim_behind = s.Line(point1=p_behind_out_3, point2=(p_behind_out_3[0] + 1.0, p_behind_out_3[1]))
@@ -2214,14 +2213,10 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_behind['c2'], point1=arcs_behind['p1'], point2=arcs_behind['p2'], direction=get_direction(arcs_behind['delta2']))
     s.ArcByCenterEnds(center=arcs_behind['c3'], point1=arcs_behind['p2'], point2=p3_behind, direction=get_direction(arcs_behind['delta3']))
 
-    # s.Line(point1=behind_offset, point2=p_behind_out_3)
-    # s.Line(point1=p_behind_out_8, point2=behind_offset)
-    # s.Line(point1=p_behind_out_7, point2=p_behind_out_8)
-    # s.Line(point1=p_behind_out_7, point2=p_behind_out_6)
-    # s.Line(point1=p_behind_out_5, point2=p_behind_out_6)
-    # s.Line(point1=p_behind_out_9, point2=p_behind_out_5)
-    # s.Line(point1=p_behind_out_10, point2=p_behind_out_9)
-    # s.Line(point1=p_behind_out_10, point2=p_behind_out_11)
+    print(behind_offset, p_behind_out_8, p_behind_out_7, p_behind_out_6, p_behind_out_5, p_behind_out_9, p_behind_out_10)
+    point_list_behind = [p_behind_out_3, [18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775], [17983.73, 775], p0_behind]
+    for i in range(len(point_list_behind) - 1):
+        s.Line(point1=point_list_behind[i], point2=point_list_behind[i + 1])
 
     # 中段
     s.Line(point1=p_front_out_1, point2=p_behind_out_1)
