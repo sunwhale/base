@@ -42,7 +42,7 @@ except:
 
 sys.path.insert(0, FLOW_PATH)
 
-from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
+from utils import ABAQUS_ENV, Circle3D, Ellipse, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
     load_json, min_difference, mirror_y_axis, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, \
     combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set, get_faces_of_p_remove_given_surface_names, \
     get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces, rotate_point_around_axis
@@ -53,6 +53,7 @@ PENULT_CORRECTION = 1.0
 
 
 # p.DatumPointByCoordinate(coords=(0, 0, 0))
+# execfile('F:/GitHub/base/base/utils/flow/f2.py', __main__.__dict__)
 
 
 def create_sketch_cross_section(model, sketch_name, points, index_r, index_t):
@@ -2056,6 +2057,225 @@ def print_assembly(session, model, viewport):
     session.printToFile(fileName='assembly_iso.png', format=PNG, canvasObjects=(viewport,))
 
 
+def create_part_insulation(model, part_name, dimension):
+    l_cylinder = dimension['l_cylinder']
+    ellipse_ratio = dimension['ellipse_ratio']
+
+    r_in_insulation = dimension['r_in_insulation']
+    r_out_insulation = dimension['r_out_insulation']
+
+    theta_in_deg_front = dimension['theta_in_deg_front']
+    theta_in_deg_behind = dimension['theta_in_deg_behind']
+
+    theta_out_deg_front = dimension['theta_out_deg_front']
+    theta_out_deg_behind = dimension['theta_out_deg_behind']
+
+    a_front = dimension['a_front']
+    a_behind = dimension['a_behind']
+    a_front_in = dimension['a_front_in']
+    a_behind_in = dimension['a_behind_in']
+
+    r_front_out_1 = dimension['r_front_out_1']
+    r_front_out_2 = dimension['r_front_out_2']
+    r_front_out_3 = dimension['r_front_out_3']
+    # r_front_out_4 = dimension['r_front_out_4']
+    r_front_out_5 = dimension['r_front_out_5']
+    r_front_out_6 = dimension['r_front_out_6']
+    r_behind_out_1 = dimension['r_behind_out_1']
+    r_behind_out_2 = dimension['r_behind_out_2']
+    r_behind_out_3 = dimension['r_behind_out_3']
+    # r_behind_out_4 = dimension['r_behind_out_4']
+    r_behind_out_5 = dimension['r_behind_out_5']
+    r_behind_out_6 = dimension['r_behind_out_6']
+
+    l_front_1 = dimension['l_front_1']
+    l_front_2 = dimension['l_front_2']
+    l_front_3 = dimension['l_front_3']
+    l_behind_1 = dimension['l_behind_1']
+    l_behind_2 = dimension['l_behind_2']
+    l_behind_3 = dimension['l_behind_3']
+    l_points_front = dimension['l_points_front']
+    l_points_behind = dimension['l_points_behind']
+
+    slope_degree_points_front = dimension['slope_degree_points_front']
+    slope_degree_points_behind = dimension['slope_degree_points_behind']
+    thickness = dimension['thickness']
+    rotate_angle_degree = dimension['rotate_angle_degree']
+
+    local_offset = 1.0
+
+    # center
+    c_1 = [0.0, 0.0]
+    c_2 = [l_cylinder, 0.0]
+
+    # ellipse
+    b_front = a_front / ellipse_ratio
+    b_behind = a_behind / ellipse_ratio
+    ellipse_front = Ellipse(c_1[0], c_1[1], a_front, b_front, long_axis='y')
+    ellipse_behind = Ellipse(c_2[0], c_2[1], a_behind, b_behind, long_axis='y')
+
+    l_points_front_x = math.cos(degrees_to_radians(slope_degree_points_front)) * l_points_front
+    l_points_front_y = math.sin(degrees_to_radians(slope_degree_points_front)) * l_points_front
+    l_points_behind_x = math.cos(degrees_to_radians(slope_degree_points_behind)) * l_points_behind
+    l_points_behind_y = math.sin(degrees_to_radians(slope_degree_points_behind)) * l_points_behind
+
+    # front out
+    line1 = Line2D((0, a_front), math.tan(degrees_to_radians(theta_out_deg_front)))
+    line2 = Line2D((0, r_out_insulation), (1, r_out_insulation))
+    p_front_out_1 = line1.get_intersection(line2)
+    p_front_out_2 = [c_1[0], a_front]
+    p_front_out_3 = [ellipse_front.x_from_y(r_front_out_2)[1], r_front_out_2]
+    p_front_out_4 = [ellipse_front.x_from_y(r_front_out_2)[1] + local_offset, r_front_out_2]
+    p_front_out_5 = [c_1[0] - l_front_1, r_front_out_3]
+    p_front_out_6 = [c_1[0] - l_front_2, r_front_out_3]
+    p_front_out_7 = [c_1[0] - l_front_2, r_front_out_1 - thickness]
+    front_offset = ellipse_front.point_along_ellipse_normal(p_front_out_3[0], p_front_out_3[1], -thickness)
+    p_front_out_8 = [c_1[0] - l_front_2 - l_points_front_x, front_offset[1]]
+    p_front_out_9 = [c_1[0] - l_front_1, r_front_out_5]
+    p_front_out_10 = [c_1[0] - l_front_3, r_front_out_5]
+    p_front_out_11 = [c_1[0] - l_front_3, r_front_out_6]
+
+    # behind put
+    line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(theta_out_deg_behind)))
+    line2 = Line2D((0, r_out_insulation), (1, r_out_insulation))
+    p_behind_out_1 = line1.get_intersection(line2)
+    p_behind_out_2 = [c_2[0], a_behind]
+    p_behind_out_3 = [ellipse_behind.x_from_y(r_behind_out_2)[0], r_behind_out_2]
+    p_behind_out_4 = [ellipse_behind.x_from_y(r_behind_out_2)[0] + local_offset, r_behind_out_2]
+    p_behind_out_5 = [c_2[0] + l_behind_1, r_behind_out_3]
+    p_behind_out_6 = [c_2[0] + l_behind_2, r_behind_out_3]
+    p_behind_out_7 = [c_2[0] + l_behind_2, r_behind_out_1 - thickness]
+    behind_offset = ellipse_behind.point_along_ellipse_normal(p_behind_out_3[0], p_behind_out_3[1], -thickness)
+    p_behind_out_8 = [c_2[0] + l_behind_2 - l_points_behind_x, behind_offset[1]]
+    p_behind_out_9 = [c_2[0] + l_behind_1, r_behind_out_5]
+    p_behind_out_10 = [c_2[0] + l_behind_3, r_behind_out_5]
+    p_behind_out_11 = [c_2[0] + l_behind_3, r_behind_out_6]
+
+    # front in
+    line1 = Line2D((0, a_front_in), math.tan(degrees_to_radians(theta_in_deg_front)))
+    line2 = Line2D((0, r_in_insulation), (1, r_in_insulation))
+    p_front_in_1 = line1.get_intersection(line2)
+    p_front_in_2 = [c_1[0], a_front_in]
+
+    # behind in
+    line1 = Line2D((c_2[0], a_behind_in), -math.tan(degrees_to_radians(theta_in_deg_behind)))
+    line2 = Line2D((0, r_in_insulation), (1, r_in_insulation))
+    p_behind_in_1 = line1.get_intersection(line2)
+    p_behind_in_2 = [c_2[0], a_behind_in]
+
+    s = model.ConstrainedSketch(name='SKETCH-INSULATION', sheetSize=40000.0)
+
+    geom_list = []
+
+    # front
+    geom_list.append(s.Line(point1=p_front_out_3, point2=p_front_out_4))
+    geom_list.append(s.EllipseByCenterPerimeter(center=c_1, axisPoint1=p_front_out_2, axisPoint2=[c_1[0] + b_front, 0.0]))
+    s.autoTrimCurve(curve1=geom_list[-1], point1=(c_1[0] - b_front, 0.0))
+    curve = s.geometry.findAt(p_front_out_3)
+    s.autoTrimCurve(curve1=curve, point1=p_front_out_3)
+
+    geom_list.append(s.Line(point1=front_offset, point2=p_front_out_3))
+    geom_list.append(s.Line(point1=p_front_out_8, point2=front_offset))
+    geom_list.append(s.Line(point1=p_front_out_7, point2=p_front_out_8))
+    geom_list.append(s.Line(point1=p_front_out_7, point2=p_front_out_6))
+    geom_list.append(s.Line(point1=p_front_out_5, point2=p_front_out_6))
+    geom_list.append(s.Line(point1=p_front_out_9, point2=p_front_out_5))
+    geom_list.append(s.Line(point1=p_front_out_10, point2=p_front_out_9))
+    geom_list.append(s.Line(point1=p_front_out_10, point2=p_front_out_11))
+
+    # behind
+    geom_list.append(s.Line(point1=p_behind_out_3, point2=p_behind_out_4))
+    geom_list.append(s.EllipseByCenterPerimeter(center=c_2, axisPoint1=p_behind_out_2, axisPoint2=[c_2[0] + b_behind, 0.0]))
+    s.autoTrimCurve(curve1=geom_list[-1], point1=(c_2[0] + b_behind, 0.0))
+    curve = s.geometry.findAt(p_behind_out_3)
+    s.autoTrimCurve(curve1=curve, point1=p_behind_out_3)
+
+    geom_list.append(s.Line(point1=behind_offset, point2=p_behind_out_3))
+    geom_list.append(s.Line(point1=p_behind_out_8, point2=behind_offset))
+    geom_list.append(s.Line(point1=p_behind_out_7, point2=p_behind_out_8))
+    geom_list.append(s.Line(point1=p_behind_out_7, point2=p_behind_out_6))
+    geom_list.append(s.Line(point1=p_behind_out_5, point2=p_behind_out_6))
+    geom_list.append(s.Line(point1=p_behind_out_9, point2=p_behind_out_5))
+    geom_list.append(s.Line(point1=p_behind_out_10, point2=p_behind_out_9))
+    geom_list.append(s.Line(point1=p_behind_out_10, point2=p_behind_out_11))
+
+    p0 = dimension['p0_front']
+    theta0_deg = dimension['theta0_deg_front']
+    p3 = dimension['p3_front']
+    theta3_deg = dimension['theta3_deg_front']
+    r1 = dimension['r1_front']
+    r2 = dimension['r2_front']
+    r3 = dimension['r3_front']
+
+    result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
+
+    p1 = result['p1']
+    p2 = result['p2']
+    c1 = result['c1']
+    c2 = result['c2']
+    c3 = result['c3']
+    delta1 = result['delta1']
+    delta2 = result['delta2']
+    delta3 = result['delta3']
+
+    s.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
+    s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
+    s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
+
+    p0 = dimension['p0_behind']
+    theta0_deg = dimension['theta0_deg_behind']
+    p3 = dimension['p3_behind']
+    theta3_deg = dimension['theta3_deg_behind']
+    r1 = dimension['r1_behind']
+    r2 = dimension['r2_behind']
+    r3 = dimension['r3_behind']
+
+    result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
+
+    p1 = result['p1']
+    p2 = result['p2']
+    c1 = result['c1']
+    c2 = result['c2']
+    c3 = result['c3']
+    delta1 = result['delta1']
+    delta2 = result['delta2']
+    delta3 = result['delta3']
+
+    s.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
+    s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
+    s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
+
+    # 中段
+    geom_list.append(s.Line(point1=p_front_out_1, point2=p_behind_out_1))
+    geom_list.append(s.Line(point1=p_front_out_1, point2=p_front_out_2))
+    geom_list.append(s.Line(point1=p_behind_out_1, point2=p_behind_out_2))
+    geom_list.append(s.Line(point1=p_front_in_1, point2=p_behind_in_1))
+    geom_list.append(s.Line(point1=p_front_in_1, point2=p_front_in_2))
+    geom_list.append(s.Line(point1=p_behind_in_1, point2=p_behind_in_2))
+
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    p.BaseSolidRevolve(sketch=s, angle=rotate_angle_degree, flipRevolveDirection=OFF)
+
+    # d = p.datums
+    # x_xis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
+    # cut_planes = [
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0),
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_out_1[0]),
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_1[0]),
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c_2[0]),
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_out_1[0]),
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_in_1[0]),
+    # ]
+    #
+    # for plane in cut_planes:
+    #     p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+    #
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+    return p
+
+
 if __name__ == "__main__":
     n = 9
 
@@ -2121,55 +2341,56 @@ if __name__ == "__main__":
     # block[:, 8] = True
 
     setting_file = 'setting.json'
-    message = load_json(setting_file)
+    if os.path.exists(setting_file):
+        message = load_json(setting_file)
 
-    n = message['n']
-    d = message['d']
-    x0 = message['x0']
-    block_length = message['block_length']
-    block_insulation_thickness_z = message['block_insulation_thickness_z']
-    block_insulation_thickness_t = message['block_insulation_thickness_t']
-    block_insulation_thickness_r = message['block_insulation_thickness_r']
-    block_gap_z = message['block_gap_z']
-    block_gap_t = message['block_gap_t']
-    a = message['a']
-    b = message['b']
-    fillet_radius = message['fillet_radius']
-    angle_demolding_1 = message['angle_demolding_1']
-    burn_offset = message['burn_offset']
-    outer_partition_offset = message['outer_partition_offset']
-    element_size = message['element_size']
-    insert_czm = message['insert_czm']
-    size = message['size']
-    front_ref_length = message['front_ref_length']
-    behind_ref_length = message['behind_ref_length']
-    r_cut_front = message['r_cut_front']
-    length_front = message['length_front']
-    p0_x_front = message['p0_x_front']
-    p0_y_front = message['p0_y_front']
-    theta0_deg_front = message['theta0_deg_front']
-    p3_x_front = message['p3_x_front']
-    p3_y_front = message['p3_y_front']
-    theta3_deg_front = message['theta3_deg_front']
-    r1_front = message['r1_front']
-    r2_front = message['r2_front']
-    r3_front = message['r3_front']
-    theta_in_deg_front = message['theta_in_deg_front']
-    r_cut_behind = message['r_cut_behind']
-    length_behind = message['length_behind']
-    p0_x_behind = message['p0_x_behind']
-    p0_y_behind = message['p0_y_behind']
-    theta0_deg_behind = message['theta0_deg_behind']
-    p3_x_behind = message['p3_x_behind']
-    p3_y_behind = message['p3_y_behind']
-    theta3_deg_behind = message['theta3_deg_behind']
-    r1_behind = message['r1_behind']
+        n = message['n']
+        d = message['d']
+        x0 = message['x0']
+        block_length = message['block_length']
+        block_insulation_thickness_z = message['block_insulation_thickness_z']
+        block_insulation_thickness_t = message['block_insulation_thickness_t']
+        block_insulation_thickness_r = message['block_insulation_thickness_r']
+        block_gap_z = message['block_gap_z']
+        block_gap_t = message['block_gap_t']
+        a = message['a']
+        b = message['b']
+        fillet_radius = message['fillet_radius']
+        angle_demolding_1 = message['angle_demolding_1']
+        burn_offset = message['burn_offset']
+        outer_partition_offset = message['outer_partition_offset']
+        element_size = message['element_size']
+        insert_czm = message['insert_czm']
+        size = message['size']
+        front_ref_length = message['front_ref_length']
+        behind_ref_length = message['behind_ref_length']
+        r_cut_front = message['r_cut_front']
+        length_front = message['length_front']
+        p0_x_front = message['p0_x_front']
+        p0_y_front = message['p0_y_front']
+        theta0_deg_front = message['theta0_deg_front']
+        p3_x_front = message['p3_x_front']
+        p3_y_front = message['p3_y_front']
+        theta3_deg_front = message['theta3_deg_front']
+        r1_front = message['r1_front']
+        r2_front = message['r2_front']
+        r3_front = message['r3_front']
+        theta_in_deg_front = message['theta_in_deg_front']
+        r_cut_behind = message['r_cut_behind']
+        length_behind = message['length_behind']
+        p0_x_behind = message['p0_x_behind']
+        p0_y_behind = message['p0_y_behind']
+        theta0_deg_behind = message['theta0_deg_behind']
+        p3_x_behind = message['p3_x_behind']
+        p3_y_behind = message['p3_y_behind']
+        theta3_deg_behind = message['theta3_deg_behind']
+        r1_behind = message['r1_behind']
 
-    p0_front = (p0_x_front, p0_y_front)
-    p3_front = (p3_x_front, p3_y_front)
+        p0_front = (p0_x_front, p0_y_front)
+        p3_front = (p3_x_front, p3_y_front)
 
-    p0_behind = (p0_x_behind, p0_y_behind)
-    p3_behind = (p3_x_behind, p3_y_behind)
+        p0_behind = (p0_x_behind, p0_y_behind)
+        p3_behind = (p3_x_behind, p3_y_behind)
 
     beta = math.pi / n
 
@@ -2183,15 +2404,15 @@ if __name__ == "__main__":
     is_create_p_gap_behind = False
     is_assemble = False
 
-    is_create_p_block = True
-    is_create_p_gap = True
-    is_create_p_block_penult = True
-    is_create_p_gap_penult = True
-    is_create_p_block_front = True
-    is_create_p_gap_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap_behind = True
-    is_assemble = True
+    # is_create_p_block = True
+    # is_create_p_gap = True
+    # is_create_p_block_penult = True
+    # is_create_p_gap_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_gap_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_gap_behind = True
+    # is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2234,6 +2455,70 @@ if __name__ == "__main__":
         model.HomogeneousSolidSection(name='SECTION-GLUE', material='MATERIAL-GLUE', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
+
+        shell_dimension = {
+            'l_cylinder': 17300.0,
+            'ellipse_ratio': 1.69,
+
+            'r_in_insulation': 1767.5,
+            'r_out_insulation': 1777.5,
+
+            'a_front': 1772.47,
+            'a_front_in': 1762.5,
+
+            'a_behind': 1772.47,
+            'a_behind_in': 1762.5,
+
+            'theta_in_deg_front': 0.16,
+            'theta_in_deg_behind': 0.16,
+
+            'theta_out_deg_front': 0.24,
+            'theta_out_deg_behind': 0.24,
+
+            'r_front_out_1': 562.5,
+            'r_front_out_2': 844.26,
+            'r_front_out_3': 460,
+            # 'r_front_out_4': 556,
+            'r_front_out_5': 425,
+            'r_front_out_6': 794,
+            'r_behind_out_1': 942,
+            'r_behind_out_2': 1260,
+            'r_behind_out_3': 815,
+            # 'r_behind_out_4': 1260,
+            'r_behind_out_5': 775,
+            'r_behind_out_6': 1109.77,
+            'l_front_1': 1022.08,
+            'l_front_2': 892.58,
+            'l_front_3': 857.58,
+            'l_behind_1': 891.06,
+            'l_behind_2': 746.48,
+            'l_behind_3': 683.73,
+
+            'l_points_front': 294.26,
+            'l_points_behind': 330.87,
+
+            'slope_degree_points_front': 84.88,
+            'slope_degree_points_behind': 87.32,
+            'thickness': 2.5,
+            'rotate_angle_degree': 360.0 / n / 2.0,
+
+            'p0_front': (-857.580, 794.0),
+            'theta0_deg_front': 90.0,
+            'p3_front': (0, 1762.5),
+            'theta3_deg_front': 0.0,
+            'r1_front': 829.41,
+            'r2_front': 1515.05,
+            'r3_front': 641.21,
+
+            'p0_behind': (17983.730, 1109.770),
+            'theta0_deg_behind': -90.0,
+            'p3_behind': (17300, 1762.5),
+            'theta3_deg_behind': 0.0,
+            'r1_behind': 525.61,
+            'r2_behind': 1075.96,
+            'r3_behind': 569.38,
+        }
+        p_insulation = create_part_insulation(model, 'PART_INSULATION', shell_dimension)
 
         block_dimension = {
             'z_list': [0, block_length / 2 - block_insulation_thickness_z, block_length / 2],
