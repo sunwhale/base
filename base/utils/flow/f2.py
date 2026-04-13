@@ -2311,12 +2311,12 @@ if __name__ == "__main__":
     d = 3529.0
     x0 = 500.0
 
-    block_length = 1229.0
+    block_length = 1508.0
     block_insulation_thickness_z = 3.0
     block_insulation_thickness_t = 3.0
     block_insulation_thickness_r = 3.0
-    block_gap_z = 18.0
-    block_gap_t = 18.0
+    block_gap_z = 8.0
+    block_gap_t = 8.0
 
     a = 50.0
     b = 25.0
@@ -2333,7 +2333,7 @@ if __name__ == "__main__":
     size = '1/2'
 
     front_ref_length = 509.0
-    behind_ref_length = 1103.08
+    behind_ref_length = 917.08
 
     r_cut_front = 460.0
     length_front = 1500.0
@@ -2345,14 +2345,6 @@ if __name__ == "__main__":
     r2_front = 1515.05
     r3_front = 641.21
     theta_in_deg_front = 0.16
-
-    # 'p0_behind': (17983.730, 1109.770),
-    # 'theta0_deg_behind': -90.0,
-    # 'p3_behind': (17300, 1762.5),
-    # 'theta3_deg_behind': 0.0,
-    # 'r1_behind': 525.61,
-    # 'r2_behind': 1075.96,
-    # 'r3_behind': 569.38,
 
     r_cut_behind = 460.0
     length_behind = 1500.0
@@ -2371,7 +2363,7 @@ if __name__ == "__main__":
     if p3_behind[1] > d / 2.0:
         raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
 
-    nl, nt = 14, n
+    nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
     block[:, 0] = True
     # block[:, 1] = True
@@ -2836,7 +2828,7 @@ if __name__ == "__main__":
             viewport.makeCurrent()
             viewport.setValues(width=200)
             viewport.setValues(height=200)
-            session.pngOptions.setValues(imageSize=(1600, 1600))
+            # session.pngOptions.setValues(imageSize=(1600, 1600))
             session.printOptions.setValues(vpDecorations=OFF)
 
             print_assembly(session, model, viewport)
