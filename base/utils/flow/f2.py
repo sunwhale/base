@@ -2106,6 +2106,22 @@ def create_part_insulation(model, part_name, dimension):
     thickness = dimension['thickness']
     insulation_rotate_angle_deg = dimension['insulation_rotate_angle_deg']
 
+    p0_front = dimension['p0_front']
+    theta0_deg_front = dimension['theta0_deg_front']
+    p3_front = dimension['p3_front']
+    theta3_deg_front = dimension['theta3_deg_front']
+    r1_front = dimension['r1_front']
+    r2_front = dimension['r2_front']
+    r3_front = dimension['r3_front']
+
+    p0_behind = dimension['p0_behind']
+    theta0_deg_behind = dimension['theta0_deg_behind']
+    p3_behind = dimension['p3_behind']
+    theta3_deg_behind = dimension['theta3_deg_behind']
+    r1_behind = dimension['r1_behind']
+    r2_behind = dimension['r2_behind']
+    r3_behind = dimension['r3_behind']
+
     # 基本参数
     c_1 = [0.0, 0.0]
     c_2 = [l_c1_c2, 0.0]
@@ -2170,15 +2186,22 @@ def create_part_insulation(model, part_name, dimension):
 
     s = model.ConstrainedSketch(name='SKETCH-INSULATION', sheetSize=2000.0)
 
-
-
-
-
     # 前封头
     l_trim_front = s.Line(point1=p_front_out_3, point2=(p_front_out_3[0] + 1.0, p_front_out_3[1]))
     ellipse_front = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=p_front_out_2, axisPoint2=[c_1[0] + b_front, 0.0])
     s.autoTrimCurve(curve1=ellipse_front, point1=(c_1[0] - b_front, 0.0))
     s.delete(objectList=(s.geometry[l_trim_front.id],))
+
+    arcs_front = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
+    s.ArcByCenterEnds(center=arcs_front['c1'], point1=p0_front, point2=arcs_front['p1'], direction=get_direction(arcs_front['delta1']))
+    s.ArcByCenterEnds(center=arcs_front['c2'], point1=arcs_front['p1'], point2=arcs_front['p2'], direction=get_direction(arcs_front['delta2']))
+    s.ArcByCenterEnds(center=arcs_front['c3'], point1=arcs_front['p2'], point2=p3_front, direction=get_direction(arcs_front['delta3']))
+
+    # print(front_offset, p_front_out_8, p_front_out_7, p_front_out_6, p_front_out_5, p_front_out_9, p_front_out_10)
+    point_list = [p_front_out_3, [-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425], p0_front]
+
+    for i in range(len(point_list) - 1):
+        s.Line(point1=point_list[i], point2=point_list[i + 1])
 
     # 后封头
     l_trim_behind = s.Line(point1=p_behind_out_3, point2=(p_behind_out_3[0] + 1.0, p_behind_out_3[1]))
@@ -2186,68 +2209,10 @@ def create_part_insulation(model, part_name, dimension):
     s.autoTrimCurve(curve1=ellipse_behind, point1=(c_2[0] + b_behind, 0.0))
     s.delete(objectList=(s.geometry[l_trim_behind.id],))
 
-
-
-    p0 = dimension['p0_front']
-    theta0_deg = dimension['theta0_deg_front']
-    p3 = dimension['p3_front']
-    theta3_deg = dimension['theta3_deg_front']
-    r1 = dimension['r1_front']
-    r2 = dimension['r2_front']
-    r3 = dimension['r3_front']
-
-    result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
-
-    p1 = result['p1']
-    p2 = result['p2']
-    c1 = result['c1']
-    c2 = result['c2']
-    c3 = result['c3']
-    delta1 = result['delta1']
-    delta2 = result['delta2']
-    delta3 = result['delta3']
-
-    s.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
-    s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
-    s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
-
-    # geom_list.append(s.Line(point1=p_front_out_3, point2=front_offset))
-    # geom_list.append(s.Line(point1=front_offset, point2=p_front_out_8))
-    # geom_list.append(s.Line(point1=p_front_out_8, point2=p_front_out_7))
-    # geom_list.append(s.Line(point1=p_front_out_7, point2=p_front_out_6))
-    # geom_list.append(s.Line(point1=p_front_out_6, point2=p_front_out_5))
-    # geom_list.append(s.Line(point1=p_front_out_5, point2=p_front_out_9))
-    # geom_list.append(s.Line(point1=p_front_out_9, point2=p_front_out_10))
-    # geom_list.append(s.Line(point1=p_front_out_10, point2=p0))
-    # print(front_offset, p_front_out_8, p_front_out_7, p_front_out_6, p_front_out_5, p_front_out_9, p_front_out_10)
-
-    point_list = [p_front_out_3, [-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425], p0]
-
-    for i in range(len(point_list) - 1):
-        s.Line(point1=point_list[i], point2=point_list[i + 1])
-
-    p0 = dimension['p0_behind']
-    theta0_deg = dimension['theta0_deg_behind']
-    p3 = dimension['p3_behind']
-    theta3_deg = dimension['theta3_deg_behind']
-    r1 = dimension['r1_behind']
-    r2 = dimension['r2_behind']
-    r3 = dimension['r3_behind']
-
-    result = solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3)
-
-    p1 = result['p1']
-    p2 = result['p2']
-    c1 = result['c1']
-    c2 = result['c2']
-    c3 = result['c3']
-    delta1 = result['delta1']
-    delta2 = result['delta2']
-    delta3 = result['delta3']
-
-    s.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1))
-    s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2))
-    s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3))
+    arcs_behind = solve_three_arcs(p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind)
+    s.ArcByCenterEnds(center=arcs_behind['c1'], point1=p0_behind, point2=arcs_behind['p1'], direction=get_direction(arcs_behind['delta1']))
+    s.ArcByCenterEnds(center=arcs_behind['c2'], point1=arcs_behind['p1'], point2=arcs_behind['p2'], direction=get_direction(arcs_behind['delta2']))
+    s.ArcByCenterEnds(center=arcs_behind['c3'], point1=arcs_behind['p2'], point2=p3_behind, direction=get_direction(arcs_behind['delta3']))
 
     # s.Line(point1=behind_offset, point2=p_behind_out_3)
     # s.Line(point1=p_behind_out_8, point2=behind_offset)
