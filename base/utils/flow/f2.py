@@ -2279,7 +2279,7 @@ def create_part_insulation(model, part_name, dimension):
 
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-    
+
     try:
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
     except:
@@ -2333,7 +2333,7 @@ if __name__ == "__main__":
     size = '1/2'
 
     front_ref_length = 509.0
-    behind_ref_length = 500.0
+    behind_ref_length = 1103.08
 
     r_cut_front = 460.0
     length_front = 1500.0
@@ -2341,20 +2341,28 @@ if __name__ == "__main__":
     theta0_deg_front = 90.0
     p3_front = (-350, 1762.5)
     theta3_deg_front = 0.0
-    r1_front = 929.4
-    r2_front = 1524.0
-    r3_front = 655.2
+    r1_front = 829.41
+    r2_front = 1515.05
+    r3_front = 641.21
     theta_in_deg_front = 0.16
+
+    # 'p0_behind': (17983.730, 1109.770),
+    # 'theta0_deg_behind': -90.0,
+    # 'p3_behind': (17300, 1762.5),
+    # 'theta3_deg_behind': 0.0,
+    # 'r1_behind': 525.61,
+    # 'r2_behind': 1075.96,
+    # 'r3_behind': 569.38,
 
     r_cut_behind = 460.0
     length_behind = 1500.0
-    p0_behind = (1207.5, 794)
+    p0_behind = (1033.73, 1109.770)
     theta0_deg_behind = -90.0
     p3_behind = (350, 1762.5)
     theta3_deg_behind = 0.0
-    r1_behind = 929.4
-    r2_behind = 1524.0
-    r3_behind = 655.2
+    r1_behind = 525.61
+    r2_behind = 1075.96
+    r3_behind = 569.38
     theta_in_deg_behind = 0.16
 
     if p3_front[1] > d / 2.0:
@@ -2363,7 +2371,7 @@ if __name__ == "__main__":
     if p3_behind[1] > d / 2.0:
         raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
 
-    nl, nt = 12, n
+    nl, nt = 14, n
     block = np.zeros((nl, nt), dtype=bool)
     block[:, 0] = True
     # block[:, 1] = True
@@ -2437,17 +2445,17 @@ if __name__ == "__main__":
     is_assemble = False
 
     is_create_p_insulation = True
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2495,7 +2503,7 @@ if __name__ == "__main__":
             'l_cylinder': 17300.0,
             'ellipse_ratio': 1.69,
 
-            'r_in_insulation': 1767.5,
+            'r_in_insulation': 1764.5,
             'r_out_insulation': 1777.5,
 
             'a_front': 1772.47,
@@ -2536,8 +2544,8 @@ if __name__ == "__main__":
             'slope_degree_points_front': 84.88,
             'slope_degree_points_behind': 87.32,
             'thickness': 2.5,
-            # 'insulation_rotate_angle_deg': 360.0 / n / 2.0,
-            'insulation_rotate_angle_deg': 360.0,
+            'insulation_rotate_angle_deg': 360.0 / n / 2.0,
+            # 'insulation_rotate_angle_deg': 360.0,
 
             'p0_front': (-857.580, 794.0),
             'theta0_deg_front': 90.0,
@@ -2557,6 +2565,7 @@ if __name__ == "__main__":
         }
         if is_create_p_insulation:
             p_insulation = create_part_insulation(model, 'PART-INSULATION', shell_dimension)
+            print('CREATE PART-INSULATION DONE.')
 
         block_dimension = {
             'z_list': [0, block_length / 2 - block_insulation_thickness_z, block_length / 2],
@@ -2666,6 +2675,8 @@ if __name__ == "__main__":
             p_gap_behind = model.parts['PART-GAP-BEHIND']
             p_gap = model.parts['PART-GAP']
             p_insulation = model.parts['PART-INSULATION']
+            for p in model.parts.values():
+                p.setValues(geometryRefinement=EXTRA_FINE)
 
         if is_assemble:
             block_types = get_block_types(block)
