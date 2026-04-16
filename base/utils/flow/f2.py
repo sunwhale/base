@@ -467,6 +467,22 @@ def create_part_base(model, part_name, sketch, length):
     return p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1
 
 
+def create_part_base_rotation(model, part_name, sketch, rotate_angle_deg):
+    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    d = p.datums
+
+    p.BaseSolidRevolve(sketch=sketch, angle=rotate_angle_deg, flipRevolveDirection=OFF)
+
+    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
+    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
+    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
+    y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
+    z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
+
+    return p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis
+
+
 def part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r):
     s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0)
     center = (0, 0)
@@ -2151,7 +2167,7 @@ def create_part_insulation(model, part_name, dimension):
     r2_behind = dimension['r2_behind']
     r3_behind = dimension['r3_behind']
 
-    front_points = [[-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425]]
+    front_points = [[-1103.36, shell_insulation_r_out_front], [-1022.08, 460], [-1022.08, 425]]
     behind_points = [[18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775]]
 
     # 基本参数
@@ -2292,6 +2308,218 @@ def create_part_insulation(model, part_name, dimension):
     return p
 
 
+def create_part_QJT(model, part_name, dimension):
+    ellipse_center = dimension['ellipse_center']
+    ellipse_ratio = dimension['ellipse_ratio']
+    r_in = dimension['r_in']
+    a_front = dimension['a_front']
+
+    thickness = dimension['thickness']
+    r_front_in_1 = dimension['r_front_in_1']
+    r_front_in_2 = dimension['r_front_in_2']
+    r_front_in_3 = dimension['r_front_in_3']
+    r_front_in_4 = dimension['r_front_in_4']
+    l_front_1 = dimension['l_front_1']
+    l_front_2 = dimension['l_front_2']
+    fillet_radius = dimension['fillet_radius']
+    rotate_angle_degree = dimension['rotate_angle_degree']
+    l_points = dimension['l_points']
+    slope_degree_points = dimension['slope_degree_points']
+
+    b_front = a_front / ellipse_ratio
+    c_x, c_y = ellipse_center
+    tol = 1.0
+
+    ellipse = Ellipse(c_x, c_y, a_front, b_front, long_axis='y')
+    l_points_x = math.cos(degrees_to_radians(slope_degree_points)) * l_points
+    l_points_y = math.sin(degrees_to_radians(slope_degree_points)) * l_points
+
+    point_1 = [c_x, a_front]
+    point_2 = [ellipse.x_from_y(r_front_in_1)[1], r_front_in_1]
+    point_3 = [c_x - l_front_1, r_front_in_1]
+    point_4 = [ellipse.x_from_y(r_front_in_2)[1], r_front_in_2]
+    point_5 = [ellipse.x_from_y(r_front_in_2)[1] + tol, r_front_in_2]
+    point_6 = [c_x - l_front_1, r_front_in_1 - thickness]
+
+    point_7 = [c_x - l_front_1, r_front_in_3]
+    point_8 = [c_x - l_front_2, r_front_in_3]
+    point_9 = [c_x - l_front_2, r_front_in_4]
+
+    s = model.ConstrainedSketch(name='SKETCH-QJT', sheetSize=40000.0)
+
+    e = s.EllipseByCenterPerimeter(center=ellipse_center, axisPoint1=point_1, axisPoint2=[c_x + b_front, 0.0])
+    s.Line(point1=point_2, point2=point_3)
+    l_temp = s.Line(point1=point_4, point2=point_5)
+
+    s.autoTrimCurve(curve1=e, point1=(c_x + b_front, 0.0))
+    curve = s.geometry.findAt((point_1))
+    s.autoTrimCurve(curve1=curve, point1=point_1)
+
+    s.delete(objectList=(s.geometry[l_temp.id],))
+
+    curve_1 = s.geometry.findAt(point_4)
+    curve_2 = s.geometry.findAt(point_3)
+
+    point = [(point_2[0] + point_3[0]) / 2, point_2[1]]
+    s.FilletByRadius(radius=fillet_radius, curve1=curve_1, nearPoint1=point_2, curve2=curve_2, nearPoint2=point)
+
+    geom_list = []
+    for g in s.geometry.values():
+        geom_list.append(g)
+    s.offset(distance=thickness, objectList=geom_list, side=RIGHT)
+
+    curve = s.geometry.findAt((point_3))
+    s.autoTrimCurve(curve1=curve, point1=point_3)
+
+    curve = s.geometry.findAt((point_4))
+    s.autoTrimCurve(curve1=curve, point1=point_4)
+
+    point = s.geometry[8].pointOn
+    curve = s.geometry.findAt((point))
+    s.autoTrimCurve(curve1=curve, point1=point)
+
+    s.Line(point1=point_6, point2=point_7)
+    s.Line(point1=point_7, point2=point_8)
+    s.Line(point1=point_8, point2=point_9)
+
+    point_offset = s.geometry[11].getVertices()[0].coords
+    point_10 = [c_x - l_front_2 - l_points_x, point_offset[1]]
+
+    s.Line(point1=point_9, point2=point_10)
+    s.Line(point1=point_10, point2=point_offset)
+
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+
+    s.setPrimaryObject(option=STANDALONE)
+
+    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    p.BaseSolidRevolve(sketch=s, angle=rotate_angle_degree, flipRevolveDirection=OFF)
+
+    p_faces = p.faces[0:0]
+    point = s.geometry[10].getVertices()[1].coords
+    cylinder = Cylinder((point_6[0], 0, 0), (point[0], 0, 0), point[1])
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+
+    arc_point = s.geometry[10].pointOn
+    arc_point_rot = rotate_point_around_vector([arc_point[0], arc_point[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2.0))
+    faces_1 = p.faces.findAt((arc_point_rot,))
+    p_faces += faces_1
+    arc_point = s.geometry[11].pointOn
+    arc_point_rot = rotate_point_around_vector([arc_point[0], arc_point[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2.0))
+    faces_2 = p.faces.findAt((arc_point_rot,))
+    p_faces += faces_2
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
+
+    cylinder = Cylinder((point_7[0], 0, 0), (point_8[0], 0, 0), point_8[1])
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+
+    arc_point = s.geometry[15].pointOn
+    arc_point_rot = rotate_point_around_vector([arc_point[0], arc_point[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2.0))
+    faces_1 = p.faces.findAt((arc_point_rot,))
+    p_faces += faces_1
+    arc_point = s.geometry[14].pointOn
+    arc_point_rot = rotate_point_around_vector([arc_point[0], arc_point[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2.0))
+    faces_2 = p.faces.findAt((arc_point_rot,))
+    p_faces += faces_2
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+
+    create_rotation_part_surface_common(p, rotate_angle_degree)
+
+    arc_point = s.geometry[16].pointOn
+    arc_point_rot = rotate_point_around_vector([arc_point[0], arc_point[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2.0))
+    faces = p.faces.findAt((arc_point_rot,))
+    if faces:
+        p.Surface(side1Faces=faces, name='SURFACE-qu')
+
+    # 创建集合（面）
+    create_face_set_from_surface(p)
+
+    # 创建集合（体）
+    set_name = 'SET-CELL-QDJ'
+    p.Set(cells=p.cells, name=set_name)
+
+    d = p.datums
+    point_arc = s.geometry[10].getVertices()[0].coords
+    point_arc_rot = rotate_point_around_vector([point_arc[0], point_arc[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2))
+    edge = p.edges.findAt(((point_arc_rot[0], point_arc_rot[1], point_arc_rot[2]),))
+    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
+    p.PartitionCellByExtrudeEdge(line=d[x_axis.id], cells=p.cells, edges=edge, sense=FORWARD)
+
+    arc_point_1 = model.sketches['SKETCH-QJT'].geometry[10].getVertices()[1].coords[0]
+    arc_DatumPlane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=arc_point_1)
+    p.PartitionCellByDatumPlane(datumPlane=d[arc_DatumPlane.id], cells=p.cells)
+
+    point_9_rot = rotate_point_around_vector([point_9[0], point_9[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2))
+    edge = p.edges.findAt((point_9_rot,))
+    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
+    p.PartitionCellByExtrudeEdge(line=d[x_axis.id], cells=p.cells, edges=edge, sense=REVERSE)
+
+    d = p.datums
+    # xy_plane_offset = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    # xz_plane_offset = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
+    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_offset.id], cells=p.cells)
+    # p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_offset.id], cells=p.cells)
+
+    element_size = 50.0
+    generate_part_mesh(p, element_size=element_size)
+
+    return p
+
+
+def create_part_cover_front(model, part_name, dimension):
+    # 变量赋值
+    cover_r_out_front = dimension['cover_r_out_front']
+    cover_thickness_front = dimension['cover_thickness_front']
+    cover_offset_front = dimension['cover_offset_front']
+    rotate_angle_deg = dimension['rotate_angle_deg']
+
+    point_1 = [cover_offset_front, 0.0]
+    point_2 = [cover_offset_front + cover_thickness_front, 0.0]
+    point_3 = [cover_offset_front + cover_thickness_front, cover_r_out_front]
+    point_4 = [cover_offset_front, cover_r_out_front]
+
+    # SKETCH-COVER-FRONT
+    s = model.ConstrainedSketch(name='SKETCH-COVER-FRONT', sheetSize=2000.0)
+    s.Line(point1=point_1, point2=point_2)
+    s.Line(point1=point_2, point2=point_3)
+    s.Line(point1=point_3, point2=point_4)
+    s.Line(point1=point_1, point2=point_4)
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
+
+    if rotate_angle_deg == 360.0:
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+
+    # 创建面
+    create_rotation_part_surface_common(p, rotate_angle_deg)
+
+    # 创建集合（面）
+    create_face_set_from_surface(p)
+
+    # 创建集合（体）
+    set_name = 'SET-CELL-HDG'
+    p.Set(cells=p.cells, name=set_name)
+
+    element_size = 50.0
+
+    # 生成网格
+    generate_part_mesh(p, element_size=element_size)
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+    return p
+
+
 if __name__ == "__main__":
     n = 9
 
@@ -2304,7 +2532,7 @@ if __name__ == "__main__":
     a_front = 1772.47
     a_behind = 1772.47
 
-    rotate_angle_deg = 20.0
+    rotate_angle_deg = 90.0
 
     block_length = 1508.0
     block_insulation_thickness_z = 3.0
@@ -2365,7 +2593,7 @@ if __name__ == "__main__":
     shell_insulation_r_in_at_a_front = 1762.5
     shell_insulation_r_in_at_a_behind = 1762.5
 
-    shell_insulation_r_out_front = 844.26
+    shell_insulation_r_out_front = 562.5
     shell_insulation_r_out_behind = 1260.0
 
     shell_insulation_r_in_front = 425.0
@@ -2453,17 +2681,17 @@ if __name__ == "__main__":
     is_assemble = False
 
     is_create_p_insulation = True
-    is_create_p_block = True
-    is_create_p_gap = True
-    is_create_p_block_penult = True
-    is_create_p_gap_penult = True
-    is_create_p_block_front = True
-    is_create_p_gap_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_create_p_block = True
+    # is_create_p_gap = True
+    # is_create_p_block_penult = True
+    # is_create_p_gap_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_gap_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2507,6 +2735,35 @@ if __name__ == "__main__":
         model.HomogeneousSolidSection(name='SECTION-GLUE', material='MATERIAL-GLUE', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
+
+        # dimension = {
+        #     'ellipse_center': [0.0, 0.0],
+        #     'ellipse_ratio': ellipse_ratio,
+        #     'r_in': 1777.5,
+        #     'a_front': 1772.47,
+        #
+        #     'r_front_in_1': 562.5,
+        #     'r_front_in_2': 844.26,
+        #     'r_front_in_3': 460,
+        #     'r_front_in_4': 560,
+        #
+        #     'l_front_1': 1035.18,
+        #     'l_front_2': 892.58,
+        #     'l_points': 294.26,
+        #     'slope_degree_points': 84.88,
+        #     'thickness': 2.5,
+        #     'fillet_radius': 10,
+        #     'rotate_angle_degree': 360.0 / n / 2.0,
+        # }
+        # p_QJT = create_part_QJT(model, 'PART-QJT', dimension)
+
+        dimension = {
+            'cover_r_out_front': 560.0,
+            'cover_thickness_front': 68.18,
+            'cover_offset_front': -1103.36,
+            'rotate_angle_deg': rotate_angle_deg
+        }
+        p_cover_front = create_part_cover_front(model, 'PART-COVER-FRONT', dimension)
 
         insulation_dimension = {
             'l_c1_c2': l_c1_c2,
