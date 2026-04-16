@@ -2116,16 +2116,16 @@ def create_part_insulation(model, part_name, dimension):
     r_in_insulation = dimension['r_in_insulation']
     r_out_insulation = dimension['r_out_insulation']
 
-    theta_in_deg_front = dimension['theta_in_deg_front']
-    theta_in_deg_behind = dimension['theta_in_deg_behind']
+    shell_insulation_theta_in_deg_front = dimension['shell_insulation_theta_in_deg_front']
+    shell_insulation_theta_in_deg_behind = dimension['shell_insulation_theta_in_deg_behind']
 
-    theta_out_deg_front = dimension['theta_out_deg_front']
-    theta_out_deg_behind = dimension['theta_out_deg_behind']
+    shell_insulation_theta_out_deg_front = dimension['shell_insulation_theta_out_deg_front']
+    shell_insulation_theta_out_deg_behind = dimension['shell_insulation_theta_out_deg_behind']
 
-    a_front_out = dimension['a_front_out']
-    a_behind_out = dimension['a_behind_out']
-    a_front_in = dimension['a_front_in']
-    a_behind_in = dimension['a_behind_in']
+    a_front = dimension['a_front']
+    a_behind = dimension['a_behind']
+    r_in_at_a_front = dimension['r_in_at_a_front']
+    r_in_at_a_behind = dimension['r_in_at_a_behind']
 
     r_front_out = dimension['r_front_out']
     r_behind_out = dimension['r_behind_out']
@@ -2133,7 +2133,7 @@ def create_part_insulation(model, part_name, dimension):
     r_front_in = dimension['r_front_in']
     r_behind_in = dimension['r_behind_in']
 
-    insulation_rotate_angle_deg = dimension['insulation_rotate_angle_deg']
+    rotate_angle_deg = dimension['rotate_angle_deg']
 
     p0_front = dimension['p0_front']
     theta0_deg_front = dimension['theta0_deg_front']
@@ -2160,36 +2160,36 @@ def create_part_insulation(model, part_name, dimension):
     element_size = 40.0
 
     # 前后椭圆对象
-    b_front_out = a_front_out / ellipse_ratio
-    b_behind_out = a_behind_out / ellipse_ratio
-    ellipse_front = Ellipse(c_1[0], c_1[1], a_front_out, b_front_out, long_axis='y')
-    ellipse_behind = Ellipse(c_2[0], c_2[1], a_behind_out, b_behind_out, long_axis='y')
+    b_front_out = a_front / ellipse_ratio
+    b_behind_out = a_behind / ellipse_ratio
+    ellipse_front = Ellipse(c_1[0], c_1[1], a_front, b_front_out, long_axis='y')
+    ellipse_behind = Ellipse(c_2[0], c_2[1], a_behind, b_behind_out, long_axis='y')
 
     # 前封头外轮廓
-    line1 = Line2D((0, a_front_out), math.tan(degrees_to_radians(theta_out_deg_front)))
+    line1 = Line2D((0, a_front), math.tan(degrees_to_radians(shell_insulation_theta_out_deg_front)))
     line2 = Line2D((0, r_out_insulation), (1, r_out_insulation))
     p_front_out_1 = line1.get_intersection(line2)
-    p_front_out_2 = [c_1[0], a_front_out]
+    p_front_out_2 = [c_1[0], a_front]
     p_front_out_3 = [ellipse_front.x_from_y(r_front_out)[1], r_front_out]
 
     # 后封头外轮廓
-    line1 = Line2D((c_2[0], a_behind_out), -math.tan(degrees_to_radians(theta_out_deg_behind)))
+    line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(shell_insulation_theta_out_deg_behind)))
     line2 = Line2D((0, r_out_insulation), (1, r_out_insulation))
     p_behind_out_1 = line1.get_intersection(line2)
-    p_behind_out_2 = [c_2[0], a_behind_out]
+    p_behind_out_2 = [c_2[0], a_behind]
     p_behind_out_3 = [ellipse_behind.x_from_y(r_behind_out)[0], r_behind_out]
 
     # 前封头内轮廓
-    line1 = Line2D((0, a_front_in), math.tan(degrees_to_radians(theta_in_deg_front)))
+    line1 = Line2D((0, r_in_at_a_front), math.tan(degrees_to_radians(shell_insulation_theta_in_deg_front)))
     line2 = Line2D((0, r_in_insulation), (1, r_in_insulation))
     p_front_in_1 = line1.get_intersection(line2)
-    p_front_in_2 = [c_1[0], a_front_in]
+    p_front_in_2 = [c_1[0], r_in_at_a_front]
 
     # 后封头内轮廓
-    line1 = Line2D((c_2[0], a_behind_in), -math.tan(degrees_to_radians(theta_in_deg_behind)))
+    line1 = Line2D((c_2[0], r_in_at_a_behind), -math.tan(degrees_to_radians(shell_insulation_theta_in_deg_behind)))
     line2 = Line2D((0, r_in_insulation), (1, r_in_insulation))
     p_behind_in_1 = line1.get_intersection(line2)
-    p_behind_in_2 = [c_2[0], a_behind_in]
+    p_behind_in_2 = [c_2[0], r_in_at_a_behind]
 
     s = model.ConstrainedSketch(name='SKETCH-INSULATION', sheetSize=2000.0)
 
@@ -2237,12 +2237,12 @@ def create_part_insulation(model, part_name, dimension):
 
     # 生成基础体
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    p.BaseSolidRevolve(sketch=s, angle=insulation_rotate_angle_deg, flipRevolveDirection=OFF)
+    p.BaseSolidRevolve(sketch=s, angle=rotate_angle_deg, flipRevolveDirection=OFF)
 
     # 创建面
-    create_rotation_part_surface_common(p, insulation_rotate_angle_deg)
+    create_rotation_part_surface_common(p, rotate_angle_deg)
     point_middle_in = ((p_front_in_1[0] + p_behind_in_1[0]) / 2.0, (p_front_in_1[1] + p_behind_in_1[1]) / 2.0, 0)
-    point_middle_in_rot = rotate_point_around_axis(point_middle_in, (0, 0, 0), (1, 0, 0), insulation_rotate_angle_deg / 2.0)
+    point_middle_in_rot = rotate_point_around_axis(point_middle_in, (0, 0, 0), (1, 0, 0), rotate_angle_deg / 2.0)
     p_face_middle = p.faces.findAt((point_middle_in_rot,))[0]
     p.Surface(side1Faces=p_face_middle.getFacesByFaceAngle(20), name='SURFACE-INNER')
     # 通过排除法确定外表面
@@ -2298,6 +2298,14 @@ if __name__ == "__main__":
     d = 3529.0
     x0 = 500.0
 
+    l_c1_c2 = 17300.0
+    ellipse_ratio = 1.69
+
+    a_front = 1772.47
+    a_behind = 1772.47
+
+    rotate_angle_deg = 20.0
+
     block_length = 1508.0
     block_insulation_thickness_z = 3.0
     block_insulation_thickness_t = 3.0
@@ -2334,7 +2342,7 @@ if __name__ == "__main__":
     r1_front = 829.41
     r2_front = 1515.05
     r3_front = 641.21
-    theta_in_deg_front = 0.16
+    shell_insulation_theta_in_deg_front = 0.16
 
     r_cut_behind = 460.0
     length_behind = 1500.0
@@ -2345,7 +2353,7 @@ if __name__ == "__main__":
     r1_behind = 525.61
     r2_behind = 1075.96
     r3_behind = 569.38
-    theta_in_deg_behind = 0.16
+    shell_insulation_theta_in_deg_behind = 0.16
 
     if p3_front[1] > d / 2.0:
         raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
@@ -2396,7 +2404,7 @@ if __name__ == "__main__":
     #     r1_front = message['r1_front']
     #     r2_front = message['r2_front']
     #     r3_front = message['r3_front']
-    #     theta_in_deg_front = message['theta_in_deg_front']
+    #     shell_insulation_theta_in_deg_front = message['shell_insulation_theta_in_deg_front']
     #     r_cut_behind = message['r_cut_behind']
     #     length_behind = message['length_behind']
     #     p0_x_behind = message['p0_x_behind']
@@ -2456,7 +2464,7 @@ if __name__ == "__main__":
         # r1_front = 929.4
         # r2_front = 1524.0
         # r3_front = 655.2
-        # theta_in_deg_front = 0.16
+        # shell_insulation_theta_in_deg_front = 0.16
 
         result = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
         plot_three_arcs(result, p0_front, p3_front, is_show=False, save_path='three_arcs_front.png')
@@ -2485,48 +2493,47 @@ if __name__ == "__main__":
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
         insulation_dimension = {
-            'l_c1_c2': 17300.0,
-            'ellipse_ratio': 1.69,
+            'l_c1_c2': l_c1_c2,
+            'ellipse_ratio': ellipse_ratio,
+
+            'a_front': a_front,
+            'a_behind': a_behind,
 
             'r_in_insulation': 1764.5,
             'r_out_insulation': 1777.5,
 
-            'a_front_out': 1772.47,
-            'a_front_in': 1762.5,
+            'r_in_at_a_front': 1762.5,
+            'r_in_at_a_behind': 1762.5,
 
-            'a_behind_out': 1772.47,
-            'a_behind_in': 1762.5,
+            'shell_insulation_theta_in_deg_front': shell_insulation_theta_in_deg_front,
+            'shell_insulation_theta_in_deg_behind': shell_insulation_theta_in_deg_behind,
 
-            'theta_in_deg_front': 0.16,
-            'theta_in_deg_behind': 0.16,
-
-            'theta_out_deg_front': 0.24,
-            'theta_out_deg_behind': 0.24,
+            'shell_insulation_theta_out_deg_front': 0.24,
+            'shell_insulation_theta_out_deg_behind': 0.24,
 
             'r_front_out': 844.26,
             'r_behind_out': 1260,
 
             'r_front_in': 425,
             'r_behind_in': 775,
+            
+            'rotate_angle_deg': rotate_angle_deg,
 
-            # 'insulation_rotate_angle_deg': 360.0 / n / 2.0,
-            'insulation_rotate_angle_deg': 20.0,
+            'p0_front': p0_front,
+            'theta0_deg_front': theta0_deg_front,
+            'p3_front': p3_front,
+            'theta3_deg_front': theta3_deg_front,
+            'r1_front': r1_front,
+            'r2_front': r2_front,
+            'r3_front': r3_front,
 
-            'p0_front': (-857.580, 794.0),
-            'theta0_deg_front': 90.0,
-            'p3_front': (0, 1762.5),
-            'theta3_deg_front': 0.0,
-            'r1_front': 829.41,
-            'r2_front': 1515.05,
-            'r3_front': 641.21,
-
-            'p0_behind': (17983.730, 1109.770),
-            'theta0_deg_behind': -90.0,
-            'p3_behind': (17300, 1762.5),
-            'theta3_deg_behind': 0.0,
-            'r1_behind': 525.61,
-            'r2_behind': 1075.96,
-            'r3_behind': 569.38,
+            'p0_behind': (p0_behind[0] + l_c1_c2, p0_behind[1]),
+            'theta0_deg_behind': theta0_deg_behind,
+            'p3_behind': (p3_behind[0] + l_c1_c2, p3_behind[1]),
+            'theta3_deg_behind': theta3_deg_behind,
+            'r1_behind': r1_behind,
+            'r2_behind': r2_behind,
+            'r3_behind': r3_behind,
         }
         if is_create_p_insulation:
             p_insulation = create_part_insulation(model, 'PART-INSULATION', insulation_dimension)
@@ -2591,7 +2598,7 @@ if __name__ == "__main__":
         first_block_dimension['r1'] = r1_front
         first_block_dimension['r2'] = r2_front
         first_block_dimension['r3'] = r3_front
-        first_block_dimension['theta_in_deg'] = theta_in_deg_front
+        first_block_dimension['theta_in_deg'] = shell_insulation_theta_in_deg_front
         if is_create_p_block_front:
             p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
             print('CREATE PART-BLOCK-FRONT DONE.')
@@ -2606,14 +2613,14 @@ if __name__ == "__main__":
         behind_block_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z]
         behind_block_dimension['r_cut'] = r_cut_behind
         behind_block_dimension['length_behind'] = length_behind
-        behind_block_dimension['p0'] = p0_behind
+        behind_block_dimension['p0'] = [p0_behind[0] + front_offset, p0_behind[1]]
         behind_block_dimension['theta0_deg'] = theta0_deg_behind
-        behind_block_dimension['p3'] = p3_behind
+        behind_block_dimension['p3'] = [p3_behind[0] + front_offset, p3_behind[1]]
         behind_block_dimension['theta3_deg'] = theta3_deg_behind
         behind_block_dimension['r1'] = r1_behind
         behind_block_dimension['r2'] = r2_behind
         behind_block_dimension['r3'] = r3_behind
-        behind_block_dimension['theta_in_deg'] = theta_in_deg_behind
+        behind_block_dimension['theta_in_deg'] = shell_insulation_theta_in_deg_behind
         if is_create_p_block_behind:
             p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
             print('CREATE PART-BLOCK-BEHIND DONE.')
