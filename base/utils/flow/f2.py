@@ -2325,12 +2325,13 @@ def create_part_flange_front(model, part_name, dimension):
     # 基本参数
     c_1 = [0.0, 0.0]
     b_front = a_front / ellipse_ratio
-    ellipse = Ellipse(c_1[0], c_1[1], a_front, b_front, long_axis='y')
-    ellipse_top_point = [c_1[0], a_front]
-    ellipse_right_point = [c_1[0] + b_front, c_1[1]]
-    r_out = cover_r_out_front + flange_thickness_offset_front
-    point_fillet = [ellipse.x_from_y(r_out)[1], r_out]
-    point_left_conner = [c_1[0] - flange_offset_front, r_out]
+    ellipse = Ellipse(0.0, 0.0, a_front, b_front, long_axis='y')
+    ellipse_top_point = [0.0, a_front]
+    ellipse_right_point = [b_front, 0.0]
+    r_mid = cover_r_out_front + flange_thickness_offset_front
+    point_fillet = [ellipse.x_from_y(r_mid)[1], r_mid]
+    point_left_conner = [flange_offset_front, r_mid]
+    point_temp = [ellipse.x_from_y(flange_r_out_front)[1], flange_r_out_front]
 
     # SKETCH-FLANGE-FRONT
     s = model.ConstrainedSketch(name='SKETCH-FLANGE-FRONT', sheetSize=2000.0)
@@ -2340,7 +2341,7 @@ def create_part_flange_front(model, part_name, dimension):
     s.autoTrimCurve(curve1=e, point1=ellipse_right_point)
 
     s.FilletByRadius(radius=flange_fillet_radius_front,
-                     curve1=s.geometry.findAt(ellipse_top_point), nearPoint1=(ellipse.x_from_y(r_out + 1.0)[1], r_out + 1.0),
+                     curve1=s.geometry.findAt(ellipse_top_point), nearPoint1=(ellipse.x_from_y(r_mid + 1.0)[1], r_mid + 1.0),
                      curve2=s.geometry.findAt(point_left_conner), nearPoint2=((point_fillet[0] + point_left_conner[0]) / 2, point_fillet[1]))
 
     geom_list = []
@@ -2349,8 +2350,7 @@ def create_part_flange_front(model, part_name, dimension):
     s.offset(distance=flange_thickness_offset_front, objectList=geom_list, side=RIGHT)
     s.delete(objectList=geom_list)
 
-    point_temp = [ellipse.x_from_y(flange_r_out_front)[1], flange_r_out_front]
-    s.Line(point1=point_temp, point2=[c_1[0], point_temp[1]])
+    s.Line(point1=point_temp, point2=[0.0, point_temp[1]])
 
     ellipse_top_point_offset = [ellipse_top_point[0], ellipse_top_point[1] - flange_thickness_offset_front]
     curve = s.geometry.findAt((ellipse_top_point_offset))
@@ -2360,16 +2360,19 @@ def create_part_flange_front(model, part_name, dimension):
     s.autoTrimCurve(curve1=curve, point1=point_temp)
 
     point_left_conner_offset = [point_left_conner[0], cover_r_out_front]
-    s.Line(point1=point_left_conner_offset, point2=[point_left_conner_offset[0], flange_r_in_front])
 
-    s.Line(point1=[point_left_conner_offset[0], flange_r_in_front], point2=[point_left_conner_offset[0] + flange_thickness_front, flange_r_in_front])
+    point_1 = [point_left_conner_offset[0], flange_r_in_front]
+    point_2 = [point_left_conner_offset[0] + flange_thickness_front, flange_r_in_front]
+    point_3 = [point_left_conner_offset[0] + flange_thickness_front, cover_r_out_front]
 
-    s.Line(point1=[point_left_conner_offset[0] + flange_thickness_front, flange_r_in_front], point2=[point_left_conner_offset[0] + flange_thickness_front, cover_r_out_front])
+    s.Line(point1=point_left_conner_offset, point2=point_1)
+    s.Line(point1=point_1, point2=point_2)
+    s.Line(point1=point_2, point2=point_3)
 
-    l1 = Line2D([point_left_conner_offset[0] + flange_thickness_front, cover_r_out_front], np.tan(np.radians(flange_slope_deg_front)))
-    l2 = Line2D(point_temp, [point_temp[0] + 1.0, point_temp[1]])
+    l1 = Line2D(point_3, np.tan(np.radians(flange_slope_deg_front)))
+    l2 = Line2D([0.0, flange_r_out_front], [1.0, flange_r_out_front])
 
-    s.Line(point1=l1.get_intersection(l2), point2=[point_left_conner_offset[0] + flange_thickness_front, cover_r_out_front])
+    s.Line(point1=l1.get_intersection(l2), point2=point_3)
 
     curve = s.geometry.findAt(([c_1[0], point_temp[1]]))
     s.autoTrimCurve(curve1=curve, point1=[c_1[0], point_temp[1]])
@@ -2669,7 +2672,7 @@ if __name__ == "__main__":
             'flange_r_in_front': 460,
             'flange_r_out_front': 843.5,
             'cover_r_out_front': 560,
-            'flange_offset_front': 1035.18,
+            'flange_offset_front': -1035.18,
             'flange_thickness_front': 142.6,
             'flange_slope_deg_front': -84.88,
             'flange_thickness_offset_front': 2.5,
