@@ -2122,8 +2122,8 @@ def create_part_insulation(model, part_name, dimension):
     theta_out_deg_front = dimension['theta_out_deg_front']
     theta_out_deg_behind = dimension['theta_out_deg_behind']
 
-    a_front = dimension['a_front']
-    a_behind = dimension['a_behind']
+    a_front_out = dimension['a_front_out']
+    a_behind_out = dimension['a_behind_out']
     a_front_in = dimension['a_front_in']
     a_behind_in = dimension['a_behind_in']
 
@@ -2160,23 +2160,23 @@ def create_part_insulation(model, part_name, dimension):
     element_size = 40.0
 
     # 前后椭圆对象
-    b_front = a_front / ellipse_ratio
-    b_behind = a_behind / ellipse_ratio
-    ellipse_front = Ellipse(c_1[0], c_1[1], a_front, b_front, long_axis='y')
-    ellipse_behind = Ellipse(c_2[0], c_2[1], a_behind, b_behind, long_axis='y')
+    b_front_out = a_front_out / ellipse_ratio
+    b_behind_out = a_behind_out / ellipse_ratio
+    ellipse_front = Ellipse(c_1[0], c_1[1], a_front_out, b_front_out, long_axis='y')
+    ellipse_behind = Ellipse(c_2[0], c_2[1], a_behind_out, b_behind_out, long_axis='y')
 
     # 前封头外轮廓
-    line1 = Line2D((0, a_front), math.tan(degrees_to_radians(theta_out_deg_front)))
+    line1 = Line2D((0, a_front_out), math.tan(degrees_to_radians(theta_out_deg_front)))
     line2 = Line2D((0, r_out_insulation), (1, r_out_insulation))
     p_front_out_1 = line1.get_intersection(line2)
-    p_front_out_2 = [c_1[0], a_front]
+    p_front_out_2 = [c_1[0], a_front_out]
     p_front_out_3 = [ellipse_front.x_from_y(r_front_out)[1], r_front_out]
 
     # 后封头外轮廓
-    line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(theta_out_deg_behind)))
+    line1 = Line2D((c_2[0], a_behind_out), -math.tan(degrees_to_radians(theta_out_deg_behind)))
     line2 = Line2D((0, r_out_insulation), (1, r_out_insulation))
     p_behind_out_1 = line1.get_intersection(line2)
-    p_behind_out_2 = [c_2[0], a_behind]
+    p_behind_out_2 = [c_2[0], a_behind_out]
     p_behind_out_3 = [ellipse_behind.x_from_y(r_behind_out)[0], r_behind_out]
 
     # 前封头内轮廓
@@ -2195,8 +2195,8 @@ def create_part_insulation(model, part_name, dimension):
 
     # 前封头
     l_trim_front = s.Line(point1=p_front_out_3, point2=(p_front_out_3[0] + 1.0, p_front_out_3[1]))
-    ellipse_front = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=p_front_out_2, axisPoint2=[c_1[0] + b_front, 0.0])
-    s.autoTrimCurve(curve1=ellipse_front, point1=(c_1[0] - b_front, 0.0))
+    ellipse_front = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=p_front_out_2, axisPoint2=[c_1[0] + b_front_out, 0.0])
+    s.autoTrimCurve(curve1=ellipse_front, point1=(c_1[0] - b_front_out, 0.0))
     s.delete(objectList=(s.geometry[l_trim_front.id],))
 
     arcs_front = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
@@ -2210,8 +2210,8 @@ def create_part_insulation(model, part_name, dimension):
 
     # 后封头
     l_trim_behind = s.Line(point1=p_behind_out_3, point2=(p_behind_out_3[0] + 1.0, p_behind_out_3[1]))
-    ellipse_behind = s.EllipseByCenterPerimeter(center=c_2, axisPoint1=p_behind_out_2, axisPoint2=[c_2[0] + b_behind, 0.0])
-    s.autoTrimCurve(curve1=ellipse_behind, point1=(c_2[0] + b_behind, 0.0))
+    ellipse_behind = s.EllipseByCenterPerimeter(center=c_2, axisPoint1=p_behind_out_2, axisPoint2=[c_2[0] + b_behind_out, 0.0])
+    s.autoTrimCurve(curve1=ellipse_behind, point1=(c_2[0] + b_behind_out, 0.0))
     s.delete(objectList=(s.geometry[l_trim_behind.id],))
 
     arcs_behind = solve_three_arcs(p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind)
@@ -2489,10 +2489,10 @@ if __name__ == "__main__":
             'r_in_insulation': 1764.5,
             'r_out_insulation': 1777.5,
 
-            'a_front': 1772.47,
+            'a_front_out': 1772.47,
             'a_front_in': 1762.5,
 
-            'a_behind': 1772.47,
+            'a_behind_out': 1772.47,
             'a_behind_in': 1762.5,
 
             'theta_in_deg_front': 0.16,
