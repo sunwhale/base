@@ -2079,6 +2079,9 @@ def create_part_insulation(model, part_name, dimension):
     r_front_out = dimension['r_front_out']
     r_behind_out = dimension['r_behind_out']
 
+    r_front_in = dimension['r_front_in']
+    r_behind_in = dimension['r_behind_in']
+
     insulation_rotate_angle_deg = dimension['insulation_rotate_angle_deg']
 
     p0_front = dimension['p0_front']
@@ -2097,8 +2100,8 @@ def create_part_insulation(model, part_name, dimension):
     r2_behind = dimension['r2_behind']
     r3_behind = dimension['r3_behind']
 
-    front_points = [[-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425]]
-    behind_points = [[18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775], [17983.73, 775]]
+    front_points = [[-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425]]
+    behind_points = [[18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775]]
 
     # 基本参数
     c_1 = [0.0, 0.0]
@@ -2138,7 +2141,7 @@ def create_part_insulation(model, part_name, dimension):
     p_behind_in_2 = [c_2[0], a_behind_in]
 
     s = model.ConstrainedSketch(name='SKETCH-INSULATION', sheetSize=2000.0)
-
+    
     # 前封头
     l_trim_front = s.Line(point1=p_front_out_3, point2=(p_front_out_3[0] + 1.0, p_front_out_3[1]))
     ellipse_front = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=p_front_out_2, axisPoint2=[c_1[0] + b_front, 0.0])
@@ -2150,7 +2153,7 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_front['c2'], point1=arcs_front['p1'], point2=arcs_front['p2'], direction=get_direction(arcs_front['delta2']))
     s.ArcByCenterEnds(center=arcs_front['c3'], point1=arcs_front['p2'], point2=p3_front, direction=get_direction(arcs_front['delta3']))
 
-    point_list_front = [p_front_out_3] + front_points + [p0_front]
+    point_list_front = [p_front_out_3] + front_points + [[p0_front[0], r_front_in], p0_front]
     for i in range(len(point_list_front) - 1):
         s.Line(point1=point_list_front[i], point2=point_list_front[i + 1])
 
@@ -2165,14 +2168,16 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_behind['c2'], point1=arcs_behind['p1'], point2=arcs_behind['p2'], direction=get_direction(arcs_behind['delta2']))
     s.ArcByCenterEnds(center=arcs_behind['c3'], point1=arcs_behind['p2'], point2=p3_behind, direction=get_direction(arcs_behind['delta3']))
 
-    point_list_behind = [p_behind_out_3] + behind_points + [p0_behind]
+    point_list_behind = [p_behind_out_3] + behind_points + [[p0_behind[0], r_behind_in], p0_behind]
     for i in range(len(point_list_behind) - 1):
         s.Line(point1=point_list_behind[i], point2=point_list_behind[i + 1])
 
-    # 中段
+    # 中段外侧
     s.Line(point1=p_front_out_1, point2=p_behind_out_1)
     s.Line(point1=p_front_out_1, point2=p_front_out_2)
     s.Line(point1=p_behind_out_1, point2=p_behind_out_2)
+
+    # 中段内侧
     s.Line(point1=p_front_in_1, point2=p_behind_in_1)
     s.Line(point1=p_front_in_1, point2=p_front_in_2)
     s.Line(point1=p_behind_in_1, point2=p_behind_in_2)
@@ -2437,6 +2442,9 @@ if __name__ == "__main__":
 
             'r_front_out': 844.26,
             'r_behind_out': 1260,
+
+            'r_front_in': 425,
+            'r_behind_in': 775,
 
             # 'insulation_rotate_angle_deg': 360.0 / n / 2.0,
             'insulation_rotate_angle_deg': 80.0,
