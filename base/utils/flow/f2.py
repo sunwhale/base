@@ -2319,7 +2319,9 @@ def create_part_flange_front(model, part_name, dimension):
     r_front_in_2 = dimension['r_front_in_2']
 
     flange_r_in_front = dimension['flange_r_in_front']
+    flange_r_out_front = dimension['flange_r_out_front']
     cover_r_out_front = dimension['cover_r_out_front']
+    flange_thickness_front = dimension['flange_thickness_front']
 
     flange_offset_front = dimension['flange_offset_front']
     l_front_2 = dimension['l_front_2']
@@ -2345,7 +2347,7 @@ def create_part_flange_front(model, part_name, dimension):
 
     point_left_conner = [c_1[0] - flange_offset_front, cover_r_out_front + thickness]
 
-    point_4 = [ellipse.x_from_y(r_front_in_2)[1], r_front_in_2]
+    # point_4 = [ellipse.x_from_y(r_front_in_2)[1], r_front_in_2]
 
     # point_5 = [ellipse.x_from_y(r_front_in_2)[1] + tol, r_front_in_2]
     # point_6 = [c_x - flange_offset_front, r_front_in_1 - thickness]
@@ -2357,17 +2359,8 @@ def create_part_flange_front(model, part_name, dimension):
     s = model.ConstrainedSketch(name='SKETCH-FLANGE-FRONT', sheetSize=40000.0)
 
     e = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=ellipse_top_point, axisPoint2=ellipse_right_point)
-    s.Spot(point=point_fillet)
-    s.Spot(point=point_left_conner)
-    s.Spot(point=point_4)
-
     s.Line(point1=point_fillet, point2=point_left_conner)
-
     s.autoTrimCurve(curve1=e, point1=ellipse_right_point)
-    # curve = s.geometry.findAt((point_1))
-    # s.autoTrimCurve(curve1=curve, point1=point_1)
-    #
-    # s.delete(objectList=(s.geometry[l_temp.id],))
 
     curve_1 = s.geometry.findAt(ellipse_top_point)
     curve_2 = s.geometry.findAt(point_left_conner)
@@ -2380,6 +2373,23 @@ def create_part_flange_front(model, part_name, dimension):
         geom_list.append(g)
     s.offset(distance=thickness, objectList=geom_list, side=RIGHT)
     s.delete(objectList=geom_list)
+
+    point_temp = [ellipse.x_from_y(flange_r_out_front)[1], flange_r_out_front]
+    s.Line(point1=point_temp, point2=[c_1[0], point_temp[1]])
+
+    ellipse_top_point_offset = [ellipse_top_point[0], ellipse_top_point[1] - thickness]
+    curve = s.geometry.findAt((ellipse_top_point_offset))
+    s.autoTrimCurve(curve1=curve, point1=ellipse_top_point_offset)
+
+    curve = s.geometry.findAt((point_temp))
+    s.autoTrimCurve(curve1=curve, point1=point_temp)
+
+    point_left_conner_offset = [point_left_conner[0], cover_r_out_front]
+    s.Line(point1=point_left_conner_offset, point2=[point_left_conner_offset[0], flange_r_in_front])
+
+    s.Line(point1=[point_left_conner_offset[0], flange_r_in_front], point2=[point_left_conner_offset[0] + flange_thickness_front, flange_r_in_front])
+
+    s.Line(point1=[point_left_conner_offset[0] + flange_thickness_front, flange_r_in_front], point2=[point_left_conner_offset[0] + flange_thickness_front, cover_r_out_front])
 
     # curve = s.geometry.findAt((point_3))
     # s.autoTrimCurve(curve1=curve, point1=point_3)
@@ -2710,7 +2720,6 @@ if __name__ == "__main__":
             'flange_r_in_front': 460,
             'flange_r_out_front': 843.5,
             'cover_r_out_front': 560,
-
 
             'flange_offset_front': 1035.18,
             'flange_thickness_front': 142.6,
