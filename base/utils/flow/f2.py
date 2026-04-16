@@ -2309,7 +2309,7 @@ def create_part_insulation(model, part_name, dimension):
 
 
 def create_part_flange_front(model, part_name, dimension):
-
+    # 变量赋值
     ellipse_ratio = dimension['ellipse_ratio']
     a_front = dimension['a_front']
     flange_thickness_offset_front = dimension['flange_thickness_offset_front']
@@ -2322,31 +2322,26 @@ def create_part_flange_front(model, part_name, dimension):
     flange_slope_deg_front = dimension['flange_slope_deg_front']
     rotate_angle_deg = dimension['rotate_angle_deg']
 
-
+    # 基本参数
     c_1 = [0.0, 0.0]
-
     b_front = a_front / ellipse_ratio
-
     ellipse = Ellipse(c_1[0], c_1[1], a_front, b_front, long_axis='y')
-
     ellipse_top_point = [c_1[0], a_front]
     ellipse_right_point = [c_1[0] + b_front, c_1[1]]
+    r_out = cover_r_out_front + flange_thickness_offset_front
+    point_fillet = [ellipse.x_from_y(r_out)[1], r_out]
+    point_left_conner = [c_1[0] - flange_offset_front, r_out]
 
-    point_fillet = [ellipse.x_from_y(cover_r_out_front + flange_thickness_offset_front)[1], cover_r_out_front + flange_thickness_offset_front]
-
-    point_left_conner = [c_1[0] - flange_offset_front, cover_r_out_front + flange_thickness_offset_front]
-
+    # SKETCH-FLANGE-FRONT
     s = model.ConstrainedSketch(name='SKETCH-FLANGE-FRONT', sheetSize=2000.0)
 
     e = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=ellipse_top_point, axisPoint2=ellipse_right_point)
     s.Line(point1=point_fillet, point2=point_left_conner)
     s.autoTrimCurve(curve1=e, point1=ellipse_right_point)
 
-    curve_1 = s.geometry.findAt(ellipse_top_point)
-    curve_2 = s.geometry.findAt(point_left_conner)
-
-    y_temp = cover_r_out_front + flange_thickness_offset_front + 1.0
-    s.FilletByRadius(radius=flange_fillet_radius_front, curve1=curve_1, nearPoint1=(ellipse.x_from_y(y_temp)[1], y_temp), curve2=curve_2, nearPoint2=((point_fillet[0] + point_left_conner[0]) / 2, point_fillet[1]))
+    s.FilletByRadius(radius=flange_fillet_radius_front,
+                     curve1=s.geometry.findAt(ellipse_top_point), nearPoint1=(ellipse.x_from_y(r_out + 1.0)[1], r_out + 1.0),
+                     curve2=s.geometry.findAt(point_left_conner), nearPoint2=((point_fillet[0] + point_left_conner[0]) / 2, point_fillet[1]))
 
     geom_list = []
     for g in s.geometry.values():
