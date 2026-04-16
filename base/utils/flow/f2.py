@@ -2356,6 +2356,21 @@ if __name__ == "__main__":
     shell_insulation_theta_in_deg_front = 0.16
     shell_insulation_theta_in_deg_behind = 0.16
 
+    shell_insulation_theta_out_deg_front = 0.24
+    shell_insulation_theta_out_deg_behind = 0.24
+
+    shell_insulation_r_in = 1764.5
+    shell_insulation_r_out = 1777.5
+
+    shell_insulation_r_in_at_a_front = 1762.5
+    shell_insulation_r_in_at_a_behind = 1762.5
+
+    shell_insulation_r_out_front = 844.26
+    shell_insulation_r_out_behind = 1260
+
+    shell_insulation_r_in_front = 425
+    shell_insulation_r_in_behind = 775
+
     if p3_front[1] > d / 2.0:
         raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
 
@@ -2500,25 +2515,23 @@ if __name__ == "__main__":
             'a_front': a_front,
             'a_behind': a_behind,
 
-            'shell_insulation_r_in': 1764.5,
-            'shell_insulation_r_out': 1777.5,
-
-            'shell_insulation_r_in_at_a_front': 1762.5,
-            'shell_insulation_r_in_at_a_behind': 1762.5,
+            'shell_insulation_r_in': shell_insulation_r_in,
+            'shell_insulation_r_out': shell_insulation_r_out,
 
             'shell_insulation_theta_in_deg_front': shell_insulation_theta_in_deg_front,
             'shell_insulation_theta_in_deg_behind': shell_insulation_theta_in_deg_behind,
 
-            'shell_insulation_theta_out_deg_front': 0.24,
-            'shell_insulation_theta_out_deg_behind': 0.24,
+            'shell_insulation_theta_out_deg_front': shell_insulation_theta_out_deg_front,
+            'shell_insulation_theta_out_deg_behind': shell_insulation_theta_out_deg_behind,
 
-            'shell_insulation_r_out_front': 844.26,
-            'shell_insulation_r_out_behind': 1260,
+            'shell_insulation_r_in_at_a_front': shell_insulation_r_in_at_a_front,
+            'shell_insulation_r_in_at_a_behind': shell_insulation_r_in_at_a_behind,
 
-            'shell_insulation_r_in_front': 425,
-            'shell_insulation_r_in_behind': 775,
-            
-            'rotate_angle_deg': rotate_angle_deg,
+            'shell_insulation_r_out_front': shell_insulation_r_out_front,
+            'shell_insulation_r_out_behind': shell_insulation_r_out_behind,
+
+            'shell_insulation_r_in_front': shell_insulation_r_in_front,
+            'shell_insulation_r_in_behind': shell_insulation_r_in_behind,
 
             'p0_front': p0_front,
             'theta0_deg_front': theta0_deg_front,
@@ -2535,6 +2548,8 @@ if __name__ == "__main__":
             'r1_behind': r1_behind,
             'r2_behind': r2_behind,
             'r3_behind': r3_behind,
+
+            'rotate_angle_deg': rotate_angle_deg,
         }
         if is_create_p_insulation:
             p_insulation = create_part_insulation(model, 'PART-INSULATION', insulation_dimension)
