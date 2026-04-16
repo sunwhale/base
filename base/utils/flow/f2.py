@@ -2126,7 +2126,6 @@ def create_part_insulation(model, part_name, dimension):
     c_1 = [0.0, 0.0]
     c_2 = [l_c1_c2, 0.0]
     element_size = 40.0
-    local_offset = 1.0
 
     # 前后椭圆对象
     b_front = a_front / ellipse_ratio
@@ -2134,27 +2133,12 @@ def create_part_insulation(model, part_name, dimension):
     ellipse_front = Ellipse(c_1[0], c_1[1], a_front, b_front, long_axis='y')
     ellipse_behind = Ellipse(c_2[0], c_2[1], a_behind, b_behind, long_axis='y')
 
-    #
-    l_points_front_x = math.cos(degrees_to_radians(slope_degree_points_front)) * l_points_front
-    l_points_front_y = math.sin(degrees_to_radians(slope_degree_points_front)) * l_points_front
-    l_points_behind_x = math.cos(degrees_to_radians(slope_degree_points_behind)) * l_points_behind
-    l_points_behind_y = math.sin(degrees_to_radians(slope_degree_points_behind)) * l_points_behind
-
     # 前封头外轮廓
     line1 = Line2D((0, a_front), math.tan(degrees_to_radians(theta_out_deg_front)))
     line2 = Line2D((0, r_out_insulation), (1, r_out_insulation))
     p_front_out_1 = line1.get_intersection(line2)
     p_front_out_2 = [c_1[0], a_front]
     p_front_out_3 = [ellipse_front.x_from_y(r_front_out_2)[1], r_front_out_2]
-    # p_front_out_4 = [ellipse_front.x_from_y(r_front_out_2)[1] + local_offset, r_front_out_2]
-    # p_front_out_5 = [c_1[0] - l_front_1, r_front_out_3]
-    # p_front_out_6 = [c_1[0] - l_front_2, r_front_out_3]
-    # p_front_out_7 = [c_1[0] - l_front_2, r_front_out_1 - thickness]
-    # front_offset = ellipse_front.point_along_ellipse_normal(p_front_out_3[0], p_front_out_3[1], -thickness)
-    # p_front_out_8 = [c_1[0] - l_front_2 - l_points_front_x, front_offset[1]]
-    # p_front_out_9 = [c_1[0] - l_front_1, r_front_out_5]
-    # p_front_out_10 = [c_1[0] - l_front_3, r_front_out_5]
-    # p_front_out_11 = [c_1[0] - l_front_3, r_front_out_6]
 
     # 后封头外轮廓
     line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(theta_out_deg_behind)))
@@ -2162,15 +2146,6 @@ def create_part_insulation(model, part_name, dimension):
     p_behind_out_1 = line1.get_intersection(line2)
     p_behind_out_2 = [c_2[0], a_behind]
     p_behind_out_3 = [ellipse_behind.x_from_y(r_behind_out_2)[0], r_behind_out_2]
-    # p_behind_out_4 = [ellipse_behind.x_from_y(r_behind_out_2)[0] + local_offset, r_behind_out_2]
-    # p_behind_out_5 = [c_2[0] + l_behind_1, r_behind_out_3]
-    # p_behind_out_6 = [c_2[0] + l_behind_2, r_behind_out_3]
-    # p_behind_out_7 = [c_2[0] + l_behind_2, r_behind_out_1 - thickness]
-    # behind_offset = ellipse_behind.point_along_ellipse_normal(p_behind_out_3[0], p_behind_out_3[1], -thickness)
-    # p_behind_out_8 = [c_2[0] + l_behind_2 - l_points_behind_x, behind_offset[1]]
-    # p_behind_out_9 = [c_2[0] + l_behind_1, r_behind_out_5]
-    # p_behind_out_10 = [c_2[0] + l_behind_3, r_behind_out_5]
-    # p_behind_out_11 = [c_2[0] + l_behind_3, r_behind_out_6]
 
     # 前封头内轮廓
     line1 = Line2D((0, a_front_in), math.tan(degrees_to_radians(theta_in_deg_front)))
@@ -2198,7 +2173,7 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_front['c3'], point1=arcs_front['p2'], point2=p3_front, direction=get_direction(arcs_front['delta3']))
 
     # print(front_offset, p_front_out_8, p_front_out_7, p_front_out_6, p_front_out_5, p_front_out_9, p_front_out_10)
-    point_list_front = [p_front_out_3, [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425], p0_front]
+    point_list_front = [p_front_out_3, [-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425], p0_front]
     for i in range(len(point_list_front) - 1):
         s.Line(point1=point_list_front[i], point2=point_list_front[i + 1])
 
@@ -2214,7 +2189,7 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_behind['c3'], point1=arcs_behind['p2'], point2=p3_behind, direction=get_direction(arcs_behind['delta3']))
 
     # print(behind_offset, p_behind_out_8, p_behind_out_7, p_behind_out_6, p_behind_out_5, p_behind_out_9, p_behind_out_10)
-    point_list_behind = [p_behind_out_3, [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775], [17983.73, 775], p0_behind]
+    point_list_behind = [p_behind_out_3, [18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775], [17983.73, 775], p0_behind]
     for i in range(len(point_list_behind) - 1):
         s.Line(point1=point_list_behind[i], point2=point_list_behind[i + 1])
 
@@ -2297,10 +2272,11 @@ if __name__ == "__main__":
 
     outer_partition_offset = 300.0
 
-    element_size = 20
-    insert_czm = False
+    element_size = 40
+    insert_czm = True
 
     size = '1/2'
+    size = '1'
 
     front_ref_length = 509.0
     behind_ref_length = 917.08
@@ -2335,61 +2311,63 @@ if __name__ == "__main__":
 
     nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
-    block[:, 0] = True
+    # block[:, :] = True
+    block[1, 0] = True
     # block[:, 1] = True
+    # block[3, 2] = True
     # block[:, 8] = True
 
-    setting_file = 'setting.json'
-    if os.path.exists(setting_file):
-        message = load_json(setting_file)
-
-        n = message['n']
-        d = message['d']
-        x0 = message['x0']
-        block_length = message['block_length']
-        block_insulation_thickness_z = message['block_insulation_thickness_z']
-        block_insulation_thickness_t = message['block_insulation_thickness_t']
-        block_insulation_thickness_r = message['block_insulation_thickness_r']
-        block_gap_z = message['block_gap_z']
-        block_gap_t = message['block_gap_t']
-        a = message['a']
-        b = message['b']
-        fillet_radius = message['fillet_radius']
-        angle_demolding_1 = message['angle_demolding_1']
-        burn_offset = message['burn_offset']
-        outer_partition_offset = message['outer_partition_offset']
-        element_size = message['element_size']
-        insert_czm = message['insert_czm']
-        size = message['size']
-        front_ref_length = message['front_ref_length']
-        behind_ref_length = message['behind_ref_length']
-        r_cut_front = message['r_cut_front']
-        length_front = message['length_front']
-        p0_x_front = message['p0_x_front']
-        p0_y_front = message['p0_y_front']
-        theta0_deg_front = message['theta0_deg_front']
-        p3_x_front = message['p3_x_front']
-        p3_y_front = message['p3_y_front']
-        theta3_deg_front = message['theta3_deg_front']
-        r1_front = message['r1_front']
-        r2_front = message['r2_front']
-        r3_front = message['r3_front']
-        theta_in_deg_front = message['theta_in_deg_front']
-        r_cut_behind = message['r_cut_behind']
-        length_behind = message['length_behind']
-        p0_x_behind = message['p0_x_behind']
-        p0_y_behind = message['p0_y_behind']
-        theta0_deg_behind = message['theta0_deg_behind']
-        p3_x_behind = message['p3_x_behind']
-        p3_y_behind = message['p3_y_behind']
-        theta3_deg_behind = message['theta3_deg_behind']
-        r1_behind = message['r1_behind']
-
-        p0_front = (p0_x_front, p0_y_front)
-        p3_front = (p3_x_front, p3_y_front)
-
-        p0_behind = (p0_x_behind, p0_y_behind)
-        p3_behind = (p3_x_behind, p3_y_behind)
+    # setting_file = 'setting.json'
+    # if os.path.exists(setting_file) and False:
+    #     message = load_json(setting_file)
+    #
+    #     n = message['n']
+    #     d = message['d']
+    #     x0 = message['x0']
+    #     block_length = message['block_length']
+    #     block_insulation_thickness_z = message['block_insulation_thickness_z']
+    #     block_insulation_thickness_t = message['block_insulation_thickness_t']
+    #     block_insulation_thickness_r = message['block_insulation_thickness_r']
+    #     block_gap_z = message['block_gap_z']
+    #     block_gap_t = message['block_gap_t']
+    #     a = message['a']
+    #     b = message['b']
+    #     fillet_radius = message['fillet_radius']
+    #     angle_demolding_1 = message['angle_demolding_1']
+    #     burn_offset = message['burn_offset']
+    #     outer_partition_offset = message['outer_partition_offset']
+    #     element_size = message['element_size']
+    #     insert_czm = message['insert_czm']
+    #     size = message['size']
+    #     front_ref_length = message['front_ref_length']
+    #     behind_ref_length = message['behind_ref_length']
+    #     r_cut_front = message['r_cut_front']
+    #     length_front = message['length_front']
+    #     p0_x_front = message['p0_x_front']
+    #     p0_y_front = message['p0_y_front']
+    #     theta0_deg_front = message['theta0_deg_front']
+    #     p3_x_front = message['p3_x_front']
+    #     p3_y_front = message['p3_y_front']
+    #     theta3_deg_front = message['theta3_deg_front']
+    #     r1_front = message['r1_front']
+    #     r2_front = message['r2_front']
+    #     r3_front = message['r3_front']
+    #     theta_in_deg_front = message['theta_in_deg_front']
+    #     r_cut_behind = message['r_cut_behind']
+    #     length_behind = message['length_behind']
+    #     p0_x_behind = message['p0_x_behind']
+    #     p0_y_behind = message['p0_y_behind']
+    #     theta0_deg_behind = message['theta0_deg_behind']
+    #     p3_x_behind = message['p3_x_behind']
+    #     p3_y_behind = message['p3_y_behind']
+    #     theta3_deg_behind = message['theta3_deg_behind']
+    #     r1_behind = message['r1_behind']
+    #
+    #     p0_front = (p0_x_front, p0_y_front)
+    #     p3_front = (p3_x_front, p3_y_front)
+    #
+    #     p0_behind = (p0_x_behind, p0_y_behind)
+    #     p3_behind = (p3_x_behind, p3_y_behind)
 
     beta = math.pi / n
 
@@ -2407,21 +2385,21 @@ if __name__ == "__main__":
     is_assemble = False
 
     is_create_p_insulation = True
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
-        # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
-        # plot_geometries(points, lines, faces)
+        points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
+        plot_geometries(points, lines, faces)
         # points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         # plot_geometries(points, lines, faces)
 
@@ -2448,6 +2426,7 @@ if __name__ == "__main__":
         Mdb()
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
+        model.setValues(globalJob='/home/dell/www/base/files/abaqus/70/5/Job-1.odb')
 
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
@@ -2506,8 +2485,8 @@ if __name__ == "__main__":
             'slope_degree_points_front': 84.88,
             'slope_degree_points_behind': 87.32,
             'thickness': 2.5,
-            'insulation_rotate_angle_deg': 360.0 / n / 2.0,
-            # 'insulation_rotate_angle_deg': 360.0,
+            # 'insulation_rotate_angle_deg': 360.0 / n / 2.0,
+            'insulation_rotate_angle_deg': 80.0,
 
             'p0_front': (-857.580, 794.0),
             'theta0_deg_front': 90.0,
@@ -2662,10 +2641,10 @@ if __name__ == "__main__":
             a.DatumCsysByDefault(CARTESIAN)
             cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
 
-            a.Instance(name='INSULATION', part=p_insulation, dependent=ON)
-            a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=-90.0)
-            a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=-90.0)
-            a.translate(instanceList=('INSULATION',), vector=(0.0, 0.0, -349.92))
+            # a.Instance(name='INSULATION', part=p_insulation, dependent=ON)
+            # a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=-90.0)
+            # a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=-90.0 - 20.0)
+            # a.translate(instanceList=('INSULATION',), vector=(0.0, 0.0, -349.92))
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
@@ -2686,96 +2665,124 @@ if __name__ == "__main__":
                 a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
                 a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                a.Instance(name=instance_name, part=gap_dict[block_type], dependent=ON)
-                a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
-                a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+                # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                # a.Instance(name=instance_name, part=gap_dict[block_type], dependent=ON)
+                # a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
+                # a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
             model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
 
-            for block_loc, block_type in block_types.items():
-                l, i = block_loc
-                instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                surface_name_1 = 'SURFACE-TIE'
-                instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
-                surface_name_2 = 'SURFACE-TIE'
-                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+            # for block_loc, block_type in block_types.items():
+            #     l, i = block_loc
+            #     instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #     surface_name_1 = 'SURFACE-TIE'
+            #     instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
+            #     surface_name_2 = 'SURFACE-TIE'
+            #     create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            for tie_loc, tie_type in ties_types.items():
-                l1, i1, l2, i2 = tie_loc
-                if tie_type == 'down':
-                    instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                    surface_name_1 = 'SURFACE-Z2'
-                    instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                    surface_name_2 = 'SURFACE-Z-2'
-                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-
-                elif tie_type == 'right':
-                    instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                    surface_name_1 = 'SURFACE-T2'
-                    instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                    surface_name_2 = 'SURFACE-T-2'
-                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-
-                elif tie_type == 'circular':
-                    instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                    surface_name_1 = 'SURFACE-T-2'
-                    instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                    surface_name_2 = 'SURFACE-T2'
-                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+            # for tie_loc, tie_type in ties_types.items():
+            #     l1, i1, l2, i2 = tie_loc
+            #     if tie_type == 'down':
+            #         instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+            #         surface_name_1 = 'SURFACE-Z2'
+            #         instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+            #         surface_name_2 = 'SURFACE-Z-2'
+            #         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+            #
+            #     elif tie_type == 'right':
+            #         instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+            #         surface_name_1 = 'SURFACE-T2'
+            #         instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+            #         surface_name_2 = 'SURFACE-T-2'
+            #         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+            #
+            #     elif tie_type == 'circular':
+            #         instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+            #         surface_name_1 = 'SURFACE-T-2'
+            #         instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+            #         surface_name_2 = 'SURFACE-T2'
+            #         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                 surface_name = 'SURFACE-INNER'
                 load_name = 'LOAD-' + instance_name + '-' + surface_name
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
 
                 set_name = 'SET-SURFACE-OUTER'
                 bc_name = 'BC-' + instance_name + '-' + set_name
                 model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
                                      u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
 
-                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                surface_name = 'SURFACE-INNER'
-                load_name = 'LOAD-' + instance_name + '-' + surface_name
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+                # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                # surface_name = 'SURFACE-INNER'
+                # load_name = 'LOAD-' + instance_name + '-' + surface_name
+                # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
 
-                set_name = 'SET-SURFACE-OUTER'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
-                                     u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+                # set_name = 'SET-SURFACE-OUTER'
+                # bc_name = 'BC-' + instance_name + '-' + set_name
+                # model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
+                #                      u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
 
-            # for block_loc, block_type in block_types.items():
-            #     l, i = block_loc
-            #
-            #     if i == 0:
-            #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-            #         set_name = 'SET-SURFACE-T0'
-            #         bc_name = 'BC-' + instance_name + '-' + set_name
-            #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-            #
-            #         instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-            #         set_name = 'SET-SURFACE-T2'
-            #         bc_name = 'BC-' + instance_name + '-' + set_name
-            #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-            #
-            #         instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-            #         set_name = 'SET-SURFACE-T0'
-            #         bc_name = 'BC-' + instance_name + '-' + set_name
-            #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-            #
-            #     if i == 8:
-            #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-            #         set_name = 'SET-SURFACE-T-1'
-            #         bc_name = 'BC-' + instance_name + '-' + set_name
-            #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-            #
-            #         instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-            #         set_name = 'SET-SURFACE-T-2'
-            #         bc_name = 'BC-' + instance_name + '-' + set_name
-            #         model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            for block_loc, block_type in block_types.items():
+                l, i = block_loc
+
+                if i == 0:
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    set_name = 'SET-SURFACE-T-1'
+                    bc_name = 'BC-' + instance_name + '-' + set_name
+                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
+                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+                                     exteriorTolerance=0.05, intersectionOnly=OFF)
+
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    set_name = 'SET-SURFACE-T1'
+                    bc_name = 'BC-' + instance_name + '-' + set_name
+                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
+                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+                                     exteriorTolerance=0.05, intersectionOnly=OFF)
+
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    set_name = 'SET-SURFACE-Z1'
+                    bc_name = 'BC-' + instance_name + '-' + set_name
+                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
+                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+                                     exteriorTolerance=0.05, intersectionOnly=OFF)
+
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    set_name = 'SET-SURFACE-Z-1'
+                    bc_name = 'BC-' + instance_name + '-' + set_name
+                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
+                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+                                     exteriorTolerance=0.05, intersectionOnly=OFF)
+
+                    # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    # set_name = 'SET-SURFACE-T0'
+                    # bc_name = 'BC-' + instance_name + '-' + set_name
+                    # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                    # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    # set_name = 'SET-SURFACE-T-2'
+                    # bc_name = 'BC-' + instance_name + '-' + set_name
+                    # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                    # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    # set_name = 'SET-SURFACE-T0'
+                    # bc_name = 'BC-' + instance_name + '-' + set_name
+                    # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                # if i == 1:
+                # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                # set_name = 'SET-SURFACE-T-1'
+                # bc_name = 'BC-' + instance_name + '-' + set_name
+                # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                # set_name = 'SET-SURFACE-T2'
+                # bc_name = 'BC-' + instance_name + '-' + set_name
+                # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             if major_version >= 2022:
                 mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
