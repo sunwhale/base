@@ -2366,10 +2366,10 @@ if __name__ == "__main__":
     shell_insulation_r_in_at_a_behind = 1762.5
 
     shell_insulation_r_out_front = 844.26
-    shell_insulation_r_out_behind = 1260
+    shell_insulation_r_out_behind = 1260.0
 
-    shell_insulation_r_in_front = 425
-    shell_insulation_r_in_behind = 775
+    shell_insulation_r_in_front = 425.0
+    shell_insulation_r_in_behind = 775.0
 
     if p3_front[1] > d / 2.0:
         raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
