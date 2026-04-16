@@ -2315,19 +2315,21 @@ if __name__ == "__main__":
     outer_partition_offset = 300.0
 
     element_size = 40
-    insert_czm = True
+    insert_czm = False
 
     size = '1/2'
-    size = '1'
+    # size = '1'
+
+    front_offset = 350.0
 
     front_ref_length = 509.0
     behind_ref_length = 917.08
 
     r_cut_front = 460.0
     length_front = 1500.0
-    p0_front = (-1207.5, 794)
+    p0_front = (-857.5, 794)
     theta0_deg_front = 90.0
-    p3_front = (-350, 1762.5)
+    p3_front = (0.0, 1762.5)
     theta3_deg_front = 0.0
     r1_front = 829.41
     r2_front = 1515.05
@@ -2336,9 +2338,9 @@ if __name__ == "__main__":
 
     r_cut_behind = 460.0
     length_behind = 1500.0
-    p0_behind = (1033.73, 1109.770)
+    p0_behind = (683.73, 1109.770)
     theta0_deg_behind = -90.0
-    p3_behind = (350, 1762.5)
+    p3_behind = (0.0, 1762.5)
     theta3_deg_behind = 0.0
     r1_behind = 525.61
     r2_behind = 1075.96
@@ -2354,8 +2356,8 @@ if __name__ == "__main__":
     nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
     # block[:, :] = True
-    block[1, 0] = True
-    # block[:, 1] = True
+    # block[1, 0] = True
+    block[:, 0] = True
     # block[3, 2] = True
     # block[:, 8] = True
 
@@ -2427,17 +2429,17 @@ if __name__ == "__main__":
     is_assemble = False
 
     is_create_p_insulation = True
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2508,7 +2510,7 @@ if __name__ == "__main__":
             'r_behind_in': 775,
 
             # 'insulation_rotate_angle_deg': 360.0 / n / 2.0,
-            'insulation_rotate_angle_deg': 40.0,
+            'insulation_rotate_angle_deg': 20.0,
 
             'p0_front': (-857.580, 794.0),
             'theta0_deg_front': 90.0,
@@ -2582,9 +2584,9 @@ if __name__ == "__main__":
 
         first_block_dimension['r_cut'] = r_cut_front
         first_block_dimension['length_front'] = length_front
-        first_block_dimension['p0'] = p0_front
+        first_block_dimension['p0'] = [p0_front[0] - front_offset, p0_front[1]]
         first_block_dimension['theta0_deg'] = theta0_deg_front
-        first_block_dimension['p3'] = p3_front
+        first_block_dimension['p3'] = [p3_front[0] - front_offset, p3_front[1]]
         first_block_dimension['theta3_deg'] = theta3_deg_front
         first_block_dimension['r1'] = r1_front
         first_block_dimension['r2'] = r2_front
@@ -2663,24 +2665,26 @@ if __name__ == "__main__":
             a.DatumCsysByDefault(CARTESIAN)
             cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
 
-            # a.Instance(name='INSULATION', part=p_insulation, dependent=ON)
-            # a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=-90.0)
-            # a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=-90.0 - 20.0)
-            # a.translate(instanceList=('INSULATION',), vector=(0.0, 0.0, -349.92))
+            a.Instance(name='INSULATION', part=p_insulation, dependent=ON)
+            a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=-90.0)
+            if size == '1/2':
+                a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=-90.0)
+            elif size == '1':
+                a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=-90.0 - 360.0 / n / 2.0)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
 
-                z_shift = 0.0
+                z_shift = front_offset
 
                 if block_type == 'FRONT':
-                    z_shift = 0.0
+                    z_shift = front_offset
                 elif block_type == 'MIDDLE':
-                    z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
+                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
                 elif block_type == 'PENULT':
-                    z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
+                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
                 elif block_type == 'BEHIND':
-                    z_shift = front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1) * (block_gap_z + block_length) + block_gap_z / 2 + block_insulation_thickness_z + behind_ref_length
+                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1) * (block_gap_z + block_length) + block_gap_z / 2 + block_insulation_thickness_z + behind_ref_length
 
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                 a.Instance(name=instance_name, part=block_dict[block_type], dependent=ON)
@@ -2726,85 +2730,85 @@ if __name__ == "__main__":
             #         surface_name_2 = 'SURFACE-T2'
             #         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            for block_loc, block_type in block_types.items():
-                l, i = block_loc
-                instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                surface_name = 'SURFACE-INNER'
-                load_name = 'LOAD-' + instance_name + '-' + surface_name
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
-
-                set_name = 'SET-SURFACE-OUTER'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
-                                     u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
-
-                # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                # surface_name = 'SURFACE-INNER'
-                # load_name = 'LOAD-' + instance_name + '-' + surface_name
-                # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
-
-                # set_name = 'SET-SURFACE-OUTER'
-                # bc_name = 'BC-' + instance_name + '-' + set_name
-                # model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
-                #                      u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
-
-            for block_loc, block_type in block_types.items():
-                l, i = block_loc
-
-                if i == 0:
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T-1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                                     exteriorTolerance=0.05, intersectionOnly=OFF)
-
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                                     exteriorTolerance=0.05, intersectionOnly=OFF)
-
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-Z1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                                     exteriorTolerance=0.05, intersectionOnly=OFF)
-
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-Z-1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                                     exteriorTolerance=0.05, intersectionOnly=OFF)
-
-                    # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    # set_name = 'SET-SURFACE-T0'
-                    # bc_name = 'BC-' + instance_name + '-' + set_name
-                    # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                    # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                    # set_name = 'SET-SURFACE-T-2'
-                    # bc_name = 'BC-' + instance_name + '-' + set_name
-                    # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                    # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                    # set_name = 'SET-SURFACE-T0'
-                    # bc_name = 'BC-' + instance_name + '-' + set_name
-                    # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                # if i == 1:
-                # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                # set_name = 'SET-SURFACE-T-1'
-                # bc_name = 'BC-' + instance_name + '-' + set_name
-                # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                # set_name = 'SET-SURFACE-T2'
-                # bc_name = 'BC-' + instance_name + '-' + set_name
-                # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            # for block_loc, block_type in block_types.items():
+            #     l, i = block_loc
+            #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #     surface_name = 'SURFACE-INNER'
+            #     load_name = 'LOAD-' + instance_name + '-' + surface_name
+            #     model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
+            #
+            #     set_name = 'SET-SURFACE-OUTER'
+            #     bc_name = 'BC-' + instance_name + '-' + set_name
+            #     model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
+            #                          u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+            #
+            #     # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            #     # surface_name = 'SURFACE-INNER'
+            #     # load_name = 'LOAD-' + instance_name + '-' + surface_name
+            #     # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
+            #
+            #     # set_name = 'SET-SURFACE-OUTER'
+            #     # bc_name = 'BC-' + instance_name + '-' + set_name
+            #     # model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
+            #     #                      u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+            #
+            # for block_loc, block_type in block_types.items():
+            #     l, i = block_loc
+            #
+            #     if i == 0:
+            #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #         set_name = 'SET-SURFACE-T-1'
+            #         bc_name = 'BC-' + instance_name + '-' + set_name
+            #         model.SubmodelBC(name=bc_name, createStepName='Step-1',
+            #                          region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+            #                          exteriorTolerance=0.05, intersectionOnly=OFF)
+            #
+            #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #         set_name = 'SET-SURFACE-T1'
+            #         bc_name = 'BC-' + instance_name + '-' + set_name
+            #         model.SubmodelBC(name=bc_name, createStepName='Step-1',
+            #                          region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+            #                          exteriorTolerance=0.05, intersectionOnly=OFF)
+            #
+            #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #         set_name = 'SET-SURFACE-Z1'
+            #         bc_name = 'BC-' + instance_name + '-' + set_name
+            #         model.SubmodelBC(name=bc_name, createStepName='Step-1',
+            #                          region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+            #                          exteriorTolerance=0.05, intersectionOnly=OFF)
+            #
+            #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #         set_name = 'SET-SURFACE-Z-1'
+            #         bc_name = 'BC-' + instance_name + '-' + set_name
+            #         model.SubmodelBC(name=bc_name, createStepName='Step-1',
+            #                          region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+            #                          exteriorTolerance=0.05, intersectionOnly=OFF)
+            #
+            #         # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #         # set_name = 'SET-SURFACE-T0'
+            #         # bc_name = 'BC-' + instance_name + '-' + set_name
+            #         # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #         # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            #         # set_name = 'SET-SURFACE-T-2'
+            #         # bc_name = 'BC-' + instance_name + '-' + set_name
+            #         # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #         # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            #         # set_name = 'SET-SURFACE-T0'
+            #         # bc_name = 'BC-' + instance_name + '-' + set_name
+            #         # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #     # if i == 1:
+            #     # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #     # set_name = 'SET-SURFACE-T-1'
+            #     # bc_name = 'BC-' + instance_name + '-' + set_name
+            #     # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #     # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            #     # set_name = 'SET-SURFACE-T2'
+            #     # bc_name = 'BC-' + instance_name + '-' + set_name
+            #     # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             if major_version >= 2022:
                 mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
