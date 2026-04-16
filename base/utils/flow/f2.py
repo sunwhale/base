@@ -1821,6 +1821,56 @@ def create_gap_surface_common(p, points, dimension):
         p.Surface(side1Faces=faces, name='SURFACE-OUTER')
 
 
+def create_rotation_part_surface_common(p, rotate_angle_deg):
+    p1 = (0.0, 0.0, 0.0)
+    p2 = (1.0, 0.0, 0.0)
+    p3 = (0.0, 1.0, 0.0)
+    plane = Plane(p1, p2, p3)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-T0')
+
+    p1 = (0.0, 0.0, 0.0)
+    p2 = (1.0, 0.0, 0.0)
+    p3 = (0.0, 1.0, 0.0)
+    p3_rot = rotate_point_around_axis(p3, (0, 0, 0), (1, 0, 0), rotate_angle_deg)
+    plane = Plane(p1, p2, p3_rot)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-T1')
+
+    x_low = p.cells.getBoundingBox()['low'][0]
+    x_high = p.cells.getBoundingBox()['high'][0]
+
+    p1 = (x_low, 0.0, 0.0)
+    p2 = (x_low, 1.0, 0.0)
+    p3 = (x_low, 0.0, 1.0)
+    plane = Plane(p1, p2, p3)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-X0')
+
+    p1 = (x_high, 0.0, 0.0)
+    p2 = (x_high, 1.0, 0.0)
+    p3 = (x_high, 0.0, 1.0)
+    plane = Plane(p1, p2, p3)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-X1')
+
+
 def set_section_common(p):
     set_name = 'SET-CELL-GRAIN'
     if set_name in p.sets.keys():
@@ -2141,7 +2191,7 @@ def create_part_insulation(model, part_name, dimension):
     p_behind_in_2 = [c_2[0], a_behind_in]
 
     s = model.ConstrainedSketch(name='SKETCH-INSULATION', sheetSize=2000.0)
-    
+
     # 前封头
     l_trim_front = s.Line(point1=p_front_out_3, point2=(p_front_out_3[0] + 1.0, p_front_out_3[1]))
     ellipse_front = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=p_front_out_2, axisPoint2=[c_1[0] + b_front, 0.0])
@@ -2189,6 +2239,18 @@ def create_part_insulation(model, part_name, dimension):
     # 生成基础体
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     p.BaseSolidRevolve(sketch=s, angle=insulation_rotate_angle_deg, flipRevolveDirection=OFF)
+
+    # 创建面
+    create_rotation_part_surface_common(p, insulation_rotate_angle_deg)
+    point_middle_in = ((p_front_in_1[0] + p_behind_in_1[0]) / 2.0, (p_front_in_1[1] + p_behind_in_1[1]) / 2.0, 0)
+    point_middle_in_rot = rotate_point_around_axis(point_middle_in, (0, 0, 0), (1, 0, 0), insulation_rotate_angle_deg / 2.0)
+    p_face_middle = p.faces.findAt((point_middle_in_rot,))[0]
+    p.Surface(side1Faces=p_face_middle.getFacesByFaceAngle(20), name='SURFACE-INNER')
+    # 通过排除法确定外表面
+    given_surface_names = list(p.surfaces.keys())
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
     # 截面剖分
     d = p.datums
