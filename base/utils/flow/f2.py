@@ -2167,7 +2167,7 @@ def create_part_insulation(model, part_name, dimension):
     r2_behind = dimension['r2_behind']
     r3_behind = dimension['r3_behind']
 
-    front_points = [[-1103.36, shell_insulation_r_out_front], [-1022.08, 460], [-1022.08, 425]]
+    front_points = [[-1103.36, shell_insulation_r_out_front], [-1103.36, shell_insulation_r_out_front - 2.5], [-1022.08, shell_insulation_r_out_front - 2.5], [-1022.08, 460], [-1022.08, 425]]
     behind_points = [[18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775]]
 
     # 基本参数
@@ -2252,8 +2252,10 @@ def create_part_insulation(model, part_name, dimension):
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
     # 生成基础体
-    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    p.BaseSolidRevolve(sketch=s, angle=rotate_angle_deg, flipRevolveDirection=OFF)
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
+
+    # 切割前接头
+    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-FRONT'], angle=360.0, flipRevolveDirection=OFF)
 
     # 创建面
     create_rotation_part_surface_common(p, rotate_angle_deg)
@@ -2342,9 +2344,9 @@ def create_part_flange_front(model, part_name, dimension):
     s.Line(point1=point_fillet, point2=point_left_conner)
     s.autoTrimCurve(curve1=e, point1=ellipse_right_point)
 
-    s.FilletByRadius(radius=flange_fillet_radius_front,
-                     curve1=s.geometry.findAt(ellipse_top_point), nearPoint1=(ellipse.x_from_y(r_mid + 1.0)[1], r_mid + 1.0),
-                     curve2=s.geometry.findAt(point_left_conner), nearPoint2=((point_fillet[0] + point_left_conner[0]) / 2, point_fillet[1]))
+    # s.FilletByRadius(radius=flange_fillet_radius_front,
+    #                  curve1=s.geometry.findAt(ellipse_top_point), nearPoint1=(ellipse.x_from_y(r_mid + 1.0)[1], r_mid + 1.0),
+    #                  curve2=s.geometry.findAt(point_left_conner), nearPoint2=((point_fillet[0] + point_left_conner[0]) / 2, point_fillet[1]))
 
     geom_list = []
     for g in s.geometry.values():
@@ -2617,7 +2619,7 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_insulation = True
+    is_create_p_insulation = True
     # is_create_p_block = True
     # is_create_p_gap = True
     # is_create_p_block_penult = True
@@ -2688,13 +2690,13 @@ if __name__ == "__main__":
         }
         p_flange_front = create_part_flange_front(model, 'PART-FLANGE-FRONT', front_flange_dimension)
 
-        # front_cover_dimension = {
-        #     'cover_r_out_front': 560.0,
-        #     'cover_thickness_front': 68.18,
-        #     'cover_offset_front': -1103.36,
-        #     'rotate_angle_deg': rotate_angle_deg
-        # }
-        # p_cover_front = create_part_cover_front(model, 'PART-COVER-FRONT', front_cover_dimension)
+        front_cover_dimension = {
+            'cover_r_out_front': 560.0,
+            'cover_thickness_front': 68.18,
+            'cover_offset_front': -1103.36,
+            'rotate_angle_deg': rotate_angle_deg
+        }
+        p_cover_front = create_part_cover_front(model, 'PART-COVER-FRONT', front_cover_dimension)
 
         insulation_dimension = {
             'l_c1_c2': l_c1_c2,
