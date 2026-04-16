@@ -1070,7 +1070,7 @@ def rotate_point_around_origin_2d(point, theta):
     return (x_rotated, y_rotated)
 
 
-def rotate_point_around_axis(p, a, b, theta, degrees=True):
+def rotate_point_around_axis(p, a, b, theta, is_degree=True):
     """
     计算点 p 绕轴 AB 旋转角度 theta 后的新坐标。
 
@@ -1108,7 +1108,7 @@ def rotate_point_around_axis(p, a, b, theta, degrees=True):
     p_rel = p - a
 
     # 将角度转换为弧度（如果需要）
-    if degrees:
+    if is_degree:
         theta = np.radians(theta)
 
     # 罗德里格斯旋转公式
