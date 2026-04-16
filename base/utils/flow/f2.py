@@ -1822,28 +1822,29 @@ def create_gap_surface_common(p, points, dimension):
 
 
 def create_rotation_part_surface_common(p, rotate_angle_deg):
-    p1 = (0.0, 0.0, 0.0)
-    p2 = (1.0, 0.0, 0.0)
-    p3 = (0.0, 1.0, 0.0)
-    plane = Plane(p1, p2, p3)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-T0')
+    if rotate_angle_deg < 360.0:
+        p1 = (0.0, 0.0, 0.0)
+        p2 = (1.0, 0.0, 0.0)
+        p3 = (0.0, 1.0, 0.0)
+        plane = Plane(p1, p2, p3)
+        p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+        for face_id in range(len(p.faces)):
+            if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+                p_faces += p.faces[face_id:face_id + 1]
+        if p_faces:
+            p.Surface(side1Faces=p_faces, name='SURFACE-T0')
 
-    p1 = (0.0, 0.0, 0.0)
-    p2 = (1.0, 0.0, 0.0)
-    p3 = (0.0, 1.0, 0.0)
-    p3_rot = rotate_point_around_axis(p3, (0, 0, 0), (1, 0, 0), rotate_angle_deg)
-    plane = Plane(p1, p2, p3_rot)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-T1')
+        p1 = (0.0, 0.0, 0.0)
+        p2 = (1.0, 0.0, 0.0)
+        p3 = (0.0, 1.0, 0.0)
+        p3_rot = rotate_point_around_axis(p3, (0, 0, 0), (1, 0, 0), rotate_angle_deg)
+        plane = Plane(p1, p2, p3_rot)
+        p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+        for face_id in range(len(p.faces)):
+            if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+                p_faces += p.faces[face_id:face_id + 1]
+        if p_faces:
+            p.Surface(side1Faces=p_faces, name='SURFACE-T1')
 
     x_low = p.cells.getBoundingBox()['low'][0]
     x_high = p.cells.getBoundingBox()['high'][0]
@@ -2483,7 +2484,7 @@ if __name__ == "__main__":
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
-        shell_dimension = {
+        insulation_dimension = {
             'l_c1_c2': 17300.0,
             'ellipse_ratio': 1.69,
 
@@ -2509,7 +2510,7 @@ if __name__ == "__main__":
             'r_behind_in': 775,
 
             # 'insulation_rotate_angle_deg': 360.0 / n / 2.0,
-            'insulation_rotate_angle_deg': 80.0,
+            'insulation_rotate_angle_deg': 40.0,
 
             'p0_front': (-857.580, 794.0),
             'theta0_deg_front': 90.0,
@@ -2528,7 +2529,7 @@ if __name__ == "__main__":
             'r3_behind': 569.38,
         }
         if is_create_p_insulation:
-            p_insulation = create_part_insulation(model, 'PART-INSULATION', shell_dimension)
+            p_insulation = create_part_insulation(model, 'PART-INSULATION', insulation_dimension)
             print('CREATE PART-INSULATION DONE.')
 
         block_dimension = {
