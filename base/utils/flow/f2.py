@@ -2331,7 +2331,8 @@ def create_part_flange_front(model, part_name, dimension):
     r_mid = cover_r_out_front + flange_thickness_offset_front
     point_fillet = [ellipse.x_from_y(r_mid)[1], r_mid]
     point_left_conner = [flange_offset_front, r_mid]
-    point_temp = [ellipse.x_from_y(flange_r_out_front)[1], flange_r_out_front]
+    point_temp_0 = [0.0, flange_r_out_front]
+    point_temp_1 = [ellipse.x_from_y(flange_r_out_front)[1], flange_r_out_front]
 
     # SKETCH-FLANGE-FRONT
     s = model.ConstrainedSketch(name='SKETCH-FLANGE-FRONT', sheetSize=2000.0)
@@ -2350,14 +2351,14 @@ def create_part_flange_front(model, part_name, dimension):
     s.offset(distance=flange_thickness_offset_front, objectList=geom_list, side=RIGHT)
     s.delete(objectList=geom_list)
 
-    s.Line(point1=point_temp, point2=[0.0, point_temp[1]])
+    s.Line(point1=point_temp_0, point2=point_temp_1)
 
     ellipse_top_point_offset = [ellipse_top_point[0], ellipse_top_point[1] - flange_thickness_offset_front]
     curve = s.geometry.findAt((ellipse_top_point_offset))
     s.autoTrimCurve(curve1=curve, point1=ellipse_top_point_offset)
 
-    curve = s.geometry.findAt((point_temp))
-    s.autoTrimCurve(curve1=curve, point1=point_temp)
+    curve = s.geometry.findAt((point_temp_1))
+    s.autoTrimCurve(curve1=curve, point1=point_temp_1)
 
     point_left_conner_offset = [point_left_conner[0], cover_r_out_front]
 
@@ -2370,12 +2371,12 @@ def create_part_flange_front(model, part_name, dimension):
     s.Line(point1=point_2, point2=point_3)
 
     l1 = Line2D(point_3, np.tan(np.radians(flange_slope_deg_front)))
-    l2 = Line2D([0.0, flange_r_out_front], [1.0, flange_r_out_front])
+    l2 = Line2D(point_temp_0, point_temp_1)
 
     s.Line(point1=l1.get_intersection(l2), point2=point_3)
 
-    curve = s.geometry.findAt(([c_1[0], point_temp[1]]))
-    s.autoTrimCurve(curve1=curve, point1=[c_1[0], point_temp[1]])
+    curve = s.geometry.findAt((point_temp_0))
+    s.autoTrimCurve(curve1=curve, point1=point_temp_0)
 
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
