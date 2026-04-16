@@ -2235,8 +2235,6 @@ def create_part_insulation(model, part_name, dimension):
 
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
-    s.setPrimaryObject(option=STANDALONE)
-
     # 生成基础体
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     p.BaseSolidRevolve(sketch=s, angle=insulation_rotate_angle_deg, flipRevolveDirection=OFF)
