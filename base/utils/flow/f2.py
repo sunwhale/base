@@ -2113,8 +2113,8 @@ def create_part_insulation(model, part_name, dimension):
     l_c1_c2 = dimension['l_c1_c2']
     ellipse_ratio = dimension['ellipse_ratio']
 
-    r_in_insulation = dimension['r_in_insulation']
-    r_out_insulation = dimension['r_out_insulation']
+    shell_insulation_r_in = dimension['shell_insulation_r_in']
+    shell_insulation_r_out = dimension['shell_insulation_r_out']
 
     shell_insulation_theta_in_deg_front = dimension['shell_insulation_theta_in_deg_front']
     shell_insulation_theta_in_deg_behind = dimension['shell_insulation_theta_in_deg_behind']
@@ -2124,14 +2124,14 @@ def create_part_insulation(model, part_name, dimension):
 
     a_front = dimension['a_front']
     a_behind = dimension['a_behind']
-    r_in_at_a_front = dimension['r_in_at_a_front']
-    r_in_at_a_behind = dimension['r_in_at_a_behind']
+    shell_insulation_r_in_at_a_front = dimension['shell_insulation_r_in_at_a_front']
+    shell_insulation_r_in_at_a_behind = dimension['shell_insulation_r_in_at_a_behind']
 
-    r_front_out = dimension['r_front_out']
-    r_behind_out = dimension['r_behind_out']
+    shell_insulation_r_out_front = dimension['shell_insulation_r_out_front']
+    shell_insulation_r_out_behind = dimension['shell_insulation_r_out_behind']
 
-    r_front_in = dimension['r_front_in']
-    r_behind_in = dimension['r_behind_in']
+    shell_insulation_r_in_front = dimension['shell_insulation_r_in_front']
+    shell_insulation_r_in_behind = dimension['shell_insulation_r_in_behind']
 
     rotate_angle_deg = dimension['rotate_angle_deg']
 
@@ -2167,29 +2167,29 @@ def create_part_insulation(model, part_name, dimension):
 
     # 前封头外轮廓
     line1 = Line2D((0, a_front), math.tan(degrees_to_radians(shell_insulation_theta_out_deg_front)))
-    line2 = Line2D((0, r_out_insulation), (1, r_out_insulation))
+    line2 = Line2D((0, shell_insulation_r_out), (1, shell_insulation_r_out))
     p_front_out_1 = line1.get_intersection(line2)
     p_front_out_2 = [c_1[0], a_front]
-    p_front_out_3 = [ellipse_front.x_from_y(r_front_out)[1], r_front_out]
+    p_front_out_3 = [ellipse_front.x_from_y(shell_insulation_r_out_front)[1], shell_insulation_r_out_front]
 
     # 后封头外轮廓
     line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(shell_insulation_theta_out_deg_behind)))
-    line2 = Line2D((0, r_out_insulation), (1, r_out_insulation))
+    line2 = Line2D((0, shell_insulation_r_out), (1, shell_insulation_r_out))
     p_behind_out_1 = line1.get_intersection(line2)
     p_behind_out_2 = [c_2[0], a_behind]
-    p_behind_out_3 = [ellipse_behind.x_from_y(r_behind_out)[0], r_behind_out]
+    p_behind_out_3 = [ellipse_behind.x_from_y(shell_insulation_r_out_behind)[0], shell_insulation_r_out_behind]
 
     # 前封头内轮廓
-    line1 = Line2D((0, r_in_at_a_front), math.tan(degrees_to_radians(shell_insulation_theta_in_deg_front)))
-    line2 = Line2D((0, r_in_insulation), (1, r_in_insulation))
+    line1 = Line2D((0, shell_insulation_r_in_at_a_front), math.tan(degrees_to_radians(shell_insulation_theta_in_deg_front)))
+    line2 = Line2D((0, shell_insulation_r_in), (1, shell_insulation_r_in))
     p_front_in_1 = line1.get_intersection(line2)
-    p_front_in_2 = [c_1[0], r_in_at_a_front]
+    p_front_in_2 = [c_1[0], shell_insulation_r_in_at_a_front]
 
     # 后封头内轮廓
-    line1 = Line2D((c_2[0], r_in_at_a_behind), -math.tan(degrees_to_radians(shell_insulation_theta_in_deg_behind)))
-    line2 = Line2D((0, r_in_insulation), (1, r_in_insulation))
+    line1 = Line2D((c_2[0], shell_insulation_r_in_at_a_behind), -math.tan(degrees_to_radians(shell_insulation_theta_in_deg_behind)))
+    line2 = Line2D((0, shell_insulation_r_in), (1, shell_insulation_r_in))
     p_behind_in_1 = line1.get_intersection(line2)
-    p_behind_in_2 = [c_2[0], r_in_at_a_behind]
+    p_behind_in_2 = [c_2[0], shell_insulation_r_in_at_a_behind]
 
     s = model.ConstrainedSketch(name='SKETCH-INSULATION', sheetSize=2000.0)
 
@@ -2204,7 +2204,7 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_front['c2'], point1=arcs_front['p1'], point2=arcs_front['p2'], direction=get_direction(arcs_front['delta2']))
     s.ArcByCenterEnds(center=arcs_front['c3'], point1=arcs_front['p2'], point2=p3_front, direction=get_direction(arcs_front['delta3']))
 
-    point_list_front = [p_front_out_3] + front_points + [[p0_front[0], r_front_in], p0_front]
+    point_list_front = [p_front_out_3] + front_points + [[p0_front[0], shell_insulation_r_in_front], p0_front]
     for i in range(len(point_list_front) - 1):
         s.Line(point1=point_list_front[i], point2=point_list_front[i + 1])
 
@@ -2219,7 +2219,7 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_behind['c2'], point1=arcs_behind['p1'], point2=arcs_behind['p2'], direction=get_direction(arcs_behind['delta2']))
     s.ArcByCenterEnds(center=arcs_behind['c3'], point1=arcs_behind['p2'], point2=p3_behind, direction=get_direction(arcs_behind['delta3']))
 
-    point_list_behind = [p_behind_out_3] + behind_points + [[p0_behind[0], r_behind_in], p0_behind]
+    point_list_behind = [p_behind_out_3] + behind_points + [[p0_behind[0], shell_insulation_r_in_behind], p0_behind]
     for i in range(len(point_list_behind) - 1):
         s.Line(point1=point_list_behind[i], point2=point_list_behind[i + 1])
 
@@ -2342,7 +2342,6 @@ if __name__ == "__main__":
     r1_front = 829.41
     r2_front = 1515.05
     r3_front = 641.21
-    shell_insulation_theta_in_deg_front = 0.16
 
     r_cut_behind = 460.0
     length_behind = 1500.0
@@ -2353,6 +2352,8 @@ if __name__ == "__main__":
     r1_behind = 525.61
     r2_behind = 1075.96
     r3_behind = 569.38
+
+    shell_insulation_theta_in_deg_front = 0.16
     shell_insulation_theta_in_deg_behind = 0.16
 
     if p3_front[1] > d / 2.0:
@@ -2450,8 +2451,8 @@ if __name__ == "__main__":
     is_assemble = True
 
     if not ABAQUS_ENV:
-        points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
-        plot_geometries(points, lines, faces)
+        # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
+        # plot_geometries(points, lines, faces)
         # points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         # plot_geometries(points, lines, faces)
 
@@ -2499,11 +2500,11 @@ if __name__ == "__main__":
             'a_front': a_front,
             'a_behind': a_behind,
 
-            'r_in_insulation': 1764.5,
-            'r_out_insulation': 1777.5,
+            'shell_insulation_r_in': 1764.5,
+            'shell_insulation_r_out': 1777.5,
 
-            'r_in_at_a_front': 1762.5,
-            'r_in_at_a_behind': 1762.5,
+            'shell_insulation_r_in_at_a_front': 1762.5,
+            'shell_insulation_r_in_at_a_behind': 1762.5,
 
             'shell_insulation_theta_in_deg_front': shell_insulation_theta_in_deg_front,
             'shell_insulation_theta_in_deg_behind': shell_insulation_theta_in_deg_behind,
@@ -2511,11 +2512,11 @@ if __name__ == "__main__":
             'shell_insulation_theta_out_deg_front': 0.24,
             'shell_insulation_theta_out_deg_behind': 0.24,
 
-            'r_front_out': 844.26,
-            'r_behind_out': 1260,
+            'shell_insulation_r_out_front': 844.26,
+            'shell_insulation_r_out_behind': 1260,
 
-            'r_front_in': 425,
-            'r_behind_in': 775,
+            'shell_insulation_r_in_front': 425,
+            'shell_insulation_r_in_behind': 775,
             
             'rotate_angle_deg': rotate_angle_deg,
 
