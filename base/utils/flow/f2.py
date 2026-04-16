@@ -2324,6 +2324,7 @@ def create_part_flange_front(model, part_name, dimension):
 
     # 基本参数
     c_1 = [0.0, 0.0]
+    element_size = 20.0
     b_front = a_front / ellipse_ratio
     ellipse = Ellipse(0.0, 0.0, a_front, b_front, long_axis='y')
     ellipse_top_point = [0.0, a_front]
@@ -2372,15 +2373,11 @@ def create_part_flange_front(model, part_name, dimension):
 
     l1 = Line2D(point_3, np.tan(np.radians(flange_slope_deg_front)))
     l2 = Line2D(point_temp_0, point_temp_1)
-
     s.Line(point1=l1.get_intersection(l2), point2=point_3)
-
     curve = s.geometry.findAt((point_temp_0))
     s.autoTrimCurve(curve1=curve, point1=point_temp_0)
 
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
-
-    s.setPrimaryObject(option=STANDALONE)
 
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
@@ -2399,8 +2396,13 @@ def create_part_flange_front(model, part_name, dimension):
     set_name = 'SET-CELL-FLANGE'
     p.Set(cells=p.cells, name=set_name)
 
-    element_size = 50.0
+    # 赋予SECTION属性
+    set_section_common(p)
+
+    # 生成网格
     generate_part_mesh(p, element_size=element_size)
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
 
@@ -2412,6 +2414,8 @@ def create_part_cover_front(model, part_name, dimension):
     cover_offset_front = dimension['cover_offset_front']
     rotate_angle_deg = dimension['rotate_angle_deg']
 
+    # 基本参数
+    element_size = 50.0
     point_1 = [cover_offset_front, 0.0]
     point_2 = [cover_offset_front + cover_thickness_front, 0.0]
     point_3 = [cover_offset_front + cover_thickness_front, cover_r_out_front]
@@ -2442,12 +2446,14 @@ def create_part_cover_front(model, part_name, dimension):
     set_name = 'SET-CELL-COVER'
     p.Set(cells=p.cells, name=set_name)
 
-    element_size = 50.0
+    # 赋予SECTION属性
+    set_section_common(p)
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
+
     return p
 
 
