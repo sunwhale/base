@@ -2059,7 +2059,6 @@ def print_assembly(session, model, viewport):
 
 def create_part_insulation(model, part_name, dimension):
     # 变量赋值
-
     l_c1_c2 = dimension['l_c1_c2']
     ellipse_ratio = dimension['ellipse_ratio']
 
@@ -2077,33 +2076,9 @@ def create_part_insulation(model, part_name, dimension):
     a_front_in = dimension['a_front_in']
     a_behind_in = dimension['a_behind_in']
 
-    r_front_out_1 = dimension['r_front_out_1']
-    r_front_out_2 = dimension['r_front_out_2']
-    r_front_out_3 = dimension['r_front_out_3']
-    r_front_out_5 = dimension['r_front_out_5']
-    r_front_out_6 = dimension['r_front_out_6']
+    r_front_out = dimension['r_front_out']
+    r_behind_out = dimension['r_behind_out']
 
-    r_behind_out_1 = dimension['r_behind_out_1']
-    r_behind_out_2 = dimension['r_behind_out_2']
-    r_behind_out_3 = dimension['r_behind_out_3']
-    r_behind_out_5 = dimension['r_behind_out_5']
-    r_behind_out_6 = dimension['r_behind_out_6']
-
-    l_front_1 = dimension['l_front_1']
-    l_front_2 = dimension['l_front_2']
-    l_front_3 = dimension['l_front_3']
-
-    l_behind_1 = dimension['l_behind_1']
-    l_behind_2 = dimension['l_behind_2']
-    l_behind_3 = dimension['l_behind_3']
-
-    l_points_front = dimension['l_points_front']
-    l_points_behind = dimension['l_points_behind']
-
-    slope_degree_points_front = dimension['slope_degree_points_front']
-    slope_degree_points_behind = dimension['slope_degree_points_behind']
-
-    thickness = dimension['thickness']
     insulation_rotate_angle_deg = dimension['insulation_rotate_angle_deg']
 
     p0_front = dimension['p0_front']
@@ -2122,6 +2097,9 @@ def create_part_insulation(model, part_name, dimension):
     r2_behind = dimension['r2_behind']
     r3_behind = dimension['r3_behind']
 
+    front_points = [[-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425]]
+    behind_points = [[18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775], [17983.73, 775]]
+
     # 基本参数
     c_1 = [0.0, 0.0]
     c_2 = [l_c1_c2, 0.0]
@@ -2138,14 +2116,14 @@ def create_part_insulation(model, part_name, dimension):
     line2 = Line2D((0, r_out_insulation), (1, r_out_insulation))
     p_front_out_1 = line1.get_intersection(line2)
     p_front_out_2 = [c_1[0], a_front]
-    p_front_out_3 = [ellipse_front.x_from_y(r_front_out_2)[1], r_front_out_2]
+    p_front_out_3 = [ellipse_front.x_from_y(r_front_out)[1], r_front_out]
 
     # 后封头外轮廓
     line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(theta_out_deg_behind)))
     line2 = Line2D((0, r_out_insulation), (1, r_out_insulation))
     p_behind_out_1 = line1.get_intersection(line2)
     p_behind_out_2 = [c_2[0], a_behind]
-    p_behind_out_3 = [ellipse_behind.x_from_y(r_behind_out_2)[0], r_behind_out_2]
+    p_behind_out_3 = [ellipse_behind.x_from_y(r_behind_out)[0], r_behind_out]
 
     # 前封头内轮廓
     line1 = Line2D((0, a_front_in), math.tan(degrees_to_radians(theta_in_deg_front)))
@@ -2172,8 +2150,7 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_front['c2'], point1=arcs_front['p1'], point2=arcs_front['p2'], direction=get_direction(arcs_front['delta2']))
     s.ArcByCenterEnds(center=arcs_front['c3'], point1=arcs_front['p2'], point2=p3_front, direction=get_direction(arcs_front['delta3']))
 
-    # print(front_offset, p_front_out_8, p_front_out_7, p_front_out_6, p_front_out_5, p_front_out_9, p_front_out_10)
-    point_list_front = [p_front_out_3, [-919.799685982577, 843.496887131294], [-918.840343670952, 843.496887131294], [-892.58, 560.0], [-892.58, 460], [-1022.08, 460], [-1022.08, 425], [-857.58, 425], p0_front]
+    point_list_front = [p_front_out_3] + front_points + [p0_front]
     for i in range(len(point_list_front) - 1):
         s.Line(point1=point_list_front[i], point2=point_list_front[i + 1])
 
@@ -2188,8 +2165,7 @@ def create_part_insulation(model, part_name, dimension):
     s.ArcByCenterEnds(center=arcs_behind['c2'], point1=arcs_behind['p1'], point2=arcs_behind['p2'], direction=get_direction(arcs_behind['delta2']))
     s.ArcByCenterEnds(center=arcs_behind['c3'], point1=arcs_behind['p2'], point2=p3_behind, direction=get_direction(arcs_behind['delta3']))
 
-    # print(behind_offset, p_behind_out_8, p_behind_out_7, p_behind_out_6, p_behind_out_5, p_behind_out_9, p_behind_out_10)
-    point_list_behind = [p_behind_out_3, [18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775], [17983.73, 775], p0_behind]
+    point_list_behind = [p_behind_out_3] + behind_points + [p0_behind]
     for i in range(len(point_list_behind) - 1):
         s.Line(point1=point_list_behind[i], point2=point_list_behind[i + 1])
 
@@ -2385,17 +2361,17 @@ if __name__ == "__main__":
     is_assemble = False
 
     is_create_p_insulation = True
-    is_create_p_block = True
-    is_create_p_gap = True
-    is_create_p_block_penult = True
-    is_create_p_gap_penult = True
-    is_create_p_block_front = True
-    is_create_p_gap_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_create_p_block = True
+    # is_create_p_gap = True
+    # is_create_p_block_penult = True
+    # is_create_p_gap_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_gap_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     if not ABAQUS_ENV:
         points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2459,32 +2435,9 @@ if __name__ == "__main__":
             'theta_out_deg_front': 0.24,
             'theta_out_deg_behind': 0.24,
 
-            'r_front_out_1': 562.5,
-            'r_front_out_2': 844.26,
-            'r_front_out_3': 460,
-            'r_front_out_5': 425,
-            'r_front_out_6': 794,
+            'r_front_out': 844.26,
+            'r_behind_out': 1260,
 
-            'r_behind_out_1': 942,
-            'r_behind_out_2': 1260,
-            'r_behind_out_3': 815,
-            'r_behind_out_5': 775,
-            'r_behind_out_6': 1109.77,
-
-            'l_front_1': 1022.08,
-            'l_front_2': 892.58,
-            'l_front_3': 857.58,
-
-            'l_behind_1': 891.06,
-            'l_behind_2': 746.48,
-            'l_behind_3': 683.73,
-
-            'l_points_front': 294.26,
-            'l_points_behind': 330.87,
-
-            'slope_degree_points_front': 84.88,
-            'slope_degree_points_behind': 87.32,
-            'thickness': 2.5,
             # 'insulation_rotate_angle_deg': 360.0 / n / 2.0,
             'insulation_rotate_angle_deg': 80.0,
 
