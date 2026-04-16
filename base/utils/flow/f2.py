@@ -2309,54 +2309,34 @@ def create_part_insulation(model, part_name, dimension):
 
 
 def create_part_flange_front(model, part_name, dimension):
-    ellipse_center = dimension['ellipse_center']
+
     ellipse_ratio = dimension['ellipse_ratio']
-    r_in = dimension['r_in']
     a_front = dimension['a_front']
-
-    thickness = dimension['thickness']
-    r_front_in_1 = dimension['r_front_in_1']
-    r_front_in_2 = dimension['r_front_in_2']
-
+    flange_thickness_offset_front = dimension['flange_thickness_offset_front']
     flange_r_in_front = dimension['flange_r_in_front']
     flange_r_out_front = dimension['flange_r_out_front']
     cover_r_out_front = dimension['cover_r_out_front']
     flange_thickness_front = dimension['flange_thickness_front']
-
     flange_offset_front = dimension['flange_offset_front']
-    l_front_2 = dimension['l_front_2']
     flange_fillet_radius_front = dimension['flange_fillet_radius_front']
-    rotate_angle_degree = dimension['rotate_angle_degree']
-    l_points = dimension['l_points']
-    slope_degree_points = dimension['slope_degree_points']
+    flange_slope_deg_front = dimension['flange_slope_deg_front']
+    rotate_angle_deg = dimension['rotate_angle_deg']
+
 
     c_1 = [0.0, 0.0]
 
     b_front = a_front / ellipse_ratio
-    c_x, c_y = ellipse_center
-    tol = 1.0
 
-    ellipse = Ellipse(c_x, c_y, a_front, b_front, long_axis='y')
-    l_points_x = math.cos(degrees_to_radians(slope_degree_points)) * l_points
-    l_points_y = math.sin(degrees_to_radians(slope_degree_points)) * l_points
+    ellipse = Ellipse(c_1[0], c_1[1], a_front, b_front, long_axis='y')
 
     ellipse_top_point = [c_1[0], a_front]
     ellipse_right_point = [c_1[0] + b_front, c_1[1]]
 
-    point_fillet = [ellipse.x_from_y(cover_r_out_front + thickness)[1], cover_r_out_front + thickness]
+    point_fillet = [ellipse.x_from_y(cover_r_out_front + flange_thickness_offset_front)[1], cover_r_out_front + flange_thickness_offset_front]
 
-    point_left_conner = [c_1[0] - flange_offset_front, cover_r_out_front + thickness]
+    point_left_conner = [c_1[0] - flange_offset_front, cover_r_out_front + flange_thickness_offset_front]
 
-    # point_4 = [ellipse.x_from_y(r_front_in_2)[1], r_front_in_2]
-
-    # point_5 = [ellipse.x_from_y(r_front_in_2)[1] + tol, r_front_in_2]
-    # point_6 = [c_x - flange_offset_front, r_front_in_1 - thickness]
-    #
-    # point_7 = [c_x - flange_offset_front, flange_r_in_front]
-    # point_8 = [c_x - l_front_2, flange_r_in_front]
-    # point_9 = [c_x - l_front_2, cover_r_out_front]
-
-    s = model.ConstrainedSketch(name='SKETCH-FLANGE-FRONT', sheetSize=40000.0)
+    s = model.ConstrainedSketch(name='SKETCH-FLANGE-FRONT', sheetSize=2000.0)
 
     e = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=ellipse_top_point, axisPoint2=ellipse_right_point)
     s.Line(point1=point_fillet, point2=point_left_conner)
@@ -2365,19 +2345,19 @@ def create_part_flange_front(model, part_name, dimension):
     curve_1 = s.geometry.findAt(ellipse_top_point)
     curve_2 = s.geometry.findAt(point_left_conner)
 
-    y_temp = cover_r_out_front + thickness + 1.0
+    y_temp = cover_r_out_front + flange_thickness_offset_front + 1.0
     s.FilletByRadius(radius=flange_fillet_radius_front, curve1=curve_1, nearPoint1=(ellipse.x_from_y(y_temp)[1], y_temp), curve2=curve_2, nearPoint2=((point_fillet[0] + point_left_conner[0]) / 2, point_fillet[1]))
 
     geom_list = []
     for g in s.geometry.values():
         geom_list.append(g)
-    s.offset(distance=thickness, objectList=geom_list, side=RIGHT)
+    s.offset(distance=flange_thickness_offset_front, objectList=geom_list, side=RIGHT)
     s.delete(objectList=geom_list)
 
     point_temp = [ellipse.x_from_y(flange_r_out_front)[1], flange_r_out_front]
     s.Line(point1=point_temp, point2=[c_1[0], point_temp[1]])
 
-    ellipse_top_point_offset = [ellipse_top_point[0], ellipse_top_point[1] - thickness]
+    ellipse_top_point_offset = [ellipse_top_point[0], ellipse_top_point[1] - flange_thickness_offset_front]
     curve = s.geometry.findAt((ellipse_top_point_offset))
     s.autoTrimCurve(curve1=curve, point1=ellipse_top_point_offset)
 
@@ -2391,60 +2371,39 @@ def create_part_flange_front(model, part_name, dimension):
 
     s.Line(point1=[point_left_conner_offset[0] + flange_thickness_front, flange_r_in_front], point2=[point_left_conner_offset[0] + flange_thickness_front, cover_r_out_front])
 
-    # curve = s.geometry.findAt((point_3))
-    # s.autoTrimCurve(curve1=curve, point1=point_3)
-    #
-    # curve = s.geometry.findAt((point_4))
-    # s.autoTrimCurve(curve1=curve, point1=point_4)
-    #
-    # point = s.geometry[8].pointOn
-    # curve = s.geometry.findAt((point))
-    # s.autoTrimCurve(curve1=curve, point1=point)
-    #
-    # s.Line(point1=point_6, point2=point_7)
-    # s.Line(point1=point_7, point2=point_8)
-    # s.Line(point1=point_8, point2=point_9)
-    #
-    # point_offset = s.geometry[11].getVertices()[0].coords
-    # point_10 = [c_x - l_front_2 - l_points_x, point_offset[1]]
-    #
-    # s.Line(point1=point_9, point2=point_10)
-    # s.Line(point1=point_10, point2=point_offset)
-    #
-    # s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+    l1 = Line2D([point_left_conner_offset[0] + flange_thickness_front, cover_r_out_front], np.tan(np.radians(flange_slope_deg_front)))
+    l2 = Line2D(point_temp, [point_temp[0] + 1.0, point_temp[1]])
+
+    s.Line(point1=l1.get_intersection(l2), point2=[point_left_conner_offset[0] + flange_thickness_front, cover_r_out_front])
+
+    curve = s.geometry.findAt(([c_1[0], point_temp[1]]))
+    s.autoTrimCurve(curve1=curve, point1=[c_1[0], point_temp[1]])
+
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
     s.setPrimaryObject(option=STANDALONE)
-    #
-    # p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    # p.BaseSolidRevolve(sketch=s, angle=rotate_angle_degree, flipRevolveDirection=OFF)
-    #
-    # # 创建集合（面）
-    # create_face_set_from_surface(p)
-    #
-    # # 创建集合（体）
-    # set_name = 'SET-CELL-QDJ'
-    # p.Set(cells=p.cells, name=set_name)
-    #
-    # d = p.datums
-    # point_arc = s.geometry[10].getVertices()[0].coords
-    # point_arc_rot = rotate_point_around_vector([point_arc[0], point_arc[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2))
-    # edge = p.edges.findAt(((point_arc_rot[0], point_arc_rot[1], point_arc_rot[2]),))
-    # x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
-    # p.PartitionCellByExtrudeEdge(line=d[x_axis.id], cells=p.cells, edges=edge, sense=FORWARD)
-    #
-    # arc_point_1 = model.sketches['SKETCH-QJT'].geometry[10].getVertices()[1].coords[0]
-    # arc_DatumPlane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=arc_point_1)
-    # p.PartitionCellByDatumPlane(datumPlane=d[arc_DatumPlane.id], cells=p.cells)
-    #
-    # point_9_rot = rotate_point_around_vector([point_9[0], point_9[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2))
-    # edge = p.edges.findAt((point_9_rot,))
-    # x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
-    # p.PartitionCellByExtrudeEdge(line=d[x_axis.id], cells=p.cells, edges=edge, sense=REVERSE)
-    #
-    # element_size = 50.0
-    # generate_part_mesh(p, element_size=element_size)
 
-    # return p
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
+
+    if rotate_angle_deg == 360.0:
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+
+    # 创建面
+    create_rotation_part_surface_common(p, rotate_angle_deg)
+
+    # 创建集合（面）
+    create_face_set_from_surface(p)
+
+    # 创建集合（体）
+    set_name = 'SET-CELL-FLANGE'
+    p.Set(cells=p.cells, name=set_name)
+
+    element_size = 50.0
+    generate_part_mesh(p, element_size=element_size)
+
+    return p
 
 
 def create_part_cover_front(model, part_name, dimension):
@@ -2481,7 +2440,7 @@ def create_part_cover_front(model, part_name, dimension):
     create_face_set_from_surface(p)
 
     # 创建集合（体）
-    set_name = 'SET-CELL-HDG'
+    set_name = 'SET-CELL-COVER'
     p.Set(cells=p.cells, name=set_name)
 
     element_size = 50.0
@@ -2709,36 +2668,28 @@ if __name__ == "__main__":
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
-        dimension = {
-            'ellipse_center': [0.0, 0.0],
+        front_flange_dimension = {
             'ellipse_ratio': ellipse_ratio,
-            'r_in': 1777.5,
             'a_front': a_front,
-
-            'r_front_in_1': 562.5,
-            'r_front_in_2': 844.26,
             'flange_r_in_front': 460,
             'flange_r_out_front': 843.5,
             'cover_r_out_front': 560,
-
             'flange_offset_front': 1035.18,
             'flange_thickness_front': 142.6,
-            'l_front_2': 892.58,
-            'l_points': 294.26,
-            'slope_degree_points': 84.88,
-            'thickness': 2.5,
+            'flange_slope_deg_front': -84.88,
+            'flange_thickness_offset_front': 2.5,
             'flange_fillet_radius_front': 10,
-            'rotate_angle_degree': 360.0 / n / 2.0,
+            'rotate_angle_deg': rotate_angle_deg,
         }
-        p_flange_front = create_part_flange_front(model, 'PART-CONNECTOR-FRONT', dimension)
+        p_flange_front = create_part_flange_front(model, 'PART-FLANGE-FRONT', front_flange_dimension)
 
-        # dimension = {
+        # front_cover_dimension = {
         #     'cover_r_out_front': 560.0,
         #     'cover_thickness_front': 68.18,
         #     'cover_offset_front': -1103.36,
         #     'rotate_angle_deg': rotate_angle_deg
         # }
-        # p_cover_front = create_part_cover_front(model, 'PART-COVER-FRONT', dimension)
+        # p_cover_front = create_part_cover_front(model, 'PART-COVER-FRONT', front_cover_dimension)
 
         insulation_dimension = {
             'l_c1_c2': l_c1_c2,
