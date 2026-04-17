@@ -2607,6 +2607,8 @@ if __name__ == "__main__":
     beta = math.pi / n
 
     is_create_p_insulation = False
+    is_create_p_cover_front = False
+    is_create_p_flange_front = False
     is_create_p_block = False
     is_create_p_gap = False
     is_create_p_block_penult = False
@@ -2620,17 +2622,19 @@ if __name__ == "__main__":
     is_assemble = False
 
     is_create_p_insulation = True
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_create_p_cover_front = True
+    is_create_p_flange_front = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2675,6 +2679,7 @@ if __name__ == "__main__":
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
+
         front_flange_dimension = {
             'ellipse_ratio': ellipse_ratio,
             'a_front': a_front,
@@ -2688,7 +2693,9 @@ if __name__ == "__main__":
             'flange_fillet_radius_front': 10,
             'rotate_angle_deg': rotate_angle_deg,
         }
-        p_flange_front = create_part_flange_front(model, 'PART-FLANGE-FRONT', front_flange_dimension)
+        if is_create_p_flange_front:
+            p_flange_front = create_part_flange_front(model, 'PART-FLANGE-FRONT', front_flange_dimension)
+            print('CREATE PART-FLANGE-FRONT DONE.')
 
         front_cover_dimension = {
             'cover_r_out_front': 560.0,
@@ -2696,7 +2703,9 @@ if __name__ == "__main__":
             'cover_offset_front': -1103.36,
             'rotate_angle_deg': rotate_angle_deg
         }
-        p_cover_front = create_part_cover_front(model, 'PART-COVER-FRONT', front_cover_dimension)
+        if is_create_p_cover_front:
+            p_cover_front = create_part_cover_front(model, 'PART-COVER-FRONT', front_cover_dimension)
+            print('CREATE PART-COVER-FRONT DONE.')
 
         insulation_dimension = {
             'l_c1_c2': l_c1_c2,
@@ -2853,6 +2862,8 @@ if __name__ == "__main__":
             p_gap_behind = model.parts['PART-GAP-BEHIND']
             p_gap = model.parts['PART-GAP']
             p_insulation = model.parts['PART-INSULATION']
+            p_cover_front = model.parts['PART-COVER-FRONT']
+            p_flange_front= model.parts['PART-FLANGE-FRONT']
             for p in model.parts.values():
                 p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -2878,12 +2889,31 @@ if __name__ == "__main__":
             a.DatumCsysByDefault(CARTESIAN)
             cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
 
-            a.Instance(name='INSULATION', part=p_insulation, dependent=ON)
-            a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 1.0, 0.0), angle=-90.0)
+            # 实例配置列表：(实例名称, 部件对象)
+            instances = [
+                ('INSULATION', p_insulation),
+                ('COVER-FRONT', p_cover_front),
+                ('FLANGE-FRONT', p_flange_front),
+            ]
+
+            # 公共旋转参数
+            origin = (0.0, 0.0, 0.0)
+            axis_y = (0.0, 1.0, 0.0)
+            axis_z = (0.0, 0.0, 1.0)
+            y_rot_angle = -90.0
+
+            # 根据 size 计算Z轴旋转角度
             if size == '1/2':
-                a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=-90.0)
+                z_rot_angle = -90.0
             elif size == '1':
-                a.rotate(instanceList=('INSULATION',), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=-90.0 - 360.0 / n / 2.0)
+                z_rot_angle = -90.0 - 360.0 / n / 2.0
+            else:
+                z_rot_angle = 0.0
+
+            for name, part in instances:
+                a.Instance(name=name, part=part, dependent=ON)
+                a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_y, angle=y_rot_angle)
+                a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_z, angle=z_rot_angle)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
