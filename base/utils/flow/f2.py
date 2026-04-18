@@ -2135,8 +2135,8 @@ def create_part_insulation(model, part_name, dimension):
     shell_insulation_theta_in_deg_front = dimension['shell_insulation_theta_in_deg_front']
     shell_insulation_theta_in_deg_behind = dimension['shell_insulation_theta_in_deg_behind']
 
-    shell_insulation_theta_out_deg_front = dimension['shell_insulation_theta_out_deg_front']
-    shell_insulation_theta_out_deg_behind = dimension['shell_insulation_theta_out_deg_behind']
+    shell_theta_in_deg_front = dimension['shell_theta_in_deg_front']
+    shell_theta_in_deg_behind = dimension['shell_theta_in_deg_behind']
 
     a_front = dimension['a_front']
     a_behind = dimension['a_behind']
@@ -2182,14 +2182,14 @@ def create_part_insulation(model, part_name, dimension):
     ellipse_behind = Ellipse(c_2[0], c_2[1], a_behind, b_behind_out, long_axis='y')
 
     # 前封头外轮廓
-    line1 = Line2D((0, a_front), math.tan(degrees_to_radians(shell_insulation_theta_out_deg_front)))
+    line1 = Line2D((0, a_front), math.tan(degrees_to_radians(shell_theta_in_deg_front)))
     line2 = Line2D((0, shell_insulation_r_out), (1, shell_insulation_r_out))
     p_front_out_1 = line1.get_intersection(line2)
     p_front_out_2 = [c_1[0], a_front]
     p_front_out_3 = [ellipse_front.x_from_y(shell_insulation_r_out_front)[1], shell_insulation_r_out_front]
 
     # 后封头外轮廓
-    line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(shell_insulation_theta_out_deg_behind)))
+    line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(shell_theta_in_deg_behind)))
     line2 = Line2D((0, shell_insulation_r_out), (1, shell_insulation_r_out))
     p_behind_out_1 = line1.get_intersection(line2)
     p_behind_out_2 = [c_2[0], a_behind]
@@ -2981,8 +2981,8 @@ if __name__ == "__main__":
             'shell_insulation_theta_in_deg_front': shell_insulation_theta_in_deg_front,
             'shell_insulation_theta_in_deg_behind': shell_insulation_theta_in_deg_behind,
 
-            'shell_insulation_theta_out_deg_front': shell_insulation_theta_out_deg_front,
-            'shell_insulation_theta_out_deg_behind': shell_insulation_theta_out_deg_behind,
+            'shell_theta_in_deg_front': shell_theta_in_deg_front,
+            'shell_theta_in_deg_behind': shell_theta_in_deg_behind,
 
             'shell_insulation_r_in_at_a_front': shell_insulation_r_in_at_a_front,
             'shell_insulation_r_in_at_a_behind': shell_insulation_r_in_at_a_behind,
