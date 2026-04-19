@@ -2539,16 +2539,12 @@ def create_part_shell(model, part_name, shell_dimension):
     l_trim_front = s.Line(point1=p_front_in_3, point2=p_front_in_4)
     ellipse_front = s.EllipseByCenterPerimeter(center=c1, axisPoint1=p_front_in_2, axisPoint2=[c1[0] + b_front, 0.0])
     s.autoTrimCurve(curve1=ellipse_front, point1=(c1[0] + b_front, 0.0))
+    add_spline(s, shell_points_front)
 
     # 后封头
     l_trim_behind = s.Line(point1=p_behind_in_3, point2=p_behind_in_4)
     ellipse_behind = s.EllipseByCenterPerimeter(center=c2, axisPoint1=p_behind_in_2, axisPoint2=[c2[0] + b_behind, 0.0])
     s.autoTrimCurve(curve1=ellipse_behind, point1=(c2[0] + b_behind, 0.0))
-
-    s.setPrimaryObject(option=STANDALONE)
-
-    add_spline(s, shell_points_front)
-
     add_spline(s, shell_points_behind)
 
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
