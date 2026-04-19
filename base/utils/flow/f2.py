@@ -2474,8 +2474,8 @@ def create_part_shell(model, part_name, shell_dimension):
     shell_theta_out_deg_front = shell_dimension['shell_theta_out_deg_front']
     shell_theta_out_deg_behind = shell_dimension['shell_theta_out_deg_behind']
 
-    a_front_out = shell_dimension['a_front_out']
-    a_behind_out = shell_dimension['a_behind_out']
+    shell_r_out_at_a_front = shell_dimension['shell_r_out_at_a_front']
+    shell_r_out_at_a_behind = shell_dimension['shell_r_out_at_a_behind']
 
     r_front_in = shell_dimension['r_front_in']
     r_behind_in = shell_dimension['r_behind_in']
@@ -2516,18 +2516,18 @@ def create_part_shell(model, part_name, shell_dimension):
     p_behind_in_5 = [c2[0] + l_behind_center_out_2, r_behind_in]
 
     # front out
-    line1 = Line2D((0, a_front_out), math.tan(degrees_to_radians(shell_theta_out_deg_front)))
+    line1 = Line2D((0, shell_r_out_at_a_front), math.tan(degrees_to_radians(shell_theta_out_deg_front)))
     line2 = Line2D((0, shell_r_out), (1, shell_r_out))
 
     p_front_out_1 = line1.get_intersection(line2)
-    p_front_out_2 = [c1[0], a_front_out]
+    p_front_out_2 = [c1[0], shell_r_out_at_a_front]
 
     # behind out
-    line1 = Line2D((c2[0], a_behind_out), -math.tan(degrees_to_radians(shell_theta_out_deg_behind)))
+    line1 = Line2D((c2[0], shell_r_out_at_a_behind), -math.tan(degrees_to_radians(shell_theta_out_deg_behind)))
     line2 = Line2D((0, shell_r_out), (1, shell_r_out))
 
     p_behind_out_1 = line1.get_intersection(line2)
-    p_behind_out_2 = [c2[0], a_behind_out]
+    p_behind_out_2 = [c2[0], shell_r_out_at_a_behind]
 
     s = model.ConstrainedSketch(name='SKETCH-SHELL', sheetSize=40000.0)
 
@@ -2756,23 +2756,37 @@ if __name__ == "__main__":
     r2_behind = 1075.96
     r3_behind = 569.38
 
-    shell_insulation_theta_in_deg_front = 0.16
-    shell_insulation_theta_in_deg_behind = 0.16
-
+    shell_r_in = 1777.5
+    shell_r_out = 1811.5
+    shell_theta_out_deg_front = 0.49
+    shell_theta_out_deg_behind = 0.49
+    shell_r_out_at_a_front = 1797
+    shell_r_out_at_a_behind = 1797
     shell_theta_in_deg_front = 0.24
     shell_theta_in_deg_behind = 0.24
 
+    shell_insulation_theta_in_deg_front = 0.16
+    shell_insulation_theta_in_deg_behind = 0.16
     shell_insulation_r_in = 1764.5
     shell_insulation_r_out = 1777.5
-
     shell_insulation_r_in_at_a_front = 1762.5
     shell_insulation_r_in_at_a_behind = 1762.5
-
     shell_insulation_r_out_front = 562.5
     shell_insulation_r_out_behind = 1260.0
-
     shell_insulation_r_in_front = 425.0
     shell_insulation_r_in_behind = 775.0
+
+    flange_r_in_front = 460
+    flange_r_out_front = 843.5
+    flange_offset_front = -1035.18
+    flange_thickness_front = 142.6
+    flange_slope_deg_front = -84.88
+    flange_thickness_offset_front = 2.5
+    flange_fillet_radius_front = 10
+
+    cover_r_out_front = 560
+    cover_thickness_front = 68.18
+    cover_offset_front = -1103.36
 
     if p3_front[1] > d / 2.0:
         raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
@@ -2918,18 +2932,18 @@ if __name__ == "__main__":
         shell_dimension = {
             'l_cylinder': l_c1_c2,
             'ellipse_ratio': ellipse_ratio,
-            'shell_r_in': 1777.5,
-            'shell_r_out': 1811.5,
+            'shell_r_in': shell_r_in,
+            'shell_r_out': shell_r_out,
             'a_front': a_front,
             'a_behind': a_behind,
 
             'shell_theta_in_deg_front': shell_theta_in_deg_front,
             'shell_theta_in_deg_behind': shell_theta_in_deg_behind,
-            'shell_theta_out_deg_front': 0.49,
-            'shell_theta_out_deg_behind': 0.49,
+            'shell_theta_out_deg_front': shell_theta_out_deg_front,
+            'shell_theta_out_deg_behind': shell_theta_out_deg_behind,
 
-            'a_front_out': 1797,
-            'a_behind_out': 1797,
+            'shell_r_out_at_a_front': shell_r_out_at_a_front,
+            'shell_r_out_at_a_behind': shell_r_out_at_a_behind,
 
             'r_front_in': 570.53,
             'r_behind_in': 948.99,
@@ -2944,14 +2958,14 @@ if __name__ == "__main__":
         front_flange_dimension = {
             'ellipse_ratio': ellipse_ratio,
             'a_front': a_front,
-            'flange_r_in_front': 460,
-            'flange_r_out_front': 843.5,
-            'cover_r_out_front': 560,
-            'flange_offset_front': -1035.18,
-            'flange_thickness_front': 142.6,
-            'flange_slope_deg_front': -84.88,
-            'flange_thickness_offset_front': 2.5,
-            'flange_fillet_radius_front': 10,
+            'flange_r_in_front': flange_r_in_front,
+            'flange_r_out_front': flange_r_out_front,
+            'cover_r_out_front': cover_r_out_front,
+            'flange_offset_front': flange_offset_front,
+            'flange_thickness_front': flange_thickness_front,
+            'flange_slope_deg_front': flange_slope_deg_front,
+            'flange_thickness_offset_front': flange_thickness_offset_front,
+            'flange_fillet_radius_front': flange_fillet_radius_front,
             'rotate_angle_deg': rotate_angle_deg,
         }
         if is_create_p_flange_front:
@@ -2959,9 +2973,9 @@ if __name__ == "__main__":
             print('CREATE PART-FLANGE-FRONT DONE.')
 
         front_cover_dimension = {
-            'cover_r_out_front': 560.0,
-            'cover_thickness_front': 68.18,
-            'cover_offset_front': -1103.36,
+            'cover_r_out_front': cover_r_out_front,
+            'cover_thickness_front': cover_thickness_front,
+            'cover_offset_front': cover_offset_front,
             'rotate_angle_deg': rotate_angle_deg
         }
         if is_create_p_cover_front:
@@ -3124,7 +3138,7 @@ if __name__ == "__main__":
             p_gap = model.parts['PART-GAP']
             p_insulation = model.parts['PART-INSULATION']
             p_cover_front = model.parts['PART-COVER-FRONT']
-            p_flange_front= model.parts['PART-FLANGE-FRONT']
+            p_flange_front = model.parts['PART-FLANGE-FRONT']
             p_shell = model.parts['PART-SHELL']
             for p in model.parts.values():
                 p.setValues(geometryRefinement=EXTRA_FINE)
