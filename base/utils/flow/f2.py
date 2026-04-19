@@ -2471,8 +2471,8 @@ def create_part_shell(model, part_name, shell_dimension):
 
     shell_theta_in_deg_front = shell_dimension['shell_theta_in_deg_front']
     shell_theta_in_deg_behind = shell_dimension['shell_theta_in_deg_behind']
-    theta_out_front = shell_dimension['theta_out_front']
-    theta_out_behind = shell_dimension['theta_out_behind']
+    shell_theta_out_deg_front = shell_dimension['shell_theta_out_deg_front']
+    shell_theta_out_deg_behind = shell_dimension['shell_theta_out_deg_behind']
 
     a_front_out = shell_dimension['a_front_out']
     a_behind_out = shell_dimension['a_behind_out']
@@ -2516,14 +2516,14 @@ def create_part_shell(model, part_name, shell_dimension):
     p_behind_in_5 = [c2[0] + l_behind_center_out_2, r_behind_in]
 
     # front out
-    line1 = Line2D((0, a_front_out), math.tan(degrees_to_radians(theta_out_front)))
+    line1 = Line2D((0, a_front_out), math.tan(degrees_to_radians(shell_theta_out_deg_front)))
     line2 = Line2D((0, shell_r_out), (1, shell_r_out))
 
     p_front_out_1 = line1.get_intersection(line2)
     p_front_out_2 = [c1[0], a_front_out]
 
     # behind out
-    line1 = Line2D((c2[0], a_behind_out), -math.tan(degrees_to_radians(theta_out_behind)))
+    line1 = Line2D((c2[0], a_behind_out), -math.tan(degrees_to_radians(shell_theta_out_deg_behind)))
     line2 = Line2D((0, shell_r_out), (1, shell_r_out))
 
     p_behind_out_1 = line1.get_intersection(line2)
@@ -2925,8 +2925,8 @@ if __name__ == "__main__":
 
             'shell_theta_in_deg_front': shell_theta_in_deg_front,
             'shell_theta_in_deg_behind': shell_theta_in_deg_behind,
-            'theta_out_front': 0.49,
-            'theta_out_behind': 0.49,
+            'shell_theta_out_deg_front': 0.49,
+            'shell_theta_out_deg_behind': 0.49,
 
             'a_front_out': 1797,
             'a_behind_out': 1797,
@@ -2939,7 +2939,7 @@ if __name__ == "__main__":
 
             'rotate_angle_deg': rotate_angle_deg,
         }
-        p_shell = create_part_shell(model, 'PART_SHELL', shell_dimension)
+        p_shell = create_part_shell(model, 'PART-SHELL', shell_dimension)
 
         front_flange_dimension = {
             'ellipse_ratio': ellipse_ratio,
@@ -3125,6 +3125,7 @@ if __name__ == "__main__":
             p_insulation = model.parts['PART-INSULATION']
             p_cover_front = model.parts['PART-COVER-FRONT']
             p_flange_front= model.parts['PART-FLANGE-FRONT']
+            p_shell = model.parts['PART-SHELL']
             for p in model.parts.values():
                 p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -3155,6 +3156,7 @@ if __name__ == "__main__":
                 ('INSULATION', p_insulation),
                 ('COVER-FRONT', p_cover_front),
                 ('FLANGE-FRONT', p_flange_front),
+                ('SHELL', p_shell),
             ]
 
             # 公共旋转参数
