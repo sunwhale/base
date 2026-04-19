@@ -2476,8 +2476,8 @@ def create_part_shell(model, part_name, shell_dimension):
     shell_r_out_at_a_behind = shell_dimension['shell_r_out_at_a_behind']
     shell_r_in_front = shell_dimension['shell_r_in_front']
     shell_r_in_behind = shell_dimension['shell_r_in_behind']
-    l_front_center_out_2 = shell_dimension['l_front_center_out_2']
-    l_behind_center_out_2 = shell_dimension['l_behind_center_out_2']
+    shell_l_c1_out = shell_dimension['shell_l_c1_out']
+    shell_l_c2_out = shell_dimension['shell_l_c2_out']
     rotate_angle_deg = shell_dimension['rotate_angle_deg']
 
     # 基本参数
@@ -2508,7 +2508,7 @@ def create_part_shell(model, part_name, shell_dimension):
     p_front_in_1 = line1.get_intersection(line2)
     p_front_in_2 = [c_1[0], a_front]
     p_front_in_3 = [ellipse_front.x_from_y(shell_r_in_front)[1], shell_r_in_front]
-    p_front_in_4 = [c_1[0] - l_front_center_out_2, shell_r_in_front]
+    p_front_in_4 = [c_1[0] - shell_l_c1_out, shell_r_in_front]
 
     # 后封头内轮廓
     line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(shell_theta_in_deg_behind)))
@@ -2516,7 +2516,7 @@ def create_part_shell(model, part_name, shell_dimension):
     p_behind_in_1 = line1.get_intersection(line2)
     p_behind_in_2 = [c_2[0], a_behind]
     p_behind_in_3 = [ellipse_behind.x_from_y(shell_r_in_behind)[0], shell_r_in_behind]
-    p_behind_in_4 = [c_2[0] + l_behind_center_out_2, shell_r_in_behind]
+    p_behind_in_4 = [c_2[0] + shell_l_c2_out, shell_r_in_behind]
 
     s = model.ConstrainedSketch(name='SKETCH-SHELL', sheetSize=2000.0)
 
@@ -2750,6 +2750,8 @@ if __name__ == "__main__":
     shell_theta_in_deg_behind = 0.24
     shell_r_in_front = 570.53
     shell_r_in_behind = 948.99
+    shell_l_c1_out = 1103.36
+    shell_l_c2_out = 968.88
 
     shell_insulation_theta_in_deg_front = 0.16
     shell_insulation_theta_in_deg_behind = 0.16
@@ -2922,21 +2924,16 @@ if __name__ == "__main__":
             'shell_r_out': shell_r_out,
             'a_front': a_front,
             'a_behind': a_behind,
-
             'shell_theta_in_deg_front': shell_theta_in_deg_front,
             'shell_theta_in_deg_behind': shell_theta_in_deg_behind,
             'shell_theta_out_deg_front': shell_theta_out_deg_front,
             'shell_theta_out_deg_behind': shell_theta_out_deg_behind,
-
             'shell_r_out_at_a_front': shell_r_out_at_a_front,
             'shell_r_out_at_a_behind': shell_r_out_at_a_behind,
-
             'shell_r_in_front': shell_r_in_front,
             'shell_r_in_behind': shell_r_in_behind,
-
-            'l_front_center_out_2': 1103.36,
-            'l_behind_center_out_2': 968.88,
-
+            'shell_l_c1_out': shell_l_c1_out,
+            'shell_l_c2_out': shell_l_c2_out,
             'rotate_angle_deg': rotate_angle_deg,
         }
         p_shell = create_part_shell(model, 'PART-SHELL', shell_dimension)
