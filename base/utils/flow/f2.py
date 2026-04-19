@@ -2477,8 +2477,8 @@ def create_part_shell(model, part_name, shell_dimension):
     shell_r_out_at_a_front = shell_dimension['shell_r_out_at_a_front']
     shell_r_out_at_a_behind = shell_dimension['shell_r_out_at_a_behind']
 
-    r_front_in = shell_dimension['r_front_in']
-    r_behind_in = shell_dimension['r_behind_in']
+    shell_r_in_front = shell_dimension['shell_r_in_front']
+    shell_r_in_behind = shell_dimension['shell_r_in_behind']
 
     l_front_center_out_2 = shell_dimension['l_front_center_out_2']
     l_behind_center_out_2 = shell_dimension['l_behind_center_out_2']
@@ -2501,9 +2501,9 @@ def create_part_shell(model, part_name, shell_dimension):
 
     p_front_in_1 = line1.get_intersection(line2)
     p_front_in_2 = [c1[0], a_front]
-    p_front_in_3 = [ellipse_front.x_from_y(r_front_in)[1], r_front_in + 10]
-    p_front_in_4 = [ellipse_front.x_from_y(r_front_in)[1], r_front_in]
-    p_front_in_5 = [c1[0] - l_front_center_out_2, r_front_in]
+    p_front_in_3 = [ellipse_front.x_from_y(shell_r_in_front)[1], shell_r_in_front + 10]
+    p_front_in_4 = [ellipse_front.x_from_y(shell_r_in_front)[1], shell_r_in_front]
+    p_front_in_5 = [c1[0] - l_front_center_out_2, shell_r_in_front]
 
     # behind in
     line1 = Line2D((c2[0], a_behind), -math.tan(degrees_to_radians(shell_theta_in_deg_behind)))
@@ -2511,9 +2511,9 @@ def create_part_shell(model, part_name, shell_dimension):
 
     p_behind_in_1 = line1.get_intersection(line2)
     p_behind_in_2 = [c2[0], a_behind]
-    p_behind_in_3 = [ellipse_behind.x_from_y(r_behind_in)[0], r_behind_in + 10]
-    p_behind_in_4 = [ellipse_behind.x_from_y(r_behind_in)[0], r_behind_in]
-    p_behind_in_5 = [c2[0] + l_behind_center_out_2, r_behind_in]
+    p_behind_in_3 = [ellipse_behind.x_from_y(shell_r_in_behind)[0], shell_r_in_behind + 10]
+    p_behind_in_4 = [ellipse_behind.x_from_y(shell_r_in_behind)[0], shell_r_in_behind]
+    p_behind_in_5 = [c2[0] + l_behind_center_out_2, shell_r_in_behind]
 
     # front out
     line1 = Line2D((0, shell_r_out_at_a_front), math.tan(degrees_to_radians(shell_theta_out_deg_front)))
@@ -2764,6 +2764,8 @@ if __name__ == "__main__":
     shell_r_out_at_a_behind = 1797
     shell_theta_in_deg_front = 0.24
     shell_theta_in_deg_behind = 0.24
+    shell_r_in_front = 570.53
+    shell_r_in_behind = 948.99
 
     shell_insulation_theta_in_deg_front = 0.16
     shell_insulation_theta_in_deg_behind = 0.16
@@ -2945,8 +2947,8 @@ if __name__ == "__main__":
             'shell_r_out_at_a_front': shell_r_out_at_a_front,
             'shell_r_out_at_a_behind': shell_r_out_at_a_behind,
 
-            'r_front_in': 570.53,
-            'r_behind_in': 948.99,
+            'shell_r_in_front': shell_r_in_front,
+            'shell_r_in_behind': shell_r_in_behind,
 
             'l_front_center_out_2': 1103.36,
             'l_behind_center_out_2': 968.88,
