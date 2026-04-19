@@ -2172,48 +2172,48 @@ def create_part_insulation(model, part_name, dimension):
     behind_points = [[18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775]]
 
     # 基本参数
-    c_1 = [0.0, 0.0]
-    c_2 = [l_c1_c2, 0.0]
+    c1 = [0.0, 0.0]
+    c2 = [l_c1_c2, 0.0]
     element_size = 40.0
 
     # 前后椭圆对象
     b_front_out = a_front / ellipse_ratio
     b_behind_out = a_behind / ellipse_ratio
-    ellipse_front = Ellipse(c_1[0], c_1[1], a_front, b_front_out, long_axis='y')
-    ellipse_behind = Ellipse(c_2[0], c_2[1], a_behind, b_behind_out, long_axis='y')
+    ellipse_front = Ellipse(c1[0], c1[1], a_front, b_front_out, long_axis='y')
+    ellipse_behind = Ellipse(c2[0], c2[1], a_behind, b_behind_out, long_axis='y')
 
     # 前封头外轮廓
     line1 = Line2D((0, a_front), math.tan(degrees_to_radians(shell_theta_in_deg_front)))
     line2 = Line2D((0, shell_insulation_r_out), (1, shell_insulation_r_out))
     p_front_out_1 = line1.get_intersection(line2)
-    p_front_out_2 = [c_1[0], a_front]
+    p_front_out_2 = [c1[0], a_front]
     p_front_out_3 = [ellipse_front.x_from_y(shell_insulation_r_out_front)[1], shell_insulation_r_out_front]
 
     # 后封头外轮廓
-    line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(shell_theta_in_deg_behind)))
+    line1 = Line2D((c2[0], a_behind), -math.tan(degrees_to_radians(shell_theta_in_deg_behind)))
     line2 = Line2D((0, shell_insulation_r_out), (1, shell_insulation_r_out))
     p_behind_out_1 = line1.get_intersection(line2)
-    p_behind_out_2 = [c_2[0], a_behind]
+    p_behind_out_2 = [c2[0], a_behind]
     p_behind_out_3 = [ellipse_behind.x_from_y(shell_insulation_r_out_behind)[0], shell_insulation_r_out_behind]
 
     # 前封头内轮廓
     line1 = Line2D((0, shell_insulation_r_in_at_a_front), math.tan(degrees_to_radians(shell_insulation_theta_in_deg_front)))
     line2 = Line2D((0, shell_insulation_r_in), (1, shell_insulation_r_in))
     p_front_in_1 = line1.get_intersection(line2)
-    p_front_in_2 = [c_1[0], shell_insulation_r_in_at_a_front]
+    p_front_in_2 = [c1[0], shell_insulation_r_in_at_a_front]
 
     # 后封头内轮廓
-    line1 = Line2D((c_2[0], shell_insulation_r_in_at_a_behind), -math.tan(degrees_to_radians(shell_insulation_theta_in_deg_behind)))
+    line1 = Line2D((c2[0], shell_insulation_r_in_at_a_behind), -math.tan(degrees_to_radians(shell_insulation_theta_in_deg_behind)))
     line2 = Line2D((0, shell_insulation_r_in), (1, shell_insulation_r_in))
     p_behind_in_1 = line1.get_intersection(line2)
-    p_behind_in_2 = [c_2[0], shell_insulation_r_in_at_a_behind]
+    p_behind_in_2 = [c2[0], shell_insulation_r_in_at_a_behind]
 
     s = model.ConstrainedSketch(name='SKETCH-INSULATION', sheetSize=2000.0)
 
     # 前封头
     l_trim_front = s.Line(point1=p_front_out_3, point2=(p_front_out_3[0] + 1.0, p_front_out_3[1]))
-    ellipse_front = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=p_front_out_2, axisPoint2=[c_1[0] + b_front_out, 0.0])
-    s.autoTrimCurve(curve1=ellipse_front, point1=(c_1[0] - b_front_out, 0.0))
+    ellipse_front = s.EllipseByCenterPerimeter(center=c1, axisPoint1=p_front_out_2, axisPoint2=[c1[0] + b_front_out, 0.0])
+    s.autoTrimCurve(curve1=ellipse_front, point1=(c1[0] - b_front_out, 0.0))
     s.delete(objectList=(s.geometry[l_trim_front.id],))
 
     arcs_front = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
@@ -2227,8 +2227,8 @@ def create_part_insulation(model, part_name, dimension):
 
     # 后封头
     l_trim_behind = s.Line(point1=p_behind_out_3, point2=(p_behind_out_3[0] + 1.0, p_behind_out_3[1]))
-    ellipse_behind = s.EllipseByCenterPerimeter(center=c_2, axisPoint1=p_behind_out_2, axisPoint2=[c_2[0] + b_behind_out, 0.0])
-    s.autoTrimCurve(curve1=ellipse_behind, point1=(c_2[0] + b_behind_out, 0.0))
+    ellipse_behind = s.EllipseByCenterPerimeter(center=c2, axisPoint1=p_behind_out_2, axisPoint2=[c2[0] + b_behind_out, 0.0])
+    s.autoTrimCurve(curve1=ellipse_behind, point1=(c2[0] + b_behind_out, 0.0))
     s.delete(objectList=(s.geometry[l_trim_behind.id],))
 
     arcs_behind = solve_three_arcs(p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind)
@@ -2276,7 +2276,7 @@ def create_part_insulation(model, part_name, dimension):
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0),
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_out_1[0]),
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_1[0]),
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c_2[0]),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c2[0]),
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_out_1[0]),
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_in_1[0]),
     ]
@@ -2326,7 +2326,7 @@ def create_part_flange_front(model, part_name, dimension):
     rotate_angle_deg = dimension['rotate_angle_deg']
 
     # 基本参数
-    c_1 = [0.0, 0.0]
+    c1 = [0.0, 0.0]
     element_size = 20.0
     b_front = a_front / ellipse_ratio
     ellipse = Ellipse(0.0, 0.0, a_front, b_front, long_axis='y')
@@ -2341,7 +2341,7 @@ def create_part_flange_front(model, part_name, dimension):
     # SKETCH-FLANGE-FRONT
     s = model.ConstrainedSketch(name='SKETCH-FLANGE-FRONT', sheetSize=2000.0)
 
-    e = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=ellipse_top_point, axisPoint2=ellipse_right_point)
+    e = s.EllipseByCenterPerimeter(center=c1, axisPoint1=ellipse_top_point, axisPoint2=ellipse_right_point)
     s.Line(point1=point_fillet, point2=point_left_conner)
     s.autoTrimCurve(curve1=e, point1=ellipse_right_point)
 
@@ -2481,42 +2481,42 @@ def create_part_shell(model, part_name, shell_dimension):
     rotate_angle_deg = shell_dimension['rotate_angle_deg']
 
     # 基本参数
-    c_1 = [0.0, 0.0]
-    c_2 = [l_c1_c2, 0.0]
+    c1 = [0.0, 0.0]
+    c2 = [l_c1_c2, 0.0]
 
     # 前后椭圆对象
     b_front = a_front / ellipse_ratio
     b_behind = a_behind / ellipse_ratio
-    ellipse_front = Ellipse(c_1[0], c_1[1], a_front, b_front, long_axis='y')
-    ellipse_behind = Ellipse(c_2[0], c_2[1], a_behind, b_behind, long_axis='y')
+    ellipse_front = Ellipse(c1[0], c1[1], a_front, b_front, long_axis='y')
+    ellipse_behind = Ellipse(c2[0], c2[1], a_behind, b_behind, long_axis='y')
 
     # 前封头外轮廓
     line1 = Line2D((0, shell_r_out_at_a_front), math.tan(degrees_to_radians(shell_theta_out_deg_front)))
     line2 = Line2D((0, shell_r_out), (1, shell_r_out))
     p_front_out_1 = line1.get_intersection(line2)
-    p_front_out_2 = [c_1[0], shell_r_out_at_a_front]
+    p_front_out_2 = [c1[0], shell_r_out_at_a_front]
 
     # 后封头外轮廓
-    line1 = Line2D((c_2[0], shell_r_out_at_a_behind), -math.tan(degrees_to_radians(shell_theta_out_deg_behind)))
+    line1 = Line2D((c2[0], shell_r_out_at_a_behind), -math.tan(degrees_to_radians(shell_theta_out_deg_behind)))
     line2 = Line2D((0, shell_r_out), (1, shell_r_out))
     p_behind_out_1 = line1.get_intersection(line2)
-    p_behind_out_2 = [c_2[0], shell_r_out_at_a_behind]
+    p_behind_out_2 = [c2[0], shell_r_out_at_a_behind]
 
     # 前封头内轮廓
     line1 = Line2D((0, a_front), math.tan(degrees_to_radians(shell_theta_in_deg_front)))
     line2 = Line2D((0, shell_r_in), (1, shell_r_in))
     p_front_in_1 = line1.get_intersection(line2)
-    p_front_in_2 = [c_1[0], a_front]
+    p_front_in_2 = [c1[0], a_front]
     p_front_in_3 = [ellipse_front.x_from_y(shell_r_in_front)[1], shell_r_in_front]
-    p_front_in_4 = [c_1[0] - shell_l_c1_out, shell_r_in_front]
+    p_front_in_4 = [c1[0] - shell_l_c1_out, shell_r_in_front]
 
     # 后封头内轮廓
-    line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(shell_theta_in_deg_behind)))
+    line1 = Line2D((c2[0], a_behind), -math.tan(degrees_to_radians(shell_theta_in_deg_behind)))
     line2 = Line2D((0, shell_r_in), (1, shell_r_in))
     p_behind_in_1 = line1.get_intersection(line2)
-    p_behind_in_2 = [c_2[0], a_behind]
+    p_behind_in_2 = [c2[0], a_behind]
     p_behind_in_3 = [ellipse_behind.x_from_y(shell_r_in_behind)[0], shell_r_in_behind]
-    p_behind_in_4 = [c_2[0] + shell_l_c2_out, shell_r_in_behind]
+    p_behind_in_4 = [c2[0] + shell_l_c2_out, shell_r_in_behind]
 
     s = model.ConstrainedSketch(name='SKETCH-SHELL', sheetSize=2000.0)
 
@@ -2532,13 +2532,13 @@ def create_part_shell(model, part_name, shell_dimension):
 
     # 前封头
     l_trim_front = s.Line(point1=p_front_in_3, point2=p_front_in_4)
-    ellipse_front = s.EllipseByCenterPerimeter(center=c_1, axisPoint1=p_front_in_2, axisPoint2=[c_1[0] + b_front, 0.0])
-    s.autoTrimCurve(curve1=ellipse_front, point1=(c_1[0] + b_front, 0.0))
+    ellipse_front = s.EllipseByCenterPerimeter(center=c1, axisPoint1=p_front_in_2, axisPoint2=[c1[0] + b_front, 0.0])
+    s.autoTrimCurve(curve1=ellipse_front, point1=(c1[0] + b_front, 0.0))
 
     # 后封头
     l_trim_behind = s.Line(point1=p_behind_in_3, point2=p_behind_in_4)
-    ellipse_behind = s.EllipseByCenterPerimeter(center=c_2, axisPoint1=p_behind_in_2, axisPoint2=[c_2[0] + b_behind, 0.0])
-    s.autoTrimCurve(curve1=ellipse_behind, point1=(c_2[0] + b_behind, 0.0))
+    ellipse_behind = s.EllipseByCenterPerimeter(center=c2, axisPoint1=p_behind_in_2, axisPoint2=[c2[0] + b_behind, 0.0])
+    s.autoTrimCurve(curve1=ellipse_behind, point1=(c2[0] + b_behind, 0.0))
 
     s.setPrimaryObject(option=STANDALONE)
 
@@ -2657,7 +2657,7 @@ def create_part_shell(model, part_name, shell_dimension):
     #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_out_1[0]),
     #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_1[0]),
     #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_in_1[0]),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c_2[0]),
+    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c2[0]),
     #     # p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_4[0]),
     # ]
     #
