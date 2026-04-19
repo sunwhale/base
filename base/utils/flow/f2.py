@@ -6,7 +6,8 @@ import math
 import os
 import sys
 from copy import deepcopy
-
+import scipy as sp
+import scipy.interpolate
 import numpy as np
 
 try:
@@ -2460,74 +2461,68 @@ def create_part_cover_front(model, part_name, dimension):
 
 
 def create_part_shell(model, part_name, shell_dimension):
-    import scipy as sp
-    import scipy.interpolate
-    l_cylinder = shell_dimension['l_cylinder']
+    # 变量赋值
+    l_c1_c2 = shell_dimension['l_c1_c2']
     ellipse_ratio = shell_dimension['ellipse_ratio']
     shell_r_in = shell_dimension['shell_r_in']
     shell_r_out = shell_dimension['shell_r_out']
     a_front = shell_dimension['a_front']
     a_behind = shell_dimension['a_behind']
-
     shell_theta_in_deg_front = shell_dimension['shell_theta_in_deg_front']
     shell_theta_in_deg_behind = shell_dimension['shell_theta_in_deg_behind']
     shell_theta_out_deg_front = shell_dimension['shell_theta_out_deg_front']
     shell_theta_out_deg_behind = shell_dimension['shell_theta_out_deg_behind']
-
     shell_r_out_at_a_front = shell_dimension['shell_r_out_at_a_front']
     shell_r_out_at_a_behind = shell_dimension['shell_r_out_at_a_behind']
-
     shell_r_in_front = shell_dimension['shell_r_in_front']
     shell_r_in_behind = shell_dimension['shell_r_in_behind']
-
     l_front_center_out_2 = shell_dimension['l_front_center_out_2']
     l_behind_center_out_2 = shell_dimension['l_behind_center_out_2']
-
     rotate_angle_deg = shell_dimension['rotate_angle_deg']
 
-    # center
-    c1 = [0.0, 0.0]
-    c2 = [l_cylinder, 0.0]
+    # 基本参数
+    c_1 = [0.0, 0.0]
+    c_2 = [l_c1_c2, 0.0]
 
-    # ellipse
+    # 前后椭圆对象
     b_front = a_front / ellipse_ratio
     b_behind = a_behind / ellipse_ratio
-    ellipse_front = Ellipse(c1[0], c1[1], a_front, b_front, long_axis='y')
-    ellipse_behind = Ellipse(c2[0], c2[1], a_behind, b_behind, long_axis='y')
+    ellipse_front = Ellipse(c_1[0], c_1[1], a_front, b_front, long_axis='y')
+    ellipse_behind = Ellipse(c_2[0], c_2[1], a_behind, b_behind, long_axis='y')
+
+    # 前封头外轮廓
+    line1 = Line2D((0, shell_r_out_at_a_front), math.tan(degrees_to_radians(shell_theta_out_deg_front)))
+    line2 = Line2D((0, shell_r_out), (1, shell_r_out))
+    p_front_out_1 = line1.get_intersection(line2)
+    p_front_out_2 = [c_1[0], shell_r_out_at_a_front]
+
+    # 后封头外轮廓
+    line1 = Line2D((c_2[0], shell_r_out_at_a_behind), -math.tan(degrees_to_radians(shell_theta_out_deg_behind)))
+    line2 = Line2D((0, shell_r_out), (1, shell_r_out))
+    p_behind_out_1 = line1.get_intersection(line2)
+    p_behind_out_2 = [c_2[0], shell_r_out_at_a_behind]
 
     # front in
     line1 = Line2D((0, a_front), math.tan(degrees_to_radians(shell_theta_in_deg_front)))
     line2 = Line2D((0, shell_r_in), (1, shell_r_in))
 
     p_front_in_1 = line1.get_intersection(line2)
-    p_front_in_2 = [c1[0], a_front]
+    p_front_in_2 = [c_1[0], a_front]
     p_front_in_3 = [ellipse_front.x_from_y(shell_r_in_front)[1], shell_r_in_front + 10]
     p_front_in_4 = [ellipse_front.x_from_y(shell_r_in_front)[1], shell_r_in_front]
-    p_front_in_5 = [c1[0] - l_front_center_out_2, shell_r_in_front]
+    p_front_in_5 = [c_1[0] - l_front_center_out_2, shell_r_in_front]
 
     # behind in
-    line1 = Line2D((c2[0], a_behind), -math.tan(degrees_to_radians(shell_theta_in_deg_behind)))
+    line1 = Line2D((c_2[0], a_behind), -math.tan(degrees_to_radians(shell_theta_in_deg_behind)))
     line2 = Line2D((0, shell_r_in), (1, shell_r_in))
 
     p_behind_in_1 = line1.get_intersection(line2)
-    p_behind_in_2 = [c2[0], a_behind]
+    p_behind_in_2 = [c_2[0], a_behind]
     p_behind_in_3 = [ellipse_behind.x_from_y(shell_r_in_behind)[0], shell_r_in_behind + 10]
     p_behind_in_4 = [ellipse_behind.x_from_y(shell_r_in_behind)[0], shell_r_in_behind]
-    p_behind_in_5 = [c2[0] + l_behind_center_out_2, shell_r_in_behind]
+    p_behind_in_5 = [c_2[0] + l_behind_center_out_2, shell_r_in_behind]
 
-    # front out
-    line1 = Line2D((0, shell_r_out_at_a_front), math.tan(degrees_to_radians(shell_theta_out_deg_front)))
-    line2 = Line2D((0, shell_r_out), (1, shell_r_out))
 
-    p_front_out_1 = line1.get_intersection(line2)
-    p_front_out_2 = [c1[0], shell_r_out_at_a_front]
-
-    # behind out
-    line1 = Line2D((c2[0], shell_r_out_at_a_behind), -math.tan(degrees_to_radians(shell_theta_out_deg_behind)))
-    line2 = Line2D((0, shell_r_out), (1, shell_r_out))
-
-    p_behind_out_1 = line1.get_intersection(line2)
-    p_behind_out_2 = [c2[0], shell_r_out_at_a_behind]
 
     s = model.ConstrainedSketch(name='SKETCH-SHELL', sheetSize=40000.0)
 
@@ -2543,8 +2538,8 @@ def create_part_shell(model, part_name, shell_dimension):
 
     # front
     geom_list.append(s.Line(point1=p_front_in_3, point2=p_front_in_4))
-    geom_list.append(s.EllipseByCenterPerimeter(center=c1, axisPoint1=p_front_in_2, axisPoint2=[c1[0] + b_front, 0.0]))
-    s.autoTrimCurve(curve1=geom_list[-1], point1=(c1[0] - b_front, 0.0))
+    geom_list.append(s.EllipseByCenterPerimeter(center=c_1, axisPoint1=p_front_in_2, axisPoint2=[c_1[0] + b_front, 0.0]))
+    s.autoTrimCurve(curve1=geom_list[-1], point1=(c_1[0] - b_front, 0.0))
     curve = s.geometry.findAt(p_front_in_3)
     s.autoTrimCurve(curve1=curve, point1=p_front_in_3)
     geom_list.append(s.Line(point1=p_front_in_4, point2=p_front_in_5))
@@ -2552,8 +2547,8 @@ def create_part_shell(model, part_name, shell_dimension):
     # behind
     geom_list.append(s.Line(point1=p_behind_in_3, point2=p_behind_in_4))
     geom_list.append(
-        s.EllipseByCenterPerimeter(center=c2, axisPoint1=p_behind_in_2, axisPoint2=[c2[0] + b_behind, 0.0]))
-    s.autoTrimCurve(curve1=geom_list[-1], point1=(c2[0] + b_behind, 0.0))
+        s.EllipseByCenterPerimeter(center=c_2, axisPoint1=p_behind_in_2, axisPoint2=[c_2[0] + b_behind, 0.0]))
+    s.autoTrimCurve(curve1=geom_list[-1], point1=(c_2[0] + b_behind, 0.0))
     curve = s.geometry.findAt(p_behind_in_3)
     s.autoTrimCurve(curve1=curve, point1=p_behind_in_3)
     geom_list.append(s.Line(point1=p_behind_in_4, point2=p_behind_in_5))
@@ -2673,7 +2668,7 @@ def create_part_shell(model, part_name, shell_dimension):
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_out_1[0]),
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_1[0]),
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_in_1[0]),
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c2[0]),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c_2[0]),
         # p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_4[0]),
     ]
 
@@ -2873,20 +2868,20 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_flange_front = True
-    is_create_p_block = True
-    is_create_p_gap = True
-    is_create_p_block_penult = True
-    is_create_p_gap_penult = True
-    is_create_p_block_front = True
-    is_create_p_gap_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_flange_front = True
+    # is_create_p_block = True
+    # is_create_p_gap = True
+    # is_create_p_block_penult = True
+    # is_create_p_gap_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_gap_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2932,7 +2927,7 @@ if __name__ == "__main__":
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
         shell_dimension = {
-            'l_cylinder': l_c1_c2,
+            'l_c1_c2': l_c1_c2,
             'ellipse_ratio': ellipse_ratio,
             'shell_r_in': shell_r_in,
             'shell_r_out': shell_r_out,
