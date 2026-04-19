@@ -1898,6 +1898,10 @@ def set_section_common(p):
     if set_name in p.sets.keys():
         p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-INSULATION', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
+    set_name = 'SET-CELL-SHELL'
+    if set_name in p.sets.keys():
+        p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-SHELL', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+
     set_name = 'SET-CELL-GLUE-A'
     if set_name in p.sets.keys():
         p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
@@ -2519,16 +2523,13 @@ def create_part_shell(model, part_name, shell_dimension):
     p_behind_in_4 = [c2[0] + shell_l_c2_out, shell_r_in_behind]
 
     s = model.ConstrainedSketch(name='SKETCH-SHELL', sheetSize=2000.0)
-
-    geom_list = []
-
     # 中段
-    # s.Line(point1=p_front_in_1, point2=p_behind_in_1)
-    # s.Line(point1=p_front_in_1, point2=p_front_in_2)
-    # s.Line(point1=p_behind_in_1, point2=p_behind_in_2)
-    # s.Line(point1=p_front_out_1, point2=p_behind_out_1)
-    # s.Line(point1=p_front_out_1, point2=p_front_out_2)
-    # s.Line(point1=p_behind_out_1, point2=p_behind_out_2)
+    s.Line(point1=p_front_in_1, point2=p_behind_in_1)
+    s.Line(point1=p_front_in_1, point2=p_front_in_2)
+    s.Line(point1=p_behind_in_1, point2=p_behind_in_2)
+    s.Line(point1=p_front_out_1, point2=p_behind_out_1)
+    s.Line(point1=p_front_out_1, point2=p_front_out_2)
+    s.Line(point1=p_behind_out_1, point2=p_behind_out_2)
 
     # 前封头
     l_trim_front = s.Line(point1=p_front_in_3, point2=p_front_in_4)
@@ -2542,141 +2543,156 @@ def create_part_shell(model, part_name, shell_dimension):
 
     s.setPrimaryObject(option=STANDALONE)
 
-    # xy = np.array([
-    #
-    #     [-1103.36, 570.53],
-    #     [-1102.09, 597.83],
-    #     [-1099.4, 609.74],
-    #     [-1094.18, 625.43],
-    #     [-1084.86, 642.6],
-    #     [-1059.9, 667.18],
-    #     [-1033.62, 706.75],
-    #     [-1014.26, 744.36],
-    #     [-996.28, 783.82],
-    #     [-975.45, 832.49],
-    #     [-957.44, 875.44],
-    #     [-939.02, 919.06],
-    #     [-922.34, 957.77],
-    #     [-901.08, 1005.53],
-    #     [-885.51, 1039.29],
-    #     [-856.66, 1098.88],
-    #     [-832.76, 1145.39],
-    #     [-800.7, 1203.85],
-    #     [-756.78, 1277.2],
-    #     [-708.17, 1350.17],
-    #     [-668.33, 1404.19],
-    #     [-615.52, 1468.59],
-    #     [-560.91, 1527.39],
-    #     [-487.04, 1595.65],
-    #     [-428.22, 1641.57],
-    #     [-386.96, 1669.67],
-    #     [-320.89, 1708.11],
-    #     [-246.54, 1741.92],
-    #     [-149.37, 1772.3],
-    #     [-96.81, 1782.41],
-    #     [-48.45, 1789.71],
-    #     [0.0, 1797]
-    #
-    # ])
-    # f = sp.interpolate.interp1d(xy[:, 0], xy[:, 1], kind='cubic', fill_value='extrapolate')
-    #
-    # xx = np.linspace(xy[0, 0], xy[-1, 0], 100)
-    # yy = f(xx)
-    # point_list = []
-    # for i in range(len(xx)):
-    #     point_list.append((xx[i], yy[i]))
-    # geom_list.append(s.Spline(points=point_list))
-    #
-    # xy = np.array([
-    #     [18268.88, 948.99],
-    #     [18260.14, 984.71],
-    #     [18250.64, 1004.14],
-    #     [18232.3, 1020.32],
-    #     [18206.49, 1051.21],
-    #     [18172.42, 1101.84],
-    #     [18140.62, 1153.38],
-    #     [18123.83, 1180.86],
-    #     [18102.88, 1214.77],
-    #     [18078.68, 1252.95],
-    #     [18056.18, 1281.24],
-    #     [18015.82, 1345.46],
-    #     [17975.95, 1398.67],
-    #     [17937.21, 1446.33],
-    #     [17916.37, 1470.39],
-    #     [17887.72, 1501.69],
-    #     [17842.43, 1547.24],
-    #     [17804.0, 1582.47],
-    #     [17761.86, 1617.08],
-    #     [17736.4, 1636.36],
-    #     [17708.05, 1656.33],
-    #     [17661.26, 1685.97],
-    #     [17621.56, 1707.98],
-    #     [17615.77, 1710.96],
-    #     [17608.75, 1714.49],
-    #     [17599.01, 1719.25],
-    #     [17591.97, 1722.58],
-    #     [17584.59, 1725.99],
-    #     [17576.51, 1729.62],
-    #     [17567.58, 1733.49],
-    #     [17551.06, 1740.07],
-    #     [17536.12, 1746.07],
-    #     [17518.73, 1752.32],
-    #     [17499.92, 1758.52],
-    #     [17482.04, 1763.89],
-    #     [17468.02, 1767.73],
-    #     [17447.41, 1772.81],
-    #     [17430.75, 1776.43],
-    #     [17414.76, 1779.48],
-    #     [17396.77, 1782.44],
-    #     [17374.46, 1785.79],
-    #     [17353.64, 1788.92],
-    #     [17338.32, 1791.23],
-    #     [17321.06, 1793.82],
-    #     [17305.18, 1796.21],
-    #     [17300, 1797]
-    #
-    # ])
-    # f = sp.interpolate.interp1d(xy[:, 0], xy[:, 1], kind='cubic', fill_value='extrapolate')
-    # xx = np.linspace(xy[0, 0], xy[-1, 0], 100)
-    # yy = f(xx)
-    # point_list = []
-    # for i in range(len(xx)):
-    #     point_list.append((xx[i], yy[i]))
-    # geom_list.append(s.Spline(points=point_list))
-    #
-    # s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
-    # p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-    # p.BaseSolidRevolve(sketch=s, angle=rotate_angle_deg, flipRevolveDirection=OFF)
-    #
-    # d = p.datums
-    # cut_planes = [
-    #     # p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0),
-    #     # p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_out_1[0]),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_out_1[0]),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_1[0]),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_in_1[0]),
-    #     p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c2[0]),
-    #     # p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_4[0]),
-    # ]
-    #
-    # for plane in cut_planes:
-    #     p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
-    #
-    # # 创建集合（面）
-    # create_face_set_from_surface(p)
-    #
-    # # 创建集合（体）
-    # set_name = 'SET-CELL-SHELL'
-    # p.Set(cells=p.cells, name=set_name)
-    #
-    # element_size = 50.0
-    #
-    # # 生成网格
+    xy = np.array([
+        [-1103.36, 570.53],
+        [-1102.09, 597.83],
+        [-1099.4, 609.74],
+        [-1094.18, 625.43],
+        [-1084.86, 642.6],
+        [-1059.9, 667.18],
+        [-1033.62, 706.75],
+        [-1014.26, 744.36],
+        [-996.28, 783.82],
+        [-975.45, 832.49],
+        [-957.44, 875.44],
+        [-939.02, 919.06],
+        [-922.34, 957.77],
+        [-901.08, 1005.53],
+        [-885.51, 1039.29],
+        [-856.66, 1098.88],
+        [-832.76, 1145.39],
+        [-800.7, 1203.85],
+        [-756.78, 1277.2],
+        [-708.17, 1350.17],
+        [-668.33, 1404.19],
+        [-615.52, 1468.59],
+        [-560.91, 1527.39],
+        [-487.04, 1595.65],
+        [-428.22, 1641.57],
+        [-386.96, 1669.67],
+        [-320.89, 1708.11],
+        [-246.54, 1741.92],
+        [-149.37, 1772.3],
+        [-96.81, 1782.41],
+        [-48.45, 1789.71],
+        [0.0, 1797]
+
+    ])
+    f = sp.interpolate.interp1d(xy[:, 0], xy[:, 1], kind='cubic', fill_value='extrapolate')
+
+    xx = np.linspace(xy[0, 0], xy[-1, 0], 100)
+    yy = f(xx)
+    point_list = []
+    for i in range(len(xx)):
+        point_list.append((xx[i], yy[i]))
+    s.Spline(points=point_list)
+
+    xy = np.array([
+        [18268.88, 948.99],
+        [18260.14, 984.71],
+        [18250.64, 1004.14],
+        [18232.3, 1020.32],
+        [18206.49, 1051.21],
+        [18172.42, 1101.84],
+        [18140.62, 1153.38],
+        [18123.83, 1180.86],
+        [18102.88, 1214.77],
+        [18078.68, 1252.95],
+        [18056.18, 1281.24],
+        [18015.82, 1345.46],
+        [17975.95, 1398.67],
+        [17937.21, 1446.33],
+        [17916.37, 1470.39],
+        [17887.72, 1501.69],
+        [17842.43, 1547.24],
+        [17804.0, 1582.47],
+        [17761.86, 1617.08],
+        [17736.4, 1636.36],
+        [17708.05, 1656.33],
+        [17661.26, 1685.97],
+        [17621.56, 1707.98],
+        [17615.77, 1710.96],
+        [17608.75, 1714.49],
+        [17599.01, 1719.25],
+        [17591.97, 1722.58],
+        [17584.59, 1725.99],
+        [17576.51, 1729.62],
+        [17567.58, 1733.49],
+        [17551.06, 1740.07],
+        [17536.12, 1746.07],
+        [17518.73, 1752.32],
+        [17499.92, 1758.52],
+        [17482.04, 1763.89],
+        [17468.02, 1767.73],
+        [17447.41, 1772.81],
+        [17430.75, 1776.43],
+        [17414.76, 1779.48],
+        [17396.77, 1782.44],
+        [17374.46, 1785.79],
+        [17353.64, 1788.92],
+        [17338.32, 1791.23],
+        [17321.06, 1793.82],
+        [17305.18, 1796.21],
+        [17300, 1797]
+
+    ])
+    f = sp.interpolate.interp1d(xy[:, 0], xy[:, 1], kind='cubic', fill_value='extrapolate')
+    xx = np.linspace(xy[0, 0], xy[-1, 0], 100)
+    yy = f(xx)
+    point_list = []
+    for i in range(len(xx)):
+        point_list.append((xx[i], yy[i]))
+    s.Spline(points=point_list)
+
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
+
+    # 截面剖分
+    d = p.datums
+    cut_planes = [
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_out_1[0]),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_in_1[0]),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=c2[0]),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_out_1[0]),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_in_1[0]),
+    ]
+    for plane in cut_planes:
+        p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+
+    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
+
+    try:
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    except:
+        pass
+
+    try:
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    except:
+        pass
+
+    # 创建集合（面）
+    create_face_set_from_surface(p)
+
+    # 创建集合（体）
+    set_name = 'SET-CELL-SHELL'
+    p.Set(cells=p.cells, name=set_name)
+
+    # 赋予SECTION属性
+    set_section_common(p)
+
+    element_size = 50.0
+
+    # 生成网格
     # generate_part_mesh(p, element_size=element_size)
-    # p.setValues(geometryRefinement=EXTRA_FINE)
-    # return p
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
 
 
 if __name__ == "__main__":
