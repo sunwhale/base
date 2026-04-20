@@ -2439,15 +2439,16 @@ def create_part_cover_front(model, part_name, dimension):
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
 
-    if rotate_angle_deg == 360.0:
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-
     # 创建面
     create_rotation_part_surface_common(p, rotate_angle_deg)
 
     # 创建集合（面）
     create_face_set_from_surface(p)
+
+    # 截面剖分
+    if rotate_angle_deg == 360.0:
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
 
     # 创建集合（体）
     set_name = 'SET-CELL-COVER'
@@ -2489,6 +2490,7 @@ def create_part_shell(model, part_name, shell_dimension):
     # 基本参数
     c1 = [0.0, 0.0]
     c2 = [l_c1_c2, 0.0]
+    element_size = 50.0
 
     # 前后椭圆对象
     b_front = a_front / ellipse_ratio
@@ -2552,8 +2554,10 @@ def create_part_shell(model, part_name, shell_dimension):
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
 
+    # 创建面
+    create_rotation_part_surface_common(p, rotate_angle_deg)
+
     # 截面剖分
-    d = p.datums
     cut_planes = [
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0),
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_out_1[0]),
@@ -2565,18 +2569,9 @@ def create_part_shell(model, part_name, shell_dimension):
     for plane in cut_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
 
-    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-
-    try:
+    if rotate_angle_deg == 360.0:
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-    except:
-        pass
-
-    try:
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-    except:
-        pass
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -2588,11 +2583,75 @@ def create_part_shell(model, part_name, shell_dimension):
     # 赋予SECTION属性
     set_section_common(p)
 
-    element_size = 50.0
-
     # 生成网格
-    # generate_part_mesh(p, element_size=element_size)
+    generate_part_mesh(p, element_size=element_size)
 
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
+
+
+def create_part_skirt_front(model, part_name, dimension):
+    # 变量赋值
+
+    r_out = dimension['r_out']
+    r_front_in_7 = dimension['r_front_in_7']
+    r_front_in_8 = dimension['r_front_in_8']
+    l_front_4 = dimension['l_front_4']
+    l_front_center_out_1 = dimension['l_front_center_out_1']
+    l_front_center_in_1 = dimension['l_front_center_in_1']
+    l_front_points = dimension['l_front_points']
+    theta_out = dimension['theta_out']
+    rotate_angle_degree = dimension['rotate_angle_degree']
+    rotate_angle_deg = shell_dimension['rotate_angle_deg']
+
+    # 基本参数
+    c1 = [0.0, 0.0]
+
+    point_1 = [c1[0] + l_front_center_in_1, r_front_in_7]
+    point_2 = [c1[0] + l_front_center_in_1, r_out - math.tan(degrees_to_radians(theta_out)) * (l_front_center_out_1 - l_front_center_in_1)]
+    point_3 = [point_2[0] - l_front_points, r_out - math.tan(degrees_to_radians(theta_out)) * l_front_points]
+    point_4 = [point_2[0] - l_front_points, r_front_in_8]
+    point_5 = [c1[0] - l_front_4, r_front_in_8]
+    point_6 = [c1[0] - l_front_4, r_front_in_7]
+
+    point1_rot = rotate_point_around_vector([point_1[0], point_1[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2))
+    point5_rot = rotate_point_around_vector([point_5[0], point_5[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2))
+    point6_rot = rotate_point_around_vector([point_6[0], point_6[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2))
+
+    # SKETCH-SKIRT-FRONT
+    s = model.ConstrainedSketch(name='SKETCH-SKIRT-FRONT', sheetSize=2000.0)
+
+    s.Line(point1=point_1, point2=point_2)
+    s.Line(point1=point_2, point2=point_3)
+    s.Line(point1=point_3, point2=point_4)
+    s.Line(point1=point_4, point2=point_5)
+    s.Line(point1=point_5, point2=point_6)
+    s.Line(point1=point_1, point2=point_6)
+
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
+
+    # 创建集合（面）
+    create_face_set_from_surface(p)
+
+    # 创建集合（体）
+    set_name = 'SET-CELL-QDJ'
+    p.Set(cells=p.cells, name=set_name)
+
+    # 截面剖分
+    yz_plane_offset = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=point_3[0])
+    d = p.datums
+    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_offset.id], cells=p.cells)
+
+    d = p.datums
+    # xy_plane_offset = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_offset.id], cells=p.cells)
+
+    element_size = 50.0
+    generate_part_mesh(p, element_size=element_size)
     p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
@@ -2832,20 +2891,20 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_flange_front = True
-    is_create_p_block = True
-    is_create_p_gap = True
-    is_create_p_block_penult = True
-    is_create_p_gap_penult = True
-    is_create_p_block_front = True
-    is_create_p_gap_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_flange_front = True
+    # is_create_p_block = True
+    # is_create_p_gap = True
+    # is_create_p_block_penult = True
+    # is_create_p_gap_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_gap_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2889,6 +2948,21 @@ if __name__ == "__main__":
         model.HomogeneousSolidSection(name='SECTION-GLUE', material='MATERIAL-GLUE', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
+
+        dimension = {
+            'ellipse_center': [0.0, 0.0],
+            'r_out': 1811.5,
+            'r_front_in_7': 1835.5,
+            'r_front_in_8': 1702.5,
+            'l_front_4': 450,
+            'l_front_center_out_1': 1700,
+            'l_front_center_in_1': 1200,
+            'l_front_points': 1627,
+            'theta_out': 0.49,
+            'rotate_angle_degree': 360.0 / n / 2.0,
+            'slope_angle_degree': 0.35,
+        }
+        p_skirt_front = create_part_skirt_front(model, 'PART-SKIRT-FRONT', dimension)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
