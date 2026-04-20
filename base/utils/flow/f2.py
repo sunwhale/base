@@ -2593,7 +2593,6 @@ def create_part_shell(model, part_name, shell_dimension):
 
 def create_part_skirt_front(model, part_name, dimension):
     # 变量赋值
-
     r_out = dimension['r_out']
     r_front_in_7 = dimension['r_front_in_7']
     r_front_in_8 = dimension['r_front_in_8']
@@ -2607,6 +2606,7 @@ def create_part_skirt_front(model, part_name, dimension):
 
     # 基本参数
     c1 = [0.0, 0.0]
+    element_size = 50.0
 
     point_1 = [c1[0] + l_front_center_in_1, r_front_in_7]
     point_2 = [c1[0] + l_front_center_in_1, r_out - math.tan(degrees_to_radians(theta_out)) * (l_front_center_out_1 - l_front_center_in_1)]
@@ -2634,24 +2634,33 @@ def create_part_skirt_front(model, part_name, dimension):
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
 
+    # 创建面
+    create_rotation_part_surface_common(p, rotate_angle_deg)
+
     # 创建集合（面）
     create_face_set_from_surface(p)
 
+    # 截面剖分
+    cut_planes = [
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=point_3[0]),
+    ]
+    for plane in cut_planes:
+        p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+
+    if rotate_angle_deg == 360.0:
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+
     # 创建集合（体）
-    set_name = 'SET-CELL-QDJ'
+    set_name = 'SET-CELL-SKIRT'
     p.Set(cells=p.cells, name=set_name)
 
-    # 截面剖分
-    yz_plane_offset = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=point_3[0])
-    d = p.datums
-    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_offset.id], cells=p.cells)
+    # 赋予SECTION属性
+    set_section_common(p)
 
-    d = p.datums
-    # xy_plane_offset = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_offset.id], cells=p.cells)
-
-    element_size = 50.0
+    # 生成网格
     generate_part_mesh(p, element_size=element_size)
+
     p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
