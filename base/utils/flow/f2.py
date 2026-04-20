@@ -2727,54 +2727,6 @@ if __name__ == "__main__":
     ]
 
     shell_points_behind = [
-        [18268.88, 948.99],
-        [18260.14, 984.71],
-        [18250.64, 1004.14],
-        [18232.3, 1020.32],
-        [18206.49, 1051.21],
-        [18172.42, 1101.84],
-        [18140.62, 1153.38],
-        [18123.83, 1180.86],
-        [18102.88, 1214.77],
-        [18078.68, 1252.95],
-        [18056.18, 1281.24],
-        [18015.82, 1345.46],
-        [17975.95, 1398.67],
-        [17937.21, 1446.33],
-        [17916.37, 1470.39],
-        [17887.72, 1501.69],
-        [17842.43, 1547.24],
-        [17804.0, 1582.47],
-        [17761.86, 1617.08],
-        [17736.4, 1636.36],
-        [17708.05, 1656.33],
-        [17661.26, 1685.97],
-        [17621.56, 1707.98],
-        [17615.77, 1710.96],
-        [17608.75, 1714.49],
-        [17599.01, 1719.25],
-        [17591.97, 1722.58],
-        [17584.59, 1725.99],
-        [17576.51, 1729.62],
-        [17567.58, 1733.49],
-        [17551.06, 1740.07],
-        [17536.12, 1746.07],
-        [17518.73, 1752.32],
-        [17499.92, 1758.52],
-        [17482.04, 1763.89],
-        [17468.02, 1767.73],
-        [17447.41, 1772.81],
-        [17430.75, 1776.43],
-        [17414.76, 1779.48],
-        [17396.77, 1782.44],
-        [17374.46, 1785.79],
-        [17353.64, 1788.92],
-        [17338.32, 1791.23],
-        [17321.06, 1793.82],
-        [17305.18, 1796.21],
-        [17300, 1797]]
-
-    shell_points_behind = [
         [17300.0, 1797.0],
         [17396.76553999, 1782.441736529],
         [17519.7184561699, 1751.98109955292],
@@ -2880,20 +2832,20 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_flange_front = True
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_flange_front = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
