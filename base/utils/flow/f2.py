@@ -2593,31 +2593,28 @@ def create_part_shell(model, part_name, shell_dimension):
 
 def create_part_skirt_front(model, part_name, dimension):
     # 变量赋值
-    r_out = dimension['r_out']
-    r_front_in_7 = dimension['r_front_in_7']
-    r_front_in_8 = dimension['r_front_in_8']
-    l_front_4 = dimension['l_front_4']
+    skirt_r_out_front = dimension['skirt_r_out_front']
+    skirt_offset_front = dimension['skirt_offset_front']
+
+    skirt_r_in_1_front = dimension['skirt_r_in_1_front']
+    skirt_r_in_2_front = dimension['skirt_r_in_2_front']
+
     l_front_center_out_1 = dimension['l_front_center_out_1']
     l_front_center_in_1 = dimension['l_front_center_in_1']
     l_front_points = dimension['l_front_points']
-    theta_out = dimension['theta_out']
-    rotate_angle_degree = dimension['rotate_angle_degree']
-    rotate_angle_deg = shell_dimension['rotate_angle_deg']
+    shell_theta_out_deg_front = dimension['shell_theta_out_deg_front']
+    rotate_angle_deg = dimension['rotate_angle_deg']
 
     # 基本参数
     c1 = [0.0, 0.0]
     element_size = 50.0
 
-    point_1 = [c1[0] + l_front_center_in_1, r_front_in_7]
-    point_2 = [c1[0] + l_front_center_in_1, r_out - math.tan(degrees_to_radians(theta_out)) * (l_front_center_out_1 - l_front_center_in_1)]
-    point_3 = [point_2[0] - l_front_points, r_out - math.tan(degrees_to_radians(theta_out)) * l_front_points]
-    point_4 = [point_2[0] - l_front_points, r_front_in_8]
-    point_5 = [c1[0] - l_front_4, r_front_in_8]
-    point_6 = [c1[0] - l_front_4, r_front_in_7]
-
-    point1_rot = rotate_point_around_vector([point_1[0], point_1[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2))
-    point5_rot = rotate_point_around_vector([point_5[0], point_5[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2))
-    point6_rot = rotate_point_around_vector([point_6[0], point_6[1], 0.0], [1.0, 0.0, 0.0], math.radians(rotate_angle_degree / 2))
+    point_1 = [c1[0] + l_front_center_in_1, skirt_r_in_1_front]
+    point_2 = [c1[0] + l_front_center_in_1, skirt_r_out_front - math.tan(degrees_to_radians(shell_theta_out_deg_front)) * (l_front_center_out_1 - l_front_center_in_1)]
+    point_3 = [point_2[0] - l_front_points, skirt_r_out_front - math.tan(degrees_to_radians(shell_theta_out_deg_front)) * l_front_points]
+    point_4 = [point_2[0] - l_front_points, skirt_r_in_2_front]
+    point_5 = [c1[0] - skirt_offset_front, skirt_r_in_2_front]
+    point_6 = [c1[0] - skirt_offset_front, skirt_r_in_1_front]
 
     # SKETCH-SKIRT-FRONT
     s = model.ConstrainedSketch(name='SKETCH-SKIRT-FRONT', sheetSize=2000.0)
@@ -2627,7 +2624,13 @@ def create_part_skirt_front(model, part_name, dimension):
     s.Line(point1=point_3, point2=point_4)
     s.Line(point1=point_4, point2=point_5)
     s.Line(point1=point_5, point2=point_6)
-    s.Line(point1=point_1, point2=point_6)
+    s.Line(point1=point_6, point2=point_1)
+
+    # s.Spot(point=point_1)
+    # s.Spot(point=point_2)
+    # s.Spot(point=point_3)
+    # s.Spot(point=point_4)
+    # s.Spot(point=point_5)
 
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
@@ -2900,20 +2903,20 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_flange_front = True
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_flange_front = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2959,16 +2962,15 @@ if __name__ == "__main__":
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
         dimension = {
-            'ellipse_center': [0.0, 0.0],
-            'r_out': 1811.5,
-            'r_front_in_7': 1835.5,
-            'r_front_in_8': 1702.5,
-            'l_front_4': 450,
+            'skirt_r_out_front': 1811.5,
+            'skirt_r_in_1_front': 1835.5,
+            'skirt_r_in_2_front': 1702.5,
+            'skirt_offset_front': 450,
             'l_front_center_out_1': 1700,
             'l_front_center_in_1': 1200,
             'l_front_points': 1627,
-            'theta_out': 0.49,
-            'rotate_angle_degree': 360.0 / n / 2.0,
+            'shell_theta_out_deg_front': 0.49,
+            'rotate_angle_deg': rotate_angle_deg,
             'slope_angle_degree': 0.35,
         }
         p_skirt_front = create_part_skirt_front(model, 'PART-SKIRT-FRONT', dimension)
