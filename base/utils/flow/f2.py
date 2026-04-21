@@ -2599,22 +2599,21 @@ def create_part_skirt_front(model, part_name, dimension):
     skirt_r_in_1_front = dimension['skirt_r_in_1_front']
     skirt_r_in_2_front = dimension['skirt_r_in_2_front']
 
-    l_front_center_out_1 = dimension['l_front_center_out_1']
-    l_front_center_in_1 = dimension['l_front_center_in_1']
-    l_front_points = dimension['l_front_points']
-    shell_theta_out_deg_front = dimension['shell_theta_out_deg_front']
+    skirt_l_1_front = dimension['skirt_l_1_front']
+    skirt_l_2_front = dimension['skirt_l_2_front']
+
     rotate_angle_deg = dimension['rotate_angle_deg']
 
     # 基本参数
     c1 = [0.0, 0.0]
     element_size = 50.0
 
-    point_1 = [c1[0] + l_front_center_in_1, skirt_r_in_1_front]
-    point_2 = [c1[0] + l_front_center_in_1, skirt_r_out_front - math.tan(degrees_to_radians(shell_theta_out_deg_front)) * (l_front_center_out_1 - l_front_center_in_1)]
-    point_3 = [point_2[0] - l_front_points, skirt_r_out_front - math.tan(degrees_to_radians(shell_theta_out_deg_front)) * l_front_points]
-    point_4 = [point_2[0] - l_front_points, skirt_r_in_2_front]
-    point_5 = [c1[0] - skirt_offset_front, skirt_r_in_2_front]
-    point_6 = [c1[0] - skirt_offset_front, skirt_r_in_1_front]
+    point_1 = [c1[0], skirt_r_in_1_front]
+    point_2 = [c1[0], skirt_r_out_front]
+    point_3 = [c1[0] + skirt_l_2_front, skirt_r_out_front]
+    point_4 = [c1[0] + skirt_l_2_front, skirt_r_in_2_front]
+    point_5 = [c1[0] + skirt_l_1_front, skirt_r_in_2_front]
+    point_6 = [c1[0] + skirt_l_1_front, skirt_r_in_1_front]
 
     # SKETCH-SKIRT-FRONT
     s = model.ConstrainedSketch(name='SKETCH-SKIRT-FRONT', sheetSize=2000.0)
@@ -2645,7 +2644,7 @@ def create_part_skirt_front(model, part_name, dimension):
 
     # 截面剖分
     cut_planes = [
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=point_3[0]),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=skirt_l_1_front),
     ]
     for plane in cut_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
@@ -2903,20 +2902,20 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_flange_front = True
-    is_create_p_block = True
-    is_create_p_gap = True
-    is_create_p_block_penult = True
-    is_create_p_gap_penult = True
-    is_create_p_block_front = True
-    is_create_p_gap_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_flange_front = True
+    # is_create_p_block = True
+    # is_create_p_gap = True
+    # is_create_p_block_penult = True
+    # is_create_p_gap_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_gap_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2962,16 +2961,14 @@ if __name__ == "__main__":
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
         dimension = {
-            'skirt_r_out_front': 1811.5,
-            'skirt_r_in_1_front': 1835.5,
-            'skirt_r_in_2_front': 1702.5,
-            'skirt_offset_front': 450,
-            'l_front_center_out_1': 1700,
-            'l_front_center_in_1': 1200,
-            'l_front_points': 1627,
+            'skirt_r_out_front': 1835.5,
+            'skirt_r_in_1_front': 1702.5,
+            'skirt_r_in_2_front': 1797.585372,
+            'skirt_offset_front': -450,
+            'skirt_l_1_front': 23,
+            'skirt_l_2_front': 1650,
             'shell_theta_out_deg_front': 0.49,
             'rotate_angle_deg': rotate_angle_deg,
-            'slope_angle_degree': 0.35,
         }
         p_skirt_front = create_part_skirt_front(model, 'PART-SKIRT-FRONT', dimension)
 
