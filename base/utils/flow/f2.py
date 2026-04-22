@@ -2183,10 +2183,10 @@ def create_part_insulation(model, part_name, dimension):
     element_size = 40.0
 
     # 前后椭圆对象
-    b_front_out = a_front / ellipse_ratio
-    b_behind_out = a_behind / ellipse_ratio
-    ellipse_front = Ellipse(c1[0], c1[1], a_front, b_front_out, long_axis='y')
-    ellipse_behind = Ellipse(c2[0], c2[1], a_behind, b_behind_out, long_axis='y')
+    b_front = a_front / ellipse_ratio
+    b_behind = a_behind / ellipse_ratio
+    ellipse_front = Ellipse(c1[0], c1[1], a_front, b_front, long_axis='y')
+    ellipse_behind = Ellipse(c2[0], c2[1], a_behind, b_behind, long_axis='y')
 
     # 前封头外轮廓
     line1 = Line2D((0, a_front), math.tan(degrees_to_radians(shell_theta_in_deg_front)))
@@ -2218,8 +2218,8 @@ def create_part_insulation(model, part_name, dimension):
 
     # 前封头
     l_trim_front = s.Line(point1=p_front_out_3, point2=(p_front_out_3[0] + 1.0, p_front_out_3[1]))
-    ellipse_front = s.EllipseByCenterPerimeter(center=c1, axisPoint1=p_front_out_2, axisPoint2=[c1[0] + b_front_out, 0.0])
-    s.autoTrimCurve(curve1=ellipse_front, point1=(c1[0] - b_front_out, 0.0))
+    ellipse_front = s.EllipseByCenterPerimeter(center=c1, axisPoint1=p_front_out_2, axisPoint2=[c1[0] + b_front, 0.0])
+    s.autoTrimCurve(curve1=ellipse_front, point1=(c1[0] - b_front, 0.0))
     s.delete(objectList=(s.geometry[l_trim_front.id],))
 
     arcs_front = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
@@ -2233,8 +2233,8 @@ def create_part_insulation(model, part_name, dimension):
 
     # 后封头
     l_trim_behind = s.Line(point1=p_behind_out_3, point2=(p_behind_out_3[0] + 1.0, p_behind_out_3[1]))
-    ellipse_behind = s.EllipseByCenterPerimeter(center=c2, axisPoint1=p_behind_out_2, axisPoint2=[c2[0] + b_behind_out, 0.0])
-    s.autoTrimCurve(curve1=ellipse_behind, point1=(c2[0] + b_behind_out, 0.0))
+    ellipse_behind = s.EllipseByCenterPerimeter(center=c2, axisPoint1=p_behind_out_2, axisPoint2=[c2[0] + b_behind, 0.0])
+    s.autoTrimCurve(curve1=ellipse_behind, point1=(c2[0] + b_behind, 0.0))
     s.delete(objectList=(s.geometry[l_trim_behind.id],))
 
     arcs_behind = solve_three_arcs(p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind)
@@ -2279,6 +2279,14 @@ def create_part_insulation(model, part_name, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
+    # 草图剖分
+    # s_insulation_partition = model.ConstrainedSketch(name='SKETCH-INSULATION-PARTITION', sheetSize=200.0)
+    # center = (0, 0)
+    # s_insulation_partition.Line(point1=(c1[0], flange_r_out_front), point2=(c1[0] - b_front, flange_r_out_front))
+    # s_insulation_partition.Line(point1=(c2[0], flange_r_out_behind), point2=(c2[0] + b_behind, flange_r_out_behind))
+    # p_faces = p.faces.getByBoundingBox(-PEN, -PEN, 0, c2[0] + PEN, PEN, TOL)
+    # p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_insulation_partition)
+
     # 截面剖分
     d = p.datums
     cut_planes = [
@@ -2292,18 +2300,48 @@ def create_part_insulation(model, part_name, dimension):
     for plane in cut_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
 
-    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
+    # 面扩展剖分
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), flange_r_out_front)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
+        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_front)
 
-    try:
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), flange_r_out_behind)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
+        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_behind)
+
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_front)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
+        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_front)
+
+    p.Set(cells=p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN), name='SET-1')
+
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_behind)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
+        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_behind)
+
+    if rotate_angle_deg == 360.0:
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-    except:
-        pass
-
-    try:
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-    except:
-        pass
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
@@ -3143,12 +3181,12 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
     is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
     # is_create_p_block = True
