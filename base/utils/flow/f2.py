@@ -1903,6 +1903,18 @@ def set_section_common(p):
     if set_name in p.sets.keys():
         p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-SHELL', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
+    set_name = 'SET-CELL-SKIRT'
+    if set_name in p.sets.keys():
+        p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-SHELL', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+
+    set_name = 'SET-CELL-FLANGE'
+    if set_name in p.sets.keys():
+        p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-STEEL', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+
+    set_name = 'SET-CELL-COVER'
+    if set_name in p.sets.keys():
+        p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-STEEL', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+
     set_name = 'SET-CELL-GLUE-A'
     if set_name in p.sets.keys():
         p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
@@ -3283,13 +3295,21 @@ if __name__ == "__main__":
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
         set_material(model.Material(name='MATERIAL-GLUE'), load_json('material_glue_prony.json'))
         set_material(model.Material(name='MATERIAL-SHELL'), load_json('material_shell.json'))
+        set_material(model.Material(name='MATERIAL-STEEL'), load_json('material_steel.json'))
         set_material(model.Material(name='MATERIAL-CZM'), load_json('material_czm.json'))
 
         model.HomogeneousSolidSection(name='SECTION-GRAIN', material='MATERIAL-GRAIN', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-INSULATION', material='MATERIAL-INSULATION', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-GLUE', material='MATERIAL-GLUE', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
+        model.HomogeneousSolidSection(name='SECTION-STEEL', material='MATERIAL-STEEL', thickness=None)
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
+
+        int_prop = model.ContactProperty('IntProp-1')
+        int_prop.TangentialBehavior(formulation=PENALTY, directionality=ISOTROPIC, slipRateDependency=OFF, pressureDependency=OFF, temperatureDependency=OFF,
+                                    dependencies=0, table=((0.01,),), shearStressLimit=None, maximumElasticSlip=FRACTION, fraction=0.005, elasticSlipStiffness=None)
+        int_prop.tangentialBehavior.setValues(formulation=FRICTIONLESS)
+        int_prop.NormalBehavior(pressureOverclosure=HARD, allowSeparation=ON, constraintEnforcementMethod=DEFAULT)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
