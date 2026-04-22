@@ -1845,24 +1845,14 @@ def create_rotation_part_surface_common(p, rotate_angle_deg):
         p2 = (1.0, 0.0, 0.0)
         p3 = (0.0, 1.0, 0.0)
         plane = Plane(p1, p2, p3)
-        p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-        for face_id in range(len(p.faces)):
-            if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-                p_faces += p.faces[face_id:face_id + 1]
-        if p_faces:
-            p.Surface(side1Faces=p_faces, name='SURFACE-T0')
+        create_surface_on_plane(p, plane, 'SURFACE-T0')
 
         p1 = (0.0, 0.0, 0.0)
         p2 = (1.0, 0.0, 0.0)
         p3 = (0.0, 1.0, 0.0)
         p3_rot = rotate_point_around_axis(p3, (0, 0, 0), (1, 0, 0), rotate_angle_deg)
         plane = Plane(p1, p2, p3_rot)
-        p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-        for face_id in range(len(p.faces)):
-            if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-                p_faces += p.faces[face_id:face_id + 1]
-        if p_faces:
-            p.Surface(side1Faces=p_faces, name='SURFACE-T1')
+        create_surface_on_plane(p, plane, 'SURFACE-T1')
 
     x_low = p.cells.getBoundingBox()['low'][0]
     x_high = p.cells.getBoundingBox()['high'][0]
@@ -1871,23 +1861,23 @@ def create_rotation_part_surface_common(p, rotate_angle_deg):
     p2 = (x_low, 1.0, 0.0)
     p3 = (x_low, 0.0, 1.0)
     plane = Plane(p1, p2, p3)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-X0')
+    create_surface_on_plane(p, plane, 'SURFACE-X0')
 
     p1 = (x_high, 0.0, 0.0)
     p2 = (x_high, 1.0, 0.0)
     p3 = (x_high, 0.0, 1.0)
     plane = Plane(p1, p2, p3)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-X1')
+    create_surface_on_plane(p, plane, 'SURFACE-X1')
+
+    p_faces = p.faces.getByBoundingBox(x_low, -PEN, 0.0, x_high, PEN, TOL)
+    r_low = p_faces.getBoundingBox()['low'][1]
+    r_high = p_faces.getBoundingBox()['high'][1]
+
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), r_low)
+    create_surface_on_cylinder(p, cylinder, 'SURFACE-R0')
+
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), r_high)
+    create_surface_on_cylinder(p, cylinder, 'SURFACE-R1')
 
 
 def set_section_common(p):
@@ -2490,6 +2480,8 @@ def create_part_flange_front(model, part_name, dimension):
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
+    combine_surfaces(p, ['SURFACE-R1', 'SURFACE-OUTER'], 'SURFACE-OUTER')
+    combine_surfaces(p, ['SURFACE-R0', 'SURFACE-X1', 'SURFACE-OUTER'], 'SURFACE-TIE')
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -2595,6 +2587,13 @@ def create_part_flange_behind(model, part_name, dimension):
 
     # 创建面
     create_rotation_part_surface_common(p, rotate_angle_deg)
+    # 通过排除法确定外表面
+    given_surface_names = list(p.surfaces.keys())
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
+    combine_surfaces(p, ['SURFACE-R1', 'SURFACE-OUTER'], 'SURFACE-OUTER')
+    combine_surfaces(p, ['SURFACE-R0', 'SURFACE-X0', 'SURFACE-OUTER'], 'SURFACE-TIE')
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -2995,6 +2994,24 @@ def part_partition_by_cylinder(p, cylinder, p_cells):
         p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells)
 
 
+def create_surface_on_cylinder(p, cylinder, surface_name):
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0], tolerance=1e-4) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name=surface_name)
+
+
+def create_surface_on_plane(p, plane, surface_name):
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name=surface_name)
+
+
 def add_spline(s, points):
     points = np.array(points)
     f = sp.interpolate.interp1d(points[:, 0], points[:, 1], kind='cubic', fill_value='extrapolate')
@@ -3248,25 +3265,25 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
-    is_create_p_block = True
-    is_create_p_gap = True
-    is_create_p_block_penult = True
-    is_create_p_gap_penult = True
-    is_create_p_block_front = True
-    is_create_p_gap_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_gap = True
+    # is_create_p_block_penult = True
+    # is_create_p_gap_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_gap_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
