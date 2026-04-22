@@ -2825,6 +2825,83 @@ def create_part_skirt_front(model, part_name, dimension):
     return p
 
 
+def create_part_skirt_behind(model, part_name, dimension):
+    # 变量赋值
+    skirt_r_out_behind = dimension['skirt_r_out_behind']
+    skirt_r_in_1_behind = dimension['skirt_r_in_1_behind']
+    skirt_r_in_2_behind = dimension['skirt_r_in_2_behind']
+    skirt_l_1_behind = dimension['skirt_l_1_behind']
+    skirt_l_2_behind = dimension['skirt_l_2_behind']
+    skirt_offset_behind = dimension['skirt_offset_behind']
+    rotate_angle_deg = dimension['rotate_angle_deg']
+
+    # 基本参数
+    c1 = [0.0, 0.0]
+    element_size = 50.0
+
+    point_1 = [c1[0] + skirt_offset_behind, skirt_r_in_1_behind]
+    point_2 = [c1[0] + skirt_offset_behind, skirt_r_out_behind]
+    point_3 = [c1[0] + skirt_offset_behind + skirt_l_2_behind, skirt_r_out_behind]
+    point_4 = [c1[0] + skirt_offset_behind + skirt_l_2_behind, skirt_r_in_2_behind]
+    point_5 = [c1[0] + skirt_offset_behind + skirt_l_1_behind, skirt_r_in_2_behind]
+    point_6 = [c1[0] + skirt_offset_behind + skirt_l_1_behind, skirt_r_in_1_behind]
+
+    # SKETCH-SKIRT-BEHIND
+    s = model.ConstrainedSketch(name='SKETCH-SKIRT-BEHIND', sheetSize=2000.0)
+
+    s.Line(point1=point_1, point2=point_2)
+    s.Line(point1=point_2, point2=point_3)
+    s.Line(point1=point_3, point2=point_4)
+    s.Line(point1=point_4, point2=point_5)
+    s.Line(point1=point_5, point2=point_6)
+    s.Line(point1=point_6, point2=point_1)
+
+    # s.Spot(point=point_1)
+    # s.Spot(point=point_2)
+    # s.Spot(point=point_3)
+    # s.Spot(point=point_4)
+    # s.Spot(point=point_5)
+
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
+
+    # 切割壳体
+    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-SHELL'], angle=360.0, flipRevolveDirection=OFF)
+
+    # 创建面
+    create_rotation_part_surface_common(p, rotate_angle_deg)
+
+    # 创建集合（面）
+    create_face_set_from_surface(p)
+
+    # 截面剖分
+    cut_planes = [
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=skirt_l_1_behind),
+    ]
+    for plane in cut_planes:
+        p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+
+    if rotate_angle_deg == 360.0:
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+
+    # 创建集合（体）
+    set_name = 'SET-CELL-SKIRT'
+    p.Set(cells=p.cells, name=set_name)
+
+    # 赋予SECTION属性
+    set_section_common(p)
+
+    # 生成网格
+    generate_part_mesh(p, element_size=element_size)
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
+
+
 def add_spline(s, points):
     points = np.array(points)
     f = sp.interpolate.interp1d(points[:, 0], points[:, 1], kind='cubic', fill_value='extrapolate')
@@ -3059,10 +3136,12 @@ if __name__ == "__main__":
 
     is_create_p_shell = False
     is_create_p_skirt_front = False
+    is_create_p_skirt_behind = False
     is_create_p_insulation = False
     is_create_p_cover_front = False
     is_create_p_cover_behind = False
     is_create_p_flange_front = False
+    is_create_p_flange_behind = False
     is_create_p_block = False
     is_create_p_gap = False
     is_create_p_block_penult = False
@@ -3077,6 +3156,7 @@ if __name__ == "__main__":
 
     is_create_p_shell = True
     is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
     is_create_p_insulation = True
     is_create_p_cover_front = True
     is_create_p_cover_behind = True
@@ -3166,14 +3246,27 @@ if __name__ == "__main__":
             'skirt_r_out_front': 1835.5,
             'skirt_r_in_1_front': 1702.5,
             'skirt_r_in_2_front': 1797.585372,
-            'skirt_offset_front': -450.0,
             'skirt_l_1_front': 23.0,
             'skirt_l_2_front': 1650.0,
+            'skirt_offset_front': -450.0,
             'rotate_angle_deg': rotate_angle_deg,
         }
         if is_create_p_skirt_front:
             p_skirt_front = create_part_skirt_front(model, 'PART-SKIRT-FRONT', skirt_front_dimension)
             print('CREATE PART-SKIRT-FRONT DONE.')
+
+        skirt_behind_dimension = {
+            'skirt_r_out_behind': 1835.5,
+            'skirt_r_in_1_behind': 1702.5,
+            'skirt_r_in_2_behind': 1797.585372,
+            'skirt_l_1_behind': 23.0,
+            'skirt_l_2_behind': 1650.0,
+            'skirt_offset_behind': -450.0,
+            'rotate_angle_deg': rotate_angle_deg,
+        }
+        if is_create_p_skirt_behind:
+            p_skirt_behind = create_part_skirt_behind(model, 'PART-SKIRT-BEHIND', skirt_behind_dimension)
+            print('CREATE PART-SKIRT-BEHIND DONE.')
 
         front_flange_dimension = {
             'ellipse_ratio': ellipse_ratio,
