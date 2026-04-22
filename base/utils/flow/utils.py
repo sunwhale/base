@@ -1050,6 +1050,39 @@ def radians_to_degrees(radians):
     return radians * 180 / math.pi
 
 
+def move_along_direction(point, direction, distance):
+    """
+    沿着给定方向矢量移动指定距离，返回新点坐标。
+    Python 2.7 兼容版本。
+
+    参数:
+        point: 起始点坐标，列表或元组，如 [x, y] 或 (x, y, z)
+        direction: 方向矢量，列表或元组，长度需与 point 相同
+        distance: 前进距离（正数表示沿方向前进，负数表示反方向）
+
+    返回:
+        新点坐标，类型与 point 相同（列表或元组）
+
+    异常:
+        ValueError: 当方向矢量的模为零时抛出
+    """
+    # 计算方向矢量的模长（使用列表推导式，兼容性更好）
+    norm = math.sqrt(sum([comp ** 2 for comp in direction]))
+    if norm == 0:
+        raise ValueError("方向矢量不能为零矢量")
+
+    # 单位方向矢量
+    unit_dir = [comp / norm for comp in direction]
+
+    # 计算新点坐标
+    new_point = [point[i] + distance * unit_dir[i] for i in range(len(point))]
+
+    # 保持返回类型与输入一致
+    if isinstance(point, tuple):
+        return tuple(new_point)
+    return new_point
+
+
 def rotate_point_around_origin_2d(point, theta):
     """
     计算点绕原点旋转后的坐标（使用弧度）
