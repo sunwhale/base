@@ -2348,75 +2348,40 @@ def create_part_insulation(model, part_name, dimension):
     # 面扩展剖分
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), flange_r_out_front)
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
-        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_front)
+    p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
+    part_partition_by_cylinder(p, cylinder, p_cells_front)
 
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), flange_r_out_behind)
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
             p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
-        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_behind)
+    p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
+    part_partition_by_cylinder(p, cylinder, p_cells_behind)
 
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_front - shell_insulation_thickness_at_flange_front)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
-        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_front)
+    p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
+    part_partition_by_cylinder(p, cylinder, p_cells_front)
 
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_behind - shell_insulation_thickness_at_flange_behind)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
-        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_behind)
+    p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
+    part_partition_by_cylinder(p, cylinder, p_cells_behind)
 
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_front)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
-        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_front)
+    p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
+    part_partition_by_cylinder(p, cylinder, p_cells_front)
 
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_behind)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
-        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_behind)
+    p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
+    part_partition_by_cylinder(p, cylinder, p_cells_behind)
 
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), flange_r_in_front)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
-        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_front)
+    p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
+    part_partition_by_cylinder(p, cylinder, p_cells_front)
 
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), flange_r_in_behind)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
-        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells_behind)
+    p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
+    part_partition_by_cylinder(p, cylinder, p_cells_behind)
 
     # 截面剖分
     cut_planes = [
@@ -2522,6 +2487,10 @@ def create_part_flange_front(model, part_name, dimension):
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
 
+    # 剖分
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), cover_r_out_front)
+    part_partition_by_cylinder(p, cylinder, p.cells)
+
     if rotate_angle_deg == 360.0:
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
@@ -2622,6 +2591,10 @@ def create_part_flange_behind(model, part_name, dimension):
 
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
+
+    # 剖分
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), cover_r_out_behind)
+    part_partition_by_cylinder(p, cylinder, p.cells)
 
     if rotate_angle_deg == 360.0:
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
@@ -3017,6 +2990,16 @@ def create_part_skirt_behind(model, part_name, dimension):
     p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
+
+
+def part_partition_by_cylinder(p, cylinder, p_cells):
+    # 找到存在于圆柱面上的面，用这个面进行PartitionCellByExtendFace
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells)
 
 
 def add_spline(s, points):
