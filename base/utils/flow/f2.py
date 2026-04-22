@@ -2416,6 +2416,106 @@ def create_part_flange_front(model, part_name, dimension):
     return p
 
 
+def create_part_flange_behind(model, part_name, dimension):
+    # 变量赋值
+    # l_c1_c2 = dimension['l_c1_c2']
+    ellipse_ratio = dimension['ellipse_ratio']
+    a_behind = dimension['a_behind']
+    flange_thickness_offset_behind = dimension['flange_thickness_offset_behind']
+    flange_r_in_behind = dimension['flange_r_in_behind']
+    flange_r_out_behind = dimension['flange_r_out_behind']
+    cover_r_out_behind = dimension['cover_r_out_behind']
+    flange_thickness_behind = dimension['flange_thickness_behind']
+    flange_offset_behind = dimension['flange_offset_behind']
+    flange_fillet_radius_behind = dimension['flange_fillet_radius_behind']
+    flange_slope_deg_behind = dimension['flange_slope_deg_behind']
+    rotate_angle_deg = dimension['rotate_angle_deg']
+
+    # 基本参数
+    c1 = [0.0, 0.0]
+    element_size = 20.0
+    b_behind = a_behind / ellipse_ratio
+    ellipse = Ellipse(0.0, 0.0, a_behind, b_behind, long_axis='y')
+    ellipse_top_point = [0.0, a_behind]
+    ellipse_right_point = [b_behind, 0.0]
+    r_mid = cover_r_out_behind + flange_thickness_offset_behind
+    point_fillet = [ellipse.x_from_y(r_mid)[1], r_mid]
+    point_left_conner = [flange_offset_behind, r_mid]
+    point_temp_0 = [0.0, flange_r_out_behind]
+    point_temp_1 = [ellipse.x_from_y(flange_r_out_behind)[1], flange_r_out_behind]
+
+    # SKETCH-FLANGE-BEHIND
+    s = model.ConstrainedSketch(name='SKETCH-FLANGE-BEHIND', sheetSize=2000.0)
+
+    e = s.EllipseByCenterPerimeter(center=c1, axisPoint1=ellipse_top_point, axisPoint2=ellipse_right_point)
+    s.Line(point1=point_fillet, point2=point_left_conner)
+    s.autoTrimCurve(curve1=e, point1=ellipse_right_point)
+
+    # s.FilletByRadius(radius=flange_fillet_radius_behind,
+    #                  curve1=s.geometry.findAt(ellipse_top_point), nearPoint1=(ellipse.x_from_y(r_mid + 1.0)[1], r_mid + 1.0),
+    #                  curve2=s.geometry.findAt(point_left_conner), nearPoint2=((point_fillet[0] + point_left_conner[0]) / 2, point_fillet[1]))
+
+    geom_list = []
+    for g in s.geometry.values():
+        geom_list.append(g)
+    s.offset(distance=flange_thickness_offset_behind, objectList=geom_list, side=RIGHT)
+    s.delete(objectList=geom_list)
+
+    s.Line(point1=point_temp_0, point2=point_temp_1)
+
+    ellipse_top_point_offset = [ellipse_top_point[0], ellipse_top_point[1] - flange_thickness_offset_behind]
+    curve = s.geometry.findAt((ellipse_top_point_offset))
+    s.autoTrimCurve(curve1=curve, point1=ellipse_top_point_offset)
+
+    curve = s.geometry.findAt((point_temp_1))
+    s.autoTrimCurve(curve1=curve, point1=point_temp_1)
+
+    point_left_conner_offset = [point_left_conner[0], cover_r_out_behind]
+
+    point_1 = [point_left_conner_offset[0], flange_r_in_behind]
+    point_2 = [point_left_conner_offset[0] + flange_thickness_behind, flange_r_in_behind]
+    point_3 = [point_left_conner_offset[0] + flange_thickness_behind, cover_r_out_behind]
+
+    s.Line(point1=point_left_conner_offset, point2=point_1)
+    s.Line(point1=point_1, point2=point_2)
+    s.Line(point1=point_2, point2=point_3)
+
+    l1 = Line2D(point_3, np.tan(np.radians(flange_slope_deg_behind)))
+    l2 = Line2D(point_temp_0, point_temp_1)
+    s.Line(point1=l1.get_intersection(l2), point2=point_3)
+    curve = s.geometry.findAt((point_temp_0))
+    s.autoTrimCurve(curve1=curve, point1=point_temp_0)
+
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
+
+    if rotate_angle_deg == 360.0:
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+
+    # 创建面
+    create_rotation_part_surface_common(p, rotate_angle_deg)
+
+    # 创建集合（面）
+    create_face_set_from_surface(p)
+
+    # 创建集合（体）
+    set_name = 'SET-CELL-FLANGE'
+    p.Set(cells=p.cells, name=set_name)
+
+    # 赋予SECTION属性
+    set_section_common(p)
+
+    # 生成网格
+    generate_part_mesh(p, element_size=element_size)
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
+
+
 def create_part_cover_front(model, part_name, dimension):
     # 变量赋值
     cover_r_out_front = dimension['cover_r_out_front']
@@ -2836,11 +2936,11 @@ if __name__ == "__main__":
     flange_thickness_offset_front = 2.5
     flange_fillet_radius_front = 10
 
-    flange_r_in_behind = 460
-    flange_r_out_behind = 843.5
+    flange_r_in_behind = 815.0
+    flange_r_out_behind = 1258.72
     flange_offset_behind = -shell_l_c1_out + cover_thickness_behind
-    flange_thickness_behind = 145.0
-    flange_slope_deg_behind = -84.88
+    flange_thickness_behind = 180.52
+    flange_slope_deg_behind = 92.78
     flange_thickness_offset_behind = 2.5
     flange_fillet_radius_behind = 10
 
@@ -2979,6 +3079,7 @@ if __name__ == "__main__":
     is_create_p_cover_front = True
     is_create_p_cover_behind = True
     is_create_p_flange_front = True
+    is_create_p_flange_behind = True
     # is_create_p_block = True
     # is_create_p_gap = True
     # is_create_p_block_penult = True
@@ -3089,6 +3190,23 @@ if __name__ == "__main__":
         if is_create_p_flange_front:
             p_flange_front = create_part_flange_front(model, 'PART-FLANGE-FRONT', front_flange_dimension)
             print('CREATE PART-FLANGE-FRONT DONE.')
+
+        behind_flange_dimension = {
+            'ellipse_ratio': ellipse_ratio,
+            'a_behind': a_behind,
+            'flange_r_in_behind': flange_r_in_behind,
+            'flange_r_out_behind': flange_r_out_behind,
+            'cover_r_out_behind': cover_r_out_behind,
+            'flange_offset_behind': flange_offset_behind,
+            'flange_thickness_behind': flange_thickness_behind,
+            'flange_slope_deg_behind': flange_slope_deg_behind,
+            'flange_thickness_offset_behind': flange_thickness_offset_behind,
+            'flange_fillet_radius_behind': flange_fillet_radius_behind,
+            'rotate_angle_deg': rotate_angle_deg,
+        }
+        if is_create_p_flange_behind:
+            p_flange_behind = create_part_flange_behind(model, 'PART-FLANGE-BEHIND', behind_flange_dimension)
+            print('CREATE PART-FLANGE-BEHIND DONE.')
 
         front_cover_dimension = {
             'cover_r_out_front': cover_r_out_front,
