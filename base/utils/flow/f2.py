@@ -2608,12 +2608,12 @@ def create_part_skirt_front(model, part_name, dimension):
     c1 = [0.0, 0.0]
     element_size = 50.0
 
-    point_1 = [c1[0], skirt_r_in_1_front]
-    point_2 = [c1[0], skirt_r_out_front]
-    point_3 = [c1[0] + skirt_l_2_front, skirt_r_out_front]
-    point_4 = [c1[0] + skirt_l_2_front, skirt_r_in_2_front]
-    point_5 = [c1[0] + skirt_l_1_front, skirt_r_in_2_front]
-    point_6 = [c1[0] + skirt_l_1_front, skirt_r_in_1_front]
+    point_1 = [c1[0] + skirt_offset_front, skirt_r_in_1_front]
+    point_2 = [c1[0] + skirt_offset_front, skirt_r_out_front]
+    point_3 = [c1[0] + skirt_offset_front + skirt_l_2_front, skirt_r_out_front]
+    point_4 = [c1[0] + skirt_offset_front + skirt_l_2_front, skirt_r_in_2_front]
+    point_5 = [c1[0] + skirt_offset_front + skirt_l_1_front, skirt_r_in_2_front]
+    point_6 = [c1[0] + skirt_offset_front + skirt_l_1_front, skirt_r_in_1_front]
 
     # SKETCH-SKIRT-FRONT
     s = model.ConstrainedSketch(name='SKETCH-SKIRT-FRONT', sheetSize=2000.0)
@@ -2635,6 +2635,9 @@ def create_part_skirt_front(model, part_name, dimension):
 
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
+
+    # 切割壳体
+    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-SHELL'], angle=360.0, flipRevolveDirection=OFF)
 
     # 创建面
     create_rotation_part_surface_common(p, rotate_angle_deg)
@@ -2887,6 +2890,8 @@ if __name__ == "__main__":
 
     beta = math.pi / n
 
+    is_create_p_shell = False
+    is_create_p_skirt_front = False
     is_create_p_insulation = False
     is_create_p_cover_front = False
     is_create_p_flange_front = False
@@ -2902,20 +2907,22 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_flange_front = True
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_flange_front = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -2960,18 +2967,6 @@ if __name__ == "__main__":
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
-        dimension = {
-            'skirt_r_out_front': 1835.5,
-            'skirt_r_in_1_front': 1702.5,
-            'skirt_r_in_2_front': 1797.585372,
-            'skirt_offset_front': -450,
-            'skirt_l_1_front': 23,
-            'skirt_l_2_front': 1650,
-            'shell_theta_out_deg_front': 0.49,
-            'rotate_angle_deg': rotate_angle_deg,
-        }
-        p_skirt_front = create_part_skirt_front(model, 'PART-SKIRT-FRONT', dimension)
-
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
             'ellipse_ratio': ellipse_ratio,
@@ -2993,7 +2988,23 @@ if __name__ == "__main__":
             'shell_points_behind': shell_points_behind,
             'rotate_angle_deg': rotate_angle_deg,
         }
-        p_shell = create_part_shell(model, 'PART-SHELL', shell_dimension)
+        if is_create_p_shell:
+            p_shell = create_part_shell(model, 'PART-SHELL', shell_dimension)
+            print('CREATE PART-SHELL DONE.')
+
+        dimension = {
+            'skirt_r_out_front': 1835.5,
+            'skirt_r_in_1_front': 1702.5,
+            'skirt_r_in_2_front': 1797.585372,
+            'skirt_offset_front': -450.0,
+            'skirt_l_1_front': 23.0,
+            'skirt_l_2_front': 1650.0,
+            'shell_theta_out_deg_front': 0.49,
+            'rotate_angle_deg': rotate_angle_deg,
+        }
+        if is_create_p_skirt_front:
+            p_skirt_front = create_part_skirt_front(model, 'PART-SKIRT-FRONT', dimension)
+            print('CREATE PART-SKIRT-FRONT DONE.')
 
         front_flange_dimension = {
             'ellipse_ratio': ellipse_ratio,
@@ -3180,6 +3191,7 @@ if __name__ == "__main__":
             p_cover_front = model.parts['PART-COVER-FRONT']
             p_flange_front = model.parts['PART-FLANGE-FRONT']
             p_shell = model.parts['PART-SHELL']
+            p_skirt_front = model.parts['PART-SKIRT-FRONT']
             for p in model.parts.values():
                 p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -3210,6 +3222,7 @@ if __name__ == "__main__":
                 ('INSULATION', p_insulation),
                 ('COVER-FRONT', p_cover_front),
                 ('FLANGE-FRONT', p_flange_front),
+                ('SKIRT-FRONT', p_skirt_front),
                 ('SHELL', p_shell),
             ]
 
