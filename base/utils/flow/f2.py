@@ -2302,12 +2302,6 @@ def create_part_insulation(model, part_name, dimension):
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_insulation_r_in_behind)
     create_surface_on_cylinder(p, cylinder, 'SURFACE-RIN-BEHIND')
 
-    # p1 = (0.0, 0.0, 0.0)
-    # p2 = (1.0, 0.0, 0.0)
-    # p3 = (0.0, 1.0, 0.0)
-    # plane = Plane(p1, p2, p3)
-    # create_surface_on_plane(p, plane, 'SURFACE-T0')
-
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
@@ -3305,9 +3299,9 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
     is_create_p_insulation = True
