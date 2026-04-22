@@ -2622,27 +2622,27 @@ def create_part_cover_behind(model, part_name, dimension):
     return p
 
 
-def create_part_shell(model, part_name, shell_dimension):
+def create_part_shell(model, part_name, dimension):
     # 变量赋值
-    l_c1_c2 = shell_dimension['l_c1_c2']
-    ellipse_ratio = shell_dimension['ellipse_ratio']
-    shell_r_in = shell_dimension['shell_r_in']
-    shell_r_out = shell_dimension['shell_r_out']
-    a_front = shell_dimension['a_front']
-    a_behind = shell_dimension['a_behind']
-    shell_theta_in_deg_front = shell_dimension['shell_theta_in_deg_front']
-    shell_theta_in_deg_behind = shell_dimension['shell_theta_in_deg_behind']
-    shell_theta_out_deg_front = shell_dimension['shell_theta_out_deg_front']
-    shell_theta_out_deg_behind = shell_dimension['shell_theta_out_deg_behind']
-    shell_r_out_at_a_front = shell_dimension['shell_r_out_at_a_front']
-    shell_r_out_at_a_behind = shell_dimension['shell_r_out_at_a_behind']
-    shell_r_in_front = shell_dimension['shell_r_in_front']
-    shell_r_in_behind = shell_dimension['shell_r_in_behind']
-    shell_l_c1_out = shell_dimension['shell_l_c1_out']
-    shell_l_c2_out = shell_dimension['shell_l_c2_out']
-    shell_points_front = shell_dimension['shell_points_front']
-    shell_points_behind = shell_dimension['shell_points_behind']
-    rotate_angle_deg = shell_dimension['rotate_angle_deg']
+    l_c1_c2 = dimension['l_c1_c2']
+    ellipse_ratio = dimension['ellipse_ratio']
+    shell_r_in = dimension['shell_r_in']
+    shell_r_out = dimension['shell_r_out']
+    a_front = dimension['a_front']
+    a_behind = dimension['a_behind']
+    shell_theta_in_deg_front = dimension['shell_theta_in_deg_front']
+    shell_theta_in_deg_behind = dimension['shell_theta_in_deg_behind']
+    shell_theta_out_deg_front = dimension['shell_theta_out_deg_front']
+    shell_theta_out_deg_behind = dimension['shell_theta_out_deg_behind']
+    shell_r_out_at_a_front = dimension['shell_r_out_at_a_front']
+    shell_r_out_at_a_behind = dimension['shell_r_out_at_a_behind']
+    shell_r_in_front = dimension['shell_r_in_front']
+    shell_r_in_behind = dimension['shell_r_in_behind']
+    shell_l_c1_out = dimension['shell_l_c1_out']
+    shell_l_c2_out = dimension['shell_l_c2_out']
+    shell_points_front = dimension['shell_points_front']
+    shell_points_behind = dimension['shell_points_behind']
+    rotate_angle_deg = dimension['rotate_angle_deg']
 
     # 基本参数
     c1 = [0.0, 0.0]
@@ -2779,12 +2779,6 @@ def create_part_skirt_front(model, part_name, dimension):
     s.Line(point1=point_5, point2=point_6)
     s.Line(point1=point_6, point2=point_1)
 
-    # s.Spot(point=point_1)
-    # s.Spot(point=point_2)
-    # s.Spot(point=point_3)
-    # s.Spot(point=point_4)
-    # s.Spot(point=point_5)
-
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
     # 生成基础体
@@ -2801,7 +2795,7 @@ def create_part_skirt_front(model, part_name, dimension):
 
     # 截面剖分
     cut_planes = [
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=skirt_l_1_front),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=point_5[0]),
     ]
     for plane in cut_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
@@ -2827,6 +2821,7 @@ def create_part_skirt_front(model, part_name, dimension):
 
 def create_part_skirt_behind(model, part_name, dimension):
     # 变量赋值
+    l_c1_c2 = dimension['l_c1_c2']
     skirt_r_out_behind = dimension['skirt_r_out_behind']
     skirt_r_in_1_behind = dimension['skirt_r_in_1_behind']
     skirt_r_in_2_behind = dimension['skirt_r_in_2_behind']
@@ -2836,15 +2831,15 @@ def create_part_skirt_behind(model, part_name, dimension):
     rotate_angle_deg = dimension['rotate_angle_deg']
 
     # 基本参数
-    c1 = [0.0, 0.0]
+    c2 = [l_c1_c2, 0.0]
     element_size = 50.0
 
-    point_1 = [c1[0] + skirt_offset_behind, skirt_r_in_1_behind]
-    point_2 = [c1[0] + skirt_offset_behind, skirt_r_out_behind]
-    point_3 = [c1[0] + skirt_offset_behind + skirt_l_2_behind, skirt_r_out_behind]
-    point_4 = [c1[0] + skirt_offset_behind + skirt_l_2_behind, skirt_r_in_2_behind]
-    point_5 = [c1[0] + skirt_offset_behind + skirt_l_1_behind, skirt_r_in_2_behind]
-    point_6 = [c1[0] + skirt_offset_behind + skirt_l_1_behind, skirt_r_in_1_behind]
+    point_1 = [c2[0] + skirt_offset_behind, skirt_r_in_1_behind]
+    point_2 = [c2[0] + skirt_offset_behind, skirt_r_out_behind]
+    point_3 = [c2[0] + skirt_offset_behind - skirt_l_2_behind, skirt_r_out_behind]
+    point_4 = [c2[0] + skirt_offset_behind - skirt_l_2_behind, skirt_r_in_2_behind]
+    point_5 = [c2[0] + skirt_offset_behind - skirt_l_1_behind, skirt_r_in_2_behind]
+    point_6 = [c2[0] + skirt_offset_behind - skirt_l_1_behind, skirt_r_in_1_behind]
 
     # SKETCH-SKIRT-BEHIND
     s = model.ConstrainedSketch(name='SKETCH-SKIRT-BEHIND', sheetSize=2000.0)
@@ -2855,12 +2850,6 @@ def create_part_skirt_behind(model, part_name, dimension):
     s.Line(point1=point_4, point2=point_5)
     s.Line(point1=point_5, point2=point_6)
     s.Line(point1=point_6, point2=point_1)
-
-    # s.Spot(point=point_1)
-    # s.Spot(point=point_2)
-    # s.Spot(point=point_3)
-    # s.Spot(point=point_4)
-    # s.Spot(point=point_5)
 
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
@@ -2878,7 +2867,7 @@ def create_part_skirt_behind(model, part_name, dimension):
 
     # 截面剖分
     cut_planes = [
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=skirt_l_1_behind),
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=point_5[0]),
     ]
     for plane in cut_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
@@ -3256,12 +3245,13 @@ if __name__ == "__main__":
             print('CREATE PART-SKIRT-FRONT DONE.')
 
         skirt_behind_dimension = {
+            'l_c1_c2': l_c1_c2,
             'skirt_r_out_behind': 1835.5,
             'skirt_r_in_1_behind': 1702.5,
             'skirt_r_in_2_behind': 1797.585372,
             'skirt_l_1_behind': 23.0,
             'skirt_l_2_behind': 1650.0,
-            'skirt_offset_behind': -450.0,
+            'skirt_offset_behind': 450.0,
             'rotate_angle_deg': rotate_angle_deg,
         }
         if is_create_p_skirt_behind:
