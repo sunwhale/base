@@ -2187,8 +2187,8 @@ def create_part_insulation(model, part_name, dimension):
     r2_behind = dimension['r2_behind']
     r3_behind = dimension['r3_behind']
 
-    front_points = [[-shell_l_c1_out, shell_insulation_r_out_front], [-shell_l_c1_out, shell_insulation_r_out_front - 2.5], [-1022.08, shell_insulation_r_out_front - 2.5], [-1022.08, 460], [-1022.08, 425]]
-    behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind], [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - 2.5], [18191.06, shell_insulation_r_out_behind - 2.5], [18191.06, 815], [18191.06, 775]]
+    front_points = [[-shell_l_c1_out, shell_insulation_r_out_front], [-shell_l_c1_out, shell_insulation_r_out_front - 2.5], [-1022.0, shell_insulation_r_out_front - 2.5], [-1022.0, 460], [-1022.0, 425]]
+    behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind], [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - 2.5], [18191.0, shell_insulation_r_out_behind - 2.5], [18191.0, 815], [18191.0, 775]]
 
     # 基本参数
     c1 = [0.0, 0.0]
@@ -2286,11 +2286,41 @@ def create_part_insulation(model, part_name, dimension):
     point_middle_in_rot = rotate_point_around_axis(point_middle_in, (0, 0, 0), (1, 0, 0), rotate_angle_deg / 2.0)
     p_face_middle = p.faces.findAt((point_middle_in_rot,))[0]
     p.Surface(side1Faces=p_face_middle.getFacesByFaceAngle(20), name='SURFACE-INNER')
+
+    point_middle_out = ((p_front_out_1[0] + p_behind_out_1[0]) / 2.0, (p_front_out_1[1] + p_behind_out_1[1]) / 2.0, 0)
+    point_middle_out_rot = rotate_point_around_axis(point_middle_out, (0, 0, 0), (1, 0, 0), rotate_angle_deg / 2.0)
+    p_face_middle = p.faces.findAt((point_middle_out_rot,))[0]
+    p.Surface(side1Faces=p_face_middle.getFacesByFaceAngle(20), name='SURFACE-OUTER')
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_front)
+    create_surface_on_cylinder(p, cylinder, 'SURFACE-ROUT-FRONT')
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_behind)
+    create_surface_on_cylinder(p, cylinder, 'SURFACE-ROUT-BEHIND')
+    combine_surfaces(p, ['SURFACE-OUTER', 'SURFACE-ROUT-FRONT', 'SURFACE-ROUT-BEHIND'], 'SURFACE-OUTER')
+
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_insulation_r_in_front)
+    create_surface_on_cylinder(p, cylinder, 'SURFACE-RIN-FRONT')
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_insulation_r_in_behind)
+    create_surface_on_cylinder(p, cylinder, 'SURFACE-RIN-BEHIND')
+
+    # p1 = (0.0, 0.0, 0.0)
+    # p2 = (1.0, 0.0, 0.0)
+    # p3 = (0.0, 1.0, 0.0)
+    # plane = Plane(p1, p2, p3)
+    # create_surface_on_plane(p, plane, 'SURFACE-T0')
+
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
     if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
+        p.Surface(side1Faces=p_faces, name='SURFACE-FLANGE')
+
+    p_faces_1 = p.faces.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
+    p_faces_2 = p.surfaces['SURFACE-FLANGE'].faces
+    create_surface_by_intersection(p, p_faces_1, p_faces_2, 'SURFACE-FLANGE-FRONT')
+
+    p_faces_1 = p.faces.getByBoundingBox(c2[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
+    p_faces_2 = p.surfaces['SURFACE-FLANGE'].faces
+    create_surface_by_intersection(p, p_faces_1, p_faces_2, 'SURFACE-FLANGE-BEHIND')
 
     # 截面剖分
     if rotate_angle_deg == 360.0:
@@ -3007,6 +3037,16 @@ def create_surface_on_plane(p, plane, surface_name):
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for face_id in range(len(p.faces)):
         if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name=surface_name)
+
+
+def create_surface_by_intersection(p, p_face_1, p_face_2, surface_name):
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p_face_1:
+        if face in p_face_2:
+            face_id = face.index
             p_faces += p.faces[face_id:face_id + 1]
     if p_faces:
         p.Surface(side1Faces=p_faces, name=surface_name)
