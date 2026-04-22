@@ -2467,6 +2467,57 @@ def create_part_cover_front(model, part_name, dimension):
     return p
 
 
+def create_part_cover_behind(model, part_name, dimension):
+    # 变量赋值
+    cover_r_out_behind = dimension['cover_r_out_behind']
+    cover_thickness_behind = dimension['cover_thickness_behind']
+    cover_offset_behind = dimension['cover_offset_behind']
+    rotate_angle_deg = dimension['rotate_angle_deg']
+
+    # 基本参数
+    element_size = 50.0
+    point_1 = [cover_offset_behind, 0.0]
+    point_2 = [cover_offset_behind + cover_thickness_behind, 0.0]
+    point_3 = [cover_offset_behind + cover_thickness_behind, cover_r_out_behind]
+    point_4 = [cover_offset_behind, cover_r_out_behind]
+
+    # SKETCH-COVER-BEHIND
+    s = model.ConstrainedSketch(name='SKETCH-COVER-BEHIND', sheetSize=2000.0)
+    s.Line(point1=point_1, point2=point_2)
+    s.Line(point1=point_2, point2=point_3)
+    s.Line(point1=point_3, point2=point_4)
+    s.Line(point1=point_1, point2=point_4)
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
+
+    # 创建面
+    create_rotation_part_surface_common(p, rotate_angle_deg)
+
+    # 创建集合（面）
+    create_face_set_from_surface(p)
+
+    # 截面剖分
+    if rotate_angle_deg == 360.0:
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+
+    # 创建集合（体）
+    set_name = 'SET-CELL-COVER'
+    p.Set(cells=p.cells, name=set_name)
+
+    # 赋予SECTION属性
+    set_section_common(p)
+
+    # 生成网格
+    generate_part_mesh(p, element_size=element_size)
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
+
+
 def create_part_shell(model, part_name, shell_dimension):
     # 变量赋值
     l_c1_c2 = shell_dimension['l_c1_c2']
@@ -2754,9 +2805,9 @@ if __name__ == "__main__":
     shell_theta_in_deg_front = 0.24
     shell_theta_in_deg_behind = 0.24
     shell_r_in_front = 562.5
-    shell_r_in_behind = 948.99
+    shell_r_in_behind = 942.5
     shell_l_c1_out = 1105.75
-    shell_l_c2_out = 968.88
+    shell_l_c2_out = 968.46
 
     shell_insulation_theta_in_deg_front = 0.16
     shell_insulation_theta_in_deg_behind = 0.16
@@ -2769,17 +2820,29 @@ if __name__ == "__main__":
     shell_insulation_r_in_front = 425.0
     shell_insulation_r_in_behind = 775.0
 
-    cover_r_out_front = 560
+    cover_r_out_front = 560.0
     cover_thickness_front = 68.0
     cover_offset_front = -shell_l_c1_out
 
-    flange_r_in_front = 460
+    cover_r_out_behind = 940.0
+    cover_thickness_behind = 43.0
+    cover_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
+
+    flange_r_in_front = 460.0
     flange_r_out_front = 843.5
     flange_offset_front = -shell_l_c1_out + cover_thickness_front
     flange_thickness_front = 145.0
     flange_slope_deg_front = -84.88
     flange_thickness_offset_front = 2.5
     flange_fillet_radius_front = 10
+
+    flange_r_in_behind = 460
+    flange_r_out_behind = 843.5
+    flange_offset_behind = -shell_l_c1_out + cover_thickness_behind
+    flange_thickness_behind = 145.0
+    flange_slope_deg_behind = -84.88
+    flange_thickness_offset_behind = 2.5
+    flange_fillet_radius_behind = 10
 
     shell_points_front = [
         [0.0, 1797],
@@ -2796,7 +2859,7 @@ if __name__ == "__main__":
         [-1057.685571407338, 669.949503482999],
         [-1075.649137556998, 653.140905494465],
         [-1084.860920203, 642.6012150702],
-        [-1092.443316670377,629.376854130482],
+        [-1092.443316670377, 629.376854130482],
         [-1096.99501445648, 617.84423753983],
         [-1101.591557792179, 600.351456585038],
         [-1104.333555627274, 583.53],
@@ -2822,8 +2885,7 @@ if __name__ == "__main__":
         [18258.4649372841, 988.825237127162],
         [18263.9764820367, 973.04],
         [18266.9140438863, 959.359404731315],
-        [18268.88, 948.99],
-        # [18268.46214527, 942.5]
+        [18268.46, 942.5]
     ]
 
     if p3_front[1] > d / 2.0:
@@ -2915,6 +2977,7 @@ if __name__ == "__main__":
     is_create_p_skirt_front = True
     is_create_p_insulation = True
     is_create_p_cover_front = True
+    is_create_p_cover_behind = True
     is_create_p_flange_front = True
     # is_create_p_block = True
     # is_create_p_gap = True
@@ -3036,6 +3099,16 @@ if __name__ == "__main__":
         if is_create_p_cover_front:
             p_cover_front = create_part_cover_front(model, 'PART-COVER-FRONT', front_cover_dimension)
             print('CREATE PART-COVER-FRONT DONE.')
+
+        behind_cover_dimension = {
+            'cover_r_out_behind': cover_r_out_behind,
+            'cover_thickness_behind': cover_thickness_behind,
+            'cover_offset_behind': cover_offset_behind,
+            'rotate_angle_deg': rotate_angle_deg
+        }
+        if is_create_p_cover_behind:
+            p_cover_behind = create_part_cover_behind(model, 'PART-COVER-BEHIND', behind_cover_dimension)
+            print('CREATE PART-COVER-BEHIND DONE.')
 
         insulation_dimension = {
             'l_c1_c2': l_c1_c2,
