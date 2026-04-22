@@ -3149,9 +3149,8 @@ if __name__ == "__main__":
 
     nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
-    block[:, :] = True
-    # block[1, 0] = True
-    # block[:, 0] = True
+    # block[:, :] = True
+    block[:, 0] = True
     # block[3, 2] = True
     # block[:, 8] = True
 
@@ -3648,10 +3647,10 @@ if __name__ == "__main__":
                 a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
                 a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-                # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                # a.Instance(name=instance_name, part=gap_dict[block_type], dependent=ON)
-                # a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
-                # a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                a.Instance(name=instance_name, part=gap_dict[block_type], dependent=ON)
+                a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
+                a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
             model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
