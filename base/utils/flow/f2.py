@@ -2154,6 +2154,8 @@ def create_part_insulation(model, part_name, dimension):
     shell_insulation_r_in_front = dimension['shell_insulation_r_in_front']
     shell_insulation_r_in_behind = dimension['shell_insulation_r_in_behind']
 
+    shell_l_c1_out = dimension['shell_l_c1_out']
+
     rotate_angle_deg = dimension['rotate_angle_deg']
 
     p0_front = dimension['p0_front']
@@ -2172,7 +2174,7 @@ def create_part_insulation(model, part_name, dimension):
     r2_behind = dimension['r2_behind']
     r3_behind = dimension['r3_behind']
 
-    front_points = [[-1103.36, shell_insulation_r_out_front], [-1103.36, shell_insulation_r_out_front - 2.5], [-1022.08, shell_insulation_r_out_front - 2.5], [-1022.08, 460], [-1022.08, 425]]
+    front_points = [[-shell_l_c1_out, shell_insulation_r_out_front], [-shell_l_c1_out, shell_insulation_r_out_front - 2.5], [-1022.08, shell_insulation_r_out_front - 2.5], [-1022.08, 460], [-1022.08, 425]]
     behind_points = [[18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775]]
 
     # 基本参数
@@ -2751,9 +2753,9 @@ if __name__ == "__main__":
     shell_r_out_at_a_behind = 1797
     shell_theta_in_deg_front = 0.24
     shell_theta_in_deg_behind = 0.24
-    shell_r_in_front = 570.53
+    shell_r_in_front = 562.5
     shell_r_in_behind = 948.99
-    shell_l_c1_out = 1103.36
+    shell_l_c1_out = 1105.75
     shell_l_c2_out = 968.88
 
     shell_insulation_theta_in_deg_front = 0.16
@@ -2767,17 +2769,17 @@ if __name__ == "__main__":
     shell_insulation_r_in_front = 425.0
     shell_insulation_r_in_behind = 775.0
 
+    cover_r_out_front = 560
+    cover_thickness_front = 68.0
+    cover_offset_front = -shell_l_c1_out
+
     flange_r_in_front = 460
     flange_r_out_front = 843.5
-    flange_offset_front = -1035.18
-    flange_thickness_front = 142.6
+    flange_offset_front = -shell_l_c1_out + cover_thickness_front
+    flange_thickness_front = 145.0
     flange_slope_deg_front = -84.88
     flange_thickness_offset_front = 2.5
     flange_fillet_radius_front = 10
-
-    cover_r_out_front = 560
-    cover_thickness_front = 68.18
-    cover_offset_front = -1103.36
 
     shell_points_front = [
         [0.0, 1797],
@@ -2790,13 +2792,15 @@ if __name__ == "__main__":
         [-976.489020854007, 830.029564571925],
         [-1021.401502536258, 729.78],
         [-1037.970411928135, 699.224089212695],
-        [-1059.35003157657, 667.852914952923],
+        [-1044.829032998202, 688.117183117819],
+        [-1057.685571407338, 669.949503482999],
+        [-1075.649137556998, 653.140905494465],
         [-1084.860920203, 642.6012150702],
-        [-1095.077521512233, 623.181727687617],
-        [-1101.015191657317, 603.060595178327],
-        [-1104.141102473345, 585.07250277308],
-        [-1103.36, 570.53],
-        # [-1105.7555870114, 562.5]
+        [-1092.443316670377,629.376854130482],
+        [-1096.99501445648, 617.84423753983],
+        [-1101.591557792179, 600.351456585038],
+        [-1104.333555627274, 583.53],
+        [-1105.75, 562.5]
     ]
 
     shell_points_behind = [
@@ -2912,17 +2916,17 @@ if __name__ == "__main__":
     is_create_p_insulation = True
     is_create_p_cover_front = True
     is_create_p_flange_front = True
-    is_create_p_block = True
-    is_create_p_gap = True
-    is_create_p_block_penult = True
-    is_create_p_gap_penult = True
-    is_create_p_block_front = True
-    is_create_p_gap_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_create_p_block = True
+    # is_create_p_gap = True
+    # is_create_p_block_penult = True
+    # is_create_p_gap_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_gap_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -3057,6 +3061,8 @@ if __name__ == "__main__":
 
             'shell_insulation_r_in_front': shell_insulation_r_in_front,
             'shell_insulation_r_in_behind': shell_insulation_r_in_behind,
+
+            'shell_l_c1_out': shell_l_c1_out,
 
             'p0_front': p0_front,
             'theta0_deg_front': theta0_deg_front,
