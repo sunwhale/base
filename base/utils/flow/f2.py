@@ -2422,13 +2422,18 @@ def create_part_insulation(model, part_name, dimension):
     cut_planes = [
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_front_out_3[0]),
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_out_3[0]),
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=(p_front_out_3[0] - shell_l_c1_out) / 2.0),
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=(p_behind_out_3[0] + l_c1_c2 + shell_l_c2_out) / 2.0),
+        # p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=(p_front_out_3[0] - shell_l_c1_out) / 2.0),
+        # p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=(p_behind_out_3[0] + l_c1_c2 + shell_l_c2_out) / 2.0),
     ]
     for plane in cut_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
 
     # 生成网格
+    # 切割后的体在前后法兰切处存在一些边被打断，导致网格划分失败，因此先进行虚拟拓扑合并处理
+    p.createVirtualTopology(mergeShortEdges=True, shortEdgeThreshold=100.0,
+                            mergeSmallFaces=False, mergeSliverFaces=False, mergeSmallAngleFaces=False,
+                            mergeThinStairFaces=False, ignoreRedundantEntities=False,
+                            cornerAngleTolerance=30.0, applyBlendControls=False)
     generate_part_mesh(p, element_size=element_size)
 
     # 创建集合（体）
