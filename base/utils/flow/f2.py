@@ -2346,42 +2346,15 @@ def create_part_insulation(model, part_name, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
 
     # 面扩展剖分
-    cylinder = Cylinder((0, 0, 0), (1, 0, 0), flange_r_out_front)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
-    part_partition_by_cylinder(p, cylinder, p_cells_front)
+    for radius in [flange_r_out_front, shell_r_in_front - shell_insulation_thickness_at_flange_front, shell_r_in_front, flange_r_in_front]:
+        cylinder = Cylinder((0, 0, 0), (1, 0, 0), radius)
+        p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
+        part_partition_by_cylinder(p, cylinder, p_cells_front)
 
-    cylinder = Cylinder((0, 0, 0), (1, 0, 0), flange_r_out_behind)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
-    part_partition_by_cylinder(p, cylinder, p_cells_behind)
-
-    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_front - shell_insulation_thickness_at_flange_front)
-    p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
-    part_partition_by_cylinder(p, cylinder, p_cells_front)
-
-    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_behind - shell_insulation_thickness_at_flange_behind)
-    p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
-    part_partition_by_cylinder(p, cylinder, p_cells_behind)
-
-    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_front)
-    p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
-    part_partition_by_cylinder(p, cylinder, p_cells_front)
-
-    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_behind)
-    p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
-    part_partition_by_cylinder(p, cylinder, p_cells_behind)
-
-    cylinder = Cylinder((0, 0, 0), (1, 0, 0), flange_r_in_front)
-    p_cells_front = p.cells.getByBoundingBox(-PEN, -PEN, -PEN, c1[0], PEN, PEN)
-    part_partition_by_cylinder(p, cylinder, p_cells_front)
-
-    cylinder = Cylinder((0, 0, 0), (1, 0, 0), flange_r_in_behind)
-    p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
-    part_partition_by_cylinder(p, cylinder, p_cells_behind)
+    for radius in [flange_r_out_behind, shell_r_in_behind - shell_insulation_thickness_at_flange_behind, shell_r_in_behind, flange_r_in_behind]:
+        cylinder = Cylinder((0, 0, 0), (1, 0, 0), radius)
+        p_cells_behind = p.cells.getByBoundingBox(c1[0], -PEN, -PEN, c2[0] + PEN, PEN, PEN)
+        part_partition_by_cylinder(p, cylinder, p_cells_behind)
 
     # 截面剖分
     cut_planes = [
