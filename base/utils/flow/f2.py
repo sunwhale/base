@@ -2335,13 +2335,13 @@ def create_part_flange_front(model, part_name, dimension):
     c1 = [0.0, 0.0]
     element_size = 20.0
     b_front = a_front / ellipse_ratio
-    ellipse = Ellipse(0.0, 0.0, a_front, b_front, long_axis='y')
-    ellipse_top_point = [0.0, a_front]
-    ellipse_right_point = [b_front, 0.0]
+    ellipse = Ellipse(c1[0], c1[1], a_front, b_front, long_axis='y')
+    ellipse_top_point = [c1[0], a_front]
+    ellipse_right_point = [c1[0] + b_front, 0.0]
     r_mid = cover_r_out_front + flange_thickness_offset_front
     point_fillet = [ellipse.x_from_y(r_mid)[1], r_mid]
     point_left_conner = [flange_offset_front, r_mid]
-    point_temp_0 = [0.0, flange_r_out_front]
+    point_temp_0 = [c1[0], flange_r_out_front]
     point_temp_1 = [ellipse.x_from_y(flange_r_out_front)[1], flange_r_out_front]
 
     # SKETCH-FLANGE-FRONT
@@ -2418,7 +2418,7 @@ def create_part_flange_front(model, part_name, dimension):
 
 def create_part_flange_behind(model, part_name, dimension):
     # 变量赋值
-    # l_c1_c2 = dimension['l_c1_c2']
+    l_c1_c2 = dimension['l_c1_c2']
     ellipse_ratio = dimension['ellipse_ratio']
     a_behind = dimension['a_behind']
     flange_thickness_offset_behind = dimension['flange_thickness_offset_behind']
@@ -2432,24 +2432,25 @@ def create_part_flange_behind(model, part_name, dimension):
     rotate_angle_deg = dimension['rotate_angle_deg']
 
     # 基本参数
-    c1 = [0.0, 0.0]
+    c2 = [l_c1_c2, 0.0]
     element_size = 20.0
     b_behind = a_behind / ellipse_ratio
-    ellipse = Ellipse(0.0, 0.0, a_behind, b_behind, long_axis='y')
-    ellipse_top_point = [0.0, a_behind]
-    ellipse_right_point = [b_behind, 0.0]
+    ellipse = Ellipse(c2[0], c2[1], a_behind, b_behind, long_axis='y')
+    ellipse_top_point = [c2[0], a_behind]
+    ellipse_left_point = [c2[0] - b_behind, 0.0]
     r_mid = cover_r_out_behind + flange_thickness_offset_behind
-    point_fillet = [ellipse.x_from_y(r_mid)[1], r_mid]
-    point_left_conner = [flange_offset_behind, r_mid]
-    point_temp_0 = [0.0, flange_r_out_behind]
-    point_temp_1 = [ellipse.x_from_y(flange_r_out_behind)[1], flange_r_out_behind]
+    point_fillet = [ellipse.x_from_y(r_mid)[0], r_mid]
+    point_left_conner = [flange_offset_behind - flange_thickness_offset_behind, r_mid]
+    point_right_conner = [flange_offset_behind, r_mid]
+    point_temp_0 = [c2[0], flange_r_out_behind]
+    point_temp_1 = [ellipse.x_from_y(flange_r_out_behind)[0], flange_r_out_behind]
 
     # SKETCH-FLANGE-BEHIND
     s = model.ConstrainedSketch(name='SKETCH-FLANGE-BEHIND', sheetSize=2000.0)
 
-    e = s.EllipseByCenterPerimeter(center=c1, axisPoint1=ellipse_top_point, axisPoint2=ellipse_right_point)
-    s.Line(point1=point_fillet, point2=point_left_conner)
-    s.autoTrimCurve(curve1=e, point1=ellipse_right_point)
+    e = s.EllipseByCenterPerimeter(center=c2, axisPoint1=ellipse_top_point, axisPoint2=ellipse_left_point)
+    s.Line(point1=point_fillet, point2=point_right_conner)
+    s.autoTrimCurve(curve1=e, point1=ellipse_left_point)
 
     # s.FilletByRadius(radius=flange_fillet_radius_behind,
     #                  curve1=s.geometry.findAt(ellipse_top_point), nearPoint1=(ellipse.x_from_y(r_mid + 1.0)[1], r_mid + 1.0),
@@ -2458,7 +2459,7 @@ def create_part_flange_behind(model, part_name, dimension):
     geom_list = []
     for g in s.geometry.values():
         geom_list.append(g)
-    s.offset(distance=flange_thickness_offset_behind, objectList=geom_list, side=RIGHT)
+    s.offset(distance=flange_thickness_offset_behind, objectList=geom_list, side=LEFT)
     s.delete(objectList=geom_list)
 
     s.Line(point1=point_temp_0, point2=point_temp_1)
@@ -2470,13 +2471,13 @@ def create_part_flange_behind(model, part_name, dimension):
     curve = s.geometry.findAt((point_temp_1))
     s.autoTrimCurve(curve1=curve, point1=point_temp_1)
 
-    point_left_conner_offset = [point_left_conner[0], cover_r_out_behind]
+    point_right_conner_offset = [point_right_conner[0], cover_r_out_behind]
 
-    point_1 = [point_left_conner_offset[0], flange_r_in_behind]
-    point_2 = [point_left_conner_offset[0] + flange_thickness_behind, flange_r_in_behind]
-    point_3 = [point_left_conner_offset[0] + flange_thickness_behind, cover_r_out_behind]
+    point_1 = [point_right_conner_offset[0], flange_r_in_behind]
+    point_2 = [point_right_conner_offset[0] - flange_thickness_behind, flange_r_in_behind]
+    point_3 = [point_right_conner_offset[0] - flange_thickness_behind, cover_r_out_behind]
 
-    s.Line(point1=point_left_conner_offset, point2=point_1)
+    s.Line(point1=point_right_conner_offset, point2=point_1)
     s.Line(point1=point_1, point2=point_2)
     s.Line(point1=point_2, point2=point_3)
 
@@ -2938,8 +2939,8 @@ if __name__ == "__main__":
 
     flange_r_in_behind = 815.0
     flange_r_out_behind = 1258.72
-    flange_offset_behind = -shell_l_c1_out + cover_thickness_behind
-    flange_thickness_behind = 180.52
+    flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
+    flange_thickness_behind = 179.0
     flange_slope_deg_behind = 92.78
     flange_thickness_offset_behind = 2.5
     flange_fillet_radius_behind = 10
@@ -3060,6 +3061,7 @@ if __name__ == "__main__":
     is_create_p_skirt_front = False
     is_create_p_insulation = False
     is_create_p_cover_front = False
+    is_create_p_cover_behind = False
     is_create_p_flange_front = False
     is_create_p_block = False
     is_create_p_gap = False
@@ -3192,6 +3194,7 @@ if __name__ == "__main__":
             print('CREATE PART-FLANGE-FRONT DONE.')
 
         behind_flange_dimension = {
+            'l_c1_c2': l_c1_c2,
             'ellipse_ratio': ellipse_ratio,
             'a_behind': a_behind,
             'flange_r_in_behind': flange_r_in_behind,
