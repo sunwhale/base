@@ -2751,14 +2751,11 @@ def create_part_shell(model, part_name, shell_dimension):
 def create_part_skirt_front(model, part_name, dimension):
     # 变量赋值
     skirt_r_out_front = dimension['skirt_r_out_front']
-    skirt_offset_front = dimension['skirt_offset_front']
-
     skirt_r_in_1_front = dimension['skirt_r_in_1_front']
     skirt_r_in_2_front = dimension['skirt_r_in_2_front']
-
     skirt_l_1_front = dimension['skirt_l_1_front']
     skirt_l_2_front = dimension['skirt_l_2_front']
-
+    skirt_offset_front = dimension['skirt_offset_front']
     rotate_angle_deg = dimension['rotate_angle_deg']
 
     # 基本参数
@@ -3165,18 +3162,17 @@ if __name__ == "__main__":
             p_shell = create_part_shell(model, 'PART-SHELL', shell_dimension)
             print('CREATE PART-SHELL DONE.')
 
-        dimension = {
+        skirt_front_dimension = {
             'skirt_r_out_front': 1835.5,
             'skirt_r_in_1_front': 1702.5,
             'skirt_r_in_2_front': 1797.585372,
             'skirt_offset_front': -450.0,
             'skirt_l_1_front': 23.0,
             'skirt_l_2_front': 1650.0,
-            'shell_theta_out_deg_front': 0.49,
             'rotate_angle_deg': rotate_angle_deg,
         }
         if is_create_p_skirt_front:
-            p_skirt_front = create_part_skirt_front(model, 'PART-SKIRT-FRONT', dimension)
+            p_skirt_front = create_part_skirt_front(model, 'PART-SKIRT-FRONT', skirt_front_dimension)
             print('CREATE PART-SKIRT-FRONT DONE.')
 
         front_flange_dimension = {
