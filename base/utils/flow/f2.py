@@ -3229,25 +3229,25 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
     is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -3317,7 +3317,7 @@ if __name__ == "__main__":
             p_shell = create_part_shell(model, 'PART-SHELL', shell_dimension)
             print('CREATE PART-SHELL DONE.')
 
-        skirt_front_dimension = {
+        front_skirt_dimension = {
             'skirt_r_out_front': 1835.5,
             'skirt_r_in_1_front': 1702.5,
             'skirt_r_in_2_front': 1797.585372,
@@ -3327,10 +3327,10 @@ if __name__ == "__main__":
             'rotate_angle_deg': rotate_angle_deg,
         }
         if is_create_p_skirt_front:
-            p_skirt_front = create_part_skirt_front(model, 'PART-SKIRT-FRONT', skirt_front_dimension)
+            p_skirt_front = create_part_skirt_front(model, 'PART-SKIRT-FRONT', front_skirt_dimension)
             print('CREATE PART-SKIRT-FRONT DONE.')
 
-        skirt_behind_dimension = {
+        behind_skirt_dimension = {
             'l_c1_c2': l_c1_c2,
             'skirt_r_out_behind': 1835.5,
             'skirt_r_in_1_behind': 1702.5,
@@ -3341,7 +3341,7 @@ if __name__ == "__main__":
             'rotate_angle_deg': rotate_angle_deg,
         }
         if is_create_p_skirt_behind:
-            p_skirt_behind = create_part_skirt_behind(model, 'PART-SKIRT-BEHIND', skirt_behind_dimension)
+            p_skirt_behind = create_part_skirt_behind(model, 'PART-SKIRT-BEHIND', behind_skirt_dimension)
             print('CREATE PART-SKIRT-BEHIND DONE.')
 
         front_flange_dimension = {
@@ -3568,8 +3568,11 @@ if __name__ == "__main__":
             p_insulation = model.parts['PART-INSULATION']
             p_cover_front = model.parts['PART-COVER-FRONT']
             p_flange_front = model.parts['PART-FLANGE-FRONT']
-            p_shell = model.parts['PART-SHELL']
             p_skirt_front = model.parts['PART-SKIRT-FRONT']
+            p_cover_behind = model.parts['PART-COVER-BEHIND']
+            p_flange_behind = model.parts['PART-FLANGE-BEHIND']
+            p_skirt_behind = model.parts['PART-SKIRT-BEHIND']
+            p_shell = model.parts['PART-SHELL']
             for p in model.parts.values():
                 p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -3601,6 +3604,9 @@ if __name__ == "__main__":
                 ('COVER-FRONT', p_cover_front),
                 ('FLANGE-FRONT', p_flange_front),
                 ('SKIRT-FRONT', p_skirt_front),
+                ('COVER-BEHIND', p_cover_behind),
+                ('FLANGE-BEHIND', p_flange_behind),
+                ('SKIRT-BEHIND', p_skirt_behind),
                 ('SHELL', p_shell),
             ]
 
