@@ -2386,6 +2386,9 @@ def create_part_insulation(model, part_name, dimension):
                             cornerAngleTolerance=30.0, applyBlendControls=False)
     generate_part_mesh(p, element_size=element_size)
 
+    # 创建集合（面）
+    create_face_set_from_surface(p)
+
     # 创建集合（体）
     set_name = 'SET-CELL-INSULATION'
     p.Set(cells=p.cells, name=set_name)
@@ -2482,6 +2485,11 @@ def create_part_flange_front(model, part_name, dimension):
 
     # 创建面
     create_rotation_part_surface_common(p, rotate_angle_deg)
+    # 通过排除法确定外表面
+    given_surface_names = list(p.surfaces.keys())
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -3305,11 +3313,10 @@ if __name__ == "__main__":
         model.HomogeneousSolidSection(name='SECTION-STEEL', material='MATERIAL-STEEL', thickness=None)
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
-        int_prop = model.ContactProperty('IntProp-1')
-        int_prop.TangentialBehavior(formulation=PENALTY, directionality=ISOTROPIC, slipRateDependency=OFF, pressureDependency=OFF, temperatureDependency=OFF,
-                                    dependencies=0, table=((0.01,),), shearStressLimit=None, maximumElasticSlip=FRACTION, fraction=0.005, elasticSlipStiffness=None)
-        int_prop.tangentialBehavior.setValues(formulation=FRICTIONLESS)
-        int_prop.NormalBehavior(pressureOverclosure=HARD, allowSeparation=ON, constraintEnforcementMethod=DEFAULT)
+        model.ContactProperty('IntProp-1')
+        model.interactionProperties['IntProp-1'].TangentialBehavior(formulation=FRICTIONLESS)
+        model.interactionProperties['IntProp-1'].CohesiveBehavior(defaultPenalties=OFF, table=((10000.0, 10000.0, 10000.0),))
+        model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
