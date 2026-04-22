@@ -2175,7 +2175,7 @@ def create_part_insulation(model, part_name, dimension):
     r3_behind = dimension['r3_behind']
 
     front_points = [[-shell_l_c1_out, shell_insulation_r_out_front], [-shell_l_c1_out, shell_insulation_r_out_front - 2.5], [-1022.08, shell_insulation_r_out_front - 2.5], [-1022.08, 460], [-1022.08, 425]]
-    behind_points = [[18035.4966776718, 1258.71680813786], [18031.0092568045, 1258.71680813786], [18046.48, 939.5], [18046.48, 815], [18191.06, 815], [18191.06, 775]]
+    behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind], [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - 2.5], [18191.06, shell_insulation_r_out_behind - 2.5], [18191.06, 815], [18191.06, 775]]
 
     # 基本参数
     c1 = [0.0, 0.0]
@@ -2263,6 +2263,9 @@ def create_part_insulation(model, part_name, dimension):
 
     # 切割前接头
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-FRONT'], angle=360.0, flipRevolveDirection=OFF)
+
+    # 切割后接头
+    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-BEHIND'], angle=360.0, flipRevolveDirection=OFF)
 
     # 创建面
     create_rotation_part_surface_common(p, rotate_angle_deg)
@@ -2916,8 +2919,8 @@ if __name__ == "__main__":
     shell_insulation_r_out = 1777.5
     shell_insulation_r_in_at_a_front = 1762.5
     shell_insulation_r_in_at_a_behind = 1762.5
-    shell_insulation_r_out_front = 562.5
-    shell_insulation_r_out_behind = 1260.0
+    shell_insulation_r_out_front = shell_r_in_front
+    shell_insulation_r_out_behind = shell_r_in_behind
     shell_insulation_r_in_front = 425.0
     shell_insulation_r_in_behind = 775.0
 
