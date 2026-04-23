@@ -3341,23 +3341,23 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
     is_open_parts_cae = True
     is_assemble = True
 
@@ -3390,7 +3390,7 @@ if __name__ == "__main__":
         Mdb()
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
-        model.setValues(globalJob='/home/dell/www/base/files/abaqus/70/5/Job-1.odb')
+        # model.setValues(globalJob='/home/dell/www/base/files/abaqus/70/5/Job-1.odb')
 
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
@@ -3407,9 +3407,9 @@ if __name__ == "__main__":
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
         model.ContactProperty('IntProp-1')
-        model.interactionProperties['IntProp-1'].TangentialBehavior(formulation=FRICTIONLESS)
-        model.interactionProperties['IntProp-1'].CohesiveBehavior(defaultPenalties=OFF, table=((10000.0, 10000.0, 10000.0),))
-        model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
+        # model.interactionProperties['IntProp-1'].TangentialBehavior(formulation=FRICTIONLESS)
+        model.interactionProperties['IntProp-1'].CohesiveBehavior(defaultPenalties=OFF, table=((1000000.0, 1000000.0, 1000000.0),))
+        # model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
@@ -3718,7 +3718,7 @@ if __name__ == "__main__":
             cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
 
             # 实例配置列表：(实例名称, 部件对象)
-            instances = [
+            rotation_instances = [
                 ('INSULATION', p_insulation),
                 ('COVER-FRONT', p_cover_front),
                 ('FLANGE-FRONT', p_flange_front),
@@ -3743,7 +3743,7 @@ if __name__ == "__main__":
             else:
                 z_rot_angle = 0.0
 
-            for name, part in instances:
+            for name, part in rotation_instances:
                 a.Instance(name=name, part=part, dependent=ON)
                 a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_y, angle=y_rot_angle)
                 a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_z, angle=z_rot_angle)
@@ -3782,10 +3782,67 @@ if __name__ == "__main__":
             surface_name_2 = 'SURFACE-OUTER'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            region1 = a.instances['FLANGE-BEHIND'].surfaces['SURFACE-TIE']
-            region2 = a.instances['FLANGE-BEHIND'].surfaces['SURFACE-TIE']
-            model.SurfaceToSurfaceContactStd(name='Int-1', createStepName='Initial', main=region1, secondary=region2, sliding=SMALL, thickness=ON, interactionProperty='IntProp-1', adjustMethod=NONE,
-                                             initialClearance=OMIT, datumAxis=None, clearanceRegion=None)
+            instance_name_1 = 'FLANGE-BEHIND'
+            surface_name_1 = 'SURFACE-TIE'
+            instance_name_2 = 'INSULATION'
+            surface_name_2 = 'SURFACE-FLANGE-BEHIND'
+            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
+            create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+            instance_name_1 = 'FLANGE-FRONT'
+            surface_name_1 = 'SURFACE-TIE'
+            instance_name_2 = 'INSULATION'
+            surface_name_2 = 'SURFACE-FLANGE-FRONT'
+            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
+            create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+            instance_name_1 = 'FLANGE-FRONT'
+            surface_name_1 = 'SURFACE-X0'
+            instance_name_2 = 'COVER-FRONT'
+            surface_name_2 = 'SURFACE-X1'
+            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
+            create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+            instance_name_1 = 'FLANGE-BEHIND'
+            surface_name_1 = 'SURFACE-X1'
+            instance_name_2 = 'COVER-BEHIND'
+            surface_name_2 = 'SURFACE-X0'
+            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
+            create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+            instance_name_1 = 'SKIRT-FRONT'
+            surface_name_1 = 'SURFACE-INNER'
+            instance_name_2 = 'SHELL'
+            surface_name_2 = 'SURFACE-OUTER'
+            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
+            create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+            instance_name_1 = 'SKIRT-BEHIND'
+            surface_name_1 = 'SURFACE-INNER'
+            instance_name_2 = 'SHELL'
+            surface_name_2 = 'SURFACE-OUTER'
+            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
+            create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+            for instance_name, _ in rotation_instances:
+                set_name = 'SET-SURFACE-T0'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                set_name = 'SET-SURFACE-T1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+            instance_name = 'INSULATION'
+            surface_name = 'SURFACE-INNER'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+
+            instance_name = 'SKIRT-FRONT'
+            set_name = 'SET-SURFACE-X0'
+            bc_name = 'BC-' + instance_name + '-' + set_name
+            model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
+                                 u1=UNSET, u2=UNSET, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
 
             # for block_loc, block_type in block_types.items():
             #     l, i = block_loc
