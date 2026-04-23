@@ -3772,7 +3772,7 @@ if __name__ == "__main__":
                 a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
                 a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-            model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
+            model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=0.1, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
 
             # 壳体内表面与绝热层外表面绑定
@@ -3782,46 +3782,40 @@ if __name__ == "__main__":
             surface_name_2 = 'SURFACE-OUTER'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            instance_name_1 = 'FLANGE-BEHIND'
-            surface_name_1 = 'SURFACE-TIE'
-            instance_name_2 = 'INSULATION'
-            surface_name_2 = 'SURFACE-FLANGE-BEHIND'
-            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
+            instance_name_1 = 'INSULATION'
+            surface_name_1 = 'SURFACE-FLANGE-FRONT'
+            instance_name_2 = 'FLANGE-FRONT'
+            surface_name_2 = 'SURFACE-TIE'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            instance_name_1 = 'FLANGE-FRONT'
-            surface_name_1 = 'SURFACE-TIE'
-            instance_name_2 = 'INSULATION'
-            surface_name_2 = 'SURFACE-FLANGE-FRONT'
-            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
+            instance_name_1 = 'INSULATION'
+            surface_name_1 = 'SURFACE-FLANGE-BEHIND'
+            instance_name_2 = 'FLANGE-BEHIND'
+            surface_name_2 = 'SURFACE-TIE'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            instance_name_1 = 'FLANGE-FRONT'
-            surface_name_1 = 'SURFACE-X0'
-            instance_name_2 = 'COVER-FRONT'
-            surface_name_2 = 'SURFACE-X1'
-            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
-            create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-
-            instance_name_1 = 'FLANGE-BEHIND'
+            instance_name_1 = 'COVER-FRONT'
             surface_name_1 = 'SURFACE-X1'
-            instance_name_2 = 'COVER-BEHIND'
+            instance_name_2 = 'FLANGE-FRONT'
             surface_name_2 = 'SURFACE-X0'
-            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
+            create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+            instance_name_1 = 'COVER-BEHIND'
+            surface_name_1 = 'SURFACE-X1'
+            instance_name_2 = 'FLANGE-BEHIND'
+            surface_name_2 = 'SURFACE-X0'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
             instance_name_1 = 'SKIRT-FRONT'
             surface_name_1 = 'SURFACE-INNER'
             instance_name_2 = 'SHELL'
             surface_name_2 = 'SURFACE-OUTER'
-            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
             instance_name_1 = 'SKIRT-BEHIND'
             surface_name_1 = 'SURFACE-INNER'
             instance_name_2 = 'SHELL'
             surface_name_2 = 'SURFACE-OUTER'
-            # create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Initial', 'IntProp-1')
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
             for instance_name, _ in rotation_instances:
