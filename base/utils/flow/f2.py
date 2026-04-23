@@ -3264,10 +3264,10 @@ if __name__ == "__main__":
     nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
     # block[:, :] = True
-    # block[:, 0] = True
+    block[:, 0] = True
     # block[:, 8] = True
-    block[0, 0] = True
-    block[1, 0] = True
+    # block[0, 0] = True
+    # block[1, 0] = True
 
     # setting_file = 'setting.json'
     # if os.path.exists(setting_file) and False:
@@ -3829,10 +3829,10 @@ if __name__ == "__main__":
                 bc_name = 'BC-' + instance_name + '-' + set_name
                 model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-            instance_name = 'INSULATION'
-            surface_name = 'SURFACE-INNER'
-            load_name = 'LOAD-' + instance_name + '-' + surface_name
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+            # instance_name = 'INSULATION'
+            # surface_name = 'SURFACE-INNER'
+            # load_name = 'LOAD-' + instance_name + '-' + surface_name
+            # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
 
             instance_name = 'SKIRT-FRONT'
             set_name = 'SET-SURFACE-X0'
@@ -3846,6 +3846,18 @@ if __name__ == "__main__":
                 surface_name_1 = 'SURFACE-TIE'
                 instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
                 surface_name_2 = 'SURFACE-TIE'
+                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+                instance_name_2 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                surface_name_2 = 'SURFACE-OUTER'
+                instance_name_1 = 'INSULATION'
+                surface_name_1 = 'SURFACE-INNER'
+                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+                instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
+                surface_name_2 = 'SURFACE-OUTER'
+                instance_name_1 = 'INSULATION'
+                surface_name_1 = 'SURFACE-INNER'
                 create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
             for tie_loc, tie_type in ties_types.items():
