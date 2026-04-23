@@ -2091,6 +2091,17 @@ def create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surf
         model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
 
 
+def create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, step_name, property_name):
+    region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+    region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+    contact_name = 'INT-%s-%s-%s-%s' % (instance_name_1, surface_name_1, instance_name_2, surface_name_2)
+    if major_version >= 2022:
+        model.SurfaceToSurfaceContactStd(name=contact_name, createStepName=step_name, main=region1, secondary=region2, sliding=SMALL, thickness=ON, interactionProperty=property_name, adjustMethod=NONE, initialClearance=OMIT, datumAxis=None,
+                                         clearanceRegion=None)
+    else:
+        pass
+
+
 def print_sketch(session, model, viewport, sketch_name):
     s = model.ConstrainedSketch(name='__edit__', objectToCopy=mdb.models['Model-1'].sketches[sketch_name])
     s.setPrimaryObject(option=STANDALONE)
@@ -2850,6 +2861,9 @@ def create_part_shell(model, part_name, dimension):
     p_face_middle = p.faces.findAt((point_middle_out_rot,))[0]
     p.Surface(side1Faces=p_face_middle.getFacesByFaceAngle(20), name='SURFACE-OUTER')
 
+    del p.surfaces['SURFACE-R0']
+    del p.surfaces['SURFACE-R1']
+
     # 截面剖分
     cut_planes = [
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0),
@@ -2925,6 +2939,11 @@ def create_part_skirt_front(model, part_name, dimension):
 
     # 创建面
     create_rotation_part_surface_common(p, rotate_angle_deg)
+    # 通过排除法确定内表面
+    given_surface_names = list(p.surfaces.keys())
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -3000,6 +3019,11 @@ def create_part_skirt_behind(model, part_name, dimension):
 
     # 创建集合（面）
     create_face_set_from_surface(p)
+    # 通过排除法确定内表面
+    given_surface_names = list(p.surfaces.keys())
+    p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
     # 截面剖分
     cut_planes = [
@@ -3240,8 +3264,7 @@ if __name__ == "__main__":
     nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
     # block[:, :] = True
-    block[:, 0] = True
-    # block[3, 2] = True
+    # block[:, 0] = True
     # block[:, 8] = True
 
     # setting_file = 'setting.json'
@@ -3318,14 +3341,14 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
     # is_create_p_block = True
     # is_create_p_gap = True
     # is_create_p_block_penult = True
@@ -3335,8 +3358,8 @@ if __name__ == "__main__":
     # is_create_p_block_behind = True
     # is_create_p_gap_behind = True
     # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -3751,6 +3774,18 @@ if __name__ == "__main__":
 
             model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
+
+            # 壳体内表面与绝热层外表面绑定
+            instance_name_1 = 'SHELL'
+            surface_name_1 = 'SURFACE-INNER'
+            instance_name_2 = 'INSULATION'
+            surface_name_2 = 'SURFACE-OUTER'
+            create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+            region1 = a.instances['FLANGE-BEHIND'].surfaces['SURFACE-TIE']
+            region2 = a.instances['FLANGE-BEHIND'].surfaces['SURFACE-TIE']
+            model.SurfaceToSurfaceContactStd(name='Int-1', createStepName='Initial', main=region1, secondary=region2, sliding=SMALL, thickness=ON, interactionProperty='IntProp-1', adjustMethod=NONE,
+                                             initialClearance=OMIT, datumAxis=None, clearanceRegion=None)
 
             # for block_loc, block_type in block_types.items():
             #     l, i = block_loc
