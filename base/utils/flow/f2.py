@@ -2291,6 +2291,7 @@ def create_part_insulation(model, part_name, dimension):
     point_middle_out_rot = rotate_point_around_axis(point_middle_out, (0, 0, 0), (1, 0, 0), rotate_angle_deg / 2.0)
     p_face_middle = p.faces.findAt((point_middle_out_rot,))[0]
     p.Surface(side1Faces=p_face_middle.getFacesByFaceAngle(20), name='SURFACE-OUTER')
+
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_front)
     create_surface_on_cylinder(p, cylinder, 'SURFACE-ROUT-FRONT')
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_behind)
@@ -2831,6 +2832,24 @@ def create_part_shell(model, part_name, dimension):
     # 创建面
     create_rotation_part_surface_common(p, rotate_angle_deg)
 
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_front)
+    create_surface_on_cylinder(p, cylinder, 'SURFACE-RIN-FRONT')
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_behind)
+    create_surface_on_cylinder(p, cylinder, 'SURFACE-RIN-BEHIND')
+
+    create_rotation_part_surface_common(p, rotate_angle_deg)
+    point_middle_in = ((p_front_in_1[0] + p_behind_in_1[0]) / 2.0, (p_front_in_1[1] + p_behind_in_1[1]) / 2.0, 0)
+    point_middle_in_rot = rotate_point_around_axis(point_middle_in, (0, 0, 0), (1, 0, 0), rotate_angle_deg / 2.0)
+    p_face_middle = p.faces.findAt((point_middle_in_rot,))[0]
+    p.Surface(side1Faces=p_face_middle.getFacesByFaceAngle(20), name='SURFACE-INNER')
+
+    combine_surfaces(p, ['SURFACE-RIN-FRONT', 'SURFACE-RIN-BEHIND', 'SURFACE-INNER'], 'SURFACE-INNER')
+
+    point_middle_out = ((p_front_out_1[0] + p_behind_out_1[0]) / 2.0, (p_front_out_1[1] + p_behind_out_1[1]) / 2.0, 0)
+    point_middle_out_rot = rotate_point_around_axis(point_middle_out, (0, 0, 0), (1, 0, 0), rotate_angle_deg / 2.0)
+    p_face_middle = p.faces.findAt((point_middle_out_rot,))[0]
+    p.Surface(side1Faces=p_face_middle.getFacesByFaceAngle(20), name='SURFACE-OUTER')
+
     # 截面剖分
     cut_planes = [
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0),
@@ -3305,8 +3324,8 @@ if __name__ == "__main__":
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
     is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
     # is_create_p_block = True
     # is_create_p_gap = True
     # is_create_p_block_penult = True
