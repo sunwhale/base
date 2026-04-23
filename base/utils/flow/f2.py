@@ -3268,6 +3268,8 @@ if __name__ == "__main__":
     # block[:, 8] = True
     # block[0, 0] = True
     # block[1, 0] = True
+    # block[2, 0] = True
+
 
     # setting_file = 'setting.json'
     # if os.path.exists(setting_file) and False:
@@ -3858,7 +3860,7 @@ if __name__ == "__main__":
                 surface_name_2 = 'SURFACE-OUTER'
                 instance_name_1 = 'INSULATION'
                 surface_name_1 = 'SURFACE-INNER'
-                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Step-1', 'IntProp-1')
 
             for tie_loc, tie_type in ties_types.items():
                 l1, i1, l2, i2 = tie_loc
