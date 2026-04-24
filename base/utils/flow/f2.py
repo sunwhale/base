@@ -2086,9 +2086,9 @@ def create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surf
     region2 = a.instances[instance_name_2].surfaces[surface_name_2]
     constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
     if major_version >= 2022:
-        model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+        model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON, constraintEnforcement=NODE_TO_SURFACE)
     else:
-        model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+        model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON, constraintEnforcement=NODE_TO_SURFACE)
 
 
 def create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, step_name, property_name):
@@ -3265,8 +3265,7 @@ if __name__ == "__main__":
     block = np.zeros((nl, nt), dtype=bool)
     # block[:, :] = True
     block[:, 0] = True
-    # block[:, 8] = True
-    # block[0, 0] = True
+    # block[:, 1] = True
     # block[1, 0] = True
     # block[2, 0] = True
 
@@ -3345,23 +3344,23 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
     is_open_parts_cae = True
     is_assemble = True
 
@@ -3776,7 +3775,7 @@ if __name__ == "__main__":
                 a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
                 a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-            model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
+            model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=0.1, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
 
             # 壳体内表面与绝热层外表面绑定
@@ -3822,14 +3821,14 @@ if __name__ == "__main__":
             surface_name_2 = 'SURFACE-OUTER'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            for instance_name, _ in rotation_instances:
-                set_name = 'SET-SURFACE-T0'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                set_name = 'SET-SURFACE-T1'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            # for instance_name, _ in rotation_instances:
+            #     set_name = 'SET-SURFACE-T0'
+            #     bc_name = 'BC-' + instance_name + '-' + set_name
+            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #     set_name = 'SET-SURFACE-T1'
+            #     bc_name = 'BC-' + instance_name + '-' + set_name
+            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             # instance_name = 'INSULATION'
             # surface_name = 'SURFACE-INNER'
@@ -3848,19 +3847,20 @@ if __name__ == "__main__":
                 surface_name_1 = 'SURFACE-TIE'
                 instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
                 surface_name_2 = 'SURFACE-TIE'
-                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                # create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Step-1', 'IntProp-1')
 
+                instance_name_1 = 'INSULATION'
+                surface_name_1 = 'SURFACE-INNER'
                 instance_name_2 = 'BLOCK-%s-%s' % (l + 1, i + 1)
                 surface_name_2 = 'SURFACE-OUTER'
-                instance_name_1 = 'INSULATION'
-                surface_name_1 = 'SURFACE-INNER'
                 create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-                instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
-                surface_name_2 = 'SURFACE-OUTER'
                 instance_name_1 = 'INSULATION'
                 surface_name_1 = 'SURFACE-INNER'
-                create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Step-1', 'IntProp-1')
+                instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
+                surface_name_2 = 'SURFACE-OUTER'
+                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
             for tie_loc, tie_type in ties_types.items():
                 l1, i1, l2, i2 = tie_loc
@@ -3906,6 +3906,16 @@ if __name__ == "__main__":
                 # bc_name = 'BC-' + instance_name + '-' + set_name
                 # model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
                 #                      u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+
+            instance_name = 'GAP-2-1'
+            surface_name = 'SURFACE-Z-2'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
+
+            instance_name = 'GAP-3-1'
+            surface_name = 'SURFACE-Z2'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
