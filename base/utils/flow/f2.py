@@ -1558,6 +1558,8 @@ def create_block_sets_common(p, faces, dimension):
         p.Set(cells=cells, name=set_name)
         set_names.append(set_name)
 
+    print(faces.shape)
+
     if faces.shape[0] >= 3 and faces.shape[1] >= 3:
         cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
         for rtz in [
@@ -3132,6 +3134,7 @@ if __name__ == "__main__":
 
     element_size = 40
     insert_czm = False
+    is_shared_node = False
 
     size = '1/2'
     size = '1'
@@ -3270,7 +3273,6 @@ if __name__ == "__main__":
     # block[1, 0] = True
     # block[2, 0] = True
 
-
     # setting_file = 'setting.json'
     # if os.path.exists(setting_file) and False:
     #     message = load_json(setting_file)
@@ -3345,23 +3347,23 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_gap = True
-    # is_create_p_block_penult = True
-    # is_create_p_gap_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_gap_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
+    is_create_p_block = True
+    is_create_p_gap = True
+    is_create_p_block_penult = True
+    is_create_p_gap_penult = True
+    is_create_p_block_front = True
+    is_create_p_gap_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
     is_open_parts_cae = True
     is_assemble = True
 
@@ -3581,8 +3583,17 @@ if __name__ == "__main__":
             p_insulation = create_part_insulation(model, 'PART-INSULATION', insulation_dimension)
             print('CREATE PART-INSULATION DONE.')
 
+        z_list_with_gap = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
+        index_t_with_gap = 3
+        if is_shared_node:
+            z_list = z_list_with_gap
+            index_t = index_t_with_gap
+        else:
+            z_list = z_list_with_gap[:-1]
+            index_t = index_t_with_gap - 1
+
         block_dimension = {
-            'z_list': [0, block_length / 2 - block_insulation_thickness_z, block_length / 2],
+            'z_list': z_list,
             'deep': 380.0,
             'x0': x0,
             'length_up': 1039.2,
@@ -3594,7 +3605,7 @@ if __name__ == "__main__":
             'b': b,
             'size': size,
             'index_r': 2,
-            'index_t': 2,
+            'index_t': index_t,
             'element_size': element_size,
             'insert_czm': insert_czm,
             'beta': beta,
@@ -3607,9 +3618,9 @@ if __name__ == "__main__":
             print('CREATE PART-BLOCK DONE.')
 
         gap_dimension = deepcopy(block_dimension)
-        gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
+        gap_dimension['z_list'] = z_list_with_gap
         gap_dimension['index_r'] = 2
-        gap_dimension['index_t'] = 3
+        gap_dimension['index_t'] = index_t_with_gap
         if is_create_p_gap:
             p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
             print('CREATE PART-GAP DONE.')
@@ -3626,10 +3637,19 @@ if __name__ == "__main__":
 
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
 
+        z_list_with_gap = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_z / 2]
+        index_t_with_gap = 3
+        if is_shared_node:
+            z_list = z_list_with_gap
+            index_t = index_t_with_gap
+        else:
+            z_list = z_list_with_gap[:-1]
+            index_t = index_t_with_gap - 1
+
         first_block_dimension = deepcopy(block_dimension)
-        first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z]
+        first_block_dimension['z_list'] = z_list
         first_block_dimension['index_r'] = 3
-        first_block_dimension['index_t'] = 2
+        first_block_dimension['index_t'] = index_t_with_gap
 
         first_block_dimension['r_cut'] = r_cut_front
         first_block_dimension['length_front'] = length_front
@@ -3646,13 +3666,20 @@ if __name__ == "__main__":
             print('CREATE PART-BLOCK-FRONT DONE.')
 
         first_gap_dimension = deepcopy(first_block_dimension)
-        first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_z / 2]
+        first_gap_dimension['z_list'] = z_list_with_gap
         if is_create_p_gap_front:
             p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
             print('CREATE PART-GAP-FRONT DONE.')
 
+        z_list_with_gap = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z, behind_ref_length + block_insulation_thickness_z + block_gap_z / 2]
+        index_t_with_gap = 3
+        if is_shared_node:
+            z_list = z_list_with_gap
+        else:
+            z_list = z_list_with_gap[:-1]
+
         behind_block_dimension = deepcopy(first_block_dimension)
-        behind_block_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z]
+        behind_block_dimension['z_list'] = z_list
         behind_block_dimension['r_cut'] = r_cut_behind
         behind_block_dimension['length_behind'] = length_behind
         behind_block_dimension['p0'] = [p0_behind[0] + front_offset, p0_behind[1]]
@@ -3668,7 +3695,7 @@ if __name__ == "__main__":
             print('CREATE PART-BLOCK-BEHIND DONE.')
 
         behind_gap_dimension = deepcopy(behind_block_dimension)
-        behind_gap_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z, behind_ref_length + block_insulation_thickness_z + block_gap_z / 2]
+        behind_gap_dimension['z_list'] = z_list_with_gap
         if is_create_p_gap_behind:
             p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
             print('CREATE PART-GAP-BEHIND DONE.')
