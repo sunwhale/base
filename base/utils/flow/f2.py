@@ -3346,14 +3346,14 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
     is_create_p_block = True
     is_create_p_gap = True
     is_create_p_block_penult = True
@@ -3362,9 +3362,9 @@ if __name__ == "__main__":
     is_create_p_gap_front = True
     is_create_p_block_behind = True
     is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -3797,10 +3797,11 @@ if __name__ == "__main__":
                 a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
                 a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                a.Instance(name=instance_name, part=gap_dict[block_type], dependent=ON)
-                a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
-                a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+                if not is_shared_node:
+                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    a.Instance(name=instance_name, part=gap_dict[block_type], dependent=ON)
+                    a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
+                    a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
             model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
@@ -3870,46 +3871,75 @@ if __name__ == "__main__":
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
-                instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                surface_name_1 = 'SURFACE-TIE'
-                instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
-                surface_name_2 = 'SURFACE-TIE'
-                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                if is_shared_node:
+                    instance_name_2 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    surface_name_2 = 'SURFACE-OUTER'
+                    instance_name_1 = 'INSULATION'
+                    surface_name_1 = 'SURFACE-INNER'
+                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                else:
+                    instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    surface_name_1 = 'SURFACE-TIE'
+                    instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
+                    surface_name_2 = 'SURFACE-TIE'
+                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-                instance_name_2 = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                surface_name_2 = 'SURFACE-OUTER'
-                instance_name_1 = 'INSULATION'
-                surface_name_1 = 'SURFACE-INNER'
-                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                    instance_name_2 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    surface_name_2 = 'SURFACE-OUTER'
+                    instance_name_1 = 'INSULATION'
+                    surface_name_1 = 'SURFACE-INNER'
+                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-                instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
-                surface_name_2 = 'SURFACE-OUTER'
-                instance_name_1 = 'INSULATION'
-                surface_name_1 = 'SURFACE-INNER'
-                create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Step-1', 'IntProp-1')
+                    instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
+                    surface_name_2 = 'SURFACE-OUTER'
+                    instance_name_1 = 'INSULATION'
+                    surface_name_1 = 'SURFACE-INNER'
+                    create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Step-1', 'IntProp-1')
 
             for tie_loc, tie_type in ties_types.items():
                 l1, i1, l2, i2 = tie_loc
-                if tie_type == 'down':
-                    instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                    surface_name_1 = 'SURFACE-Z2'
-                    instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                    surface_name_2 = 'SURFACE-Z-2'
-                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                if is_shared_node:
+                    if tie_type == 'down':
+                        instance_name_1 = 'BLOCK-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-Z1'
+                        instance_name_2 = 'BLOCK-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-Z-1'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-                elif tie_type == 'right':
-                    instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                    surface_name_1 = 'SURFACE-T2'
-                    instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                    surface_name_2 = 'SURFACE-T-2'
-                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                    elif tie_type == 'right':
+                        instance_name_1 = 'BLOCK-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-T1'
+                        instance_name_2 = 'BLOCK-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-T-1'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-                elif tie_type == 'circular':
-                    instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                    surface_name_1 = 'SURFACE-T-2'
-                    instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                    surface_name_2 = 'SURFACE-T2'
-                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                    elif tie_type == 'circular':
+                        instance_name_1 = 'BLOCK-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-T-1'
+                        instance_name_2 = 'BLOCK-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-T1'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                else:
+                    if tie_type == 'down':
+                        instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-Z2'
+                        instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-Z-2'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+                    elif tie_type == 'right':
+                        instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-T2'
+                        instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-T-2'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+                    elif tie_type == 'circular':
+                        instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-T-2'
+                        instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-T2'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
@@ -3918,31 +3948,22 @@ if __name__ == "__main__":
                 load_name = 'LOAD-' + instance_name + '-' + surface_name
                 model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
 
-                # set_name = 'SET-SURFACE-OUTER'
-                # bc_name = 'BC-' + instance_name + '-' + set_name
-                # model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
-                #                      u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
-
-                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                surface_name = 'SURFACE-INNER'
-                load_name = 'LOAD-' + instance_name + '-' + surface_name
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
-
-                # set_name = 'SET-SURFACE-OUTER'
-                # bc_name = 'BC-' + instance_name + '-' + set_name
-                # model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
-                #                      u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+                if not is_shared_node:
+                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    surface_name = 'SURFACE-INNER'
+                    load_name = 'LOAD-' + instance_name + '-' + surface_name
+                    model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
                 if i == 0:
-                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T-2'
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    set_name = 'SET-SURFACE-T-1'
                     bc_name = 'BC-' + instance_name + '-' + set_name
                     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T2'
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    set_name = 'SET-SURFACE-T1'
                     bc_name = 'BC-' + instance_name + '-' + set_name
                     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
