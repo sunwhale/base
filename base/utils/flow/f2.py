@@ -1528,6 +1528,7 @@ def part_partition_p1p(p, d, p1p):
 
 def create_block_sets_common(p, faces, dimension):
     z_list = dimension['z_list']
+    index_t = dimension['index_t']
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
@@ -1558,9 +1559,7 @@ def create_block_sets_common(p, faces, dimension):
         p.Set(cells=cells, name=set_name)
         set_names.append(set_name)
 
-    print(faces.shape)
-
-    if faces.shape[0] >= 3 and faces.shape[1] >= 3:
+    if index_t >= 3 and faces.shape[1] >= 3:
         cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
         for rtz in [
             [0, 2, 0],
@@ -3134,7 +3133,7 @@ if __name__ == "__main__":
 
     element_size = 40
     insert_czm = False
-    is_shared_node = False
+    is_shared_node = True
 
     size = '1/2'
     size = '1'
@@ -3347,14 +3346,14 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
     is_create_p_block = True
     is_create_p_gap = True
     is_create_p_block_penult = True
@@ -3363,9 +3362,9 @@ if __name__ == "__main__":
     is_create_p_gap_front = True
     is_create_p_block_behind = True
     is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
