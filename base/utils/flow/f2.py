@@ -3069,6 +3069,46 @@ def add_spline(s, points):
 
 
 if __name__ == "__main__":
+    is_create_p_shell = False
+    is_create_p_skirt_front = False
+    is_create_p_skirt_behind = False
+    is_create_p_flange_front = False
+    is_create_p_flange_behind = False
+    is_create_p_insulation = False
+    is_create_p_cover_front = False
+    is_create_p_cover_behind = False
+    is_create_p_block = False
+    is_create_p_block_penult = False
+    is_create_p_block_front = False
+    is_create_p_block_behind = False
+    is_create_p_gap = False
+    is_create_p_gap_penult = False
+    is_create_p_gap_front = False
+    is_create_p_gap_behind = False
+    is_save_parts_cae = False
+    is_open_parts_cae = False
+    is_assemble = False
+
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
+    is_create_p_block = True
+    is_create_p_block_penult = True
+    is_create_p_block_front = True
+    is_create_p_block_behind = True
+    is_create_p_gap = True
+    is_create_p_gap_penult = True
+    is_create_p_gap_front = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
+
     n = 9
     d = 3529.0
     x0 = 500.0
@@ -3230,38 +3270,34 @@ if __name__ == "__main__":
         [18268.46, 942.5]
     ]
 
-    if p3_front[1] > d / 2.0:
-        raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
-
-    if p3_behind[1] > d / 2.0:
-        raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
-
-    nl, nt = 12, n
-    block = np.zeros((nl, nt), dtype=bool)
-    block[:, 0] = True
-
     setting_file = 'setting.json'
-    if os.path.exists(setting_file) and False:
+    if os.path.exists(setting_file):
         message = load_json(setting_file)
-
         n = message['n']
         d = message['d']
         x0 = message['x0']
+        l_c1_c2 = message['l_c1_c2']
+        ellipse_ratio = message['ellipse_ratio']
+        a_front = message['a_front']
+        a_behind = message['a_behind']
+        rotate_angle_deg = message['rotate_angle_deg']
         block_length = message['block_length']
         block_insulation_thickness_z = message['block_insulation_thickness_z']
         block_insulation_thickness_t = message['block_insulation_thickness_t']
         block_insulation_thickness_r = message['block_insulation_thickness_r']
         block_gap_z = message['block_gap_z']
         block_gap_t = message['block_gap_t']
+        slot_deep = message['slot_deep']
         slot_ellipse_a = message['slot_ellipse_a']
         slot_ellipse_b = message['slot_ellipse_b']
-        fillet_radius = message['fillet_radius']
         angle_demolding_1 = message['angle_demolding_1']
         burn_offset = message['burn_offset']
         outer_partition_offset = message['outer_partition_offset']
         element_size = message['element_size']
         insert_czm = message['insert_czm']
+        is_shared_node = message['is_shared_node']
         size = message['size']
+        front_offset = message['front_offset']
         front_ref_length = message['front_ref_length']
         behind_ref_length = message['behind_ref_length']
         r_cut_front = message['r_cut_front']
@@ -3275,7 +3311,6 @@ if __name__ == "__main__":
         r1_front = message['r1_front']
         r2_front = message['r2_front']
         r3_front = message['r3_front']
-        shell_insulation_theta_in_deg_front = message['shell_insulation_theta_in_deg_front']
         r_cut_behind = message['r_cut_behind']
         length_behind = message['length_behind']
         p0_x_behind = message['p0_x_behind']
@@ -3285,54 +3320,97 @@ if __name__ == "__main__":
         p3_y_behind = message['p3_y_behind']
         theta3_deg_behind = message['theta3_deg_behind']
         r1_behind = message['r1_behind']
+        r2_behind = message['r2_behind']
+        r3_behind = message['r3_behind']
+        shell_r_in = message['shell_r_in']
+        shell_r_out = message['shell_r_out']
+        shell_theta_out_deg_front = message['shell_theta_out_deg_front']
+        shell_theta_out_deg_behind = message['shell_theta_out_deg_behind']
+        shell_r_out_at_a_front = message['shell_r_out_at_a_front']
+        shell_r_out_at_a_behind = message['shell_r_out_at_a_behind']
+        shell_theta_in_deg_front = message['shell_theta_in_deg_front']
+        shell_theta_in_deg_behind = message['shell_theta_in_deg_behind']
+        shell_r_in_front = message['shell_r_in_front']
+        shell_r_in_behind = message['shell_r_in_behind']
+        shell_l_c1_out = message['shell_l_c1_out']
+        shell_l_c2_out = message['shell_l_c2_out']
+        shell_insulation_theta_in_deg_front = message['shell_insulation_theta_in_deg_front']
+        shell_insulation_theta_in_deg_behind = message['shell_insulation_theta_in_deg_behind']
+        shell_insulation_r_in = message['shell_insulation_r_in']
+        shell_insulation_r_out = message['shell_insulation_r_out']
+        shell_insulation_r_in_at_a_front = message['shell_insulation_r_in_at_a_front']
+        shell_insulation_r_in_at_a_behind = message['shell_insulation_r_in_at_a_behind']
+        shell_insulation_r_out_front = message['shell_insulation_r_out_front']
+        shell_insulation_r_out_behind = message['shell_insulation_r_out_behind']
+        shell_insulation_r_in_front = message['shell_insulation_r_in_front']
+        shell_insulation_r_in_behind = message['shell_insulation_r_in_behind']
+        shell_insulation_thickness_at_flange_front = message['shell_insulation_thickness_at_flange_front']
+        shell_insulation_thickness_at_flange_behind = message['shell_insulation_thickness_at_flange_behind']
+        cover_r_out_front = message['cover_r_out_front']
+        cover_thickness_front = message['cover_thickness_front']
+        cover_offset_front = message['cover_offset_front']
+        cover_r_out_behind = message['cover_r_out_behind']
+        cover_thickness_behind = message['cover_thickness_behind']
+        cover_offset_behind = message['cover_offset_behind']
+        flange_r_in_front = message['flange_r_in_front']
+        flange_r_out_front = message['flange_r_out_front']
+        flange_offset_front = message['flange_offset_front']
+        flange_thickness_front = message['flange_thickness_front']
+        flange_slope_deg_front = message['flange_slope_deg_front']
+        flange_thickness_offset_front = message['flange_thickness_offset_front']
+        flange_fillet_radius_front = message['flange_fillet_radius_front']
+        flange_r_in_behind = message['flange_r_in_behind']
+        flange_r_out_behind = message['flange_r_out_behind']
+        flange_offset_behind = message['flange_offset_behind']
+        flange_thickness_behind = message['flange_thickness_behind']
+        flange_slope_deg_behind = message['flange_slope_deg_behind']
+        flange_thickness_offset_behind = message['flange_thickness_offset_behind']
+        flange_fillet_radius_behind = message['flange_fillet_radius_behind']
+        skirt_r_out_front = message['skirt_r_out_front']
+        skirt_r_in_1_front = message['skirt_r_in_1_front']
+        skirt_r_in_2_front = message['skirt_r_in_2_front']
+        skirt_l_1_front = message['skirt_l_1_front']
+        skirt_l_2_front = message['skirt_l_2_front']
+        skirt_offset_front = message['skirt_offset_front']
+        skirt_r_out_behind = message['skirt_r_out_behind']
+        skirt_r_in_1_behind = message['skirt_r_in_1_behind']
+        skirt_r_in_2_behind = message['skirt_r_in_2_behind']
+        skirt_l_1_behind = message['skirt_l_1_behind']
+        skirt_l_2_behind = message['skirt_l_2_behind']
+        skirt_offset_behind = message['skirt_offset_behind']
+        is_create_p_shell = message['is_create_p_shell']
+        is_create_p_skirt_front = message['is_create_p_skirt_front']
+        is_create_p_skirt_behind = message['is_create_p_skirt_behind']
+        is_create_p_flange_front = message['is_create_p_flange_front']
+        is_create_p_flange_behind = message['is_create_p_flange_behind']
+        is_create_p_insulation = message['is_create_p_insulation']
+        is_create_p_cover_front = message['is_create_p_cover_front']
+        is_create_p_cover_behind = message['is_create_p_cover_behind']
+        is_create_p_block = message['is_create_p_block']
+        is_create_p_block_penult = message['is_create_p_block_penult']
+        is_create_p_block_front = message['is_create_p_block_front']
+        is_create_p_block_behind = message['is_create_p_block_behind']
+        is_create_p_gap = message['is_create_p_gap']
+        is_create_p_gap_penult = message['is_create_p_gap_penult']
+        is_create_p_gap_front = message['is_create_p_gap_front']
+        is_create_p_gap_behind = message['is_create_p_gap_behind']
+        is_save_parts_cae = message['is_save_parts_cae']
+        is_open_parts_cae = message['is_open_parts_cae']
+        is_assemble = message['is_assemble']
 
     p0_front = (p0_x_front, p0_y_front)
     p3_front = (p3_x_front, p3_y_front)
-
+    if p3_front[1] > d / 2.0:
+        raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
     p0_behind = (p0_x_behind, p0_y_behind)
     p3_behind = (p3_x_behind, p3_y_behind)
-
+    if p3_behind[1] > d / 2.0:
+        raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
     beta = math.pi / n
 
-    is_create_p_shell = False
-    is_create_p_skirt_front = False
-    is_create_p_skirt_behind = False
-    is_create_p_flange_front = False
-    is_create_p_flange_behind = False
-    is_create_p_insulation = False
-    is_create_p_cover_front = False
-    is_create_p_cover_behind = False
-    is_create_p_block = False
-    is_create_p_block_penult = False
-    is_create_p_block_front = False
-    is_create_p_block_behind = False
-    is_create_p_gap = False
-    is_create_p_gap_penult = False
-    is_create_p_gap_front = False
-    is_create_p_gap_behind = False
-    is_save_parts_cae = False
-    is_open_parts_cae = False
-    is_assemble = False
-
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
-    is_create_p_block_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap = True
-    is_create_p_gap_penult = True
-    is_create_p_gap_front = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    nl, nt = 12, n
+    block = np.zeros((nl, nt), dtype=bool)
+    block[:, 0] = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
