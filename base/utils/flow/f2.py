@@ -1528,6 +1528,7 @@ def part_partition_p1p(p, d, p1p):
 
 def create_block_sets_common(p, faces, dimension):
     z_list = dimension['z_list']
+    index_t = dimension['index_t']
     z = np.array(z_list)
     z_centers = (z[:-1] + z[1:]) / 2.0
 
@@ -1558,7 +1559,7 @@ def create_block_sets_common(p, faces, dimension):
         p.Set(cells=cells, name=set_name)
         set_names.append(set_name)
 
-    if faces.shape[0] >= 3 and faces.shape[1] >= 3:
+    if index_t >= 3 and faces.shape[1] >= 3:
         cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
         for rtz in [
             [0, 2, 0],
@@ -2086,9 +2087,9 @@ def create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surf
     region2 = a.instances[instance_name_2].surfaces[surface_name_2]
     constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
     if major_version >= 2022:
-        model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON, constraintEnforcement=NODE_TO_SURFACE)
+        model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
     else:
-        model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON, constraintEnforcement=NODE_TO_SURFACE)
+        model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
 
 
 def create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, step_name, property_name):
@@ -3132,6 +3133,7 @@ if __name__ == "__main__":
 
     element_size = 40
     insert_czm = False
+    is_shared_node = True
 
     size = '1/2'
     size = '1'
@@ -3265,10 +3267,10 @@ if __name__ == "__main__":
     block = np.zeros((nl, nt), dtype=bool)
     # block[:, :] = True
     block[:, 0] = True
-    # block[:, 1] = True
+    # block[:, 8] = True
+    # block[0, 0] = True
     # block[1, 0] = True
     # block[2, 0] = True
-
 
     # setting_file = 'setting.json'
     # if os.path.exists(setting_file) and False:
@@ -3410,9 +3412,9 @@ if __name__ == "__main__":
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
         model.ContactProperty('IntProp-1')
-        # model.interactionProperties['IntProp-1'].TangentialBehavior(formulation=FRICTIONLESS)
+        model.interactionProperties['IntProp-1'].TangentialBehavior(formulation=FRICTIONLESS)
         model.interactionProperties['IntProp-1'].CohesiveBehavior(defaultPenalties=OFF, table=((1000000.0, 1000000.0, 1000000.0),))
-        # model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
+        model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
@@ -3580,8 +3582,17 @@ if __name__ == "__main__":
             p_insulation = create_part_insulation(model, 'PART-INSULATION', insulation_dimension)
             print('CREATE PART-INSULATION DONE.')
 
+        z_list_with_gap = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
+        index_t_with_gap = 3
+        if is_shared_node:
+            z_list = z_list_with_gap
+            index_t = index_t_with_gap
+        else:
+            z_list = z_list_with_gap[:-1]
+            index_t = index_t_with_gap - 1
+
         block_dimension = {
-            'z_list': [0, block_length / 2 - block_insulation_thickness_z, block_length / 2],
+            'z_list': z_list,
             'deep': 380.0,
             'x0': x0,
             'length_up': 1039.2,
@@ -3593,7 +3604,7 @@ if __name__ == "__main__":
             'b': b,
             'size': size,
             'index_r': 2,
-            'index_t': 2,
+            'index_t': index_t,
             'element_size': element_size,
             'insert_czm': insert_czm,
             'beta': beta,
@@ -3606,9 +3617,9 @@ if __name__ == "__main__":
             print('CREATE PART-BLOCK DONE.')
 
         gap_dimension = deepcopy(block_dimension)
-        gap_dimension['z_list'] = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
+        gap_dimension['z_list'] = z_list_with_gap
         gap_dimension['index_r'] = 2
-        gap_dimension['index_t'] = 3
+        gap_dimension['index_t'] = index_t_with_gap
         if is_create_p_gap:
             p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
             print('CREATE PART-GAP DONE.')
@@ -3625,10 +3636,19 @@ if __name__ == "__main__":
 
         points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
 
+        z_list_with_gap = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_z / 2]
+        index_t_with_gap = 3
+        if is_shared_node:
+            z_list = z_list_with_gap
+            index_t = index_t_with_gap
+        else:
+            z_list = z_list_with_gap[:-1]
+            index_t = index_t_with_gap - 1
+
         first_block_dimension = deepcopy(block_dimension)
-        first_block_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z]
+        first_block_dimension['z_list'] = z_list
         first_block_dimension['index_r'] = 3
-        first_block_dimension['index_t'] = 2
+        first_block_dimension['index_t'] = index_t_with_gap
 
         first_block_dimension['r_cut'] = r_cut_front
         first_block_dimension['length_front'] = length_front
@@ -3645,13 +3665,20 @@ if __name__ == "__main__":
             print('CREATE PART-BLOCK-FRONT DONE.')
 
         first_gap_dimension = deepcopy(first_block_dimension)
-        first_gap_dimension['z_list'] = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_z / 2]
+        first_gap_dimension['z_list'] = z_list_with_gap
         if is_create_p_gap_front:
             p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
             print('CREATE PART-GAP-FRONT DONE.')
 
+        z_list_with_gap = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z, behind_ref_length + block_insulation_thickness_z + block_gap_z / 2]
+        index_t_with_gap = 3
+        if is_shared_node:
+            z_list = z_list_with_gap
+        else:
+            z_list = z_list_with_gap[:-1]
+
         behind_block_dimension = deepcopy(first_block_dimension)
-        behind_block_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z]
+        behind_block_dimension['z_list'] = z_list
         behind_block_dimension['r_cut'] = r_cut_behind
         behind_block_dimension['length_behind'] = length_behind
         behind_block_dimension['p0'] = [p0_behind[0] + front_offset, p0_behind[1]]
@@ -3667,7 +3694,7 @@ if __name__ == "__main__":
             print('CREATE PART-BLOCK-BEHIND DONE.')
 
         behind_gap_dimension = deepcopy(behind_block_dimension)
-        behind_gap_dimension['z_list'] = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z, behind_ref_length + block_insulation_thickness_z + block_gap_z / 2]
+        behind_gap_dimension['z_list'] = z_list_with_gap
         if is_create_p_gap_behind:
             p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
             print('CREATE PART-GAP-BEHIND DONE.')
@@ -3770,12 +3797,13 @@ if __name__ == "__main__":
                 a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
                 a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                a.Instance(name=instance_name, part=gap_dict[block_type], dependent=ON)
-                a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
-                a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+                if not is_shared_node:
+                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    a.Instance(name=instance_name, part=gap_dict[block_type], dependent=ON)
+                    a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
+                    a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
-            model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=0.1, minInc=1e-06, maxInc=1.0)
+            model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
 
             # 壳体内表面与绝热层外表面绑定
@@ -3821,14 +3849,14 @@ if __name__ == "__main__":
             surface_name_2 = 'SURFACE-OUTER'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            # for instance_name, _ in rotation_instances:
-            #     set_name = 'SET-SURFACE-T0'
-            #     bc_name = 'BC-' + instance_name + '-' + set_name
-            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-            #
-            #     set_name = 'SET-SURFACE-T1'
-            #     bc_name = 'BC-' + instance_name + '-' + set_name
-            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            for instance_name, _ in rotation_instances:
+                set_name = 'SET-SURFACE-T0'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                set_name = 'SET-SURFACE-T1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             # instance_name = 'INSULATION'
             # surface_name = 'SURFACE-INNER'
@@ -3843,47 +3871,75 @@ if __name__ == "__main__":
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
-                instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                surface_name_1 = 'SURFACE-TIE'
-                instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
-                surface_name_2 = 'SURFACE-TIE'
-                # create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-                create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Step-1', 'IntProp-1')
+                if is_shared_node:
+                    instance_name_2 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    surface_name_2 = 'SURFACE-OUTER'
+                    instance_name_1 = 'INSULATION'
+                    surface_name_1 = 'SURFACE-INNER'
+                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                else:
+                    instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    surface_name_1 = 'SURFACE-TIE'
+                    instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
+                    surface_name_2 = 'SURFACE-TIE'
+                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-                instance_name_1 = 'INSULATION'
-                surface_name_1 = 'SURFACE-INNER'
-                instance_name_2 = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                surface_name_2 = 'SURFACE-OUTER'
-                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                    instance_name_2 = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    surface_name_2 = 'SURFACE-OUTER'
+                    instance_name_1 = 'INSULATION'
+                    surface_name_1 = 'SURFACE-INNER'
+                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-                instance_name_1 = 'INSULATION'
-                surface_name_1 = 'SURFACE-INNER'
-                instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
-                surface_name_2 = 'SURFACE-OUTER'
-                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                    instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
+                    surface_name_2 = 'SURFACE-OUTER'
+                    instance_name_1 = 'INSULATION'
+                    surface_name_1 = 'SURFACE-INNER'
+                    create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Step-1', 'IntProp-1')
 
             for tie_loc, tie_type in ties_types.items():
                 l1, i1, l2, i2 = tie_loc
-                if tie_type == 'down':
-                    instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                    surface_name_1 = 'SURFACE-Z2'
-                    instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                    surface_name_2 = 'SURFACE-Z-2'
-                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                if is_shared_node:
+                    if tie_type == 'down':
+                        instance_name_1 = 'BLOCK-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-Z1'
+                        instance_name_2 = 'BLOCK-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-Z-1'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-                elif tie_type == 'right':
-                    instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                    surface_name_1 = 'SURFACE-T2'
-                    instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                    surface_name_2 = 'SURFACE-T-2'
-                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                    elif tie_type == 'right':
+                        instance_name_1 = 'BLOCK-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-T1'
+                        instance_name_2 = 'BLOCK-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-T-1'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-                elif tie_type == 'circular':
-                    instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                    surface_name_1 = 'SURFACE-T-2'
-                    instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                    surface_name_2 = 'SURFACE-T2'
-                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                    elif tie_type == 'circular':
+                        instance_name_1 = 'BLOCK-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-T-1'
+                        instance_name_2 = 'BLOCK-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-T1'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                else:
+                    if tie_type == 'down':
+                        instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-Z2'
+                        instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-Z-2'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+                    elif tie_type == 'right':
+                        instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-T2'
+                        instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-T-2'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+
+                    elif tie_type == 'circular':
+                        instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
+                        surface_name_1 = 'SURFACE-T-2'
+                        instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
+                        surface_name_2 = 'SURFACE-T2'
+                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
@@ -3892,41 +3948,22 @@ if __name__ == "__main__":
                 load_name = 'LOAD-' + instance_name + '-' + surface_name
                 model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
 
-                # set_name = 'SET-SURFACE-OUTER'
-                # bc_name = 'BC-' + instance_name + '-' + set_name
-                # model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
-                #                      u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
-
-                instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                surface_name = 'SURFACE-INNER'
-                load_name = 'LOAD-' + instance_name + '-' + surface_name
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
-
-                # set_name = 'SET-SURFACE-OUTER'
-                # bc_name = 'BC-' + instance_name + '-' + set_name
-                # model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
-                #                      u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
-
-            instance_name = 'GAP-2-1'
-            surface_name = 'SURFACE-Z-2'
-            load_name = 'LOAD-' + instance_name + '-' + surface_name
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
-
-            instance_name = 'GAP-3-1'
-            surface_name = 'SURFACE-Z2'
-            load_name = 'LOAD-' + instance_name + '-' + surface_name
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
+                if not is_shared_node:
+                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    surface_name = 'SURFACE-INNER'
+                    load_name = 'LOAD-' + instance_name + '-' + surface_name
+                    model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
                 if i == 0:
-                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T-2'
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    set_name = 'SET-SURFACE-T-1'
                     bc_name = 'BC-' + instance_name + '-' + set_name
                     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T2'
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    set_name = 'SET-SURFACE-T1'
                     bc_name = 'BC-' + instance_name + '-' + set_name
                     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
