@@ -118,17 +118,16 @@ class F2Form(FlaskForm):
     block_insulation_thickness_t = FloatField('θ方向绝热层厚度 (mm)', default=3.0)
     block_gap_z = FloatField('z方向药块间隙 (mm)', default=8.0)
     block_gap_t = FloatField('θ方向药块间隙 (mm)', default=8.0)
-
     slot_deep = FloatField('星槽深度 (mm)', default=380.0)
     slot_ellipse_a = FloatField('星槽椭圆长轴 a (mm)', default=50.0)
     slot_ellipse_b = FloatField('星槽椭圆短轴 b (mm)', default=25.0)
-
     angle_demolding_1 = FloatField('环向脱模角度 (度)', default=1.5)
+
     burn_offset = FloatField('燃面退移量 (mm)', default=0.0)
     outer_partition_offset = FloatField('外轮廓剖分偏移量 (mm)', default=300.0)
     element_size = FloatField('单元尺寸 (mm)', default=40.0)
     insert_czm = BooleanField('是否插入内聚力单元', default=False)
-    is_shared_node = BooleanField('随动胶和药块是否共节点，mm', default=False)
+    is_shared_node = BooleanField('随动胶和药块是否共节点', default=False)
     size = SelectField('对称性', coerce=str)
 
     front_offset = FloatField('头部坐标系与全局坐标系的偏移 (mm)', default=350.0)

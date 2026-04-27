@@ -108,9 +108,11 @@
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                           <hr>
                           {{ render_form_row([form.n, form.d, form.x0]) }}
+                          {{ render_form_row([form.l_c1_c2, form.ellipse_ratio]) }}
+                          {{ render_form_row([form.a_front, form.a_behind]) }}
                           {{ render_form_row([form.burn_offset, form.outer_partition_offset]) }}
                           {{ render_form_row([form.element_size, form.size]) }}
-                          {{ render_form_row([form.insert_czm]) }}
+                          {{ render_form_row([form.insert_czm, form.is_shared_node]) }}
                         </div>
                       </div>
                     </div>
@@ -127,7 +129,8 @@
                         <div class="col-12">
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                           <hr>
-                          {{ render_form_row([form.slot_ellipse_a, form.slot_ellipse_b, form.angle_demolding_1]) }}
+                          {{ render_form_row([form.slot_ellipse_a, form.slot_ellipse_b]) }}
+                          {{ render_form_row([form.angle_demolding_1, form.slot_deep]) }}
                           <div class="col-6">
                             <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-SLOT.png') }}"
                                  style="width: 100%; height: auto; cursor: pointer;"
@@ -151,8 +154,8 @@
                         <div class="col-12">
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                           <hr>
-                          {{ render_form_row([form.block_length, form.block_insulation_thickness_z]) }}
-                          {{ render_form_row([form.block_insulation_thickness_t, form.block_insulation_thickness_r]) }}
+                          {{ render_form_row([form.block_length]) }}
+                          {{ render_form_row([form.block_insulation_thickness_z, form.block_insulation_thickness_r, form.block_insulation_thickness_t]) }}
                         </div>
                       </div>
                     </div>
@@ -186,6 +189,7 @@
                         <div class="col-12">
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                           <hr>
+                          {{ render_form_row([form.front_offset]) }}
                           {{ render_form_row([form.front_ref_length, form.r_cut_front, form.length_front]) }}
                           {{ render_form_row([form.p0_x_front, form.p0_y_front, form.theta0_deg_front]) }}
                           {{ render_form_row([form.p3_x_front, form.p3_y_front, form.theta3_deg_front]) }}
@@ -226,6 +230,108 @@
                                  alt="描述文字"
                                  onclick="openImagePreview(this.src)">
                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-8">
+                    <div class="card-header">
+                      <h3 class="card-title">壳体几何参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.shell_r_in, form.shell_r_out]) }}
+                          {{ render_form_row([form.shell_theta_out_deg_front, form.shell_theta_out_deg_behind]) }}
+                          {{ render_form_row([form.shell_r_out_at_a_front, form.shell_r_out_at_a_behind]) }}
+                          {{ render_form_row([form.shell_theta_in_deg_front, form.shell_theta_in_deg_behind]) }}
+                          {{ render_form_row([form.shell_r_in_front, form.shell_r_in_behind]) }}
+                          {{ render_form_row([form.shell_l_c1_out, form.shell_l_c2_out]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-8">
+                    <div class="card-header">
+                      <h3 class="card-title">壳体绝热层几何参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.shell_insulation_theta_in_deg_front, form.shell_insulation_theta_in_deg_behind]) }}
+                          {{ render_form_row([form.shell_insulation_r_in, form.shell_insulation_r_out]) }}
+                          {{ render_form_row([form.shell_insulation_r_in_at_a_front, form.shell_insulation_r_in_at_a_behind]) }}
+                          {{ render_form_row([form.shell_insulation_r_in_front, form.shell_insulation_r_in_behind]) }}
+                          {{ render_form_row([form.shell_r_in_front, form.shell_r_in_behind]) }}
+                          {{ render_form_row([form.shell_insulation_thickness_at_flange_front, form.shell_insulation_thickness_at_flange_behind]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-8">
+                    <div class="card-header">
+                      <h3 class="card-title">盖板几何参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.cover_r_out_front, form.cover_thickness_front]) }}
+                          {{ render_form_row([form.cover_r_out_behind, form.cover_thickness_behind]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-8">
+                    <div class="card-header">
+                      <h3 class="card-title">法兰接头几何参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.flange_r_in_front, form.flange_r_out_front]) }}
+                          {{ render_form_row([form.flange_thickness_front, form.flange_slope_deg_front, form.flange_fillet_radius_front]) }}
+                          {{ render_form_row([form.flange_r_in_behind, form.flange_r_out_behind]) }}
+                          {{ render_form_row([form.flange_thickness_behind, form.flange_slope_deg_behind, form.flange_fillet_radius_behind]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="card card-primary" data-card-id="card-8">
+                    <div class="card-header">
+                      <h3 class="card-title">裙几何参数</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_field(form.submit, button_style='btn btn-info') }}
+                          <hr>
+                          {{ render_form_row([form.skirt_r_out_front, form.skirt_r_in_1_front, form.skirt_r_in_2_front]) }}
+                          {{ render_form_row([form.skirt_l_1_front, form.skirt_l_2_front, form.skirt_offset_front]) }}
+                          {{ render_form_row([form.skirt_r_out_behind, form.skirt_r_in_1_behind, form.skirt_r_in_2_behind]) }}
+                          {{ render_form_row([form.skirt_l_1_behind, form.skirt_l_2_behind, form.skirt_offset_behind]) }}
                         </div>
                       </div>
                     </div>
