@@ -3213,6 +3213,20 @@ if __name__ == "__main__":
     flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
     flange_fillet_radius_behind = 10
 
+    skirt_r_out_front = 1835.5
+    skirt_r_in_1_front = 1702.5
+    skirt_r_in_2_front = 1797.585372
+    skirt_l_1_front = 23.0
+    skirt_l_2_front = 1650.0
+    skirt_offset_front = -450.0
+
+    skirt_r_out_behind = 1835.5
+    skirt_r_in_1_behind = 1702.5
+    skirt_r_in_2_behind = 1797.585372
+    skirt_l_1_behind = 23.0
+    skirt_l_2_behind = 1650.0
+    skirt_offset_behind = 450.0
+
     shell_points_front = [
         [0.0, 1797],
         [-96.8064430098, 1782.413462884],
@@ -3268,9 +3282,6 @@ if __name__ == "__main__":
     # block[:, :] = True
     block[:, 0] = True
     # block[:, 8] = True
-    # block[0, 0] = True
-    # block[1, 0] = True
-    # block[2, 0] = True
 
     # setting_file = 'setting.json'
     # if os.path.exists(setting_file) and False:
@@ -3442,12 +3453,12 @@ if __name__ == "__main__":
             print('CREATE PART-SHELL DONE.')
 
         front_skirt_dimension = {
-            'skirt_r_out_front': 1835.5,
-            'skirt_r_in_1_front': 1702.5,
-            'skirt_r_in_2_front': 1797.585372,
-            'skirt_l_1_front': 23.0,
-            'skirt_l_2_front': 1650.0,
-            'skirt_offset_front': -450.0,
+            'skirt_r_out_front': skirt_r_out_front,
+            'skirt_r_in_1_front': skirt_r_in_1_front,
+            'skirt_r_in_2_front': skirt_r_in_2_front,
+            'skirt_l_1_front': skirt_l_1_front,
+            'skirt_l_2_front': skirt_l_2_front,
+            'skirt_offset_front': skirt_offset_front,
             'rotate_angle_deg': rotate_angle_deg,
         }
         if is_create_p_skirt_front:
@@ -3456,12 +3467,12 @@ if __name__ == "__main__":
 
         behind_skirt_dimension = {
             'l_c1_c2': l_c1_c2,
-            'skirt_r_out_behind': 1835.5,
-            'skirt_r_in_1_behind': 1702.5,
-            'skirt_r_in_2_behind': 1797.585372,
-            'skirt_l_1_behind': 23.0,
-            'skirt_l_2_behind': 1650.0,
-            'skirt_offset_behind': 450.0,
+            'skirt_r_out_behind': skirt_r_out_behind,
+            'skirt_r_in_1_behind': skirt_r_in_1_behind,
+            'skirt_r_in_2_behind': skirt_r_in_2_behind,
+            'skirt_l_1_behind': skirt_l_1_behind,
+            'skirt_l_2_behind': skirt_l_2_behind,
+            'skirt_offset_behind': skirt_offset_behind,
             'rotate_angle_deg': rotate_angle_deg,
         }
         if is_create_p_skirt_behind:
