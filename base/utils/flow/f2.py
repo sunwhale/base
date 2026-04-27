@@ -85,21 +85,21 @@ def create_sketch_burn_x0(model, sketch_name, x0, burn_offset=0.0):
     return s
 
 
-def create_sketch_slot(model, sketch_name, x0, deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset=0.0):
+def create_sketch_slot(model, sketch_name, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
-    center = [x0 + deep, 0.0]
-    p1 = [x0 + deep, -slot_ellipse_a]
-    p2 = [x0 + deep + slot_ellipse_b, 0.0]
+    center = [x0 + slot_deep, 0.0]
+    p1 = [x0 + slot_deep, -slot_ellipse_a]
+    p2 = [x0 + slot_deep + slot_ellipse_b, 0.0]
     e1 = s.EllipseByCenterPerimeter(center=center, axisPoint1=p1, axisPoint2=p2)
     l1 = Line2D(p1, np.tan(degrees_to_radians(angle_demolding_1)))
-    l2 = Line2D([x0 + deep - r_cut, 0.0], [x0 + deep - r_cut, 1.0])
+    l2 = Line2D([x0 + slot_deep - r_cut, 0.0], [x0 + slot_deep - r_cut, 1.0])
     p3 = l1.get_intersection(l2)
     p4 = [p3[0], 0.0]
 
     s.Line(point1=p1, point2=p3)
     s.Line(point1=p3, point2=p4)
     s.Line(point1=center, point2=p2)
-    s.autoTrimCurve(curve1=e1, point1=[x0 + deep, slot_ellipse_a])
+    s.autoTrimCurve(curve1=e1, point1=[x0 + slot_deep, slot_ellipse_a])
     s.Line(point1=p4, point2=center)
 
     if burn_offset > 0:
@@ -108,7 +108,7 @@ def create_sketch_slot(model, sketch_name, x0, deep, slot_ellipse_a, slot_ellips
         s.Line(point1=s.vertices[5].coords, point2=s.vertices[8].coords)
         s.delete(objectList=(s.geometry[4], s.geometry[7]))
 
-    center_line = s.ConstructionLine(point1=(x0 + deep - r_cut, -1e4), point2=(x0 + deep - r_cut, 1e4))
+    center_line = s.ConstructionLine(point1=(x0 + slot_deep - r_cut, -1e4), point2=(x0 + slot_deep - r_cut, 1e4))
     geom_list = []
     for g in s.geometry.values():
         geom_list.append(g)
@@ -236,10 +236,10 @@ def create_sketch_front_outer_offset(model, sketch_name, t, points, x0, index_r,
     return s
 
 
-def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_list, block_insulation_thickness_z, slot_ellipse_a, slot_ellipse_b, burn_offset=0.0):
+def create_sketch_penult_inner(model, sketch_name, t, x0, slot_deep, block_length, z_list, block_insulation_thickness_z, slot_ellipse_a, slot_ellipse_b, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
-    r = x0 + deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
+    r = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
 
     p0 = [block_length / 2.0 + z_list[-1] - z_list[-2], r]
     p1 = [block_length / 2.0, r]
@@ -268,10 +268,10 @@ def create_sketch_penult_inner(model, sketch_name, t, x0, deep, block_length, z_
     return s, p3
 
 
-def create_sketch_behind_inner(model, sketch_name, t, x0, deep, slot_ellipse_a, slot_ellipse_b, burn_offset=0.0):
+def create_sketch_behind_inner(model, sketch_name, t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
 
-    r = x0 + deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
+    r = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
 
     p1 = [-PEN, r]
     p2 = [PEN, r]
@@ -341,7 +341,7 @@ def create_sketch_gap_t(model, sketch_name, t, points):
 
 def get_local_variables_common(dimension):
     z_list = dimension['z_list']
-    deep = dimension['deep']
+    slot_deep = dimension['slot_deep']
     x0 = dimension['x0']
     angle_demolding_1 = dimension['angle_demolding_1']
     slot_ellipse_a = dimension['slot_ellipse_a']
@@ -354,7 +354,7 @@ def get_local_variables_common(dimension):
     burn_offset = dimension['burn_offset']
 
     return (z_list,
-            deep,
+            slot_deep,
             x0,
             angle_demolding_1,
             slot_ellipse_a,
@@ -528,7 +528,7 @@ def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end):
 
 def create_part_block(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -552,8 +552,8 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     set_names = create_block_sets_common(p, faces, dimension)
 
     # 星槽切割
-    r_cut = x0 + deep
-    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
+    r_cut = x0 + slot_deep
+    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
 
     # 燃面退移x0
@@ -609,7 +609,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -638,8 +638,8 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=cut_edges, sense=FORWARD)
 
     # 星槽切割
-    r_cut = x0 + deep
-    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
+    r_cut = x0 + slot_deep
+    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
 
     # 燃面退移x0
@@ -689,7 +689,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_front, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_front(dimension)
 
     # 基本参数
@@ -794,7 +794,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
     # 星槽切割
-    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-FRONT-SLOT', x0, deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
+    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-FRONT-SLOT', x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
 
@@ -833,8 +833,8 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         if edge is not None:
             p_edges.append(edge)
         # p.DatumPointByCoordinate(coords=(p1p[0], p1p[1], z_center))
-    point1 = (x0 + deep - r_cut, 0.0)
-    point2 = (x0 + deep - r_cut, 1.0)
+    point1 = (x0 + slot_deep - r_cut, 0.0)
+    point2 = (x0 + slot_deep - r_cut, 1.0)
     point3 = rotate_point_around_origin_2d(point1, beta / 2.0)
     point4 = rotate_point_around_origin_2d(point2, beta / 2.0)
     point5 = rotate_point_around_axis((p1p[0], p1p[1], 0.0), (point3[0], point3[1], 0.0), (point4[0], point4[1], 0.0), TOL)
@@ -890,7 +890,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_front, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_front(dimension)
 
     # 基本参数
@@ -931,7 +931,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByDatumPlane(datumPlane=d[partition_plane.id], cells=p.cells)
 
     # 星槽切割
-    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-FRONT-SLOT', x0, deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
+    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-FRONT-SLOT', x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
 
@@ -998,7 +998,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -1022,8 +1022,8 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     set_names = create_block_sets_common(p, faces, dimension)
 
     # 星槽切割
-    r_cut = x0 + deep
-    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
+    r_cut = x0 + slot_deep
+    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
 
     # 燃面退移x0
@@ -1054,7 +1054,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_inner, ref_point = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, slot_ellipse_a, slot_ellipse_b, burn_offset)
+    s_penult_inner, ref_point = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, slot_deep, block_length, z_list, block_insulation_thickness_z, slot_ellipse_a, slot_ellipse_b, burn_offset)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_inner, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
@@ -1093,7 +1093,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -1126,8 +1126,8 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByDatumPlane(datumPlane=d[partition_plane.id], cells=p.cells)
 
     # 星槽切割
-    r_cut = x0 + deep
-    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
+    r_cut = x0 + slot_deep
+    s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
 
     # 燃面退移x0
@@ -1160,7 +1160,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割内燃道
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_penult_inner, ref_point = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, deep, block_length, z_list, block_insulation_thickness_z, slot_ellipse_a, slot_ellipse_b, burn_offset)
+    s_penult_inner, ref_point = create_sketch_penult_inner(model, 'SKETCH-PENULT-INNER', t, x0, slot_deep, block_length, z_list, block_insulation_thickness_z, slot_ellipse_a, slot_ellipse_b, burn_offset)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_penult_inner, angle=360.0, flipRevolveDirection=ON)
 
     given_surface_names = list(p.surfaces.keys())
@@ -1192,7 +1192,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_behind, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_behind(dimension)
 
     # 基本参数
@@ -1347,7 +1347,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 旋转切割尾部内轮廓
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_inner = create_sketch_behind_inner(model, 'SKETCH-BEHIND-INNER', t, x0, deep, slot_ellipse_a, slot_ellipse_b, burn_offset)
+    s_behind_inner = create_sketch_behind_inner(model, 'SKETCH-BEHIND-INNER', t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, burn_offset)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_inner, angle=360.0, flipRevolveDirection=ON)
 
     # 通过排除法确定内表面
@@ -1382,7 +1382,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_behind, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_behind(dimension)
 
     # 基本参数
@@ -1457,7 +1457,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_inner = create_sketch_behind_inner(model, 'SKETCH-BEHIND-INNER', t, x0, deep, slot_ellipse_a, slot_ellipse_b, burn_offset)
+    s_behind_inner = create_sketch_behind_inner(model, 'SKETCH-BEHIND-INNER', t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, burn_offset)
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_inner, angle=360.0, flipRevolveDirection=ON)
 
     # 通过排除法确定内表面
@@ -2393,7 +2393,7 @@ def create_part_cover_behind(model, part_name, dimension):
 
 
 def part_partition_p1p(p, d, p1p):
-    # p1 = [x0 + deep, -slot_ellipse_a]
+    # p1 = [x0 + slot_deep, -slot_ellipse_a]
     # offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
     offset = p1p[0]
     if offset >= p.cells.getBoundingBox()['low'][0]:
@@ -2488,7 +2488,7 @@ def create_block_surface_common(p, points, dimension):
     z_list = dimension['z_list']
     index_r = dimension['index_r']
     index_t = dimension['index_t']
-    deep = dimension['deep']
+    slot_deep = dimension['slot_deep']
     burn_offset = dimension['burn_offset']
     length = z_list[-1] * 2.0
 
@@ -3083,9 +3083,9 @@ if __name__ == "__main__":
     block_insulation_thickness_r = 3.0
     block_gap_z = 8.0
     block_gap_t = 8.0
+    slot_deep = 380.0
     slot_ellipse_a = 50.0
     slot_ellipse_b = 25.0
-    fillet_radius = 50.0
     angle_demolding_1 = 1.5
     burn_offset = 0.0
     outer_partition_offset = 300.0
@@ -3093,15 +3093,18 @@ if __name__ == "__main__":
     insert_czm = False
     is_shared_node = True
     size = '1'
+
     front_offset = 350.0
     front_ref_length = 509.0
     behind_ref_length = 917.08
 
     r_cut_front = 460.0
     length_front = 1500.0
-    p0_front = (-857.5, 794)
+    p0_x_front = -857.5
+    p0_y_front = 794
     theta0_deg_front = 90.0
-    p3_front = (0.0, 1762.5)
+    p3_x_front = 0.0
+    p3_y_front = 1762.5
     theta3_deg_front = 0.0
     r1_front = 829.41
     r2_front = 1515.05
@@ -3109,9 +3112,11 @@ if __name__ == "__main__":
 
     r_cut_behind = 460.0
     length_behind = 1500.0
-    p0_behind = (683.73, 1109.770)
+    p0_x_behind = 683.73
+    p0_y_behind = 1109.770
     theta0_deg_behind = -90.0
-    p3_behind = (0.0, 1762.5)
+    p3_x_behind = 0.0
+    p3_y_behind = 1762.5
     theta3_deg_behind = 0.0
     r1_behind = 525.61
     r2_behind = 1075.96
@@ -3281,11 +3286,11 @@ if __name__ == "__main__":
         theta3_deg_behind = message['theta3_deg_behind']
         r1_behind = message['r1_behind']
 
-        p0_front = (p0_x_front, p0_y_front)
-        p3_front = (p3_x_front, p3_y_front)
+    p0_front = (p0_x_front, p0_y_front)
+    p3_front = (p3_x_front, p3_y_front)
 
-        p0_behind = (p0_x_behind, p0_y_behind)
-        p3_behind = (p3_x_behind, p3_y_behind)
+    p0_behind = (p0_x_behind, p0_y_behind)
+    p3_behind = (p3_x_behind, p3_y_behind)
 
     beta = math.pi / n
 
@@ -3555,7 +3560,7 @@ if __name__ == "__main__":
 
         block_dimension = {
             'z_list': z_list,
-            'deep': 380.0,
+            'slot_deep': slot_deep,
             'x0': x0,
             'angle_demolding_1': angle_demolding_1,
             'slot_ellipse_a': slot_ellipse_a,
