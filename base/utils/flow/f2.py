@@ -343,11 +343,7 @@ def get_local_variables_common(dimension):
     z_list = dimension['z_list']
     deep = dimension['deep']
     x0 = dimension['x0']
-    length_up = dimension['length_up']
-    width = dimension['width']
     angle_demolding_1 = dimension['angle_demolding_1']
-    angle_demolding_2 = dimension['angle_demolding_2']
-    fillet_radius = dimension['fillet_radius']
     slot_ellipse_a = dimension['slot_ellipse_a']
     slot_ellipse_b = dimension['slot_ellipse_b']
     size = dimension['size']
@@ -360,11 +356,7 @@ def get_local_variables_common(dimension):
     return (z_list,
             deep,
             x0,
-            length_up,
-            width,
             angle_demolding_1,
-            angle_demolding_2,
-            fillet_radius,
             slot_ellipse_a,
             slot_ellipse_b,
             size,
@@ -536,7 +528,7 @@ def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end):
 
 def create_part_block(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, deep, x0, angle_demolding_1, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -617,7 +609,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, deep, x0, angle_demolding_1, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -697,7 +689,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, deep, x0, angle_demolding_1, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_front, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_front(dimension)
 
     # 基本参数
@@ -898,7 +890,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, deep, x0, angle_demolding_1, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_front, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_front(dimension)
 
     # 基本参数
@@ -1006,7 +998,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, deep, x0, angle_demolding_1, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -1101,7 +1093,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, deep, x0, angle_demolding_1, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -1200,7 +1192,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, deep, x0, angle_demolding_1, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_behind, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_behind(dimension)
 
     # 基本参数
@@ -1390,7 +1382,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, deep, x0, length_up, width, angle_demolding_1, angle_demolding_2, fillet_radius, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    z_list, deep, x0, angle_demolding_1, a, b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_behind, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_behind(dimension)
 
     # 基本参数
@@ -3566,11 +3558,7 @@ if __name__ == "__main__":
             'z_list': z_list,
             'deep': 380.0,
             'x0': x0,
-            'length_up': 1039.2,
-            'width': 100.0,
             'angle_demolding_1': angle_demolding_1,
-            'angle_demolding_2': 10.0,
-            'fillet_radius': fillet_radius,
             'slot_ellipse_a': slot_ellipse_a,
             'slot_ellipse_b': slot_ellipse_b,
             'size': size,
