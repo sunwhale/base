@@ -3181,8 +3181,6 @@ if __name__ == "__main__":
     shell_insulation_r_out = 1777.5
     shell_insulation_r_in_at_a_front = 1762.5
     shell_insulation_r_in_at_a_behind = 1762.5
-    shell_insulation_r_out_front = shell_r_in_front
-    shell_insulation_r_out_behind = shell_r_in_behind
     shell_insulation_r_in_front = 425.0
     shell_insulation_r_in_behind = 775.0
     shell_insulation_thickness_at_flange_front = 2.5
@@ -3190,26 +3188,20 @@ if __name__ == "__main__":
 
     cover_r_out_front = 560.0
     cover_thickness_front = 68.0
-    cover_offset_front = -shell_l_c1_out
 
     cover_r_out_behind = 940.0
     cover_thickness_behind = 43.0
-    cover_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
 
     flange_r_in_front = 460.0
     flange_r_out_front = 843.5
-    flange_offset_front = -shell_l_c1_out + cover_thickness_front
     flange_thickness_front = 145.0
     flange_slope_deg_front = -84.88
-    flange_thickness_offset_front = shell_insulation_thickness_at_flange_front
     flange_fillet_radius_front = 10
 
     flange_r_in_behind = 815.0
     flange_r_out_behind = 1258.72
-    flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
     flange_thickness_behind = 179.0
     flange_slope_deg_behind = 92.78
-    flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
     flange_fillet_radius_behind = 10
 
     skirt_r_out_front = 1835.5
@@ -3340,31 +3332,23 @@ if __name__ == "__main__":
         shell_insulation_r_out = message['shell_insulation_r_out']
         shell_insulation_r_in_at_a_front = message['shell_insulation_r_in_at_a_front']
         shell_insulation_r_in_at_a_behind = message['shell_insulation_r_in_at_a_behind']
-        shell_insulation_r_out_front = message['shell_insulation_r_out_front']
-        shell_insulation_r_out_behind = message['shell_insulation_r_out_behind']
         shell_insulation_r_in_front = message['shell_insulation_r_in_front']
         shell_insulation_r_in_behind = message['shell_insulation_r_in_behind']
         shell_insulation_thickness_at_flange_front = message['shell_insulation_thickness_at_flange_front']
         shell_insulation_thickness_at_flange_behind = message['shell_insulation_thickness_at_flange_behind']
         cover_r_out_front = message['cover_r_out_front']
         cover_thickness_front = message['cover_thickness_front']
-        cover_offset_front = message['cover_offset_front']
         cover_r_out_behind = message['cover_r_out_behind']
         cover_thickness_behind = message['cover_thickness_behind']
-        cover_offset_behind = message['cover_offset_behind']
         flange_r_in_front = message['flange_r_in_front']
         flange_r_out_front = message['flange_r_out_front']
-        flange_offset_front = message['flange_offset_front']
         flange_thickness_front = message['flange_thickness_front']
         flange_slope_deg_front = message['flange_slope_deg_front']
-        flange_thickness_offset_front = message['flange_thickness_offset_front']
         flange_fillet_radius_front = message['flange_fillet_radius_front']
         flange_r_in_behind = message['flange_r_in_behind']
         flange_r_out_behind = message['flange_r_out_behind']
-        flange_offset_behind = message['flange_offset_behind']
         flange_thickness_behind = message['flange_thickness_behind']
         flange_slope_deg_behind = message['flange_slope_deg_behind']
-        flange_thickness_offset_behind = message['flange_thickness_offset_behind']
         flange_fillet_radius_behind = message['flange_fillet_radius_behind']
         skirt_r_out_front = message['skirt_r_out_front']
         skirt_r_in_1_front = message['skirt_r_in_1_front']
@@ -3407,6 +3391,15 @@ if __name__ == "__main__":
     if p3_behind[1] > d / 2.0:
         raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
     beta = math.pi / n
+
+    shell_insulation_r_out_front = shell_r_in_front
+    shell_insulation_r_out_behind = shell_r_in_behind
+    cover_offset_front = -shell_l_c1_out
+    cover_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
+    flange_offset_front = -shell_l_c1_out + cover_thickness_front
+    flange_thickness_offset_front = shell_insulation_thickness_at_flange_front
+    flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
+    flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
 
     nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
