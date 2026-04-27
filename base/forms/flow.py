@@ -157,6 +157,19 @@ class F2Form(FlaskForm):
     r2_behind = FloatField('尾部三段圆弧r2，mm', default=1075.96)
     r3_behind = FloatField('尾部三段圆弧r3，mm', default=569.38)
 
+    shell_r_in = FloatField('壳体内半径 (mm)', default=1777.5)
+    shell_r_out = FloatField('壳体外半径 (mm)', default=1811.5)
+    shell_theta_out_deg_front = FloatField('头部壳体外侧锥角 (度)', default=0.49)
+    shell_theta_out_deg_behind = FloatField('尾部壳体外侧锥角 (度)', default=0.49)
+    shell_r_out_at_a_front = FloatField('头部壳体外半径 (mm)', default=1797)
+    shell_r_out_at_a_behind = FloatField('尾部部壳体外半径 (mm)', default=1797)
+    shell_theta_in_deg_front = FloatField('头部壳体内侧锥角 (度)', default=0.24)
+    shell_theta_in_deg_behind = FloatField('尾部壳体内侧锥角 (度)', default=0.24)
+    shell_r_in_front = FloatField('头部壳体内半径 (mm)', default=562.5)
+    shell_r_in_behind = FloatField('尾部壳体内半径 (mm)', default=942.5)
+    shell_l_c1_out = FloatField('头部壳体距离前椭圆中心轴向距离 (mm)', default=1105.75)
+    shell_l_c2_out = FloatField('尾部壳体距离后椭圆中心轴向距离 (mm)', default=968.46)
+
     shell_insulation_theta_in_deg_front = FloatField('头部绝热层内束角，度', default=0.16)
     shell_insulation_theta_in_deg_behind = FloatField('尾部绝热层内束角，度', default=0.16)
 
