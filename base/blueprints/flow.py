@@ -446,21 +446,28 @@ def f2():
             'n': form.n.data,
             'd': form.d.data,
             'x0': form.x0.data,
+            'l_c1_c2': form.l_c1_c2.data,
+            'ellipse_ratio': form.ellipse_ratio.data,
+            'a_front': form.a_front.data,
+            'a_behind': form.a_behind.data,
+            'rotate_angle_deg': form.rotate_angle_deg.data,
             'block_length': form.block_length.data,
             'block_insulation_thickness_z': form.block_insulation_thickness_z.data,
             'block_insulation_thickness_t': form.block_insulation_thickness_t.data,
             'block_insulation_thickness_r': form.block_insulation_thickness_r.data,
             'block_gap_z': form.block_gap_z.data,
             'block_gap_t': form.block_gap_t.data,
-            'a': form.a.data,
-            'b': form.b.data,
-            'fillet_radius': form.fillet_radius.data,
+            'slot_deep': form.slot_deep.data,
+            'slot_ellipse_a': form.slot_ellipse_a.data,
+            'slot_ellipse_b': form.slot_ellipse_b.data,
             'angle_demolding_1': form.angle_demolding_1.data,
             'burn_offset': form.burn_offset.data,
             'outer_partition_offset': form.outer_partition_offset.data,
             'element_size': form.element_size.data,
             'insert_czm': form.insert_czm.data,
+            'is_shared_node': form.is_shared_node.data,
             'size': form.size.data,
+            'front_offset': form.front_offset.data,
             'front_ref_length': form.front_ref_length.data,
             'behind_ref_length': form.behind_ref_length.data,
             'r_cut_front': form.r_cut_front.data,
@@ -474,7 +481,6 @@ def f2():
             'r1_front': form.r1_front.data,
             'r2_front': form.r2_front.data,
             'r3_front': form.r3_front.data,
-            'theta_in_deg_front': form.theta_in_deg_front.data,
             'r_cut_behind': form.r_cut_behind.data,
             'length_behind': form.length_behind.data,
             'p0_x_behind': form.p0_x_behind.data,
@@ -484,6 +490,20 @@ def f2():
             'p3_y_behind': form.p3_y_behind.data,
             'theta3_deg_behind': form.theta3_deg_behind.data,
             'r1_behind': form.r1_behind.data,
+            'r2_behind': form.r2_behind.data,
+            'r3_behind': form.r3_behind.data,
+            'shell_r_in': form.shell_r_in.data,
+            'shell_r_out': form.shell_r_out.data,
+            'shell_theta_out_deg_front': form.shell_theta_out_deg_front.data,
+            'shell_theta_out_deg_behind': form.shell_theta_out_deg_behind.data,
+            'shell_r_out_at_a_front': form.shell_r_out_at_a_front.data,
+            'shell_r_out_at_a_behind': form.shell_r_out_at_a_behind.data,
+            'shell_theta_in_deg_front': form.shell_theta_in_deg_front.data,
+            'shell_theta_in_deg_behind': form.shell_theta_in_deg_behind.data,
+            'shell_r_in_front': form.shell_r_in_front.data,
+            'shell_r_in_behind': form.shell_r_in_behind.data,
+            'shell_l_c1_out': form.shell_l_c1_out.data,
+            'shell_l_c2_out': form.shell_l_c2_out.data,
         }
         dump_json(setting_file, message)
 
@@ -516,21 +536,28 @@ def f2():
             form.n.data = message['n']
             form.d.data = message['d']
             form.x0.data = message['x0']
+            form.l_c1_c2.data = message['l_c1_c2']
+            form.ellipse_ratio.data = message['ellipse_ratio']
+            form.a_front.data = message['a_front']
+            form.a_behind.data = message['a_behind']
+            form.rotate_angle_deg.data = message['rotate_angle_deg']
             form.block_length.data = message['block_length']
             form.block_insulation_thickness_z.data = message['block_insulation_thickness_z']
             form.block_insulation_thickness_t.data = message['block_insulation_thickness_t']
             form.block_insulation_thickness_r.data = message['block_insulation_thickness_r']
             form.block_gap_z.data = message['block_gap_z']
             form.block_gap_t.data = message['block_gap_t']
-            form.a.data = message['a']
-            form.b.data = message['b']
-            form.fillet_radius.data = message['fillet_radius']
+            form.slot_deep.data = message['slot_deep']
+            form.slot_ellipse_a.data = message['slot_ellipse_a']
+            form.slot_ellipse_b.data = message['slot_ellipse_b']
             form.angle_demolding_1.data = message['angle_demolding_1']
             form.burn_offset.data = message['burn_offset']
             form.outer_partition_offset.data = message['outer_partition_offset']
             form.element_size.data = message['element_size']
             form.insert_czm.data = message['insert_czm']
+            form.is_shared_node.data = message['is_shared_node']
             form.size.data = message['size']
+            form.front_offset.data = message['front_offset']
             form.front_ref_length.data = message['front_ref_length']
             form.behind_ref_length.data = message['behind_ref_length']
             form.r_cut_front.data = message['r_cut_front']
@@ -544,7 +571,6 @@ def f2():
             form.r1_front.data = message['r1_front']
             form.r2_front.data = message['r2_front']
             form.r3_front.data = message['r3_front']
-            form.theta_in_deg_front.data = message['theta_in_deg_front']
             form.r_cut_behind.data = message['r_cut_behind']
             form.length_behind.data = message['length_behind']
             form.p0_x_behind.data = message['p0_x_behind']
@@ -554,6 +580,20 @@ def f2():
             form.p3_y_behind.data = message['p3_y_behind']
             form.theta3_deg_behind.data = message['theta3_deg_behind']
             form.r1_behind.data = message['r1_behind']
+            form.r2_behind.data = message['r2_behind']
+            form.r3_behind.data = message['r3_behind']
+            form.shell_r_in.data = message['shell_r_in']
+            form.shell_r_out.data = message['shell_r_out']
+            form.shell_theta_out_deg_front.data = message['shell_theta_out_deg_front']
+            form.shell_theta_out_deg_behind.data = message['shell_theta_out_deg_behind']
+            form.shell_r_out_at_a_front.data = message['shell_r_out_at_a_front']
+            form.shell_r_out_at_a_behind.data = message['shell_r_out_at_a_behind']
+            form.shell_theta_in_deg_front.data = message['shell_theta_in_deg_front']
+            form.shell_theta_in_deg_behind.data = message['shell_theta_in_deg_behind']
+            form.shell_r_in_front.data = message['shell_r_in_front']
+            form.shell_r_in_behind.data = message['shell_r_in_behind']
+            form.shell_l_c1_out.data = message['shell_l_c1_out']
+            form.shell_l_c2_out.data = message['shell_l_c2_out']
         except KeyError:
             pass
 

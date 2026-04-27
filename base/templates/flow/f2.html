@@ -127,7 +127,7 @@
                         <div class="col-12">
                           {{ render_field(form.submit, button_style='btn btn-info') }}
                           <hr>
-                          {{ render_form_row([form.a, form.b, form.angle_demolding_1]) }}
+                          {{ render_form_row([form.slot_ellipse_a, form.slot_ellipse_b, form.angle_demolding_1]) }}
                           <div class="col-6">
                             <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='SKETCH-SLOT.png') }}"
                                  style="width: 100%; height: auto; cursor: pointer;"
@@ -190,7 +190,6 @@
                           {{ render_form_row([form.p0_x_front, form.p0_y_front, form.theta0_deg_front]) }}
                           {{ render_form_row([form.p3_x_front, form.p3_y_front, form.theta3_deg_front]) }}
                           {{ render_form_row([form.r1_front, form.r2_front, form.r3_front]) }}
-                          {{ render_form_row([form.theta_in_deg_front]) }}
                           <hr>
                           <div class="col-6">
                             <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='three_arcs_front.png') }}"
@@ -219,7 +218,6 @@
                           {{ render_form_row([form.p0_x_behind, form.p0_y_behind, form.theta0_deg_behind]) }}
                           {{ render_form_row([form.p3_x_behind, form.p3_y_behind, form.theta3_deg_behind]) }}
                           {{ render_form_row([form.r1_behind, form.r2_behind, form.r3_behind]) }}
-                          {{ render_form_row([form.theta_in_deg_behind]) }}
                           <hr>
                           <div class="col-6">
                             <img src="{{ url_for('flow.get_flow_file', flow_id=flow_id, filename='three_arcs_behind.png') }}"
