@@ -126,8 +126,8 @@ class F2Form(FlaskForm):
     burn_offset = FloatField('燃面退移量 (mm)', default=0.0)
     outer_partition_offset = FloatField('外轮廓剖分偏移量 (mm)', default=300.0)
     element_size = FloatField('单元尺寸 (mm)', default=40.0)
-    insert_czm = BooleanField('是否插入内聚力单元', default=False)
-    is_shared_node = BooleanField('随动胶和药块是否共节点', default=False)
+    insert_czm = BooleanField('插入内聚力单元', default=False)
+    is_shared_node = BooleanField('随动胶和药块共节点', default=False)
     size = SelectField('对称性', coerce=str)
 
     front_offset = FloatField('头部坐标系与全局坐标系的偏移 (mm)', default=350.0)
