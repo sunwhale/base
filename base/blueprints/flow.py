@@ -504,6 +504,42 @@ def f2():
             'shell_r_in_behind': form.shell_r_in_behind.data,
             'shell_l_c1_out': form.shell_l_c1_out.data,
             'shell_l_c2_out': form.shell_l_c2_out.data,
+            'shell_insulation_theta_in_deg_front': form.shell_insulation_theta_in_deg_front.data,
+            'shell_insulation_theta_in_deg_behind': form.shell_insulation_theta_in_deg_behind.data,
+            'shell_insulation_r_in': form.shell_insulation_r_in.data,
+            'shell_insulation_r_out': form.shell_insulation_r_out.data,
+            'shell_insulation_r_in_at_a_front': form.shell_insulation_r_in_at_a_front.data,
+            'shell_insulation_r_in_at_a_behind': form.shell_insulation_r_in_at_a_behind.data,
+            'shell_insulation_r_in_front': form.shell_insulation_r_in_front.data,
+            'shell_insulation_r_in_behind': form.shell_insulation_r_in_behind.data,
+            'shell_insulation_thickness_at_flange_front': form.shell_insulation_thickness_at_flange_front.data,
+            'shell_insulation_thickness_at_flange_behind': form.shell_insulation_thickness_at_flange_behind.data,
+            'cover_r_out_front': form.cover_r_out_front.data,
+            'cover_thickness_front': form.cover_thickness_front.data,
+            'cover_r_out_behind': form.cover_r_out_behind.data,
+            'cover_thickness_behind': form.cover_thickness_behind.data,
+            'flange_r_in_front': form.flange_r_in_front.data,
+            'flange_r_out_front': form.flange_r_out_front.data,
+            'flange_thickness_front': form.flange_thickness_front.data,
+            'flange_slope_deg_front': form.flange_slope_deg_front.data,
+            'flange_fillet_radius_front': form.flange_fillet_radius_front.data,
+            'flange_r_in_behind': form.flange_r_in_behind.data,
+            'flange_r_out_behind': form.flange_r_out_behind.data,
+            'flange_thickness_behind': form.flange_thickness_behind.data,
+            'flange_slope_deg_behind': form.flange_slope_deg_behind.data,
+            'flange_fillet_radius_behind': form.flange_fillet_radius_behind.data,
+            'skirt_r_out_front': form.skirt_r_out_front.data,
+            'skirt_r_in_1_front': form.skirt_r_in_1_front.data,
+            'skirt_r_in_2_front': form.skirt_r_in_2_front.data,
+            'skirt_l_1_front': form.skirt_l_1_front.data,
+            'skirt_l_2_front': form.skirt_l_2_front.data,
+            'skirt_offset_front': form.skirt_offset_front.data,
+            'skirt_r_out_behind': form.skirt_r_out_behind.data,
+            'skirt_r_in_1_behind': form.skirt_r_in_1_behind.data,
+            'skirt_r_in_2_behind': form.skirt_r_in_2_behind.data,
+            'skirt_l_1_behind': form.skirt_l_1_behind.data,
+            'skirt_l_2_behind': form.skirt_l_2_behind.data,
+            'skirt_offset_behind': form.skirt_offset_behind.data,
         }
         dump_json(setting_file, message)
 
@@ -594,6 +630,42 @@ def f2():
             form.shell_r_in_behind.data = message['shell_r_in_behind']
             form.shell_l_c1_out.data = message['shell_l_c1_out']
             form.shell_l_c2_out.data = message['shell_l_c2_out']
+            form.shell_insulation_theta_in_deg_front.data = message['shell_insulation_theta_in_deg_front']
+            form.shell_insulation_theta_in_deg_behind.data = message['shell_insulation_theta_in_deg_behind']
+            form.shell_insulation_r_in.data = message['shell_insulation_r_in']
+            form.shell_insulation_r_out.data = message['shell_insulation_r_out']
+            form.shell_insulation_r_in_at_a_front.data = message['shell_insulation_r_in_at_a_front']
+            form.shell_insulation_r_in_at_a_behind.data = message['shell_insulation_r_in_at_a_behind']
+            form.shell_insulation_r_in_front.data = message['shell_insulation_r_in_front']
+            form.shell_insulation_r_in_behind.data = message['shell_insulation_r_in_behind']
+            form.shell_insulation_thickness_at_flange_front.data = message['shell_insulation_thickness_at_flange_front']
+            form.shell_insulation_thickness_at_flange_behind.data = message['shell_insulation_thickness_at_flange_behind']
+            form.cover_r_out_front.data = message['cover_r_out_front']
+            form.cover_thickness_front.data = message['cover_thickness_front']
+            form.cover_r_out_behind.data = message['cover_r_out_behind']
+            form.cover_thickness_behind.data = message['cover_thickness_behind']
+            form.flange_r_in_front.data = message['flange_r_in_front']
+            form.flange_r_out_front.data = message['flange_r_out_front']
+            form.flange_thickness_front.data = message['flange_thickness_front']
+            form.flange_slope_deg_front.data = message['flange_slope_deg_front']
+            form.flange_fillet_radius_front.data = message['flange_fillet_radius_front']
+            form.flange_r_in_behind.data = message['flange_r_in_behind']
+            form.flange_r_out_behind.data = message['flange_r_out_behind']
+            form.flange_thickness_behind.data = message['flange_thickness_behind']
+            form.flange_slope_deg_behind.data = message['flange_slope_deg_behind']
+            form.flange_fillet_radius_behind.data = message['flange_fillet_radius_behind']
+            form.skirt_r_out_front.data = message['skirt_r_out_front']
+            form.skirt_r_in_1_front.data = message['skirt_r_in_1_front']
+            form.skirt_r_in_2_front.data = message['skirt_r_in_2_front']
+            form.skirt_l_1_front.data = message['skirt_l_1_front']
+            form.skirt_l_2_front.data = message['skirt_l_2_front']
+            form.skirt_offset_front.data = message['skirt_offset_front']
+            form.skirt_r_out_behind.data = message['skirt_r_out_behind']
+            form.skirt_r_in_1_behind.data = message['skirt_r_in_1_behind']
+            form.skirt_r_in_2_behind.data = message['skirt_r_in_2_behind']
+            form.skirt_l_1_behind.data = message['skirt_l_1_behind']
+            form.skirt_l_2_behind.data = message['skirt_l_2_behind']
+            form.skirt_offset_behind.data = message['skirt_offset_behind']
         except KeyError:
             pass
 
