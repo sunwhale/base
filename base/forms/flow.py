@@ -105,15 +105,24 @@ class F2Form(FlaskForm):
     n = IntegerField('环向等分数 n', default=9, validators=[DataRequired()])
     d = FloatField('药柱直径 d，mm', default=3529.0)
     x0 = FloatField('内轮廓距离 x0，mm', default=500.0)
-    block_length = FloatField('药块长度，mm', default=1229.0)
+
+    l_c1_c2 = FloatField('前后椭圆中心距离，mm', default=17300.0)
+    ellipse_ratio = FloatField('椭圆长短轴比', default=1.69)
+    a_front = FloatField('前椭圆长轴，mm', default=1772.47)
+    a_behind = FloatField('后椭圆长轴，mm', default=1772.47)
+    rotate_angle_deg = FloatField('旋转体转角，度', default=40.0)
+
+    block_length = FloatField('药块长度，mm', default=1508.0)
     block_insulation_thickness_z = FloatField('z方向绝热层厚度，mm', default=3.0)
     block_insulation_thickness_r = FloatField('r方向绝热层厚度，mm', default=3.0)
     block_insulation_thickness_t = FloatField('θ方向绝热层厚度，mm', default=3.0)
-    block_gap_z = FloatField('z方向药块间隙，mm', default=9.0)
-    block_gap_t = FloatField('θ方向药块间隙，mm', default=9.0)
-    a = FloatField('椭圆长轴 a，mm', default=50.0)
-    b = FloatField('椭圆短轴 b，mm', default=25.0)
-    fillet_radius = FloatField('fillet_radius，mm', default=50.0)
+    block_gap_z = FloatField('z方向药块间隙，mm', default=8.0)
+    block_gap_t = FloatField('θ方向药块间隙，mm', default=8.0)
+
+    slot_deep = FloatField('星槽深度，mm', default=380.0)
+    slot_ellipse_a = FloatField('星槽椭圆长轴 a，mm', default=50.0)
+    slot_ellipse_b = FloatField('星槽椭圆短轴 b，mm', default=25.0)
+
     angle_demolding_1 = FloatField('环向脱模角度，度', default=1.5)
     burn_offset = FloatField('燃面退移量，mm', default=0.0)
     outer_partition_offset = FloatField('外轮廓剖分偏移量，mm', default=300.0)
@@ -121,33 +130,35 @@ class F2Form(FlaskForm):
     insert_czm = BooleanField('是否插入内聚力单元', default=False)
     size = SelectField('对称性', coerce=str)
 
+    front_offset = FloatField('头部坐标系与全局坐标系的偏移，mm', default=350.0)
     front_ref_length = FloatField('头部参考长度，mm', default=509.0)
     r_cut_front = FloatField('头部星槽切割半径，mm', default=460.0)
     length_front = FloatField('头部拉伸长度，mm', default=1500.0)
-    p0_x_front = FloatField('头部p0点，x坐标，mm', default=-1207.5)
+    p0_x_front = FloatField('头部p0点，x坐标，mm', default=-857.5)
     p0_y_front = FloatField('头部p0点，y坐标，mm', default=794.0)
     theta0_deg_front = FloatField('头部p0点切线角度，度', default=90.0)
-    p3_x_front = FloatField('头部p3点，x坐标，mm', default=-350.0)
+    p3_x_front = FloatField('头部p3点，x坐标，mm', default=0.0)
     p3_y_front = FloatField('头部p3点，y坐标，mm', default=1762.5)
     theta3_deg_front = FloatField('头部p3点切线角度，度，mm', default=0.0)
-    r1_front = FloatField('头部三段圆弧r1，mm', default=929.4)
-    r2_front = FloatField('头部三段圆弧r2，mm', default=1524.0)
-    r3_front = FloatField('头部三段圆弧r3，mm', default=655.2)
-    theta_in_deg_front = FloatField('头部绝热层内束角，度', default=0.16)
+    r1_front = FloatField('头部三段圆弧r1，mm', default=829.41)
+    r2_front = FloatField('头部三段圆弧r2，mm', default=1515.05)
+    r3_front = FloatField('头部三段圆弧r3，mm', default=641.21)
 
-    behind_ref_length = FloatField('尾部参考长度，mm', default=500.0)
+    behind_ref_length = FloatField('尾部参考长度，mm', default=917.08)
     r_cut_behind = FloatField('尾部星槽切割半径，mm', default=460.0)
     length_behind = FloatField('尾部拉伸长度，mm', default=1500.0)
-    p0_x_behind = FloatField('尾部p0点，x坐标，mm', default=1207.5)
-    p0_y_behind = FloatField('尾部p0点，y坐标，mm', default=794.0)
+    p0_x_behind = FloatField('尾部p0点，x坐标，mm', default=683.73)
+    p0_y_behind = FloatField('尾部p0点，y坐标，mm', default=1109.770)
     theta0_deg_behind = FloatField('尾部p0点切线角度，度', default=-90.0)
-    p3_x_behind = FloatField('尾部p3点，x坐标，mm', default=350.0)
+    p3_x_behind = FloatField('尾部p3点，x坐标，mm', default=0.0)
     p3_y_behind = FloatField('尾部p3点，y坐标，mm', default=1762.5)
     theta3_deg_behind = FloatField('尾部p3点切线角度，度，mm', default=0.0)
-    r1_behind = FloatField('尾部三段圆弧r1，mm', default=929.4)
-    r2_behind = FloatField('尾部三段圆弧r2，mm', default=1524.0)
-    r3_behind = FloatField('尾部三段圆弧r3，mm', default=655.2)
-    theta_in_deg_behind = FloatField('尾部绝热层内束角，度', default=0.16)
+    r1_behind = FloatField('尾部三段圆弧r1，mm', default=525.61)
+    r2_behind = FloatField('尾部三段圆弧r2，mm', default=1075.96)
+    r3_behind = FloatField('尾部三段圆弧r3，mm', default=569.38)
+
+    shell_insulation_theta_in_deg_front = FloatField('头部绝热层内束角，度', default=0.16)
+    shell_insulation_theta_in_deg_behind = FloatField('尾部绝热层内束角，度', default=0.16)
 
     material_tool = SelectField('铣刀材料', coerce=str)
     material_plane = SelectField('平板材料', coerce=str)
@@ -157,7 +168,7 @@ class F2Form(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(F2Form, self).__init__(*args, **kwargs)
-        self.size.choices = ['1/4', '1/2', '1']
+        self.size.choices = ['1', '1/2', '1/4']
         self.material_tool.choices = ['']
         self.material_plane.choices = ['']
         self.material_interaction.choices = ['']
