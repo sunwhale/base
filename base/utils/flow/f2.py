@@ -837,7 +837,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     point2 = (x0 + slot_deep - r_cut, 1.0)
     point3 = rotate_point_around_origin_2d(point1, beta / 2.0)
     point4 = rotate_point_around_origin_2d(point2, beta / 2.0)
-    point5 = rotate_point_around_axis((p1p[0], p1p[1], 0.0), (point3[0], point3[1], 0.0), (point4[0], point4[1], 0.0), TOL)
+    point5 = rotate_point_around_axis((p1p[0], p1p[1], 0.0), (point3[0], point3[1], 0.0), (point4[0], point4[1], 0.0), TOL * 10.0)
     # p.DatumPointByCoordinate(coords=point5)
     edge = p.edges.findAt(point5)
     if edge is not None:
