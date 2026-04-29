@@ -787,9 +787,12 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         [0, 0, 0]
     ]:
         cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
-    cells = get_same_volume_cells(p, cells)
     for pa in faces_xz_plane[index_r - 1]:
-        cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
+        if pa[0] < z_list[1]:
+            cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
+        else:
+            # 处理切割面距离中心界面距离非常近的情况
+            cells += p.cells.findAt(((pa[1], 0.0, z_list[1] - TOL),))
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
@@ -803,16 +806,6 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
     p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
 
-    # 创建集合（体），SET-CELL-INSULATION
-    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-GRAIN', ['SET-CELL-GRAIN'])
-    if cells:
-        p.Set(cells=cells, name='SET-CELL-INSULATION')
-
-    # 创建集合（体），SET-CELL-GLUE-A
-    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-INSULATION', ['SET-CELL-GRAIN', 'SET-CELL-INSULATION'])
-    if cells:
-        p.Set(cells=cells, name='SET-CELL-GLUE-A')
-
     # 镜像
     if size == '1':
         p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
@@ -822,6 +815,16 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         pass
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
+
+    # 创建集合（体），SET-CELL-INSULATION
+    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-GRAIN', ['SET-CELL-GRAIN'])
+    if cells:
+        p.Set(cells=cells, name='SET-CELL-INSULATION')
+
+    # 创建集合（体），SET-CELL-GLUE-A
+    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-INSULATION', ['SET-CELL-GRAIN', 'SET-CELL-INSULATION'])
+    if cells:
+        p.Set(cells=cells, name='SET-CELL-GLUE-A')
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
@@ -856,7 +859,8 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
-    given_surface_names.remove('SURFACE-OUTER')
+    if 'SURFACE-OUTER' in given_surface_names:
+        given_surface_names.remove('SURFACE-OUTER')
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
@@ -868,7 +872,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     create_face_set_from_surface(p)
 
     # 更新集合（体），处理镜像
-    create_block_sets_same_volume(p)
+    # create_block_sets_same_volume(p)
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
@@ -3089,25 +3093,25 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
     is_create_p_block_front = True
-    is_create_p_block_behind = True
-    is_create_p_gap = True
-    is_create_p_gap_penult = True
-    is_create_p_gap_front = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_create_p_block_behind = True
+    # is_create_p_gap = True
+    # is_create_p_gap_penult = True
+    # is_create_p_gap_front = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     n = 9
     d = 3529.0
@@ -3384,14 +3388,15 @@ if __name__ == "__main__":
 
     p0_front = (p0_x_front, p0_y_front)
     p3_front = (p3_x_front, p3_y_front)
-    if p3_front[1] > d / 2.0:
-        raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
     p0_behind = (p0_x_behind, p0_y_behind)
     p3_behind = (p3_x_behind, p3_y_behind)
-    if p3_behind[1] > d / 2.0:
-        raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
-    beta = math.pi / n
 
+    # if p3_front[1] > d / 2.0:
+    #     raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
+    # if p3_behind[1] > d / 2.0:
+    #     raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
+
+    beta = math.pi / n
     shell_insulation_r_out_front = shell_r_in_front
     shell_insulation_r_out_behind = shell_r_in_behind
     cover_offset_front = -shell_l_c1_out
