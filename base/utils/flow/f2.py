@@ -3101,8 +3101,8 @@ if __name__ == "__main__":
     # is_create_p_insulation = True
     # is_create_p_cover_front = True
     # is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_block_penult = True
+    is_create_p_block = True
+    is_create_p_block_penult = True
     is_create_p_block_front = True
     # is_create_p_block_behind = True
     # is_create_p_gap = True
@@ -3111,7 +3111,7 @@ if __name__ == "__main__":
     # is_create_p_gap_behind = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
-    # is_assemble = True
+    is_assemble = True
 
     n = 9
     d = 3529.0
@@ -3267,6 +3267,7 @@ if __name__ == "__main__":
     ]
 
     setting_file = 'setting.json'
+    setting_file = 'setting_520.json'
     if os.path.exists(setting_file):
         message = load_json(setting_file)
         n = message['n']
@@ -3435,6 +3436,24 @@ if __name__ == "__main__":
 
         plot_blocks_map(block, is_show=False, save_path='blocks_map.png')
     if ABAQUS_ENV:
+        # 初始化part对象
+        p_insulation = None
+        p_cover_front = None
+        p_flange_front = None
+        p_skirt_front = None
+        p_cover_behind = None
+        p_flange_behind = None
+        p_skirt_behind = None
+        p_shell = None
+        p_block_front = None
+        p_block_penult = None
+        p_block_behind = None
+        p_block = None
+        p_gap_front = None
+        p_gap_penult = None
+        p_gap_behind = None
+        p_gap = None
+
         Mdb()
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
@@ -3768,35 +3787,37 @@ if __name__ == "__main__":
             block_types = get_block_types(block)
             ties_types = get_tie_types(block)
 
-            block_dict = {
+            # 药块字典
+            block_part_dict = {
                 'FRONT': p_block_front,
                 'PENULT': p_block_penult,
                 'BEHIND': p_block_behind,
                 'MIDDLE': p_block
             }
 
-            gap_dict = {
+            # 缝隙字典
+            gap_part_dict = {
                 'FRONT': p_gap_front,
                 'PENULT': p_gap_penult,
                 'BEHIND': p_gap_behind,
                 'MIDDLE': p_gap
             }
 
+            # 旋转体字典
+            rotation_part_dict = {
+                'INSULATION': p_insulation,
+                'COVER-FRONT': p_cover_front,
+                'FLANGE-FRONT': p_flange_front,
+                'SKIRT-FRONT': p_skirt_front,
+                'COVER-BEHIND': p_cover_behind,
+                'FLANGE-BEHIND': p_flange_behind,
+                'SKIRT-BEHIND': p_skirt_behind,
+                'SHELL': p_shell,
+            }
+
             a = model.rootAssembly
             a.DatumCsysByDefault(CARTESIAN)
             cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
-
-            # 实例配置列表：(实例名称, 部件对象)
-            rotation_instances = [
-                ('INSULATION', p_insulation),
-                ('COVER-FRONT', p_cover_front),
-                ('FLANGE-FRONT', p_flange_front),
-                ('SKIRT-FRONT', p_skirt_front),
-                ('COVER-BEHIND', p_cover_behind),
-                ('FLANGE-BEHIND', p_flange_behind),
-                ('SKIRT-BEHIND', p_skirt_behind),
-                ('SHELL', p_shell),
-            ]
 
             # 公共旋转参数
             origin = (0.0, 0.0, 0.0)
@@ -3812,10 +3833,11 @@ if __name__ == "__main__":
             else:
                 z_rot_angle = 0.0
 
-            for name, part in rotation_instances:
-                a.Instance(name=name, part=part, dependent=ON)
-                a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_y, angle=y_rot_angle)
-                a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_z, angle=z_rot_angle)
+            for name, part in rotation_part_dict.items():
+                if part is not None:
+                    a.Instance(name=name, part=part, dependent=ON)
+                    a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_y, angle=y_rot_angle)
+                    a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_z, angle=z_rot_angle)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
@@ -3832,15 +3854,17 @@ if __name__ == "__main__":
                     z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1) * (block_gap_z + block_length) + block_gap_z / 2 + block_insulation_thickness_z + behind_ref_length
 
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                a.Instance(name=instance_name, part=block_dict[block_type], dependent=ON)
-                a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
-                a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-
-                if not is_shared_node:
-                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                    a.Instance(name=instance_name, part=gap_dict[block_type], dependent=ON)
+                if block_part_dict[block_type] is not None:
+                    a.Instance(name=instance_name, part=block_part_dict[block_type], dependent=ON)
                     a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
                     a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+
+                if not is_shared_node:
+                    if gap_part_dict[block_type] is not None:
+                        instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                        a.Instance(name=instance_name, part=gap_part_dict[block_type], dependent=ON)
+                        a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
+                        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
 
             model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
@@ -3888,7 +3912,7 @@ if __name__ == "__main__":
             surface_name_2 = 'SURFACE-OUTER'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            for instance_name, _ in rotation_instances:
+            for instance_name in rotation_part_dict.keys():
                 set_name = 'SET-SURFACE-T0'
                 bc_name = 'BC-' + instance_name + '-' + set_name
                 model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
