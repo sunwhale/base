@@ -134,12 +134,18 @@ def create_sketch_front_outer(model, sketch_name, t, points, index_r, index_t, p
     l1 = Line2D(p3, np.tan(degrees_to_radians(theta_in_deg)))
     l2 = Line2D([0.0, points[index_r, 0, 0]], [1.0, points[index_r, 0, 0]])
     l3 = Line2D((z_list[-1], 0.0), (z_list[-1], 1.0))
-    if l1.get_intersection(l2)[0] > l1.get_intersection(l3)[0]:
+
+    if l1.get_intersection(l2) is None:
+        # 处理theta_in_deg为0度，l1和l2平行的情况
         p4 = l1.get_intersection(l3)
         p5 = (PEN, p4[1])
     else:
-        p4 = l1.get_intersection(l2)
-        p5 = (z_list[-1], p4[1])
+        if l1.get_intersection(l2)[0] > l1.get_intersection(l3)[0]:
+            p4 = l1.get_intersection(l3)
+            p5 = (PEN, p4[1])
+        else:
+            p4 = l1.get_intersection(l2)
+            p5 = (z_list[-1], p4[1])
 
     p1 = result['p1']
     p2 = result['p2']
@@ -3101,8 +3107,8 @@ if __name__ == "__main__":
     # is_create_p_insulation = True
     # is_create_p_cover_front = True
     # is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
     is_create_p_block_front = True
     # is_create_p_block_behind = True
     # is_create_p_gap = True
@@ -3111,7 +3117,7 @@ if __name__ == "__main__":
     # is_create_p_gap_behind = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
-    is_assemble = True
+    # is_assemble = True
 
     n = 9
     d = 3529.0
@@ -3407,7 +3413,7 @@ if __name__ == "__main__":
     flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
     flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
 
-    nl, nt = 12, n
+    nl, nt = 6, n
     block = np.zeros((nl, nt), dtype=bool)
     block[:, 0] = True
 
