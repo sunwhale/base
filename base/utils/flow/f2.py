@@ -798,7 +798,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
             cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
         else:
             # 处理切割面距离中心界面距离非常近的情况
-            cells += p.cells.findAt(((pa[1], 0.0, z_list[1] - TOL),))
+            cells += p.cells.findAt(((pa[1], 0.0, z_list[1] - TOL * 10),))
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
@@ -3107,8 +3107,8 @@ if __name__ == "__main__":
     # is_create_p_insulation = True
     # is_create_p_cover_front = True
     # is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_block_penult = True
+    is_create_p_block = True
+    is_create_p_block_penult = True
     is_create_p_block_front = True
     # is_create_p_block_behind = True
     # is_create_p_gap = True
@@ -3117,7 +3117,7 @@ if __name__ == "__main__":
     # is_create_p_gap_behind = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
-    # is_assemble = True
+    is_assemble = True
 
     n = 9
     d = 3529.0
