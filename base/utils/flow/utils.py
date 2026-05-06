@@ -1482,7 +1482,7 @@ def solve_three_arcs(p0, theta0_deg, p3, theta3_deg, r1, r2, r3, tol=1e-6):
         return None
 
 
-def plot_three_arcs(result, p0, p3, figsize=(10, 8), is_show=True, is_save=True, save_path='three_arcs.png'):
+def plot_three_arcs(result, p0, p3, figsize=(10, 8), is_show=True, is_save=True, save_path='three_arcs.png', objective_points=[]):
     """
     绘制三段圆弧及其几何要素
     """
@@ -1528,6 +1528,9 @@ def plot_three_arcs(result, p0, p3, figsize=(10, 8), is_show=True, is_save=True,
     ax.plot(p1[0], p1[1], 'mo', markersize=8, label='Tangent p1')
     ax.plot(p2[0], p2[1], 'co', markersize=8, label='Tangent p2')
     ax.plot(p3[0], p3[1], 'k^', markersize=10, label='End p3')
+
+    for point in objective_points:
+        ax.plot(point[0], point[1], 'ys', markersize=10)
 
     # 绘制圆心到切点的连线
     ax.plot([c1[0], p0[0]], [c1[1], p0[1]], 'r--', alpha=0.5)
@@ -1668,6 +1671,77 @@ def geometries(d, x0, beta, rt, tt):
                 if i == 0:
                     mid_point = 0.5 * (point1 + point2)
                     lines['%s%s-%s%s' % (i, j, i, j + 1)] = ['line', point1, point2, mid_point]
+                else:
+                    theta1, theta2, radius, mid_point = calc_arc(center, point1, point2)
+                    lines['%s%s-%s%s' % (i, j, i, j + 1)] = ['arc', point1, point2, mid_point]
+
+    faces = np.zeros([nr, nt, 2])
+    for i in range(faces.shape[0]):
+        for j in range(faces.shape[1]):
+            point = (np.array(lines['%s%s-%s%s' % (i, j, i, j + 1)][3]) + np.array(lines['%s%s-%s%s' % (i + 1, j, i + 1, j + 1)][3])) / 2.0
+            faces[i, j, 0] = point[0]
+            faces[i, j, 1] = point[1]
+
+    return points, lines, faces
+
+
+def geometries_circle(d, x0, beta, intercept, rt, tt):
+    nr = len(rt)
+    nt = len(tt)
+
+    r = [0.0 for _ in range(nr)]
+    b = [0.0 for _ in range(nt)]
+
+    for i in range(nr):
+        r[i] = d / 2.0 - sum(rt[0:nr - i])
+
+    for i in range(nt):
+        b[i] = -sum(tt[0:nt - i]) / np.cos(beta) + intercept
+
+    points = np.zeros([nr + 1, nt + 1, 2])
+
+    k = np.tan(beta)
+
+    # 遍历所有点
+    for j in range(nt + 1):
+        for i in range(nr + 1):
+            if j == 0:  # 第一列
+                if i == 0:  # 第一行，第一列
+                    points[i, j] = np.array([x0, 0])
+                else:  # 其他行，第一列
+                    points[i, j] = np.array([r[i - 1], 0])
+            else:  # 其他列
+                if i == 0:  # 第一行，其他列
+                    points[i, j] = line_circle_intersection(k, b[j - 1], x0)[0]
+                else:  # 其他行，其他列
+                    points[i, j] = line_circle_intersection(k, b[j - 1], r[i - 1])[0]
+
+    lines = {}
+    center = (0, 0)
+    for i in range(points.shape[0]):
+        for j in range(points.shape[1]):
+            point1 = points[i, j]
+            if i - 1 > 0:
+                point2 = points[i - 1, j]
+                mid_point = 0.5 * (point1 + point2)
+                lines['%s%s-%s%s' % (i, j, i - 1, j)] = ['line', point1, point2, mid_point]
+            if i + 1 < points.shape[0]:
+                point2 = points[i + 1, j]
+                mid_point = 0.5 * (point1 + point2)
+                lines['%s%s-%s%s' % (i, j, i + 1, j)] = ['line', point1, point2, mid_point]
+            if j - 1 > 0:
+                point2 = points[i, j - 1]
+                if i == 0:
+                    mid_point = 0.5 * (point1 + point2)
+                    lines['%s%s-%s%s' % (i, j, i, j - 1)] = ['line', point1, point2, mid_point]
+                else:
+                    theta1, theta2, radius, mid_point = calc_arc(center, point2, point1)
+                    lines['%s%s-%s%s' % (i, j, i, j - 1)] = ['arc', point1, point2, mid_point]
+            if j + 1 < points.shape[1]:
+                point2 = points[i, j + 1]
+                if i == 0:
+                    mid_point = 0.5 * (point1 + point2)
+                    lines['%s%s-%s%s' % (i, j, i, j + 1)] = ['arc', point1, point2, mid_point]
                 else:
                     theta1, theta2, radius, mid_point = calc_arc(center, point1, point2)
                     lines['%s%s-%s%s' % (i, j, i, j + 1)] = ['arc', point1, point2, mid_point]
@@ -1925,7 +1999,7 @@ def combine_surfaces(p, surface_names, combine_surface_name):
         p.Surface(side1Faces=p_faces, name=combine_surface_name)
 
 
-def generate_part_mesh(p, element_size, deviationFactor=0.2, minSizeValue=8.0):
+def generate_part_mesh(p, element_size, deviationFactor=0.2, minSizeValue=1.0):
     elemType1 = mesh.ElemType(elemCode=C3D8H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType2 = mesh.ElemType(elemCode=C3D6H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
     elemType3 = mesh.ElemType(elemCode=C3D4H, secondOrderAccuracy=OFF, distortionControl=DEFAULT)
@@ -1988,13 +2062,8 @@ if __name__ == "__main__":
 
     if not ABAQUS_ENV:
         print(dir())
-        # 创建椭圆（中心在 (2,3)，长半轴5，短半轴3，长轴沿x方向）
-        ellipse = Ellipse(2, 3, 5, 3, 'x')
-        # 创建直线：y = x + 1
-        line = Line2D(1, -1, 1)  # x - y + 1 = 0
-        intersections = ellipse.intersect_with_line(line)
-        for p in intersections:
-            print(p)
+        points, lines, faces = geometries_circle(480, 160, math.pi / 6, -67.55, [0, 2, 2], [0, 2, 2])
+        plot_geometries(points, lines, faces)
 
     if ABAQUS_ENV:
         pass
