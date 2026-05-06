@@ -179,12 +179,18 @@ def create_sketch_behind_outer(model, sketch_name, t, points, index_r, index_t, 
     l1 = Line2D(p3, np.tan(degrees_to_radians(-theta_in_deg)))
     l2 = Line2D([0.0, points[index_r, 0, 0]], [1.0, points[index_r, 0, 0]])
     l3 = Line2D((-z_list[-1], 0.0), (-z_list[-1], 1.0))
-    if l1.get_intersection(l2)[0] < l1.get_intersection(l3)[0]:
+    if l1.get_intersection(l2) is None:
+        # 处理theta_in_deg为0度，l1和l2平行的情况
         p4 = l1.get_intersection(l3)
         p5 = (-PEN, p4[1])
     else:
-        p4 = l1.get_intersection(l2)
-        p5 = (-z_list[-1], p4[1])
+
+        if l1.get_intersection(l2)[0] < l1.get_intersection(l3)[0]:
+            p4 = l1.get_intersection(l3)
+            p5 = (-PEN, p4[1])
+        else:
+            p4 = l1.get_intersection(l2)
+            p5 = (-z_list[-1], p4[1])
 
     p1 = result['p1']
     p2 = result['p2']
@@ -3078,6 +3084,77 @@ def add_spline(s, points):
     s.Spline(points=point_list)
 
 
+def geometries_circle(d, x0, beta, intercept, rt, tt):
+    nr = len(rt)
+    nt = len(tt)
+
+    r = [0.0 for _ in range(nr)]
+    b = [0.0 for _ in range(nt)]
+
+    for i in range(nr):
+        r[i] = d / 2.0 - sum(rt[0:nr - i])
+
+    for i in range(nt):
+        b[i] = -sum(tt[0:nt - i]) / np.cos(beta) + intercept
+
+    points = np.zeros([nr + 1, nt + 1, 2])
+
+    k = np.tan(beta)
+
+    # 遍历所有点
+    for j in range(nt + 1):
+        for i in range(nr + 1):
+            if j == 0:  # 第一列
+                if i == 0:  # 第一行，第一列
+                    points[i, j] = np.array([x0, 0])
+                else:  # 其他行，第一列
+                    points[i, j] = np.array([r[i - 1], 0])
+            else:  # 其他列
+                if i == 0:  # 第一行，其他列
+                    points[i, j] = line_circle_intersection(k, b[j - 1], x0)[0]
+                else:  # 其他行，其他列
+                    points[i, j] = line_circle_intersection(k, b[j - 1], r[i - 1])[0]
+
+    lines = {}
+    center = (0, 0)
+    for i in range(points.shape[0]):
+        for j in range(points.shape[1]):
+            point1 = points[i, j]
+            if i - 1 > 0:
+                point2 = points[i - 1, j]
+                mid_point = 0.5 * (point1 + point2)
+                lines['%s%s-%s%s' % (i, j, i - 1, j)] = ['line', point1, point2, mid_point]
+            if i + 1 < points.shape[0]:
+                point2 = points[i + 1, j]
+                mid_point = 0.5 * (point1 + point2)
+                lines['%s%s-%s%s' % (i, j, i + 1, j)] = ['line', point1, point2, mid_point]
+            if j - 1 > 0:
+                point2 = points[i, j - 1]
+                if i == 0:
+                    mid_point = 0.5 * (point1 + point2)
+                    lines['%s%s-%s%s' % (i, j, i, j - 1)] = ['line', point1, point2, mid_point]
+                else:
+                    theta1, theta2, radius, mid_point = calc_arc(center, point2, point1)
+                    lines['%s%s-%s%s' % (i, j, i, j - 1)] = ['arc', point1, point2, mid_point]
+            if j + 1 < points.shape[1]:
+                point2 = points[i, j + 1]
+                if i == 0:
+                    mid_point = 0.5 * (point1 + point2)
+                    lines['%s%s-%s%s' % (i, j, i, j + 1)] = ['arc', point1, point2, mid_point]
+                else:
+                    theta1, theta2, radius, mid_point = calc_arc(center, point1, point2)
+                    lines['%s%s-%s%s' % (i, j, i, j + 1)] = ['arc', point1, point2, mid_point]
+
+    faces = np.zeros([nr, nt, 2])
+    for i in range(faces.shape[0]):
+        for j in range(faces.shape[1]):
+            point = (np.array(lines['%s%s-%s%s' % (i, j, i, j + 1)][3]) + np.array(lines['%s%s-%s%s' % (i + 1, j, i + 1, j + 1)][3])) / 2.0
+            faces[i, j, 0] = point[0]
+            faces[i, j, 1] = point[1]
+
+    return points, lines, faces
+
+
 if __name__ == "__main__":
     is_create_p_shell = False
     is_create_p_skirt_front = False
@@ -3107,10 +3184,10 @@ if __name__ == "__main__":
     # is_create_p_insulation = True
     # is_create_p_cover_front = True
     # is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
-    is_create_p_block_front = True
-    # is_create_p_block_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
+    # is_create_p_block_front = True
+    is_create_p_block_behind = True
     # is_create_p_gap = True
     # is_create_p_gap_penult = True
     # is_create_p_gap_front = True
@@ -3433,6 +3510,25 @@ if __name__ == "__main__":
         # r2_front = 1524.0
         # r3_front = 655.2
         # shell_insulation_theta_in_deg_front = 0.16
+
+        # p0_behind = (71.54, 147.58)
+        # theta0_deg_behind = -90.0
+        # p3_behind = (0, 239.5)
+        # theta3_deg_behind = 0.0
+        # r1_behind = 60.0
+        # r2_behind = 260.0
+        # r3_behind = 68.0
+
+        # for r1_behind in range(0, 100, 10):
+        #     for r2_behind in range(0, 300, 10):
+        #         for r3_behind in range(0, 100, 10):
+        #             result = solve_three_arcs(p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind)
+        #             if result is not None:
+        #                 print(r1_behind, r2_behind, r3_behind)
+        #                 plot_three_arcs(result, p0_behind, p3_behind, is_show=True, save_path='three_arcs_behind.png', objective_points=[[0.0, 237.5], [35.1081097913, 228.7594746125], [67.625019058233, 182.508006856104], [71.537317044939, 147.5867657151]])
+
+        # result = solve_three_arcs(p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind)
+        # plot_three_arcs(result, p0_behind, p3_behind, is_show=True, save_path='three_arcs_behind.png', objective_points=[[0.0, 237.5], [35.1081097913, 228.7594746125], [67.625019058233, 182.508006856104], [71.537317044939, 147.5867657151]])
 
         result = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
         plot_three_arcs(result, p0_front, p3_front, is_show=False, save_path='three_arcs_front.png')
