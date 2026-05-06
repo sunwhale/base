@@ -1321,16 +1321,6 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
-    # 创建集合（体），SET-CELL-INSULATION
-    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-GRAIN', ['SET-CELL-GRAIN'])
-    if cells:
-        p.Set(cells=cells, name='SET-CELL-INSULATION')
-
-    # 创建集合（体），SET-CELL-GLUE-A
-    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-INSULATION', ['SET-CELL-GRAIN', 'SET-CELL-INSULATION'])
-    if cells:
-        p.Set(cells=cells, name='SET-CELL-GLUE-A')
-
     # 镜像
     if size == '1':
         p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
@@ -1341,6 +1331,16 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
         pass
     else:
         raise NotImplementedError('Unsupported size {}'.format(size))
+
+    # 创建集合（体），SET-CELL-INSULATION
+    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-GRAIN', ['SET-CELL-GRAIN'])
+    if cells:
+        p.Set(cells=cells, name='SET-CELL-INSULATION')
+
+    # 创建集合（体），SET-CELL-GLUE-A
+    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-INSULATION', ['SET-CELL-GRAIN', 'SET-CELL-INSULATION'])
+    if cells:
+        p.Set(cells=cells, name='SET-CELL-GLUE-A')
 
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
@@ -1354,7 +1354,8 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
-    given_surface_names.remove('SURFACE-OUTER')
+    if 'SURFACE-OUTER' in given_surface_names:
+        given_surface_names.remove('SURFACE-OUTER')
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
@@ -1376,7 +1377,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     create_face_set_from_surface(p)
 
     # 更新集合（体），处理镜像
-    create_block_sets_same_volume(p)
+    # create_block_sets_same_volume(p)
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
