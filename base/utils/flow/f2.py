@@ -69,6 +69,17 @@ def create_sketch_cross_section(model, sketch_name, points, index_r, index_t):
     return s
 
 
+def create_sketch_cross_section_behind(model, sketch_name, points, index_r, index_t):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+    center = (0, 0)
+    geom_list = []
+    geom_list.append(s.Line(point1=points[0, 0], point2=points[index_r, 0]))
+    geom_list.append(s.ArcByCenterEnds(center=center, point1=points[index_r, 0], point2=points[index_r, index_t], direction=COUNTERCLOCKWISE))
+    geom_list.append(s.Line(point1=points[index_r, index_t], point2=points[0, index_t]))
+    geom_list.append(s.ArcByCenterEnds(center=center, point1=points[0, index_t], point2=points[0, 0], direction=CLOCKWISE))
+    return s
+
+
 def create_sketch_burn_x0(model, sketch_name, x0, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
 
@@ -220,7 +231,7 @@ def create_sketch_behind_outer(model, sketch_name, t, points, index_r, index_t, 
 def create_sketch_behind_outer_offset(model, sketch_name, t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, transform=t)
     geom_list = []
-    geom_list.append(s.Line(point1=(p0[0], x0), point2=p0))
+    geom_list.append(s.Line(point1=(p0[0], points[0, 0, 0]), point2=p0))
     geom_list.append(s.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
     geom_list.append(s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
     geom_list.append(s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
@@ -1409,7 +1420,7 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
     z_centers = (z[:-1] + z[1:]) / 2.0
 
     # SKETCH-CROSS-SECTION
-    s_cross_section = create_sketch_cross_section(model, 'SKETCH-CROSS-SECTION', points, index_r, index_t)
+    s_cross_section = create_sketch_cross_section_behind(model, 'SKETCH-CROSS-SECTION-BEHIND', points, index_r, index_t)
 
     # 生成基础体
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
@@ -1463,9 +1474,9 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_behind_outer_offset)
 
     # 弧线轮廓剖分
-    x, y = polar_to_cartesian(p4[1], TOL)
-    # x = min(x, points[index_r, 0][0])
+    x, y = polar_to_cartesian(points[0, 0, 0], TOL)
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
+
     # 拾取主体弧线
     partition_edges = []
     for g in s_behind_outer_offset.geometry.values()[2:index_r * 6]:
@@ -1477,8 +1488,7 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # 连接线段剖分
-    x, y = polar_to_cartesian(p4[1], TOL)
-    # x = min(x, points[index_r, 0][0])
+    x, y = polar_to_cartesian(points[0, 0, 0], TOL)
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
     # 拾取分段连线
     partition_edges = []
