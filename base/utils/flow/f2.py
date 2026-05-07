@@ -1475,6 +1475,7 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
 
     # 弧线轮廓剖分
     x, y = polar_to_cartesian(points[0, 0, 0], TOL)
+    x, y = polar_to_cartesian(p4[1], TOL)
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
 
     # 拾取主体弧线
@@ -1489,6 +1490,7 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
 
     # 连接线段剖分
     x, y = polar_to_cartesian(points[0, 0, 0], TOL)
+    x, y = polar_to_cartesian(p4[1], TOL)
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
     # 拾取分段连线
     partition_edges = []
@@ -1579,6 +1581,78 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
 
     # 更新集合（体），处理镜像
     # create_block_sets_same_volume(p)
+
+    # 创建集合（面），粘接界面
+    p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
+
+    # 生成网格
+    generate_part_mesh(p, element_size=element_size)
+
+    # 插入内聚力单元
+    if insert_czm:
+        insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
+
+    # 赋予SECTION属性
+    set_section_common(p)
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
+
+
+def create_part_block_behind_2(model, part_name, points, lines, faces, dimension):
+    # 变量赋值
+    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+
+    # 基本参数
+    origin = (0.0, 0.0, 0.0)
+    length = z_list[-1] * 2.0
+    z = np.array(z_list)
+    z_centers = (z[:-1] + z[1:]) / 2.0
+
+    # SKETCH-CROSS-SECTION
+    s_cross_section = create_sketch_cross_section_behind(model, 'SKETCH-CROSS-SECTION-BEHIND', points, index_r, index_t)
+
+    # 生成基础体
+    p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis, xy_plane_z1 = create_part_base(model, part_name, s_cross_section, length)
+
+    # 截面剖分
+    part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r)
+
+    # z剖分
+    part_partition_z(p, d, z_list)
+
+    # 创建集合（体）
+    set_names = create_block_sets_common(p, faces, dimension)
+
+    # 镜像
+    if size == '1':
+        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
+        p.Mirror(mirrorPlane=d[xz_plane.id], keepOriginal=ON)
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    elif size == '1/2':
+        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    elif size == '1/4':
+        pass
+    else:
+        raise NotImplementedError('Unsupported size {}'.format(size))
+
+    # 旋转切割尾部内轮廓
+    t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    s_behind_inner = create_sketch_behind_inner(model, 'SKETCH-BEHIND-INNER', t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, burn_offset)
+    p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_inner, angle=360.0, flipRevolveDirection=ON)
+
+    # 创建面
+    create_block_surface_common(p, points, dimension)
+    combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
+
+    # 创建集合（面）
+    create_face_set_from_surface(p)
+
+    # 更新集合（体），处理镜像
+    create_block_sets_same_volume(p)
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
@@ -3387,7 +3461,7 @@ if __name__ == "__main__":
     # is_create_p_cover_front = True
     # is_create_p_cover_behind = True
     # is_create_p_block = True
-    # is_create_p_block_penult = True
+    is_create_p_block_penult = True
     # is_create_p_block_front = True
     is_create_p_block_behind = True
     # is_create_p_gap = True
@@ -4051,10 +4125,12 @@ if __name__ == "__main__":
         behind_block_dimension['r2'] = r2_behind
         behind_block_dimension['r3'] = r3_behind
         behind_block_dimension['theta_in_deg'] = shell_insulation_theta_in_deg_behind
-        points, lines, faces = geometries_circle(d, 140, 0.0, 67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        # points, lines, faces = geometries_circle(d, 140, 0.0, 67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        points, lines, faces = geometries_circle(d, 140, math.pi / 6, -67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         if is_create_p_block_behind:
             # p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
-            p_block_behind = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
+            # p_block_behind = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1', points, lines, faces, behind_block_dimension)
+            p_block_behind = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2', points, lines, faces, behind_block_dimension)
             print('CREATE PART-BLOCK-BEHIND DONE.')
 
         behind_gap_dimension = deepcopy(behind_block_dimension)
