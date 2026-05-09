@@ -1899,7 +1899,10 @@ def create_part_shell(model, part_name, dimension):
         p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p_behind_in_1[0]),
     ]
     for plane in cut_planes:
-        p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+        try:
+            p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+        except:
+            pass
 
     if rotate_angle_deg == 360.0:
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
@@ -2353,8 +2356,15 @@ def create_part_insulation(model, part_name, dimension):
     r2_behind = dimension['r2_behind']
     r3_behind = dimension['r3_behind']
 
-    front_points = [[-shell_l_c1_out, shell_insulation_r_out_front], [-shell_l_c1_out, shell_insulation_r_out_front - 2.5], [-1022.0, shell_insulation_r_out_front - 2.5], [-1022.0, 460], [-1022.0, 425]]
-    behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind], [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - 2.5], [18191.0, shell_insulation_r_out_behind - 2.5], [18191.0, 815], [18191.0, 775]]
+    # front_points = [[-shell_l_c1_out, shell_insulation_r_out_front], [-shell_l_c1_out, shell_insulation_r_out_front - 2.5], [-1022.0, shell_insulation_r_out_front - 2.5], [-1022.0, 460], [-1022.0, 425]]
+    # behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind], [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - 2.5], [18191.0, shell_insulation_r_out_behind - 2.5], [18191.0, 815], [18191.0, 775]]
+
+    front_points = [[-shell_l_c1_out, shell_insulation_r_out_front],
+                    [-shell_l_c1_out, shell_insulation_r_out_front - 2.5],
+                    [-131.32, shell_insulation_r_out_front - 2.5], [-131.32, 100], [-131.32, 88.5]]
+    behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind],
+                     [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - 2.5],
+                     [809.07, shell_insulation_r_out_behind - 2.5], [809.07, 105], [809.07, 96]]
 
     # 基本参数
     c1 = [0.0, 0.0]
@@ -3452,17 +3462,17 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
-    # is_create_p_block = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
+    is_create_p_block = True
     is_create_p_block_penult = True
-    # is_create_p_block_front = True
+    is_create_p_block_front = True
     is_create_p_block_behind = True
     # is_create_p_gap = True
     # is_create_p_gap_penult = True
@@ -3470,7 +3480,7 @@ if __name__ == "__main__":
     # is_create_p_gap_behind = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
-    is_assemble = True
+    # is_assemble = True
 
     n = 9
     d = 3529.0
@@ -3625,6 +3635,51 @@ if __name__ == "__main__":
         [18268.46, 942.5]
     ]
 
+    shell_points_front = [
+        [0.0, 257.5],
+        [-9.12, 256.55],
+        [-17.4, 255.41],
+        [-26.22, 253.33],
+        [-36.1, 249.87],
+        [-45.39, 245.55],
+        [-53.98, 240.6],
+        [-61.39, 235.53],
+        [-68.51, 229.93],
+        [-74.87, 224.24],
+        [-81.14, 218.01],
+        [-87.89, 210.73],
+        [-94.96, 202.32],
+        [-101.76, 193.2],
+        [-108.61, 182.88],
+        [-115.18, 171.97],
+        [-120.3, 162.59],
+        [-124.99, 152.83],
+        [-129.21, 143.21],
+        [-133.47, 133.11],
+        [-137.14, 124.56]
+    ]
+
+    shell_points_behind = [
+        [684.0, 257.5],
+        [689.41, 256.97],
+        [696.45, 256.3],
+        [706.62, 254.33],
+        [716.54, 251.25],
+        [726.63, 246.93],
+        [735.17, 242.3],
+        [745.62, 235.35],
+        [753.89, 228.75],
+        [762.01, 221.17],
+        [769.12, 213.78],
+        [776.47, 205.4],
+        [782.9, 197.16],
+        [789.6, 187.36],
+        [796.09, 177.25],
+        [801.06, 168.47],
+        [805.88, 159.25],
+        [810.09, 150.63],
+        [814.1, 141.95]
+    ]
     setting_file = 'setting.json'
     setting_file = 'setting_520.json'
     if os.path.exists(setting_file):
@@ -4032,6 +4087,7 @@ if __name__ == "__main__":
             index_t = index_t_with_gap - 1
 
         block_dimension = {
+            'n': n,
             'z_list': z_list,
             'slot_deep': slot_deep,
             'x0': x0,
@@ -4125,11 +4181,12 @@ if __name__ == "__main__":
         behind_block_dimension['r2'] = r2_behind
         behind_block_dimension['r3'] = r3_behind
         behind_block_dimension['theta_in_deg'] = shell_insulation_theta_in_deg_behind
-        # points, lines, faces = geometries_circle(d, 140, 0.0, 67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
-        points, lines, faces = geometries_circle(d, 140, math.pi / 6, -67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        points, lines, faces = geometries_circle(d, 140, 0.0, 67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        # points, lines, faces = geometries_circle(d, 140, 0.0, 67.55, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        # points, lines, faces = geometries_circle(d, 140, math.pi / 6, -67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         if is_create_p_block_behind:
             # p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
-            # p_block_behind = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1', points, lines, faces, behind_block_dimension)
+            p_block_behind = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1', points, lines, faces, behind_block_dimension)
             p_block_behind = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2', points, lines, faces, behind_block_dimension)
             print('CREATE PART-BLOCK-BEHIND DONE.')
 
