@@ -1255,7 +1255,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # SKETCH-BEHIND-OUTER-OFFSET
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_outer_offset = create_sketch_behind_outer_offset(model, 'SKETCH-BEHIND-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_behind_outer_offset, num_geometry = create_sketch_behind_outer_offset(model, 'SKETCH-BEHIND-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     # 创建面SURFACE-OUTER
     # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
@@ -1273,14 +1273,14 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     faces_xz_plane = {}
     for i in range(1, index_r):
         faces_xz_plane[i] = []
-        for j in [2, 3, 4, 5, 6, 7]:
-            pa = (np.array(g[j + 6 * (i - 1)].pointOn) + np.array(g[j + 6 * i].pointOn)) / 2.0
+        for j in range(2, num_geometry + 1):
+            pa = (np.array(g[j + num_geometry * (i - 1)].pointOn) + np.array(g[j + num_geometry * i].pointOn)) / 2.0
             faces_xz_plane[i].append(pa)
             s_behind_outer_offset.Spot(point=pa)
     for i in range(1, index_r):
-        for j in [3, 4, 5, 6, 7]:
-            pa = g[6 * (i - 1) + j].getVertices()[0].coords
-            pb = g[6 * i + j].getVertices()[0].coords
+        for j in range(3, num_geometry + 1):
+            pa = g[num_geometry * (i - 1) + j].getVertices()[0].coords
+            pb = g[num_geometry * i + j].getVertices()[0].coords
             s_behind_outer_offset.Line(point1=pa, point2=pb)
     p_faces = p.faces.getByBoundingBox(0, 0, -PEN, PEN, TOL, PEN)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_behind_outer_offset)
@@ -1291,7 +1291,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
     # 拾取主体弧线
     partition_edges = []
-    for g in s_behind_outer_offset.geometry.values()[2:index_r * 6]:
+    for g in s_behind_outer_offset.geometry.values()[2:index_r * num_geometry]:
         z, x = g.pointOn
         # p.DatumPointByCoordinate(coords=(x, 0.0, z))
         edge_sequence = p.edges.findAt((x, 0.0, z))
@@ -1446,7 +1446,7 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
 
     # SKETCH-BEHIND-OUTER-OFFSET
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_behind_outer_offset = create_sketch_behind_outer_offset(model, 'SKETCH-BEHIND-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_behind_outer_offset, num_geometry = create_sketch_behind_outer_offset(model, 'SKETCH-BEHIND-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     # 创建面SURFACE-OUTER
     # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
@@ -1464,14 +1464,14 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
     faces_xz_plane = {}
     for i in range(1, index_r):
         faces_xz_plane[i] = []
-        for j in [2, 3, 4, 5, 6, 7]:
-            pa = (np.array(g[j + 6 * (i - 1)].pointOn) + np.array(g[j + 6 * i].pointOn)) / 2.0
+        for j in range(2, num_geometry + 1):
+            pa = (np.array(g[j + num_geometry * (i - 1)].pointOn) + np.array(g[j + num_geometry * i].pointOn)) / 2.0
             faces_xz_plane[i].append(pa)
             s_behind_outer_offset.Spot(point=pa)
     for i in range(1, index_r):
-        for j in [3, 4, 5, 6, 7]:
-            pa = g[6 * (i - 1) + j].getVertices()[0].coords
-            pb = g[6 * i + j].getVertices()[0].coords
+        for j in range(3, num_geometry + 1):
+            pa = g[num_geometry * (i - 1) + j].getVertices()[0].coords
+            pb = g[num_geometry * i + j].getVertices()[0].coords
             s_behind_outer_offset.Line(point1=pa, point2=pb)
     p_faces = p.faces.getByBoundingBox(0, 0, -PEN, PEN, TOL, PEN)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_behind_outer_offset)
@@ -1483,7 +1483,7 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
 
     # 拾取主体弧线
     partition_edges = []
-    for g in s_behind_outer_offset.geometry.values()[2:index_r * 6]:
+    for g in s_behind_outer_offset.geometry.values()[2:index_r * num_geometry]:
         z, x = g.pointOn
         # p.DatumPointByCoordinate(coords=(x, 0.0, z))
         edge_sequence = p.edges.findAt((x, 0.0, z))
@@ -3475,8 +3475,8 @@ if __name__ == "__main__":
     # is_create_p_cover_behind = True
     # is_create_p_block = True
     # is_create_p_block_penult = True
-    is_create_p_block_front = True
-    # is_create_p_block_behind = True
+    # is_create_p_block_front = True
+    is_create_p_block_behind = True
     # is_create_p_gap = True
     # is_create_p_gap_penult = True
     # is_create_p_gap_front = True
