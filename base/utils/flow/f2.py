@@ -789,7 +789,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))  # 基于p4点所在的半径拾取sweep_edge
     # 拾取分段连线
     partition_edges = []
-    for g in s_front_outer_offset.geometry.values()[index_r * 6:]:
+    for g in s_front_outer_offset.geometry.values()[index_r * num_geometry:]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
@@ -1305,7 +1305,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
     # 拾取分段连线
     partition_edges = []
-    for g in s_behind_outer_offset.geometry.values()[index_r * 6:]:
+    for g in s_behind_outer_offset.geometry.values()[index_r * num_geometry:]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
@@ -1497,7 +1497,7 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
     # 拾取分段连线
     partition_edges = []
-    for g in s_behind_outer_offset.geometry.values()[index_r * 6:]:
+    for g in s_behind_outer_offset.geometry.values()[index_r * num_geometry:]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
@@ -3475,12 +3475,12 @@ if __name__ == "__main__":
     # is_create_p_cover_behind = True
     # is_create_p_block = True
     # is_create_p_block_penult = True
-    # is_create_p_block_front = True
+    is_create_p_block_front = True
     is_create_p_block_behind = True
     # is_create_p_gap = True
     # is_create_p_gap_penult = True
-    # is_create_p_gap_front = True
-    # is_create_p_gap_behind = True
+    is_create_p_gap_front = True
+    is_create_p_gap_behind = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
     # is_assemble = True
