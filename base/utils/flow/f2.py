@@ -366,6 +366,7 @@ def create_sketch_gap_t(model, sketch_name, t, points):
 
 
 def get_local_variables_common(dimension):
+    n = dimension['n']
     z_list = dimension['z_list']
     slot_deep = dimension['slot_deep']
     x0 = dimension['x0']
@@ -379,7 +380,8 @@ def get_local_variables_common(dimension):
     insert_czm = dimension['insert_czm']
     burn_offset = dimension['burn_offset']
 
-    return (z_list,
+    return (n,
+            z_list,
             slot_deep,
             x0,
             angle_demolding_1,
@@ -554,7 +556,7 @@ def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end):
 
 def create_part_block(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -635,7 +637,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -715,7 +717,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_front(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_front, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_front(dimension)
 
     # 基本参数
@@ -920,7 +922,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap_front(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_front, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_front(dimension)
 
     # 基本参数
@@ -1028,7 +1030,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -1123,7 +1125,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
 def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -1222,7 +1224,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_behind, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_behind(dimension)
 
     # 基本参数
@@ -1413,7 +1415,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
 def create_part_block_behind_1(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_behind, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_behind(dimension)
 
     # 基本参数
@@ -1605,7 +1607,7 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
 
 def create_part_block_behind_2(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -1677,7 +1679,7 @@ def create_part_block_behind_2(model, part_name, points, lines, faces, dimension
 
 def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     # 变量赋值
-    z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+    n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_behind, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_behind(dimension)
 
     # 基本参数
@@ -3465,20 +3467,20 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_block_penult = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
+    is_create_p_block = True
+    is_create_p_block_penult = True
     is_create_p_block_front = True
     is_create_p_block_behind = True
-    # is_create_p_gap = True
-    # is_create_p_gap_penult = True
+    is_create_p_gap = True
+    is_create_p_gap_penult = True
     is_create_p_gap_front = True
     is_create_p_gap_behind = True
     # is_save_parts_cae = True
@@ -4184,11 +4186,13 @@ if __name__ == "__main__":
         behind_block_dimension['r2'] = r2_behind
         behind_block_dimension['r3'] = r3_behind
         behind_block_dimension['theta_in_deg'] = shell_insulation_theta_in_deg_behind
-        points, lines, faces = geometries_circle(d, 140, 0.0, 67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        # points, lines, faces = geometries_circle(d, 140, 0.0, 67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         # points, lines, faces = geometries_circle(d, 140, 0.0, 67.55, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         # points, lines, faces = geometries_circle(d, 140, math.pi / 6, -67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         if is_create_p_block_behind:
-            # p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
+            p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
+            # points, lines, faces = geometries_circle(d, 140, 0.0, 67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+            points, lines, faces = geometries_circle(d, 140, math.pi / 6, -67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
             p_block_behind = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1', points, lines, faces, behind_block_dimension)
             p_block_behind = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2', points, lines, faces, behind_block_dimension)
             print('CREATE PART-BLOCK-BEHIND DONE.')
