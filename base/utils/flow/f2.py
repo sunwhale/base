@@ -235,13 +235,14 @@ def create_sketch_behind_outer_offset(model, sketch_name, t, points, x0, index_r
     geom_list.append(s.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
     geom_list.append(s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
     geom_list.append(s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
-    geom_list.append(s.Line(point1=p3, point2=p4))
+    if np.linalg.norm(p3 - p4) > 1e-10:
+        # 处理p3和p4重合的情况
+        geom_list.append(s.Line(point1=p3, point2=p4))
     geom_list.append(s.Line(point1=p4, point2=p5))
     # 逆序循环，保证轮廓线从外到内的顺序排列
     for i in range(index_r - 1, 0, -1):
         s.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=LEFT)
-
-    return s
+    return s, len(geom_list)
 
 
 def create_sketch_front_outer_offset(model, sketch_name, t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3):
@@ -251,12 +252,14 @@ def create_sketch_front_outer_offset(model, sketch_name, t, points, x0, index_r,
     geom_list.append(s.ArcByCenterEnds(center=c1, point1=p0, point2=p1, direction=get_direction(delta1)))
     geom_list.append(s.ArcByCenterEnds(center=c2, point1=p1, point2=p2, direction=get_direction(delta2)))
     geom_list.append(s.ArcByCenterEnds(center=c3, point1=p2, point2=p3, direction=get_direction(delta3)))
-    geom_list.append(s.Line(point1=p3, point2=p4))
+    if np.linalg.norm(p3 - p4) > 1e-10:
+        # 处理p3和p4重合的情况
+        geom_list.append(s.Line(point1=p3, point2=p4))
     geom_list.append(s.Line(point1=p4, point2=p5))
     # 逆序循环，保证轮廓线从外到内的顺序排列
     for i in range(index_r - 1, 0, -1):
         s.offset(distance=float(points[index_r, 0][0] - points[i, 0][0]), objectList=geom_list, side=RIGHT)
-    return s
+    return s, len(geom_list)
 
 
 def create_sketch_penult_inner(model, sketch_name, t, x0, slot_deep, block_length, z_list, block_insulation_thickness_z, slot_ellipse_a, slot_ellipse_b, burn_offset=0.0):
@@ -737,7 +740,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # SKETCH-FRONT-OUTER-OFFSET
     t = p.MakeSketchTransform(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
-    s_front_outer_offset = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
+    s_front_outer_offset, num_geometry = create_sketch_front_outer_offset(model, 'SKETCH-FRONT-OUTER-OFFSET', t, points, x0, index_r, p0, p1, p2, p3, p4, p5, c1, c2, c3, delta1, delta2, delta3)
 
     # 创建面SURFACE-OUTER
     # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
@@ -755,14 +758,14 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     faces_xz_plane = {}
     for i in range(1, index_r):
         faces_xz_plane[i] = []
-        for j in [2, 3, 4, 5, 6, 7]:
-            pa = (np.array(g[j + 6 * (i - 1)].pointOn) + np.array(g[j + 6 * i].pointOn)) / 2.0
+        for j in range(2, num_geometry + 1):
+            pa = (np.array(g[j + num_geometry * (i - 1)].pointOn) + np.array(g[j + num_geometry * i].pointOn)) / 2.0
             faces_xz_plane[i].append(pa)
             s_front_outer_offset.Spot(point=pa)
     for i in range(1, index_r):
-        for j in [3, 4, 5, 6, 7]:
-            pa = g[6 * (i - 1) + j].getVertices()[0].coords
-            pb = g[6 * i + j].getVertices()[0].coords
+        for j in range(3, num_geometry + 1):
+            pa = g[num_geometry * (i - 1) + j].getVertices()[0].coords
+            pb = g[num_geometry * i + j].getVertices()[0].coords
             s_front_outer_offset.Line(point1=pa, point2=pb)
     p_faces = p.faces.getByBoundingBox(0, 0, -PEN, PEN, TOL, PEN)
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_front_outer_offset)
@@ -773,7 +776,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     sweep_edge = p.edges.findAt((x, y, z_list[-1]))  # 基于p4点所在的半径拾取sweep_edge
     # 拾取主体弧线
     partition_edges = []
-    for g in s_front_outer_offset.geometry.values()[2:index_r * 6]:
+    for g in s_front_outer_offset.geometry.values()[2:index_r * num_geometry]:
         z, x = g.pointOn
         edge_sequence = p.edges.findAt((x, 0.0, z))
         if edge_sequence is not None:
@@ -3462,18 +3465,18 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
     is_create_p_block_front = True
-    is_create_p_block_behind = True
+    # is_create_p_block_behind = True
     # is_create_p_gap = True
     # is_create_p_gap_penult = True
     # is_create_p_gap_front = True
