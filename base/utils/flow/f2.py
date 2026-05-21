@@ -2372,11 +2372,11 @@ def create_part_insulation(model, part_name, dimension):
     # behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind], [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - 2.5], [18191.0, shell_insulation_r_out_behind - 2.5], [18191.0, 815], [18191.0, 775]]
 
     front_points = [[-shell_l_c1_out, shell_insulation_r_out_front],
-                    [-shell_l_c1_out, shell_insulation_r_out_front - 2.5],
-                    [-131.32, shell_insulation_r_out_front - 2.5], [-131.32, 100], [-131.32, 88.5]]
+                    [-shell_l_c1_out, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
+                    [-131.32, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front], [-131.32, 100], [-131.32, 88.5]]
     behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind],
-                     [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - 2.5],
-                     [809.07, shell_insulation_r_out_behind - 2.5], [809.07, 105], [809.07, 96]]
+                     [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind],
+                     [809.07, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind], [809.07, 105], [809.07, 96]]
 
     # 基本参数
     c1 = [0.0, 0.0]
@@ -2510,54 +2510,56 @@ def create_part_insulation(model, part_name, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 草图剖分
-    s_insulation_partition = model.ConstrainedSketch(name='SKETCH-INSULATION-PARTITION', sheetSize=200.0)
-    # s_insulation_partition.Line(point1=(c1[0], flange_r_out_front), point2=(c1[0] - b_front, flange_r_out_front))
-    # s_insulation_partition.Line(point1=(c2[0], flange_r_out_behind), point2=(c2[0] + b_behind, flange_r_out_behind))
-    # s_insulation_partition.Line(point1=arcs_front['c1'], point2=arcs_front['p1'])
-    # s_insulation_partition.Line(point1=arcs_front['c2'], point2=arcs_front['p2'])
-    # s_insulation_partition.Line(point1=arcs_behind['c1'], point2=arcs_behind['p1'])
-    # s_insulation_partition.Line(point1=arcs_behind['c2'], point2=arcs_behind['p2'])
-    # p0_front_offset = move_along_direction(p3_front, (p0_front[0] - arcs_front['c1'][0], p0_front[1] - arcs_front['c1'][1]), PEN)
-    # p0_behind_offset = move_along_direction(p3_behind, (p0_behind[0] - arcs_behind['c1'][0], p0_behind[1] - arcs_behind['c1'][1]), PEN)
-    # s_insulation_partition.Line(point1=p0_front, point2=p0_front_offset)
-    # s_insulation_partition.Line(point1=p0_behind, point2=p0_behind_offset)
+    is_sketch_partition = False
+    if is_sketch_partition:
+        s_insulation_partition = model.ConstrainedSketch(name='SKETCH-INSULATION-PARTITION', sheetSize=200.0)
+        # s_insulation_partition.Line(point1=(c1[0], flange_r_out_front), point2=(c1[0] - b_front, flange_r_out_front))
+        # s_insulation_partition.Line(point1=(c2[0], flange_r_out_behind), point2=(c2[0] + b_behind, flange_r_out_behind))
+        # s_insulation_partition.Line(point1=arcs_front['c1'], point2=arcs_front['p1'])
+        # s_insulation_partition.Line(point1=arcs_front['c2'], point2=arcs_front['p2'])
+        # s_insulation_partition.Line(point1=arcs_behind['c1'], point2=arcs_behind['p1'])
+        # s_insulation_partition.Line(point1=arcs_behind['c2'], point2=arcs_behind['p2'])
+        # p0_front_offset = move_along_direction(p3_front, (p0_front[0] - arcs_front['c1'][0], p0_front[1] - arcs_front['c1'][1]), PEN)
+        # p0_behind_offset = move_along_direction(p3_behind, (p0_behind[0] - arcs_behind['c1'][0], p0_behind[1] - arcs_behind['c1'][1]), PEN)
+        # s_insulation_partition.Line(point1=p0_front, point2=p0_front_offset)
+        # s_insulation_partition.Line(point1=p0_behind, point2=p0_behind_offset)
 
-    arcs_front_p1_offset = move_along_direction(arcs_front['p1'], (arcs_front['p1'][0] - arcs_front['c1'][0], arcs_front['p1'][1] - arcs_front['c1'][1]), PEN)
-    arcs_front_p2_offset = move_along_direction(arcs_front['p2'], (arcs_front['p2'][0] - arcs_front['c2'][0], arcs_front['p2'][1] - arcs_front['c2'][1]), PEN)
-    arcs_behind_p1_offset = move_along_direction(arcs_behind['p1'], (arcs_behind['p1'][0] - arcs_behind['c1'][0], arcs_behind['p1'][1] - arcs_behind['c1'][1]), PEN)
-    arcs_behind_p2_offset = move_along_direction(arcs_behind['p2'], (arcs_behind['p2'][0] - arcs_behind['c2'][0], arcs_behind['p2'][1] - arcs_behind['c2'][1]), PEN)
-    arcs_front_p1_offset_tol = move_along_direction(arcs_front['p1'], (arcs_front['p1'][0] - arcs_front['c1'][0], arcs_front['p1'][1] - arcs_front['c1'][1]), 1.0)
-    arcs_front_p2_offset_tol = move_along_direction(arcs_front['p2'], (arcs_front['p2'][0] - arcs_front['c2'][0], arcs_front['p2'][1] - arcs_front['c2'][1]), 1.0)
-    arcs_behind_p1_offset_tol = move_along_direction(arcs_behind['p1'], (arcs_behind['p1'][0] - arcs_behind['c1'][0], arcs_behind['p1'][1] - arcs_behind['c1'][1]), 1.0)
-    arcs_behind_p2_offset_tol = move_along_direction(arcs_behind['p2'], (arcs_behind['p2'][0] - arcs_behind['c2'][0], arcs_behind['p2'][1] - arcs_behind['c2'][1]), 1.0)
-    s_insulation_partition.Line(point1=arcs_front['p1'], point2=arcs_front_p1_offset)
-    s_insulation_partition.Line(point1=arcs_front['p2'], point2=arcs_front_p2_offset)
-    s_insulation_partition.Line(point1=arcs_behind['p1'], point2=arcs_behind_p1_offset)
-    s_insulation_partition.Line(point1=arcs_behind['p2'], point2=arcs_behind_p2_offset)
-    p_faces = p.faces.getByBoundingBox(-PEN, -PEN, 0, c2[0] + PEN, PEN, TOL)
-    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_insulation_partition)
-    sweep_edge_point = rotate_point_around_axis((0.0, a_front, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), TOL)
-    p.DatumPointByCoordinate(coords=sweep_edge_point)
-    sweep_edge = p.edges.findAt(sweep_edge_point)
-    partition_edges = []
-    for partition_edge_point in [arcs_front_p1_offset_tol, arcs_front_p2_offset_tol, arcs_behind_p1_offset_tol, arcs_behind_p2_offset_tol]:
-        x, y = partition_edge_point
-        edge_sequence = p.edges.findAt((x, y, 0.0))
-        if edge_sequence is not None:
-            partition_edges.append(edge_sequence)
-    p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
-
-    if rotate_angle_deg == 360.0:
-        sweep_edge_point = rotate_point_around_axis((0.0, a_front, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), -TOL)
+        arcs_front_p1_offset = move_along_direction(arcs_front['p1'], (arcs_front['p1'][0] - arcs_front['c1'][0], arcs_front['p1'][1] - arcs_front['c1'][1]), PEN)
+        arcs_front_p2_offset = move_along_direction(arcs_front['p2'], (arcs_front['p2'][0] - arcs_front['c2'][0], arcs_front['p2'][1] - arcs_front['c2'][1]), PEN)
+        arcs_behind_p1_offset = move_along_direction(arcs_behind['p1'], (arcs_behind['p1'][0] - arcs_behind['c1'][0], arcs_behind['p1'][1] - arcs_behind['c1'][1]), PEN)
+        arcs_behind_p2_offset = move_along_direction(arcs_behind['p2'], (arcs_behind['p2'][0] - arcs_behind['c2'][0], arcs_behind['p2'][1] - arcs_behind['c2'][1]), PEN)
+        arcs_front_p1_offset_tol = move_along_direction(arcs_front['p1'], (arcs_front['p1'][0] - arcs_front['c1'][0], arcs_front['p1'][1] - arcs_front['c1'][1]), 1.0)
+        arcs_front_p2_offset_tol = move_along_direction(arcs_front['p2'], (arcs_front['p2'][0] - arcs_front['c2'][0], arcs_front['p2'][1] - arcs_front['c2'][1]), 1.0)
+        arcs_behind_p1_offset_tol = move_along_direction(arcs_behind['p1'], (arcs_behind['p1'][0] - arcs_behind['c1'][0], arcs_behind['p1'][1] - arcs_behind['c1'][1]), 1.0)
+        arcs_behind_p2_offset_tol = move_along_direction(arcs_behind['p2'], (arcs_behind['p2'][0] - arcs_behind['c2'][0], arcs_behind['p2'][1] - arcs_behind['c2'][1]), 1.0)
+        s_insulation_partition.Line(point1=arcs_front['p1'], point2=arcs_front_p1_offset)
+        s_insulation_partition.Line(point1=arcs_front['p2'], point2=arcs_front_p2_offset)
+        s_insulation_partition.Line(point1=arcs_behind['p1'], point2=arcs_behind_p1_offset)
+        s_insulation_partition.Line(point1=arcs_behind['p2'], point2=arcs_behind_p2_offset)
+        p_faces = p.faces.getByBoundingBox(-PEN, -PEN, 0, c2[0] + PEN, PEN, TOL)
+        p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_insulation_partition)
+        sweep_edge_point = rotate_point_around_axis((0.0, a_front, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), TOL)
         p.DatumPointByCoordinate(coords=sweep_edge_point)
         sweep_edge = p.edges.findAt(sweep_edge_point)
         partition_edges = []
-        for partition_edge_point in [arcs_front_p1_offset_tol, arcs_front_p2_offset_tol, arcs_behind_p1_offset_tol,arcs_behind_p2_offset_tol]:
+        for partition_edge_point in [arcs_front_p1_offset_tol, arcs_front_p2_offset_tol, arcs_behind_p1_offset_tol, arcs_behind_p2_offset_tol]:
             x, y = partition_edge_point
             edge_sequence = p.edges.findAt((x, y, 0.0))
             if edge_sequence is not None:
                 partition_edges.append(edge_sequence)
         p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
+
+        if rotate_angle_deg == 360.0:
+            sweep_edge_point = rotate_point_around_axis((0.0, a_front, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), -TOL)
+            p.DatumPointByCoordinate(coords=sweep_edge_point)
+            sweep_edge = p.edges.findAt(sweep_edge_point)
+            partition_edges = []
+            for partition_edge_point in [arcs_front_p1_offset_tol, arcs_front_p2_offset_tol, arcs_behind_p1_offset_tol, arcs_behind_p2_offset_tol]:
+                x, y = partition_edge_point
+                edge_sequence = p.edges.findAt((x, y, 0.0))
+                if edge_sequence is not None:
+                    partition_edges.append(edge_sequence)
+            p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # 截面剖分
     if rotate_angle_deg == 360.0:
@@ -3496,8 +3498,8 @@ if __name__ == "__main__":
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
     is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
     # is_create_p_block = True
     # is_create_p_block_penult = True
     # is_create_p_block_front = True
