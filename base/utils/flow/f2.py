@@ -1896,8 +1896,10 @@ def create_part_shell(model, part_name, dimension):
     p_face_middle = p.faces.findAt((point_middle_out_rot,))[0]
     p.Surface(side1Faces=p_face_middle.getFacesByFaceAngle(20), name='SURFACE-OUTER')
 
-    del p.surfaces['SURFACE-R0']
-    del p.surfaces['SURFACE-R1']
+    if 'SURFACE-R0' in p.surfaces.keys():
+        del p.surfaces['SURFACE-R0']
+    if 'SURFACE-R1' in p.surfaces.keys():
+        del p.surfaces['SURFACE-R1']
 
     # 截面剖分
     cut_planes = [
@@ -2504,9 +2506,9 @@ def create_part_insulation(model, part_name, dimension):
     create_surface_by_intersection(p, p_faces_1, p_faces_2, 'SURFACE-FLANGE-BEHIND')
 
     # 截面剖分
-    if rotate_angle_deg == 360.0:
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    # if rotate_angle_deg == 360.0:
+    #     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    #     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
 
     # 草图剖分
     s_insulation_partition = model.ConstrainedSketch(name='SKETCH-INSULATION-PARTITION', sheetSize=200.0)
@@ -3479,17 +3481,17 @@ if __name__ == "__main__":
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
     is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
-    is_create_p_block_front = True
-    is_create_p_block_behind = True
-    is_create_p_block_behind_ab = True
-    is_create_p_gap = True
-    is_create_p_gap_penult = True
-    is_create_p_gap_front = True
-    is_create_p_gap_behind = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_block_behind_ab = True
+    # is_create_p_gap = True
+    # is_create_p_gap_penult = True
+    # is_create_p_gap_front = True
+    # is_create_p_gap_behind = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
     # is_assemble = True
@@ -4202,7 +4204,7 @@ if __name__ == "__main__":
         if is_create_p_gap_behind:
             p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
             print('CREATE PART-GAP-BEHIND DONE.')
-            
+
         if is_create_p_block_behind_ab:
             r_out = 140.0
 
