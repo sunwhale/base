@@ -1417,6 +1417,7 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
     # 变量赋值
     n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
     r_cut, length_behind, p0, theta0_deg, p3, theta3_deg, theta_in_deg, beta, r1, r2, r3 = get_local_variables_behind(dimension)
+    central_angle = dimension['central_angle']
 
     # 基本参数
     origin = (0.0, 0.0, 0.0)
@@ -1479,8 +1480,10 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
     p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketch=s_behind_outer_offset)
 
     # 弧线轮廓剖分
-    x, y = polar_to_cartesian(points[0, 0, 0], TOL)
-    x, y = polar_to_cartesian(p4[1], TOL)
+    if central_angle < math.pi / n:
+        x, y = polar_to_cartesian(points[0, 0, 0], TOL)
+    else:
+        x, y = polar_to_cartesian(p4[1], TOL)
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
 
     # 拾取主体弧线
@@ -1494,8 +1497,10 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # 连接线段剖分
-    x, y = polar_to_cartesian(points[0, 0, 0], TOL)
-    x, y = polar_to_cartesian(p4[1], TOL)
+    if central_angle < math.pi / n:
+        x, y = polar_to_cartesian(points[0, 0, 0], TOL)
+    else:
+        x, y = polar_to_cartesian(p4[1], TOL)
     sweep_edge = p.edges.findAt((x, y, -z_list[-1]))
     # 拾取分段连线
     partition_edges = []
@@ -3467,22 +3472,22 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
     is_create_p_block_front = True
     is_create_p_block_behind = True
-    is_create_p_gap = True
-    is_create_p_gap_penult = True
-    is_create_p_gap_front = True
-    is_create_p_gap_behind = True
+    # is_create_p_gap = True
+    # is_create_p_gap_penult = True
+    # is_create_p_gap_front = True
+    # is_create_p_gap_behind = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
     # is_assemble = True
@@ -4192,9 +4197,17 @@ if __name__ == "__main__":
         if is_create_p_block_behind:
             p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
             # points, lines, faces = geometries_circle(d, 140, 0.0, 67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
-            points, lines, faces = geometries_circle(d, 140, math.pi / 6, -67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+            central_angle = math.pi / 6
+            behind_block_dimension['central_angle'] = central_angle
+            points, lines, faces = geometries_circle(d, 140, central_angle, -67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
             p_block_behind = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1', points, lines, faces, behind_block_dimension)
             p_block_behind = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2', points, lines, faces, behind_block_dimension)
+
+            central_angle = 0.0
+            behind_block_dimension['central_angle'] = central_angle
+            points, lines, faces = geometries_circle(d, 140, central_angle, 67.55, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+            p_block_behind = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1-2', points, lines, faces, behind_block_dimension)
+            p_block_behind = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2-2', points, lines, faces, behind_block_dimension)
             print('CREATE PART-BLOCK-BEHIND DONE.')
 
         behind_gap_dimension = deepcopy(behind_block_dimension)
