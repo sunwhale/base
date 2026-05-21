@@ -2506,9 +2506,8 @@ def create_part_insulation(model, part_name, dimension):
     create_surface_by_intersection(p, p_faces_1, p_faces_2, 'SURFACE-FLANGE-BEHIND')
 
     # 截面剖分
-    # if rotate_angle_deg == 360.0:
-    #     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-    #     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    if rotate_angle_deg == 360.0:
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 草图剖分
     s_insulation_partition = model.ConstrainedSketch(name='SKETCH-INSULATION-PARTITION', sheetSize=200.0)
@@ -2547,6 +2546,19 @@ def create_part_insulation(model, part_name, dimension):
         if edge_sequence is not None:
             partition_edges.append(edge_sequence)
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
+
+    if rotate_angle_deg == 360.0:
+        sweep_edge_point = rotate_point_around_axis((0.0, a_front, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), -TOL)
+        p.DatumPointByCoordinate(coords=sweep_edge_point)
+        sweep_edge = p.edges.findAt(sweep_edge_point)
+        partition_edges = []
+        for partition_edge_point in [arcs_front_p1_offset_tol, arcs_front_p2_offset_tol, arcs_behind_p1_offset_tol,arcs_behind_p2_offset_tol]:
+            x, y = partition_edge_point
+            edge_sequence = p.edges.findAt((x, y, 0.0))
+            if edge_sequence is not None:
+                partition_edges.append(edge_sequence)
+        p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
 
     # 截面剖分
     cut_planes = [
