@@ -3479,17 +3479,17 @@ if __name__ == "__main__":
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
     is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_block_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_block_behind_ab = True
-    # is_create_p_gap = True
-    # is_create_p_gap_penult = True
-    # is_create_p_gap_front = True
-    # is_create_p_gap_behind = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
+    is_create_p_block = True
+    is_create_p_block_penult = True
+    is_create_p_block_front = True
+    is_create_p_block_behind = True
+    is_create_p_block_behind_ab = True
+    is_create_p_gap = True
+    is_create_p_gap_penult = True
+    is_create_p_gap_front = True
+    is_create_p_gap_behind = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
     # is_assemble = True
@@ -4202,28 +4202,30 @@ if __name__ == "__main__":
 
             central_angle_a = math.pi / 6
             intercept_a = -67.55
-            behind_block_dimension['central_angle'] = central_angle_a
-            behind_block_dimension['index_r'] = 3
+            behind_block_a_dimension = deepcopy(first_block_dimension)
+            behind_block_a_dimension['central_angle'] = central_angle_a
+            behind_block_a_dimension['index_r'] = 3
             points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
-            p_block_behind_1a = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1A', points, lines, faces, behind_block_dimension)
+            p_block_behind_1a = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1A', points, lines, faces, behind_block_a_dimension)
             print('CREATE PART-BLOCK-BEHIND-1A DONE.')
 
             behind_block_dimension['index_r'] = 2
             points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
-            p_block_behind_2a = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2A', points, lines, faces, behind_block_dimension)
+            p_block_behind_2a = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2A', points, lines, faces, behind_block_a_dimension)
             print('CREATE PART-BLOCK-BEHIND-2A DONE.')
 
             central_angle_b = 0.0
             intercept_b = 58.5
-            behind_block_dimension['central_angle'] = central_angle_b
-            behind_block_dimension['index_r'] = 3
+            behind_block_b_dimension = deepcopy(first_block_dimension)
+            behind_block_b_dimension['central_angle'] = central_angle_b
+            behind_block_b_dimension['index_r'] = 3
             points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
-            p_block_behind_1b = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1B', points, lines, faces, behind_block_dimension)
+            p_block_behind_1b = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1B', points, lines, faces, behind_block_b_dimension)
             print('CREATE PART-BLOCK-BEHIND-1B DONE.')
 
-            behind_block_dimension['index_r'] = 2
+            behind_block_b_dimension['index_r'] = 2
             points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
-            p_block_behind_2b = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2B', points, lines, faces, behind_block_dimension)
+            p_block_behind_2b = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2B', points, lines, faces, behind_block_b_dimension)
             print('CREATE PART-BLOCK-BEHIND-2B DONE.')
 
         behind_gap_dimension = deepcopy(behind_block_dimension)
