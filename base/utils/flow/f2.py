@@ -3464,6 +3464,7 @@ if __name__ == "__main__":
     is_create_p_block_penult = False
     is_create_p_block_front = False
     is_create_p_block_behind = False
+    is_create_p_block_behind_ab = False
     is_create_p_gap = False
     is_create_p_gap_penult = False
     is_create_p_gap_front = False
@@ -3472,18 +3473,19 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
     # is_create_p_cover_front = True
     # is_create_p_cover_behind = True
     # is_create_p_block = True
     # is_create_p_block_penult = True
-    is_create_p_block_front = True
-    is_create_p_block_behind = True
+    # is_create_p_block_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_block_behind_ab = True
     # is_create_p_gap = True
     # is_create_p_gap_penult = True
     # is_create_p_gap_front = True
@@ -4193,16 +4195,23 @@ if __name__ == "__main__":
         behind_block_dimension['theta_in_deg'] = shell_insulation_theta_in_deg_behind
         if is_create_p_block_behind:
             p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
-            central_angle_a = math.pi / 6
+            print('CREATE PART-BLOCK-BEHIND DONE.')
+
+        if is_create_p_block_behind_ab:
             r_out = 140.0
+
+            central_angle_a = math.pi / 6
             intercept_a = -67.55
             behind_block_dimension['central_angle'] = central_angle_a
             behind_block_dimension['index_r'] = 3
             points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
             p_block_behind_1a = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1A', points, lines, faces, behind_block_dimension)
+            print('CREATE PART-BLOCK-BEHIND-1A DONE.')
+
             behind_block_dimension['index_r'] = 2
             points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
             p_block_behind_2a = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2A', points, lines, faces, behind_block_dimension)
+            print('CREATE PART-BLOCK-BEHIND-2A DONE.')
 
             central_angle_b = 0.0
             intercept_b = 58.5
@@ -4210,10 +4219,12 @@ if __name__ == "__main__":
             behind_block_dimension['index_r'] = 3
             points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
             p_block_behind_1b = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1B', points, lines, faces, behind_block_dimension)
+            print('CREATE PART-BLOCK-BEHIND-1B DONE.')
+
             behind_block_dimension['index_r'] = 2
             points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
             p_block_behind_2b = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2B', points, lines, faces, behind_block_dimension)
-            print('CREATE PART-BLOCK-BEHIND DONE.')
+            print('CREATE PART-BLOCK-BEHIND-2B DONE.')
 
         behind_gap_dimension = deepcopy(behind_block_dimension)
         behind_gap_dimension['z_list'] = z_list_with_gap
