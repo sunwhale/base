@@ -2558,6 +2558,9 @@ def create_part_insulation(model, part_name, dimension):
             if edge_sequence is not None:
                 partition_edges.append(edge_sequence)
         p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
+
+    # 截面剖分
+    if rotate_angle_deg == 360.0:
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
 
     # 截面剖分
