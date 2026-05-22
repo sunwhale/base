@@ -3496,24 +3496,24 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
-    is_create_p_block_front = True
-    is_create_p_block_behind = True
-    is_create_p_block_behind_ab = True
-    is_create_p_gap = True
-    is_create_p_gap_penult = True
-    is_create_p_gap_front = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_block_behind = True
+    # # is_create_p_block_behind_ab = True
+    # is_create_p_gap = True
+    # is_create_p_gap_penult = True
+    # is_create_p_gap_front = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
     is_open_parts_cae = True
     is_assemble = True
 
@@ -4370,6 +4370,9 @@ if __name__ == "__main__":
             model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
 
+            model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
+            model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=a.datums[cylindrical_datum.id], description='', expression='8.6-1.5*(Z+1037.75)/19263.21')
+
             # 壳体内表面与绝热层外表面绑定
             instance_name_1 = 'SHELL'
             surface_name_1 = 'SURFACE-INNER'
@@ -4510,70 +4513,70 @@ if __name__ == "__main__":
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                 surface_name = 'SURFACE-INNER'
                 load_name = 'LOAD-' + instance_name + '-' + surface_name
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
 
                 if not is_shared_node:
                     instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
                     surface_name = 'SURFACE-INNER'
                     load_name = 'LOAD-' + instance_name + '-' + surface_name
-                    model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude=UNSET)
+                    model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
-                if i == 0:
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T-1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T-1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                                     exteriorTolerance=0.05, intersectionOnly=OFF)
-
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                                     exteriorTolerance=0.05, intersectionOnly=OFF)
-
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-Z1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                                     exteriorTolerance=0.05, intersectionOnly=OFF)
-
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-Z-1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                                     region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                                     exteriorTolerance=0.05, intersectionOnly=OFF)
-
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T0'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                if i == 2:
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T2'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                # if i == 0:
+                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                #     set_name = 'SET-SURFACE-T-1'
+                #     bc_name = 'BC-' + instance_name + '-' + set_name
+                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                #
+                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                #     set_name = 'SET-SURFACE-T1'
+                #     bc_name = 'BC-' + instance_name + '-' + set_name
+                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                #
+                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                #     set_name = 'SET-SURFACE-T-1'
+                #     bc_name = 'BC-' + instance_name + '-' + set_name
+                #     model.SubmodelBC(name=bc_name, createStepName='Step-1',
+                #                      region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+                #                      exteriorTolerance=0.05, intersectionOnly=OFF)
+                #
+                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                #     set_name = 'SET-SURFACE-T1'
+                #     bc_name = 'BC-' + instance_name + '-' + set_name
+                #     model.SubmodelBC(name=bc_name, createStepName='Step-1',
+                #                      region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+                #                      exteriorTolerance=0.05, intersectionOnly=OFF)
+                #
+                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                #     set_name = 'SET-SURFACE-Z1'
+                #     bc_name = 'BC-' + instance_name + '-' + set_name
+                #     model.SubmodelBC(name=bc_name, createStepName='Step-1',
+                #                      region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+                #                      exteriorTolerance=0.05, intersectionOnly=OFF)
+                #
+                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                #     set_name = 'SET-SURFACE-Z-1'
+                #     bc_name = 'BC-' + instance_name + '-' + set_name
+                #     model.SubmodelBC(name=bc_name, createStepName='Step-1',
+                #                      region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
+                #                      exteriorTolerance=0.05, intersectionOnly=OFF)
+                #
+                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                #     set_name = 'SET-SURFACE-T0'
+                #     bc_name = 'BC-' + instance_name + '-' + set_name
+                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                #
+                # if i == 2:
+                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                #     set_name = 'SET-SURFACE-T1'
+                #     bc_name = 'BC-' + instance_name + '-' + set_name
+                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                #
+                #     instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                #     set_name = 'SET-SURFACE-T2'
+                #     bc_name = 'BC-' + instance_name + '-' + set_name
+                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             if major_version >= 2022:
                 mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
