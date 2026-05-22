@@ -4433,8 +4433,10 @@ if __name__ == "__main__":
             instance_name = 'SKIRT-FRONT'
             set_name = 'SET-SURFACE-X0'
             bc_name = 'BC-' + instance_name + '-' + set_name
+            # model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
+            #                      u1=UNSET, u2=UNSET, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
             model.DisplacementBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name],
-                                 u1=UNSET, u2=UNSET, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
+                                 u1=0.0, u2=0.0, u3=0.0, ur1=UNSET, ur2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, distributionType=UNIFORM, fieldName='', localCsys=a.datums[cylindrical_datum.id])
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
@@ -4508,18 +4510,18 @@ if __name__ == "__main__":
                         surface_name_2 = 'SURFACE-T2'
                         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            for block_loc, block_type in block_types.items():
-                l, i = block_loc
-                instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                surface_name = 'SURFACE-INNER'
-                load_name = 'LOAD-' + instance_name + '-' + surface_name
-                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
-
-                if not is_shared_node:
-                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                    surface_name = 'SURFACE-INNER'
-                    load_name = 'LOAD-' + instance_name + '-' + surface_name
-                    model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
+            # for block_loc, block_type in block_types.items():
+            #     l, i = block_loc
+            #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #     surface_name = 'SURFACE-INNER'
+            #     load_name = 'LOAD-' + instance_name + '-' + surface_name
+            #     model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
+            #
+            #     if not is_shared_node:
+            #         instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+            #         surface_name = 'SURFACE-INNER'
+            #         load_name = 'LOAD-' + instance_name + '-' + surface_name
+            #         model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
@@ -4585,7 +4587,7 @@ if __name__ == "__main__":
                         explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
                         modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
                         scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
-                        multiprocessingMode=DEFAULT, numCpus=8, numDomains=8, numGPUs=0)
+                        multiprocessingMode=DEFAULT, numCpus=16, numDomains=16, numGPUs=0)
             else:
                 mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
                         atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
