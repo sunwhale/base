@@ -906,6 +906,8 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
+    p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-INSULATION'], p.sets['SET-CELL-GLUE-A']), name='SET-FACES-INSULATION-GLUE-A')
+    create_z_t_face_set(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
@@ -1106,6 +1108,8 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
+    p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-INSULATION'], p.sets['SET-CELL-GLUE-A']), name='SET-FACES-INSULATION-GLUE-A')
+    create_z_t_face_set(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
 
     # 星槽剖分
     part_partition_p1p(p, d, p1p)
@@ -1399,6 +1403,8 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
+    p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-INSULATION'], p.sets['SET-CELL-GLUE-A']), name='SET-FACES-INSULATION-GLUE-A')
+    create_z_t_face_set(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
@@ -3551,26 +3557,26 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
     is_create_p_block = True
-    # is_create_p_block_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_block_behind = True
-    # # is_create_p_block_behind_ab = True
-    # is_create_p_gap = True
-    # is_create_p_gap_penult = True
-    # is_create_p_gap_front = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_create_p_block_penult = True
+    is_create_p_block_front = True
+    is_create_p_block_behind = True
+    # is_create_p_block_behind_ab = True
+    is_create_p_gap = True
+    is_create_p_gap_penult = True
+    is_create_p_gap_front = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     n = 9
     d = 3529.0
