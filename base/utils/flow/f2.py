@@ -1811,7 +1811,7 @@ def create_part_shell(model, part_name, dimension):
     # 基本参数
     c1 = [0.0, 0.0]
     c2 = [l_c1_c2, 0.0]
-    element_size = 50.0
+    element_size = 60.0
 
     # 前后椭圆对象
     b_front = a_front / ellipse_ratio
@@ -2107,7 +2107,7 @@ def create_part_flange_front(model, part_name, dimension):
 
     # 基本参数
     c1 = [0.0, 0.0]
-    element_size = 20.0
+    element_size = 40.0
     b_front = a_front / ellipse_ratio
     ellipse = Ellipse(c1[0], c1[1], a_front, b_front, long_axis='y')
     ellipse_top_point = [c1[0], a_front]
@@ -2218,7 +2218,7 @@ def create_part_flange_behind(model, part_name, dimension):
 
     # 基本参数
     c2 = [l_c1_c2, 0.0]
-    element_size = 20.0
+    element_size = 40.0
     b_behind = a_behind / ellipse_ratio
     ellipse = Ellipse(c2[0], c2[1], a_behind, b_behind, long_axis='y')
     ellipse_top_point = [c2[0], a_behind]
@@ -2368,20 +2368,24 @@ def create_part_insulation(model, part_name, dimension):
     r2_behind = dimension['r2_behind']
     r3_behind = dimension['r3_behind']
 
-    # front_points = [[-shell_l_c1_out, shell_insulation_r_out_front], [-shell_l_c1_out, shell_insulation_r_out_front - 2.5], [-1022.0, shell_insulation_r_out_front - 2.5], [-1022.0, 460], [-1022.0, 425]]
-    # behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind], [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - 2.5], [18191.0, shell_insulation_r_out_behind - 2.5], [18191.0, 815], [18191.0, 775]]
-
     front_points = [[-shell_l_c1_out, shell_insulation_r_out_front],
                     [-shell_l_c1_out, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
-                    [-131.32, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front], [-131.32, 100], [-131.32, 88.5]]
+                    [-1022.0, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front], [-1022.0, 460], [-1022.0, 425]]
     behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind],
                      [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind],
-                     [809.07, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind], [809.07, 105], [809.07, 96]]
+                     [18191.0, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind], [18191.0, 815], [18191.0, 775]]
+
+    # front_points = [[-shell_l_c1_out, shell_insulation_r_out_front],
+    #                 [-shell_l_c1_out, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
+    #                 [-131.32, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front], [-131.32, 100], [-131.32, 88.5]]
+    # behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind],
+    #                  [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind],
+    #                  [809.07, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind], [809.07, 105], [809.07, 96]]
 
     # 基本参数
     c1 = [0.0, 0.0]
     c2 = [l_c1_c2, 0.0]
-    element_size = 40.0
+    element_size = 60.0
 
     # 前后椭圆对象
     b_front = a_front / ellipse_ratio
@@ -2510,7 +2514,7 @@ def create_part_insulation(model, part_name, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 草图剖分
-    is_sketch_partition = False
+    is_sketch_partition = True
     if is_sketch_partition:
         s_insulation_partition = model.ConstrainedSketch(name='SKETCH-INSULATION-PARTITION', sheetSize=200.0)
         # s_insulation_partition.Line(point1=(c1[0], flange_r_out_front), point2=(c1[0] - b_front, flange_r_out_front))
@@ -3500,18 +3504,18 @@ if __name__ == "__main__":
     is_create_p_insulation = True
     is_create_p_cover_front = True
     is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_block_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_block_behind_ab = True
-    # is_create_p_gap = True
-    # is_create_p_gap_penult = True
-    # is_create_p_gap_front = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_create_p_block = True
+    is_create_p_block_penult = True
+    is_create_p_block_front = True
+    is_create_p_block_behind = True
+    is_create_p_block_behind_ab = True
+    is_create_p_gap = True
+    is_create_p_gap_penult = True
+    is_create_p_gap_front = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     n = 9
     d = 3529.0
@@ -3666,53 +3670,54 @@ if __name__ == "__main__":
         [18268.46, 942.5]
     ]
 
-    shell_points_front = [
-        [0.0, 257.5],
-        [-9.12, 256.55],
-        [-17.4, 255.41],
-        [-26.22, 253.33],
-        [-36.1, 249.87],
-        [-45.39, 245.55],
-        [-53.98, 240.6],
-        [-61.39, 235.53],
-        [-68.51, 229.93],
-        [-74.87, 224.24],
-        [-81.14, 218.01],
-        [-87.89, 210.73],
-        [-94.96, 202.32],
-        [-101.76, 193.2],
-        [-108.61, 182.88],
-        [-115.18, 171.97],
-        [-120.3, 162.59],
-        [-124.99, 152.83],
-        [-129.21, 143.21],
-        [-133.47, 133.11],
-        [-137.14, 124.56]
-    ]
+    # shell_points_front = [
+    #     [0.0, 257.5],
+    #     [-9.12, 256.55],
+    #     [-17.4, 255.41],
+    #     [-26.22, 253.33],
+    #     [-36.1, 249.87],
+    #     [-45.39, 245.55],
+    #     [-53.98, 240.6],
+    #     [-61.39, 235.53],
+    #     [-68.51, 229.93],
+    #     [-74.87, 224.24],
+    #     [-81.14, 218.01],
+    #     [-87.89, 210.73],
+    #     [-94.96, 202.32],
+    #     [-101.76, 193.2],
+    #     [-108.61, 182.88],
+    #     [-115.18, 171.97],
+    #     [-120.3, 162.59],
+    #     [-124.99, 152.83],
+    #     [-129.21, 143.21],
+    #     [-133.47, 133.11],
+    #     [-137.14, 124.56]
+    # ]
+    #
+    # shell_points_behind = [
+    #     [684.0, 257.5],
+    #     [689.41, 256.97],
+    #     [696.45, 256.3],
+    #     [706.62, 254.33],
+    #     [716.54, 251.25],
+    #     [726.63, 246.93],
+    #     [735.17, 242.3],
+    #     [745.62, 235.35],
+    #     [753.89, 228.75],
+    #     [762.01, 221.17],
+    #     [769.12, 213.78],
+    #     [776.47, 205.4],
+    #     [782.9, 197.16],
+    #     [789.6, 187.36],
+    #     [796.09, 177.25],
+    #     [801.06, 168.47],
+    #     [805.88, 159.25],
+    #     [810.09, 150.63],
+    #     [814.1, 141.95]
+    # ]
 
-    shell_points_behind = [
-        [684.0, 257.5],
-        [689.41, 256.97],
-        [696.45, 256.3],
-        [706.62, 254.33],
-        [716.54, 251.25],
-        [726.63, 246.93],
-        [735.17, 242.3],
-        [745.62, 235.35],
-        [753.89, 228.75],
-        [762.01, 221.17],
-        [769.12, 213.78],
-        [776.47, 205.4],
-        [782.9, 197.16],
-        [789.6, 187.36],
-        [796.09, 177.25],
-        [801.06, 168.47],
-        [805.88, 159.25],
-        [810.09, 150.63],
-        [814.1, 141.95]
-    ]
     setting_file = 'setting.json'
-    setting_file = 'setting_520.json'
+    # setting_file = 'setting_520.json'
     if os.path.exists(setting_file):
         message = load_json(setting_file)
         n = message['n']
@@ -3852,9 +3857,9 @@ if __name__ == "__main__":
     flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
     flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
 
-    nl, nt = 6, n
+    nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
-    block[:, 0] = True
+    block[:, :] = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -4408,14 +4413,14 @@ if __name__ == "__main__":
             surface_name_2 = 'SURFACE-OUTER'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            for instance_name in rotation_part_dict.keys():
-                set_name = 'SET-SURFACE-T0'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                set_name = 'SET-SURFACE-T1'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            # for instance_name in rotation_part_dict.keys():
+            #     set_name = 'SET-SURFACE-T0'
+            #     bc_name = 'BC-' + instance_name + '-' + set_name
+            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #     set_name = 'SET-SURFACE-T1'
+            #     bc_name = 'BC-' + instance_name + '-' + set_name
+            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             # instance_name = 'INSULATION'
             # surface_name = 'SURFACE-INNER'
@@ -4515,16 +4520,16 @@ if __name__ == "__main__":
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
-                if i == 0:
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T-1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                # if i == 0:
+                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                #     set_name = 'SET-SURFACE-T-1'
+                #     bc_name = 'BC-' + instance_name + '-' + set_name
+                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T1'
-                    bc_name = 'BC-' + instance_name + '-' + set_name
-                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                    # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    # set_name = 'SET-SURFACE-T1'
+                    # bc_name = 'BC-' + instance_name + '-' + set_name
+                    # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             #         instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
             #         set_name = 'SET-SURFACE-T-1'
@@ -4560,13 +4565,13 @@ if __name__ == "__main__":
             #         # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
             #
 
-            #
-            #     # if i == 1:
-            #     # instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-            #     # set_name = 'SET-SURFACE-T-1'
-            #     # bc_name = 'BC-' + instance_name + '-' + set_name
-            #     # model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-            #
+
+                # if i == 2:
+                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                #     set_name = 'SET-SURFACE-T1'
+                #     bc_name = 'BC-' + instance_name + '-' + set_name
+                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
             #     # instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
             #     # set_name = 'SET-SURFACE-T2'
             #     # bc_name = 'BC-' + instance_name + '-' + set_name
