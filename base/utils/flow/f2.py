@@ -45,8 +45,8 @@ sys.path.insert(0, FLOW_PATH)
 
 from utils import ABAQUS_ENV, Circle3D, Ellipse, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
     load_json, min_difference, mirror_y_axis, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, \
-    combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_cell_in_set, get_faces_of_p_remove_given_surface_names, \
-    get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces, rotate_point_around_axis, move_along_direction
+    combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_face_in_set, is_cell_in_set, \
+    get_faces_of_p_remove_given_surface_names, get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces, rotate_point_around_axis, move_along_direction
 
 PEN = 1e4
 TOL = 1e-6
@@ -616,6 +616,8 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
+    p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-INSULATION'], p.sets['SET-CELL-GLUE-A']), name='SET-FACES-INSULATION-GLUE-A')
+    create_z_t_face_set(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
 
     # 星槽剖分
     part_partition_p1p(p, d, p1p)
@@ -2913,6 +2915,59 @@ def create_block_surface_common(p, points, dimension):
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
 
+def create_z_t_face_set(p, points, dimension, nz, nt, set_name):
+    z_list = dimension['z_list']
+    index_r = dimension['index_r']
+    index_t = dimension['index_t']
+    slot_deep = dimension['slot_deep']
+    burn_offset = dimension['burn_offset']
+    length = z_list[-1 - nz] * 2.0
+
+    p1 = (points[0, 0][0], points[0, 0][1], length / 2.0)
+    p2 = (points[0, 1][0], points[0, 1][1], length / 2.0)
+    p3 = (points[1, 0][0], points[1, 0][1], length / 2.0)
+    plane = Plane(p1, p2, p3)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Set(faces=p_faces, name=set_name + '-Z1')
+
+    p1 = (points[0, 0][0], points[0, 0][1], -length / 2.0)
+    p2 = (points[0, 1][0], points[0, 1][1], -length / 2.0)
+    p3 = (points[1, 0][0], points[1, 0][1], -length / 2.0)
+    plane = Plane(p1, p2, p3)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Set(faces=p_faces, name=set_name + '-Z-1')
+
+    p1 = (points[0, index_t - nt][0], points[0, index_t - nt][1], 0.0)
+    p2 = (points[index_r, index_t - nt][0], points[index_r, index_t - nt][1], 0.0)
+    p3 = (points[0, index_t - nt][0], points[0, index_t - nt][1], length / 2.0)
+    plane = Plane(p1, p2, p3)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Set(faces=p_faces, name=set_name + '-T1')
+
+    p1 = (points[0, index_t - nt][0], -points[0, index_t - nt][1], 0.0)
+    p2 = (points[index_r, index_t - nt][0], -points[index_r, index_t - nt][1], 0.0)
+    p3 = (points[0, index_t - nt][0], -points[0, index_t - nt][1], length / 2.0)
+    plane = Plane(p1, p2, p3)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Set(faces=p_faces, name=set_name + '-T-1')
+
+
 def create_gap_surface_common(p, points, dimension):
     z_list = dimension['z_list']
     index_r = dimension['index_r']
@@ -3504,7 +3559,7 @@ if __name__ == "__main__":
     # is_create_p_insulation = True
     # is_create_p_cover_front = True
     # is_create_p_cover_behind = True
-    # is_create_p_block = True
+    is_create_p_block = True
     # is_create_p_block_penult = True
     # is_create_p_block_front = True
     # is_create_p_block_behind = True
@@ -3514,8 +3569,8 @@ if __name__ == "__main__":
     # is_create_p_gap_front = True
     # is_create_p_gap_behind = True
     # is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     n = 9
     d = 3529.0
@@ -4338,7 +4393,7 @@ if __name__ == "__main__":
                 if part is not None:
                     a.Instance(name=name, part=part, dependent=ON)
                     a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_y, angle=y_rot_angle)
-                    a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_z, angle=z_rot_angle)
+                    # a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_z, angle=z_rot_angle)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
@@ -4579,6 +4634,8 @@ if __name__ == "__main__":
                 #     set_name = 'SET-SURFACE-T2'
                 #     bc_name = 'BC-' + instance_name + '-' + set_name
                 #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+            model.Gravity(name='Load-1', createStepName='Step-1', comp2=-9800.0, distributionType=UNIFORM, field='')
 
             if major_version >= 2022:
                 mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,

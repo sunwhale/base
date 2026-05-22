@@ -1949,6 +1949,13 @@ def vertices_in_cells(cells):
     return cell_vertices
 
 
+def is_face_in_set(face, p_set):
+    for f in p_set.faces:
+        if f == face:
+            return True
+    return False
+
+
 def is_cell_in_set(cell, p_set):
     for c in p_set.cells:
         if c == cell:
