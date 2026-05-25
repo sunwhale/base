@@ -85,6 +85,7 @@ def odb_to_npz(setting_file):
             odb = openOdb(path=str(odb_name), readOnly=True)
             data = {}
             time = []
+            step_time = {}
 
             # loop of regions
             for r in regions:
@@ -176,10 +177,12 @@ def odb_to_npz(setting_file):
 
                 # loop of steps
                 time = []
+                step_time = {}
                 for step in step_frames:
                     step_name = str(step[0])
                     frames_in_step = step[1]
                     frames = odb.steps[step_name].frames
+                    step_time[step_name] = []
 
                     # loop of frames
                     if frames_in_step == []:
@@ -189,6 +192,7 @@ def odb_to_npz(setting_file):
                         for i, frame in enumerate(frames):
                             if i in frames_in_step:
                                 time.append(frame.frameValue)
+                                step_time[step_name].append(frame.frameValue)
                                 current_count += 1
                                 if is_write(current_count, total_count):
                                     f_proc.write('%.1f\n' % (float(current_count) * 100 / total_count))
@@ -197,8 +201,7 @@ def odb_to_npz(setting_file):
                                 for v in variables:
                                     v_name = str(v[0])
                                     v_position = str(v[1])
-                                    field_output = frame.fieldOutputs[v_name].getSubset(position=position[v_position],
-                                                                                        region=region)
+                                    field_output = frame.fieldOutputs[v_name].getSubset(position=position[v_position], region=region)
                                     if len(field_output.bulkDataBlocks) > 0:
                                         bulk_data = field_output.bulkDataBlocks[0]
                                         field_var = data[r_name]['fieldOutputs'][v_name]
@@ -213,6 +216,7 @@ def odb_to_npz(setting_file):
                         for frame_id in frames_in_step:
                             print(frame_id)
                             time.append(frames[frame_id].frameValue)
+                            step_time[step_name].append(frames[frame_id].frameValue)
                             current_count += 1
                             if is_write(current_count, total_count):
                                 f_proc.write('%.1f\n' % (float(current_count) * 100 / total_count))
@@ -221,8 +225,7 @@ def odb_to_npz(setting_file):
                             for v in variables:
                                 v_name = str(v[0])
                                 v_position = str(v[1])
-                                field_output = frames[frame_id].fieldOutputs[v_name].getSubset(
-                                    position=position[v_position], region=region)
+                                field_output = frames[frame_id].fieldOutputs[v_name].getSubset(position=position[v_position], region=region)
                                 if len(field_output.bulkDataBlocks) > 0:
                                     bulk_data = field_output.bulkDataBlocks[0]
                                     field_var = data[r_name]['fieldOutputs'][v_name]
@@ -235,10 +238,12 @@ def odb_to_npz(setting_file):
 
             np.savez(odb_name.replace('.odb', '') + '.npz',
                      data=data,
-                     time=time)
+                     time=time,
+                     step_time=step_time)
 
             del data
             del time
+            del step_time
 
             odb.close()
             with open('.odb_to_npz_status', 'w') as f:
