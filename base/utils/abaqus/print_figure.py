@@ -83,13 +83,16 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
     viewport.viewportAnnotationOptions.setValues(legendPosition=setting['legendPosition'])
     viewport.odbDisplay.basicOptions.setValues(mirrorAboutXyPlane=setting['mirrorAboutXyPlane'], mirrorAboutXzPlane=setting['mirrorAboutXzPlane'], mirrorAboutYzPlane=setting['mirrorAboutYzPlane'])
 
+    region_name = ''
     if setting['removeElementSet'] != '':
         leaf = dgo.LeafFromElementSets(elementSets=(setting['removeElementSet'],))
         viewport.odbDisplay.displayGroup.remove(leaf=leaf)
+        region_name = 'remove_' + setting['removeElementSet']
 
     if setting['replaceElementSet'] != '':
         leaf = dgo.LeafFromElementSets(elementSets=(setting['replaceElementSet'],))
         viewport.odbDisplay.displayGroup.replace(leaf=leaf)
+        region_name = 'replace_' + setting['replaceElementSet']
 
     viewport.enableMultipleColors()
     viewport.setColor(initialColor='#BDBDBD')
@@ -134,13 +137,13 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
         display.setFrame(step=setting['step'], frame=setting['frame'])
 
         if setting['refinement'] != ():
-            figurename = '%s_%s.png' % (setting['refinement'][-1], setting['frame'])
+            figurename = '%s_%s_%s_%s.png' % (setting['variableLabel'], setting['refinement'][-1], region_name, setting['frame'])
         else:
-            figurename = '%s_%s.png' % (setting['variableLabel'], setting['frame'])
+            figurename = '%s_%s_%s.png' % (setting['variableLabel'], region_name, setting['frame'])
         if setting['plotState'] == (UNDEFORMED,):
-            figurename = 'UNDEFORMED_%s_%s.png' % (setting['colorMappings'], setting['frame'])
+            figurename = 'UNDEFORMED_%s_%s_%s.png' % (setting['colorMappings'], region_name, setting['frame'])
         elif setting['plotState'] == (DEFORMED,):
-            figurename = 'DEFORMED_%s_%s.png' % (setting['colorMappings'], setting['frame'])
+            figurename = 'DEFORMED_%s_%s_%s.png' % (setting['colorMappings'], region_name, setting['frame'])
 
         session.printToFile(fileName=figurename, format=PNG, canvasObjects=(viewport,))
 
@@ -172,13 +175,13 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
         for frame_id in frame_ids:
             display.setFrame(step=setting['step'], frame=frame_id)
             if setting['refinement'] != ():
-                figurename = '%s%s%s_%s.png' % (path, os.sep, setting['refinement'][-1], frame_id)
+                figurename = '%s%s%s_%s_%s_%s.png' % (path, os.sep, setting['variableLabel'], setting['refinement'][-1], region_name, frame_id)
             else:
-                figurename = '%s%s%s_%s.png' % (path, os.sep, setting['variableLabel'], frame_id)
+                figurename = '%s%s%s_%s_%s.png' % (path, os.sep, setting['variableLabel'], region_name, frame_id)
             if setting['plotState'] == (UNDEFORMED,):
-                figurename = '%s%sUNDEFORMED_%s_%s.png' % (path, os.sep, setting['colorMappings'], frame_id)
+                figurename = '%s%sUNDEFORMED_%s_%s_%s.png' % (path, os.sep, setting['colorMappings'], region_name, frame_id)
             elif setting['plotState'] == (DEFORMED,):
-                figurename = '%s%sDEFORMED_%s_%s.png' % (path, os.sep, setting['colorMappings'], frame_id)
+                figurename = '%s%sDEFORMED_%s_%s_%s.png' % (path, os.sep, setting['colorMappings'], region_name, frame_id)
 
             session.printToFile(fileName=figurename, format=PNG, canvasObjects=(viewport,))
 
