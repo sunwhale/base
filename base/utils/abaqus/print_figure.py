@@ -157,13 +157,13 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
         interval = setting['frameInterval']
 
         if setting['refinement'] != ():
-            path = '%s' % (setting['refinement'][-1])
+            path = '%s_%s_%s' % (setting['variableLabel'], setting['refinement'][-1], region_name)
         else:
-            path = '%s' % (setting['variableLabel'])
+            path = '%s_%s' % (setting['variableLabel'], region_name)
         if setting['plotState'] == (UNDEFORMED,):
-            path = 'UNDEFORMED_%s' % (setting['colorMappings'])
+            path = 'UNDEFORMED_%s_%s' % (setting['colorMappings'], region_name)
         elif setting['plotState'] == (DEFORMED,):
-            path = 'DEFORMED_%s' % (setting['colorMappings'])
+            path = 'DEFORMED_%s_%s' % (setting['colorMappings'], region_name)
 
         if os.path.exists(path):
             shutil.rmtree(path)
