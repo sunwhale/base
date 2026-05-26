@@ -179,7 +179,7 @@ def distance(point1, point2):
         raise ValueError("两个点的维度必须相同")
 
     squared_diff_sum = sum((p1 - p2) ** 2 for p1, p2 in zip(point1, point2))
-    return math.sqrt(squared_diff_sum)
+    return np.sqrt(squared_diff_sum)
 
 
 def normal_scalar_projection(displacement, a, b, c, d=None):
@@ -202,6 +202,26 @@ def normal_scalar_projection(displacement, a, b, c, d=None):
     # 点积：自动将最后维度 (3) 与 n_unit 进行点积
     scalar_proj = np.dot(displacement, n_unit)  # 结果形状 (198, 83)
     return scalar_proj
+
+
+def signed_distance(points, a, b, c, d):
+    """
+    计算点集到平面的有符号距离。
+
+    参数:
+        points: ndarray of shape (n, 3) 每个点是 [x, y, z]
+        a, b, c, d: 平面方程系数
+
+    返回:
+        distances: ndarray of shape (n,) 有符号距离
+    """
+    normal = np.array([a, b, c])
+    norm_len = np.linalg.norm(normal)
+    if norm_len == 0:
+        raise ValueError("法向量不能为零向量")
+    # 分子: a*x + b*y + c*z + d
+    numerator = points @ normal + d  # 点积 + d
+    return numerator / norm_len
 
 
 data = {}
@@ -256,20 +276,34 @@ u_b = np.swapaxes(u_b, 0, 1)
 print(u_a[9, 82, :])
 print(u_b[9, 82, :])
 
+print(u_b[9, 82, :] - u_a[9, 82, :])
+
+print(distance(coords_a[9, :], coords_b[9, :]))
+print(distance(coords_a[9, :] + u_a[9, 82, :], coords_b[9, :] + u_b[9, 82, :]))
+
 print(u_a.shape, coords_a.shape)
 u_max = []
 
 # for nt in range(0, 83):
 for nt in [82]:
     a, b, c, d = fit_plane_lsq(coords_a + u_a[:, nt, :])
-    # print(f"拟合平面: {a:.4f}*x + {b:.4f}*y + {c:.4f}*z + {d:.4f} = 0")
+    print(f"拟合平面: {a:.4f}*x + {b:.4f}*y + {c:.4f}*z + {d:.4f} = 0")
     # print(f"法向量模长: {np.sqrt(a * a + b * b + c * c):.6f}")
-    u_a_normal = normal_scalar_projection(u_a[:, nt, :], a, b, c, d)
-    u_b_normal = normal_scalar_projection(u_b[:, nt, :], a, b, c, d)
-    linear_interp = LinearNDInterpolator(list(zip(cyl_coords_a[:, 0], cyl_coords_a[:, 2])), u_a_normal)
 
-    u = linear_interp(list(zip(cyl_coords_b[:, 0], cyl_coords_b[:, 2]))) - u_b_normal
+    distance_a = signed_distance(coords_a + u_a[:, nt, :], a, b, c, d)
+    distance_b = signed_distance(coords_b + u_b[:, nt, :], a, b, c, d)
+
+    distance_a_interp = LinearNDInterpolator(list(zip(cyl_coords_a[:, 0], cyl_coords_a[:, 2])), distance_a)
+
+    u = distance_a_interp(list(zip(cyl_coords_b[:, 0], cyl_coords_b[:, 2]))) - distance_b
     u_max.append(u.max())
+
+    print(normal_scalar_projection(u_a[9, nt, :], a, b, c, d))
+
+    a, b, c, d = fit_plane_lsq(coords_b + u_b[:, nt, :])
+    print(f"拟合平面: {a:.4f}*x + {b:.4f}*y + {c:.4f}*z + {d:.4f} = 0")
+    print(normal_scalar_projection(u_b[9, nt, :], a, b, c, d))
+
     # print(u)
     # x = cyl_coords_a[:,0]
     # y = cyl_coords_a[:,2]
