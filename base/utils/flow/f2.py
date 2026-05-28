@@ -2379,11 +2379,13 @@ def create_part_insulation(model, part_name, dimension):
     front_points = [[-shell_l_c1_out, shell_insulation_r_out_front],
                     [-shell_l_c1_out, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
                     [-shell_l_c1_out + cover_thickness_front, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
-                    [-shell_l_c1_out + cover_thickness_front, r_cut_front], [-shell_l_c1_out + cover_thickness_front, shell_insulation_r_in_front]]
+                    [-shell_l_c1_out + cover_thickness_front, flange_r_in_front],
+                    [-shell_l_c1_out + cover_thickness_front, shell_insulation_r_in_front]]
     behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind],
                      [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind],
                      [l_c1_c2 + shell_l_c2_out - cover_thickness_behind, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind],
-                     [l_c1_c2 + shell_l_c2_out - cover_thickness_behind, flange_r_in_behind], [l_c1_c2 + shell_l_c2_out - cover_thickness_behind, shell_insulation_r_in_behind]]
+                     [l_c1_c2 + shell_l_c2_out - cover_thickness_behind, flange_r_in_behind],
+                     [l_c1_c2 + shell_l_c2_out - cover_thickness_behind, shell_insulation_r_in_behind]]
 
     # front_points = [[-shell_l_c1_out, shell_insulation_r_out_front],
     #                 [-shell_l_c1_out, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
@@ -3690,7 +3692,7 @@ if __name__ == "__main__":
     skirt_offset_behind = 450.0
 
     setting_file = 'setting.json'
-    # setting_file = 'setting_520.json'
+    setting_file = 'setting_520.json'
     if os.path.exists(setting_file):
         message = load_json(setting_file)
         n = message['n']
