@@ -2378,10 +2378,12 @@ def create_part_insulation(model, part_name, dimension):
 
     front_points = [[-shell_l_c1_out, shell_insulation_r_out_front],
                     [-shell_l_c1_out, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
-                    [-1022.0, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front], [-1022.0, 460], [-1022.0, 425]]
+                    [-shell_l_c1_out + cover_thickness_front, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
+                    [-shell_l_c1_out + cover_thickness_front, r_cut_front], [-shell_l_c1_out + cover_thickness_front, shell_insulation_r_in_front]]
     behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind],
                      [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind],
-                     [18191.0, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind], [18191.0, 815], [18191.0, 775]]
+                     [l_c1_c2 + shell_l_c2_out - cover_thickness_behind, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind],
+                     [l_c1_c2 + shell_l_c2_out - cover_thickness_behind, flange_r_in_behind], [l_c1_c2 + shell_l_c2_out - cover_thickness_behind, shell_insulation_r_in_behind]]
 
     # front_points = [[-shell_l_c1_out, shell_insulation_r_out_front],
     #                 [-shell_l_c1_out, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
@@ -3687,96 +3689,6 @@ if __name__ == "__main__":
     skirt_l_2_behind = 1650.0
     skirt_offset_behind = 450.0
 
-    shell_points_front = [
-        [0.0, 1797],
-        [-96.8064430098, 1782.413462884],
-        [-254.909928736249, 1738.57729039316],
-        [-421.6014439709067, 1646.30010370615],
-        [-589.305564707334, 1497.75654546221],
-        [-746.505943075241, 1293.30829663749],
-        [-870.44360451547, 1070.88145443796],
-        [-976.489020854007, 830.029564571925],
-        [-1021.401502536258, 729.78],
-        [-1037.970411928135, 699.224089212695],
-        [-1044.829032998202, 688.117183117819],
-        [-1057.685571407338, 669.949503482999],
-        [-1075.649137556998, 653.140905494465],
-        [-1084.860920203, 642.6012150702],
-        [-1092.443316670377, 629.376854130482],
-        [-1096.99501445648, 617.84423753983],
-        [-1101.591557792179, 600.351456585038],
-        [-1104.333555627274, 583.53],
-        [-1105.75, 562.5]
-    ]
-
-    shell_points_behind = [
-        [17300.0, 1797.0],
-        [17396.76553999, 1782.441736529],
-        [17519.7184561699, 1751.98109955292],
-        [17618.0767849756, 1709.77995097863],
-        [17701.4989115574, 1660.72443960816],
-        [17781.1164710385, 1601.62973945467],
-        [17866.3436975168, 1523.78393637163],
-        [17957.1030195404, 1422.34651700716],
-        [18028.332724774, 1327.87837590518],
-        [18090.5528937387, 1234.36960053656],
-        [18145.7756605144, 1144.93620532394],
-        [18188.2751225951, 1077.31181333258],
-        [18216.5911504077, 1038.11451194076],
-        [18230.084720212, 1022.615046924],
-        [18250.63937956, 1004.135041099],
-        [18258.4649372841, 988.825237127162],
-        [18263.9764820367, 973.04],
-        [18266.9140438863, 959.359404731315],
-        [18268.46, 942.5]
-    ]
-
-    # shell_points_front = [
-    #     [0.0, 257.5],
-    #     [-9.12, 256.55],
-    #     [-17.4, 255.41],
-    #     [-26.22, 253.33],
-    #     [-36.1, 249.87],
-    #     [-45.39, 245.55],
-    #     [-53.98, 240.6],
-    #     [-61.39, 235.53],
-    #     [-68.51, 229.93],
-    #     [-74.87, 224.24],
-    #     [-81.14, 218.01],
-    #     [-87.89, 210.73],
-    #     [-94.96, 202.32],
-    #     [-101.76, 193.2],
-    #     [-108.61, 182.88],
-    #     [-115.18, 171.97],
-    #     [-120.3, 162.59],
-    #     [-124.99, 152.83],
-    #     [-129.21, 143.21],
-    #     [-133.47, 133.11],
-    #     [-137.14, 124.56]
-    # ]
-    #
-    # shell_points_behind = [
-    #     [684.0, 257.5],
-    #     [689.41, 256.97],
-    #     [696.45, 256.3],
-    #     [706.62, 254.33],
-    #     [716.54, 251.25],
-    #     [726.63, 246.93],
-    #     [735.17, 242.3],
-    #     [745.62, 235.35],
-    #     [753.89, 228.75],
-    #     [762.01, 221.17],
-    #     [769.12, 213.78],
-    #     [776.47, 205.4],
-    #     [782.9, 197.16],
-    #     [789.6, 187.36],
-    #     [796.09, 177.25],
-    #     [801.06, 168.47],
-    #     [805.88, 159.25],
-    #     [810.09, 150.63],
-    #     [814.1, 141.95]
-    # ]
-
     setting_file = 'setting.json'
     # setting_file = 'setting_520.json'
     if os.path.exists(setting_file):
@@ -3878,6 +3790,9 @@ if __name__ == "__main__":
         skirt_l_1_behind = message['skirt_l_1_behind']
         skirt_l_2_behind = message['skirt_l_2_behind']
         skirt_offset_behind = message['skirt_offset_behind']
+        shell_points_front = message['shell_points_front']
+        shell_points_behind = message['shell_points_behind']
+
         # is_create_p_shell = message['is_create_p_shell']
         # is_create_p_skirt_front = message['is_create_p_skirt_front']
         # is_create_p_skirt_behind = message['is_create_p_skirt_behind']
