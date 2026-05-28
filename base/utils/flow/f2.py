@@ -4571,18 +4571,18 @@ if __name__ == "__main__":
                         surface_name_2 = 'SURFACE-T2'
                         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            # for block_loc, block_type in block_types.items():
-            #     l, i = block_loc
-            #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-            #     surface_name = 'SURFACE-INNER'
-            #     load_name = 'LOAD-' + instance_name + '-' + surface_name
-            #     model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
-            #
-            #     if not is_shared_node:
-            #         instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-            #         surface_name = 'SURFACE-INNER'
-            #         load_name = 'LOAD-' + instance_name + '-' + surface_name
-            #         model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
+            for block_loc, block_type in block_types.items():
+                l, i = block_loc
+                instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                surface_name = 'SURFACE-INNER'
+                load_name = 'LOAD-' + instance_name + '-' + surface_name
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
+
+                if not is_shared_node:
+                    instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
+                    surface_name = 'SURFACE-INNER'
+                    load_name = 'LOAD-' + instance_name + '-' + surface_name
+                    model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
@@ -4641,7 +4641,7 @@ if __name__ == "__main__":
                 #     bc_name = 'BC-' + instance_name + '-' + set_name
                 #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-            model.Gravity(name='Load-1', createStepName='Step-1', comp2=-9800.0, distributionType=UNIFORM, field='')
+            # model.Gravity(name='Load-1', createStepName='Step-1', comp2=-9800.0, distributionType=UNIFORM, field='')
 
             if major_version >= 2022:
                 mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
