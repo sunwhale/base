@@ -3573,7 +3573,7 @@ if __name__ == "__main__":
     is_create_p_block_penult = True
     is_create_p_block_front = True
     is_create_p_block_behind = True
-    # is_create_p_block_behind_ab = True
+    is_create_p_block_behind_ab = True
     is_create_p_gap = True
     is_create_p_gap_penult = True
     is_create_p_gap_front = True
@@ -3835,7 +3835,7 @@ if __name__ == "__main__":
     flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
     flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
 
-    nl, nt = 12, n
+    nl, nt = 7, n
     block = np.zeros((nl, nt), dtype=bool)
     block[:, :] = True
 
