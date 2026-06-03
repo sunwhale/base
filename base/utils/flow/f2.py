@@ -542,16 +542,37 @@ def part_partition_z(p, d, z_list, is_minus=False):
     return xy_plane_z
 
 
-def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end):
+def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end, size):
     x1 = ref_point_2[0]
     y1 = ref_point_2[1]
     if ref_point_1[1] > 0.0:
         p_faces = p.faces.getByBoundingBox(0, TOL, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
     else:
         p_faces = p.faces.getByBoundingBox(0, 0, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
-    p_faces = get_same_area_faces(p, p_faces)
+    p_faces = get_mirror_faces(p, p_faces, size)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
+
+
+def get_mirror_faces(p, p_faces, size):
+    for face in p_faces:
+        point = face.pointOn[0]
+
+        point_mirror_y = [point[0], -point[1], point[2]]
+        point_mirror_z = [point[0], point[1], -point[2]]
+        point_mirror_yz = [point[0], -point[1], -point[2]]
+
+        if size == "1/2":
+            p_faces += p.faces.findAt((point_mirror_z,))
+        elif size == "1":
+            p_faces += p.faces.findAt((point_mirror_y,))
+            p_faces += p.faces.findAt((point_mirror_z,))
+            p_faces += p.faces.findAt((point_mirror_yz,))
+
+    if p_faces:
+        return p_faces
+    else:
+        return None
 
 
 def create_part_block(model, part_name, points, lines, faces, dimension):
@@ -604,7 +625,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_block_surface_common(p, points, dimension)
-    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1])
+    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1], size)
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
@@ -692,7 +713,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_gap_surface_common(p, points, dimension)
-    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1])
+    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1], size)
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
@@ -880,7 +901,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_block_surface_common(p, points, dimension)
-    create_surface_slot(p, p1p, p2p, -r_cut - slot_ellipse_b - burn_offset, z_list[-1])
+    create_surface_slot(p, p1p, p2p, -r_cut - slot_ellipse_b - burn_offset, z_list[-1], size)
 
     if size == '1':
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
@@ -989,7 +1010,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_gap_surface_common(p, points, dimension)
-    create_surface_slot(p, p1p, p2p, -r_cut - slot_ellipse_b - burn_offset, z_list[-1])
+    create_surface_slot(p, p1p, p2p, -r_cut - slot_ellipse_b - burn_offset, z_list[-1], size)
 
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
@@ -1085,7 +1106,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_block_surface_common(p, points, dimension)
-    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1])
+    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1], size)
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
     # 旋转切割内燃道
@@ -1188,7 +1209,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_gap_surface_common(p, points, dimension)
-    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1])
+    create_surface_slot(p, p1p, p2p, 0.0, z_list[-1], size)
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
     # 捕捉倒角参考点
@@ -3692,7 +3713,7 @@ if __name__ == "__main__":
     skirt_offset_behind = 450.0
 
     setting_file = 'setting.json'
-    setting_file = 'setting_520.json'
+    # setting_file = 'setting_520.json'
     if os.path.exists(setting_file):
         message = load_json(setting_file)
         n = message['n']
@@ -3835,9 +3856,9 @@ if __name__ == "__main__":
     flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
     flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
 
-    nl, nt = 7, n
+    nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
-    block[:, :] = True
+    block[:, 0] = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -4316,7 +4337,7 @@ if __name__ == "__main__":
                 if part is not None:
                     a.Instance(name=name, part=part, dependent=ON)
                     a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_y, angle=y_rot_angle)
-                    # a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_z, angle=z_rot_angle)
+                    a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_z, angle=z_rot_angle)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
