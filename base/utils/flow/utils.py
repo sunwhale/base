@@ -4,9 +4,18 @@
 """
 import json
 import math
+import sys
+from collections import Counter
 
 import numpy as np
-from collections import Counter
+
+# 兼容 Python 2 和 3
+if sys.version_info[0] == 2:
+    string_types = (str, unicode)
+    text_type = unicode
+else:
+    string_types = (str,)
+    text_type = str
 
 try:
     import matplotlib.pyplot as plt
@@ -1029,7 +1038,7 @@ def load_json(file_path, encoding='utf-8'):
 
 
 def is_unicode_all_uppercase(obj):
-    return isinstance(obj, unicode) and obj.isupper() and any(c.isalpha() for c in obj)
+    return isinstance(obj, text_type) and obj.isupper() and any(c.isalpha() for c in obj)
 
 
 def degrees_to_radians(degrees):
