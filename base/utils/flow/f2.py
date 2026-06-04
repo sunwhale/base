@@ -3206,6 +3206,10 @@ def set_section_common(p):
     if set_name in p.sets.keys():
         p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-GLUE', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
 
+    set_name = 'SET-CELL-GLUE-B'
+    if set_name in p.sets.keys():
+        p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-GLUE-WALL', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+
     set_name = 'COHESIVE-ELEMENTS-GRAIN-INSULATION'
     if set_name in p.sets.keys():
         p.SectionAssignment(region=p.sets[set_name], sectionName='SECTION-CZM', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
@@ -3858,7 +3862,7 @@ if __name__ == "__main__":
 
     nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
-    block[:, 0] = True
+    block[:, :] = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -3933,12 +3937,14 @@ if __name__ == "__main__":
         set_material(model.Material(name='MATERIAL-SHELL'), load_json('material_shell.json'))
         set_material(model.Material(name='MATERIAL-STEEL'), load_json('material_steel.json'))
         set_material(model.Material(name='MATERIAL-CZM'), load_json('material_czm.json'))
+        set_material(model.Material(name='MATERIAL-GLUE-WALL'), load_json('material_glue_wall.json'))
 
         model.HomogeneousSolidSection(name='SECTION-GRAIN', material='MATERIAL-GRAIN', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-INSULATION', material='MATERIAL-INSULATION', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-GLUE', material='MATERIAL-GLUE', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-SHELL', material='MATERIAL-SHELL', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-STEEL', material='MATERIAL-STEEL', thickness=None)
+        model.HomogeneousSolidSection(name='SECTION-GLUE-WALL', material='MATERIAL-GLUE-WALL', thickness=None)
         model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
         model.ContactProperty('IntProp-1')
@@ -4130,7 +4136,7 @@ if __name__ == "__main__":
             'slot_ellipse_a': slot_ellipse_a,
             'slot_ellipse_b': slot_ellipse_b,
             'size': size,
-            'index_r': 2,
+            'index_r': 3,
             'index_t': index_t,
             'element_size': element_size,
             'insert_czm': insert_czm,
@@ -4138,7 +4144,7 @@ if __name__ == "__main__":
             'burn_offset': burn_offset
         }
 
-        points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        points, lines, faces = geometries(d, x0, beta, [0, 8, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         if is_create_p_block:
             p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
             print('CREATE PART-BLOCK DONE.')
@@ -4161,7 +4167,7 @@ if __name__ == "__main__":
             p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
             print('CREATE PART-GAP-PENULT DONE.')
 
-        points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        points, lines, faces = geometries(d, x0, beta, [0, 8, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
 
         z_list_with_gap = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_z / 2]
         index_t_with_gap = 3
@@ -4174,7 +4180,7 @@ if __name__ == "__main__":
 
         first_block_dimension = deepcopy(block_dimension)
         first_block_dimension['z_list'] = z_list
-        first_block_dimension['index_r'] = 3
+        first_block_dimension['index_r'] = 4
         first_block_dimension['index_t'] = index_t
 
         first_block_dimension['r_cut'] = r_cut_front
