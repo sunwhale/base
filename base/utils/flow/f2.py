@@ -508,7 +508,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     part_partition_z(p, d, z_list)
 
     # 创建集合（体）
-    set_names = create_block_sets_common(p, faces, dimension)
+    set_names = create_sets_block_common(p, faces, dimension)
 
     # 星槽切割
     r_cut = x0 + slot_deep
@@ -534,7 +534,7 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
         raise NotImplementedError('Unsupported size {}'.format(size))
 
     # 创建面
-    create_block_surface_common(p, points, dimension)
+    create_surface_block_common(p, points, dimension)
     create_surface_slot(p, p1p, p2p, 0.0, z_list[-1], size)
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
@@ -543,12 +543,12 @@ def create_part_block(model, part_name, points, lines, faces, dimension):
     create_face_set_from_surface(p)
 
     # 更新集合（体），处理镜像
-    create_block_sets_same_volume(p)
+    create_sets_block_same_volume(p)
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-INSULATION'], p.sets['SET-CELL-GLUE-A']), name='SET-FACES-INSULATION-GLUE-A')
-    create_z_t_face_set(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
+    create_sets_z_t_face(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
 
     # 星槽剖分
     part_partition_p1p(p, d, p1p)
@@ -810,7 +810,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
         p.PartitionCellByExtrudeEdge(line=d[y_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
     # 创建面
-    create_block_surface_common(p, points, dimension)
+    create_surface_block_common(p, points, dimension)
     create_surface_slot(p, p1p, p2p, -r_cut - slot_ellipse_b - burn_offset, z_list[-1], size)
 
     if size == '1':
@@ -847,12 +847,12 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     create_face_set_from_surface(p)
 
     # 更新集合（体），处理镜像
-    # create_block_sets_same_volume(p)
+    # create_sets_block_same_volume(p)
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-INSULATION'], p.sets['SET-CELL-GLUE-A']), name='SET-FACES-INSULATION-GLUE-A')
-    create_z_t_face_set(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
+    create_sets_z_t_face(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
@@ -1000,7 +1000,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     part_partition_z(p, d, z_list)
 
     # 创建集合（体）
-    set_names = create_block_sets_common(p, faces, dimension)
+    set_names = create_sets_block_common(p, faces, dimension)
 
     # 星槽切割
     r_cut = x0 + slot_deep
@@ -1026,10 +1026,10 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
         raise NotImplementedError('Unsupported size {}'.format(size))
 
     # 更新集合（体），处理镜像
-    create_block_sets_same_volume(p)
+    create_sets_block_same_volume(p)
 
     # 创建面
-    create_block_surface_common(p, points, dimension)
+    create_surface_block_common(p, points, dimension)
     create_surface_slot(p, p1p, p2p, 0.0, z_list[-1], size)
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
@@ -1054,7 +1054,7 @@ def create_part_block_penult(model, part_name, points, lines, faces, dimension):
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-INSULATION'], p.sets['SET-CELL-GLUE-A']), name='SET-FACES-INSULATION-GLUE-A')
-    create_z_t_face_set(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
+    create_sets_z_t_face(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
 
     # 星槽剖分
     part_partition_p1p(p, d, p1p)
@@ -1312,7 +1312,7 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 创建面
-    create_block_surface_common(p, points, dimension)
+    create_surface_block_common(p, points, dimension)
 
     if size == '1':
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
@@ -1344,12 +1344,12 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     create_face_set_from_surface(p)
 
     # 更新集合（体），处理镜像
-    # create_block_sets_same_volume(p)
+    # create_sets_block_same_volume(p)
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-INSULATION'], p.sets['SET-CELL-GLUE-A']), name='SET-FACES-INSULATION-GLUE-A')
-    create_z_t_face_set(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
+    create_sets_z_t_face(p, points, dimension, 1, 1, 'SET-FACES-INSULATION-GLUE-A')
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
@@ -1511,7 +1511,7 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 创建面
-    create_block_surface_common(p, points, dimension)
+    create_surface_block_common(p, points, dimension)
 
     if size == '1':
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
@@ -1543,7 +1543,7 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
     create_face_set_from_surface(p)
 
     # 更新集合（体），处理镜像
-    # create_block_sets_same_volume(p)
+    # create_sets_block_same_volume(p)
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
@@ -1586,7 +1586,7 @@ def create_part_block_behind_2(model, part_name, points, lines, faces, dimension
     part_partition_z(p, d, z_list)
 
     # 创建集合（体）
-    set_names = create_block_sets_common(p, faces, dimension)
+    set_names = create_sets_block_common(p, faces, dimension)
 
     # 镜像
     if size == '1':
@@ -1608,14 +1608,14 @@ def create_part_block_behind_2(model, part_name, points, lines, faces, dimension
     p.CutRevolve(sketchPlane=d[xz_plane.id], sketchUpEdge=d[x_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_behind_inner, angle=360.0, flipRevolveDirection=ON)
 
     # 创建面
-    create_block_surface_common(p, points, dimension)
+    create_surface_block_common(p, points, dimension)
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
     # 创建集合（面）
     create_face_set_from_surface(p)
 
     # 更新集合（体），处理镜像
-    create_block_sets_same_volume(p)
+    create_sets_block_same_volume(p)
 
     # 创建集合（面），粘接界面
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
@@ -2755,7 +2755,7 @@ def part_partition_p1p(p, d, p1p):
         p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_slot.id], cells=p.cells)
 
 
-def create_block_sets_common(p, faces, dimension):
+def create_sets_block_common(p, faces, dimension):
     z_list = dimension['z_list']
     index_t = dimension['index_t']
     z = np.array(z_list)
@@ -2830,7 +2830,7 @@ def create_block_sets_common(p, faces, dimension):
     return set_names
 
 
-def create_block_sets_same_volume(p):
+def create_sets_block_same_volume(p):
     for set_name in ['SET-CELL-GRAIN', 'SET-CELL-INSULATION', 'SET-CELL-GLUE-A', 'SET-CELL-GLUE-B']:
         if set_name in p.sets.keys():
             p_cells = p.sets[set_name].cells
@@ -2850,7 +2850,7 @@ def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end, size):
         p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
 
 
-def create_block_surface_common(p, points, dimension):
+def create_surface_block_common(p, points, dimension):
     z_list = dimension['z_list']
     index_r = dimension['index_r']
     index_t = dimension['index_t']
@@ -2944,7 +2944,7 @@ def create_block_surface_common(p, points, dimension):
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
 
-def create_z_t_face_set(p, points, dimension, nz, nt, set_name):
+def create_sets_z_t_face(p, points, dimension, nz, nt, set_name):
     z_list = dimension['z_list']
     index_r = dimension['index_r']
     index_t = dimension['index_t']
