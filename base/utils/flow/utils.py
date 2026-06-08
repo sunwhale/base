@@ -2134,6 +2134,108 @@ def add_spline(s, points):
     s.Spline(points=point_list)
 
 
+def get_tie_types(block):
+    """
+    根据 block 矩阵计算相邻（包括环形相邻）的格子对，并输出字典。
+    参数:
+        block: np.ndarray, 布尔矩阵，True 表示有块
+    """
+    nl, nt = block.shape
+    edges_list = []
+
+    # 右邻
+    for i in range(nl):
+        for j in range(nt - 1):
+            if block[i, j] and block[i, j + 1]:
+                edges_list.append(((i, j), (i, j + 1), 'right'))
+
+    # 下邻
+    for i in range(nl - 1):
+        for j in range(nt):
+            if block[i, j] and block[i + 1, j]:
+                edges_list.append(((i, j), (i + 1, j), 'down'))
+
+    # 环形连接（行方向首尾）
+    for i in range(nl):
+        if block[i, 0] and block[i, -1]:
+            edges_list.append(((i, 0), (i, nt - 1), 'circular'))
+
+    # 规范化并存入字典
+    edges_dict = {}
+    for (c1, c2, d) in edges_list:
+        if d == 'circular':
+            key = (c1[0], c1[1], c2[0], c2[1])
+        else:
+            # 普通邻边，确保顺序统一（按行优先，同行则按列序）
+            if c1[0] < c2[0] or (c1[0] == c2[0] and c1[1] < c2[1]):
+                key = (c1[0], c1[1], c2[0], c2[1])
+            else:
+                key = (c2[0], c2[1], c1[0], c1[1])
+        edges_dict[key] = d
+
+    # 打印输出
+    # for key, d in edges_dict.items():
+    #     r1, c1, r2, c2 = key
+    #     print("({},{}) -> ({},{})  [{}]".format(r1 + 1, c1 + 1, r2 + 1, c2 + 1, d))
+
+    return edges_dict
+
+
+def get_block_types(block):
+    """
+    返回每个有块位置的标签。
+    参数:
+        block: np.ndarray, 布尔矩阵，True 表示有块
+    返回:
+        dict: 键为 (行,列) 坐标，值为标签字符串 ('FRONT','PENULT','BEHIND','MIDDLE')
+    """
+    nl, nt = block.shape
+    labels = {}
+
+    # 第一行
+    for j in np.where(block[0, :])[0]:
+        labels[(0, int(j))] = 'FRONT'
+
+    # 倒数第二行
+    if nl >= 2:
+        for j in np.where(block[-2, :])[0]:
+            labels[(nl - 2, int(j))] = 'PENULT'
+
+    # 最后一行
+    for j in np.where(block[-1, :])[0]:
+        labels[(nl - 1, int(j))] = 'BEHIND'
+
+    # 中间行（索引 1 到 nl-3）
+    for i in range(1, nl - 2):
+        for j in np.where(block[i, :])[0]:
+            labels[(i, int(j))] = 'MIDDLE'
+
+    return labels
+
+
+def create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2):
+    a = model.rootAssembly
+    region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+    region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+    constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
+    if major_version >= 2022:
+        model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+    else:
+        model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+
+
+def create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, step_name, property_name):
+    a = model.rootAssembly
+    region1 = a.instances[instance_name_1].surfaces[surface_name_1]
+    region2 = a.instances[instance_name_2].surfaces[surface_name_2]
+    contact_name = 'INT-%s-%s-%s-%s' % (instance_name_1, surface_name_1, instance_name_2, surface_name_2)
+    if major_version >= 2022:
+        model.SurfaceToSurfaceContactStd(name=contact_name, createStepName=step_name, main=region1, secondary=region2, sliding=SMALL, thickness=ON, interactionProperty=property_name, adjustMethod=NONE, initialClearance=OMIT, datumAxis=None,
+                                         clearanceRegion=None)
+    else:
+        pass
+
+
 if __name__ == "__main__":
 
     if not ABAQUS_ENV:
