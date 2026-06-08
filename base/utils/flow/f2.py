@@ -42,12 +42,15 @@ except:
     pass
 
 sys.path.insert(0, FLOW_PATH)
+import importlib
+import utils
+reload(utils)
 
-from utils import ABAQUS_ENV, Circle3D, Ellipse, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, geometries_circle, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, \
-    line_circle_intersection, load_json, min_difference, mirror_y_axis, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, \
-    solve_three_arcs, combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_face_in_set, is_cell_in_set, \
-    get_faces_of_p_remove_given_surface_names, get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces, rotate_point_around_axis, move_along_direction, part_partition_by_cylinder, create_surface_on_cylinder, create_surface_on_plane, \
-    create_surface_by_intersection, get_cells_by_remove, add_spline
+from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Ellipse, Line2D, Plane, add_spline, calc_arc, combine_surfaces, create_contact_of_instance_surface, create_face_set_from_surface, create_surface_by_intersection, create_surface_on_cylinder, \
+    create_surface_on_plane, create_tie_of_instance_surface, degrees_to_radians, find_duplicates, generate_part_mesh, geometries, geometries_circle, geometries_hex, get_block_types, get_cells_adjacent_to_set_and_remove_set_names, get_cells_by_remove, \
+    get_common_faces_between_sets, get_direction, get_faces_of_p_remove_given_surface_names, get_same_area_faces, get_same_volume_cells, get_tie_types, get_z_list, ignore_common_edges_of_faces, insert_COH3D8_at_face_set, is_cell_in_set, is_face_in_set, \
+    is_unicode_all_uppercase, json, line_circle_intersection, load_json, major_version, math, min_difference, mirror_y_axis, move_along_direction, part_partition_by_cylinder, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, \
+    radians_to_degrees, rotate_point_around_axis, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, string_types, text_type, vertices_in_cells
 
 PEN = 1e4
 TOL = 1e-6
@@ -3318,106 +3321,6 @@ def plot_blocks_map(block, figsize=(8, 8), is_show=True, is_save=True, save_path
         plt.show()
 
 
-def get_tie_types(block):
-    """
-    根据 block 矩阵计算相邻（包括环形相邻）的格子对，并输出字典。
-    参数:
-        block: np.ndarray, 布尔矩阵，True 表示有块
-    """
-    nl, nt = block.shape
-    edges_list = []
-
-    # 右邻
-    for i in range(nl):
-        for j in range(nt - 1):
-            if block[i, j] and block[i, j + 1]:
-                edges_list.append(((i, j), (i, j + 1), 'right'))
-
-    # 下邻
-    for i in range(nl - 1):
-        for j in range(nt):
-            if block[i, j] and block[i + 1, j]:
-                edges_list.append(((i, j), (i + 1, j), 'down'))
-
-    # 环形连接（行方向首尾）
-    for i in range(nl):
-        if block[i, 0] and block[i, -1]:
-            edges_list.append(((i, 0), (i, nt - 1), 'circular'))
-
-    # 规范化并存入字典
-    edges_dict = {}
-    for (c1, c2, d) in edges_list:
-        if d == 'circular':
-            key = (c1[0], c1[1], c2[0], c2[1])
-        else:
-            # 普通邻边，确保顺序统一（按行优先，同行则按列序）
-            if c1[0] < c2[0] or (c1[0] == c2[0] and c1[1] < c2[1]):
-                key = (c1[0], c1[1], c2[0], c2[1])
-            else:
-                key = (c2[0], c2[1], c1[0], c1[1])
-        edges_dict[key] = d
-
-    # 打印输出
-    # for key, d in edges_dict.items():
-    #     r1, c1, r2, c2 = key
-    #     print("({},{}) -> ({},{})  [{}]".format(r1 + 1, c1 + 1, r2 + 1, c2 + 1, d))
-
-    return edges_dict
-
-
-def get_block_types(block):
-    """
-    返回每个有块位置的标签。
-    参数:
-        block: np.ndarray, 布尔矩阵，True 表示有块
-    返回:
-        dict: 键为 (行,列) 坐标，值为标签字符串 ('FRONT','PENULT','BEHIND','MIDDLE')
-    """
-    nl, nt = block.shape
-    labels = {}
-
-    # 第一行
-    for j in np.where(block[0, :])[0]:
-        labels[(0, int(j))] = 'FRONT'
-
-    # 倒数第二行
-    if nl >= 2:
-        for j in np.where(block[-2, :])[0]:
-            labels[(nl - 2, int(j))] = 'PENULT'
-
-    # 最后一行
-    for j in np.where(block[-1, :])[0]:
-        labels[(nl - 1, int(j))] = 'BEHIND'
-
-    # 中间行（索引 1 到 nl-3）
-    for i in range(1, nl - 2):
-        for j in np.where(block[i, :])[0]:
-            labels[(i, int(j))] = 'MIDDLE'
-
-    return labels
-
-
-def create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2):
-    region1 = a.instances[instance_name_1].surfaces[surface_name_1]
-    region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-    constrain_name = 'TIE-%s-%s' % (instance_name_1, instance_name_2)
-    if major_version >= 2022:
-        model.Tie(name=constrain_name, main=region1, secondary=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
-    else:
-        model.Tie(name=constrain_name, master=region1, slave=region2, positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
-
-
-def create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, step_name, property_name):
-    region1 = a.instances[instance_name_1].surfaces[surface_name_1]
-    region2 = a.instances[instance_name_2].surfaces[surface_name_2]
-    contact_name = 'INT-%s-%s-%s-%s' % (instance_name_1, surface_name_1, instance_name_2, surface_name_2)
-    if major_version >= 2022:
-        model.SurfaceToSurfaceContactStd(name=contact_name, createStepName=step_name, main=region1, secondary=region2, sliding=SMALL, thickness=ON, interactionProperty=property_name, adjustMethod=NONE, initialClearance=OMIT, datumAxis=None,
-                                         clearanceRegion=None)
-    else:
-        pass
-
-
 def print_sketch(session, model, viewport, sketch_name):
     s = model.ConstrainedSketch(name='__edit__', objectToCopy=mdb.models['Model-1'].sketches[sketch_name])
     s.setPrimaryObject(option=STANDALONE)
@@ -3481,24 +3384,24 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
-    is_create_p_block_front = True
-    is_create_p_block_behind = True
-    is_create_p_block_behind_ab = True
-    is_create_p_gap = True
-    is_create_p_gap_penult = True
-    is_create_p_gap_front = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_block_behind_ab = True
+    # is_create_p_gap = True
+    # is_create_p_gap_penult = True
+    # is_create_p_gap_front = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
     is_open_parts_cae = True
     is_assemble = True
 
