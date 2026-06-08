@@ -1550,6 +1550,17 @@ def create_part_block_behind_1(model, part_name, points, lines, faces, dimension
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
+    if faces.shape[0] >= 3 and faces.shape[1] >= 3:
+        # 创建集合（体），SET-CELL-GLUE-B
+        p_cells = get_cells_from_faces(p, p.surfaces['SURFACE-OUTER'].faces)
+        if p_cells:
+            p.Set(cells=p_cells, name='SET-CELL-GLUE-B')
+
+        # 更新集合（体），SET-CELL-GLUE-A
+        p_cells = get_cells_by_remove(p, p.sets['SET-CELL-GLUE-A'].cells, p.sets['SET-CELL-GLUE-B'].cells)
+        if p_cells:
+            p.Set(cells=p_cells, name='SET-CELL-GLUE-A')
+
     # 创建集合（面）
     create_face_set_from_surface(p)
 
