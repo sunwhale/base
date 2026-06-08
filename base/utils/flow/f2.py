@@ -42,10 +42,15 @@ except:
     pass
 
 sys.path.insert(0, FLOW_PATH)
+
 import importlib
 import utils
 
-reload(utils)
+# 兼容 Python 2 和 3
+if sys.version_info[0] == 2:
+    reload(utils)
+else:
+    importlib.reload(utils)
 
 from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Ellipse, Line2D, Plane, add_spline, calc_arc, combine_surfaces, create_contact_of_instance_surface, create_face_set_from_surface, create_surface_by_intersection, create_surface_on_cylinder, \
     create_surface_on_plane, create_tie_of_instance_surface, degrees_to_radians, find_duplicates, generate_part_mesh, geometries, geometries_circle, geometries_hex, get_block_types, get_cells_adjacent_to_set_and_remove_set_names, get_cells_by_remove, \
