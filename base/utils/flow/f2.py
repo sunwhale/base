@@ -814,7 +814,7 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_surface_block_common(p, points, dimension)
-    create_surface_slot(p, p1p, p2p, -r_cut - slot_ellipse_b - burn_offset, z_list[-1], size)
+    create_surface_slot(p, p1p, p2p, -r_cut - slot_ellipse_b - burn_offset, z_list[-1], size, is_middle=False)
 
     if size == '1':
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
@@ -937,7 +937,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
 
     # 创建面
     create_surface_gap_common(p, points, dimension)
-    create_surface_slot(p, p1p, p2p, -r_cut - slot_ellipse_b - burn_offset, z_list[-1], size)
+    create_surface_slot(p, p1p, p2p, -r_cut - slot_ellipse_b - burn_offset, z_list[-1], size, is_middle=False)
 
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
@@ -2894,14 +2894,14 @@ def create_sets_z_t_face(p, points, dimension, nz, nt, set_name):
         p.Set(faces=p_faces, name=set_name + '-T-1')
 
 
-def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end, size):
+def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end, size, is_middle=True):
     x1 = ref_point_2[0]
     y1 = ref_point_2[1]
     if ref_point_1[1] > 0.0:
         p_faces = p.faces.getByBoundingBox(0, TOL, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
     else:
         p_faces = p.faces.getByBoundingBox(0, 0, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
-    p_faces = get_mirror_faces(p, p_faces, size)
+    p_faces = get_mirror_faces(p, p_faces, size, is_middle)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
 
