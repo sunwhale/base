@@ -54,7 +54,7 @@ from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Ellipse, Line2D, Plan
     create_surface_on_plane, create_tie_of_instance_surface, degrees_to_radians, find_duplicates, generate_part_mesh, geometries, geometries_circle, geometries_hex, get_block_types, get_cells_adjacent_to_set_and_remove_set_names, get_cells_by_remove, \
     get_common_faces_between_sets, get_direction, get_faces_of_p_remove_given_surface_names, get_same_area_faces, get_same_volume_cells, get_tie_types, get_z_list, ignore_common_edges_of_faces, insert_COH3D8_at_face_set, is_cell_in_set, is_face_in_set, \
     is_unicode_all_uppercase, json, line_circle_intersection, load_json, major_version, math, min_difference, mirror_y_axis, move_along_direction, part_partition_by_cylinder, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, \
-    radians_to_degrees, rotate_point_around_axis, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, string_types, text_type, vertices_in_cells, get_mirror_faces
+    radians_to_degrees, rotate_point_around_axis, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, string_types, text_type, vertices_in_cells, get_mirror_faces, get_cells_from_faces
 
 PEN = 1e4
 TOL = 1e-6
@@ -832,19 +832,16 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
 
-    # 创建集合（体），SET-CELL-GLUE-B
-    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face in p.surfaces['SURFACE-OUTER'].faces:
-        face_cells = face.getCells()
-        if face_cells:
-            for cell_id in face_cells:
-                cells += p.cells[cell_id:cell_id + 1]
-    if cells:
-        p.Set(cells=cells, name='SET-CELL-GLUE-B')
+    if faces.shape[0] >= 3 and faces.shape[1] >= 3:
+        # 创建集合（体），SET-CELL-GLUE-B
+        p_cells = get_cells_from_faces(p, p.surfaces['SURFACE-OUTER'].faces)
+        if p_cells:
+            p.Set(cells=p_cells, name='SET-CELL-GLUE-B')
 
-    p_cells = get_cells_by_remove(p, p.sets['SET-CELL-GLUE-A'].cells, p.sets['SET-CELL-GLUE-B'].cells)
-    if p_cells:
-        p.Set(cells=p_cells, name='SET-CELL-GLUE-A')
+        # 更新集合（体），SET-CELL-GLUE-A
+        p_cells = get_cells_by_remove(p, p.sets['SET-CELL-GLUE-A'].cells, p.sets['SET-CELL-GLUE-B'].cells)
+        if p_cells:
+            p.Set(cells=p_cells, name='SET-CELL-GLUE-A')
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -1342,6 +1339,17 @@ def create_part_block_behind(model, part_name, points, lines, faces, dimension):
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+
+    if faces.shape[0] >= 3 and faces.shape[1] >= 3:
+        # 创建集合（体），SET-CELL-GLUE-B
+        p_cells = get_cells_from_faces(p, p.surfaces['SURFACE-OUTER'].faces)
+        if p_cells:
+            p.Set(cells=p_cells, name='SET-CELL-GLUE-B')
+
+        # 更新集合（体），SET-CELL-GLUE-A
+        p_cells = get_cells_by_remove(p, p.sets['SET-CELL-GLUE-A'].cells, p.sets['SET-CELL-GLUE-B'].cells)
+        if p_cells:
+            p.Set(cells=p_cells, name='SET-CELL-GLUE-A')
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -3400,6 +3408,7 @@ if __name__ == "__main__":
     block_insulation_thickness_z = 3.0
     block_insulation_thickness_t = 3.0
     block_insulation_thickness_r = 3.0
+    wall_insulation_thickness = 8.0
     block_gap_z = 8.0
     block_gap_t = 8.0
     slot_deep = 380.0
@@ -3917,7 +3926,7 @@ if __name__ == "__main__":
             'slot_ellipse_a': slot_ellipse_a,
             'slot_ellipse_b': slot_ellipse_b,
             'size': size,
-            'index_r': 3,
+            'index_r': 2 + 1,
             'index_t': index_t,
             'element_size': element_size,
             'insert_czm': insert_czm,
@@ -3925,7 +3934,7 @@ if __name__ == "__main__":
             'burn_offset': burn_offset
         }
 
-        points, lines, faces = geometries(d, x0, beta, [0, 8, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        points, lines, faces = geometries(d, x0, beta, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
         if is_create_p_block:
             p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
             print('CREATE PART-BLOCK DONE.')
@@ -3948,7 +3957,7 @@ if __name__ == "__main__":
             p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
             print('CREATE PART-GAP-PENULT DONE.')
 
-        points, lines, faces = geometries(d, x0, beta, [0, 8, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        points, lines, faces = geometries(d, x0, beta, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
 
         z_list_with_gap = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_z / 2]
         index_t_with_gap = 3
@@ -3961,7 +3970,7 @@ if __name__ == "__main__":
 
         first_block_dimension = deepcopy(block_dimension)
         first_block_dimension['z_list'] = z_list
-        first_block_dimension['index_r'] = 4
+        first_block_dimension['index_r'] = 3 + 1
         first_block_dimension['index_t'] = index_t
 
         first_block_dimension['r_cut'] = r_cut_front
@@ -4020,13 +4029,13 @@ if __name__ == "__main__":
             intercept_a = -67.55
             behind_block_a_dimension = deepcopy(behind_block_dimension)
             behind_block_a_dimension['central_angle'] = central_angle_a
-            behind_block_a_dimension['index_r'] = 3
-            points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+            behind_block_a_dimension['index_r'] = 3 + 1
+            points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
             p_block_behind_1a = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1A', points, lines, faces, behind_block_a_dimension)
             print('CREATE PART-BLOCK-BEHIND-1A DONE.')
 
-            behind_block_a_dimension['index_r'] = 2
-            points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+            behind_block_a_dimension['index_r'] = 2 + 1
+            points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
             p_block_behind_2a = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2A', points, lines, faces, behind_block_a_dimension)
             print('CREATE PART-BLOCK-BEHIND-2A DONE.')
 
@@ -4034,13 +4043,13 @@ if __name__ == "__main__":
             intercept_b = 58.5
             behind_block_b_dimension = deepcopy(behind_block_dimension)
             behind_block_b_dimension['central_angle'] = central_angle_b
-            behind_block_b_dimension['index_r'] = 3
-            points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+            behind_block_b_dimension['index_r'] = 3 + 1
+            points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
             p_block_behind_1b = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1B', points, lines, faces, behind_block_b_dimension)
             print('CREATE PART-BLOCK-BEHIND-1B DONE.')
 
-            behind_block_b_dimension['index_r'] = 2
-            points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+            behind_block_b_dimension['index_r'] = 2 + 1
+            points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
             p_block_behind_2b = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2B', points, lines, faces, behind_block_b_dimension)
             print('CREATE PART-BLOCK-BEHIND-2B DONE.')
 

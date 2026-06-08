@@ -2263,6 +2263,16 @@ def get_mirror_faces(p, p_faces, size, is_middle):
         return None
 
 
+def get_cells_from_faces(p, p_faces):
+    p_cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p_faces:
+        face_cells = face.getCells()
+        if face_cells:
+            for cell_id in face_cells:
+                p_cells += p.cells[cell_id:cell_id + 1]
+    return p_cells
+
+
 if __name__ == "__main__":
 
     if not ABAQUS_ENV:
