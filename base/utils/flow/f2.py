@@ -2,12 +2,10 @@
 """
 
 """
-import math
 import os
 import sys
 from copy import deepcopy
-import scipy as sp
-import scipy.interpolate
+
 import numpy as np
 
 try:
