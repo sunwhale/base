@@ -44,13 +44,14 @@ except:
 sys.path.insert(0, FLOW_PATH)
 import importlib
 import utils
+
 reload(utils)
 
 from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Ellipse, Line2D, Plane, add_spline, calc_arc, combine_surfaces, create_contact_of_instance_surface, create_face_set_from_surface, create_surface_by_intersection, create_surface_on_cylinder, \
     create_surface_on_plane, create_tie_of_instance_surface, degrees_to_radians, find_duplicates, generate_part_mesh, geometries, geometries_circle, geometries_hex, get_block_types, get_cells_adjacent_to_set_and_remove_set_names, get_cells_by_remove, \
     get_common_faces_between_sets, get_direction, get_faces_of_p_remove_given_surface_names, get_same_area_faces, get_same_volume_cells, get_tie_types, get_z_list, ignore_common_edges_of_faces, insert_COH3D8_at_face_set, is_cell_in_set, is_face_in_set, \
     is_unicode_all_uppercase, json, line_circle_intersection, load_json, major_version, math, min_difference, mirror_y_axis, move_along_direction, part_partition_by_cylinder, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, \
-    radians_to_degrees, rotate_point_around_axis, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, string_types, text_type, vertices_in_cells
+    radians_to_degrees, rotate_point_around_axis, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, string_types, text_type, vertices_in_cells, get_mirror_faces
 
 PEN = 1e4
 TOL = 1e-6
@@ -482,101 +483,6 @@ def create_part_base_rotation(model, part_name, sketch, rotate_angle_deg):
     z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
 
     return p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis
-
-
-def part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r):
-    s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0)
-    center = (0, 0)
-    geom_list = []
-
-    # 面切割
-    # 拾取被切割平面上的线段，同一个theta
-    for i in range(1, index_t):
-        geom_list.append(s_cross_section_partition.Line(point1=points[0, i], point2=points[index_r, i]))
-    # 拾取被切割平面上的线段，同一个r
-    for i in range(1, index_r):
-        geom_list.append(s_cross_section_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
-
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, PEN, PEN, TOL)
-    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_cross_section_partition)
-
-    # 体切割
-    # 拾取被切割平面上的线段，同一个r
-    partition_edges = []
-    line_keys = []
-    for i in range(1, index_r):
-        for j in range(0, index_t):
-            line_key = '%s%s-%s%s' % (i, j, i, j + 1)
-            line_keys.append(line_key)
-
-    for line_key in line_keys:
-        line_middle_point = lines[line_key][3]
-        x, y = line_middle_point
-        edge_sequence = p.edges.findAt(((x, y, 0),))
-        if len(edge_sequence) > 0:
-            partition_edges.append(edge_sequence[0])
-    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
-
-    # 拾取被切割平面上的线段，同一个theta
-    partition_edges = []
-    line_keys = []
-
-    for j in range(1, index_t):
-        for i in range(0, index_r):
-            line_key = '%s%s-%s%s' % (i, j, i + 1, j)
-            line_keys.append(line_key)
-
-    for line_key in line_keys:
-        line_middle_point = lines[line_key][3]
-        x, y = line_middle_point
-        edge_sequence = p.edges.findAt(((x, y, 0),))
-        if len(edge_sequence) > 0:
-            partition_edges.append(edge_sequence[0])
-    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
-
-
-def part_partition_z(p, d, z_list, is_minus=False):
-    xy_plane_z = {}
-    for i in range(1, len(z_list) - 1):
-        if is_minus:
-            xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=-z_list[i])
-        else:
-            xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
-    return xy_plane_z
-
-
-def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end, size):
-    x1 = ref_point_2[0]
-    y1 = ref_point_2[1]
-    if ref_point_1[1] > 0.0:
-        p_faces = p.faces.getByBoundingBox(0, TOL, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
-    else:
-        p_faces = p.faces.getByBoundingBox(0, 0, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
-    p_faces = get_mirror_faces(p, p_faces, size)
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
-
-
-def get_mirror_faces(p, p_faces, size):
-    for face in p_faces:
-        point = face.pointOn[0]
-
-        point_mirror_y = [point[0], -point[1], point[2]]
-        point_mirror_z = [point[0], point[1], -point[2]]
-        point_mirror_yz = [point[0], -point[1], -point[2]]
-
-        if size == "1/2":
-            p_faces += p.faces.findAt((point_mirror_z,))
-        elif size == "1":
-            p_faces += p.faces.findAt((point_mirror_y,))
-            p_faces += p.faces.findAt((point_mirror_z,))
-            p_faces += p.faces.findAt((point_mirror_yz,))
-
-    if p_faces:
-        return p_faces
-    else:
-        return None
 
 
 def create_part_block(model, part_name, points, lines, faces, dimension):
@@ -2778,6 +2684,68 @@ def create_part_cover_behind(model, part_name, dimension):
     return p
 
 
+def part_partition_cross_section(model, p, d, x_axis, z_axis, index_t, index_r):
+    s_cross_section_partition = model.ConstrainedSketch(name='SKETCH-CROSS-SECTION-PARTITION', sheetSize=200.0)
+    center = (0, 0)
+    geom_list = []
+
+    # 面切割
+    # 拾取被切割平面上的线段，同一个theta
+    for i in range(1, index_t):
+        geom_list.append(s_cross_section_partition.Line(point1=points[0, i], point2=points[index_r, i]))
+    # 拾取被切割平面上的线段，同一个r
+    for i in range(1, index_r):
+        geom_list.append(s_cross_section_partition.ArcByCenterEnds(center=center, point1=points[i, 0], point2=points[i, index_t], direction=COUNTERCLOCKWISE))
+
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, PEN, PEN, TOL)
+    p.PartitionFaceBySketch(sketchUpEdge=d[x_axis.id], faces=p_faces, sketchOrientation=BOTTOM, sketch=s_cross_section_partition)
+
+    # 体切割
+    # 拾取被切割平面上的线段，同一个r
+    partition_edges = []
+    line_keys = []
+    for i in range(1, index_r):
+        for j in range(0, index_t):
+            line_key = '%s%s-%s%s' % (i, j, i, j + 1)
+            line_keys.append(line_key)
+
+    for line_key in line_keys:
+        line_middle_point = lines[line_key][3]
+        x, y = line_middle_point
+        edge_sequence = p.edges.findAt(((x, y, 0),))
+        if len(edge_sequence) > 0:
+            partition_edges.append(edge_sequence[0])
+    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
+
+    # 拾取被切割平面上的线段，同一个theta
+    partition_edges = []
+    line_keys = []
+
+    for j in range(1, index_t):
+        for i in range(0, index_r):
+            line_key = '%s%s-%s%s' % (i, j, i + 1, j)
+            line_keys.append(line_key)
+
+    for line_key in line_keys:
+        line_middle_point = lines[line_key][3]
+        x, y = line_middle_point
+        edge_sequence = p.edges.findAt(((x, y, 0),))
+        if len(edge_sequence) > 0:
+            partition_edges.append(edge_sequence[0])
+    p.PartitionCellByExtrudeEdge(line=p.datums[z_axis.id], cells=p.cells, edges=partition_edges, sense=FORWARD)
+
+
+def part_partition_z(p, d, z_list, is_minus=False):
+    xy_plane_z = {}
+    for i in range(1, len(z_list) - 1):
+        if is_minus:
+            xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=-z_list[i])
+        else:
+            xy_plane_z[i] = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z_list[i])
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_z[i].id], cells=p.cells)
+    return xy_plane_z
+
+
 def part_partition_p1p(p, d, p1p):
     # p1 = [x0 + slot_deep, -slot_ellipse_a]
     # offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
@@ -2868,6 +2836,18 @@ def create_block_sets_same_volume(p):
             p_cells = p.sets[set_name].cells
             p_cells = get_same_volume_cells(p, p_cells)
             p.Set(cells=p_cells, name=set_name)
+
+
+def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end, size):
+    x1 = ref_point_2[0]
+    y1 = ref_point_2[1]
+    if ref_point_1[1] > 0.0:
+        p_faces = p.faces.getByBoundingBox(0, TOL, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
+    else:
+        p_faces = p.faces.getByBoundingBox(0, 0, z_begin, x1 * 1.05, y1 * (1.0 + TOL), z_end)
+    p_faces = get_mirror_faces(p, p_faces, size)
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-SLOT')
 
 
 def create_block_surface_common(p, points, dimension):
@@ -3384,24 +3364,24 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_block_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_block_behind_ab = True
-    # is_create_p_gap = True
-    # is_create_p_gap_penult = True
-    # is_create_p_gap_front = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
+    is_create_p_block = True
+    is_create_p_block_penult = True
+    is_create_p_block_front = True
+    is_create_p_block_behind = True
+    is_create_p_block_behind_ab = True
+    is_create_p_gap = True
+    is_create_p_gap_penult = True
+    is_create_p_gap_front = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
     is_open_parts_cae = True
     is_assemble = True
 
