@@ -622,7 +622,7 @@ def create_part_gap(model, part_name, points, lines, faces, dimension):
         raise NotImplementedError('Unsupported size {}'.format(size))
 
     # 创建面
-    create_gap_surface_common(p, points, dimension)
+    create_surface_gap_common(p, points, dimension)
     create_surface_slot(p, p1p, p2p, 0.0, z_list[-1], size)
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
@@ -933,7 +933,7 @@ def create_part_gap_front(model, part_name, points, lines, faces, dimension):
         raise NotImplementedError('Unsupported size {}'.format(size))
 
     # 创建面
-    create_gap_surface_common(p, points, dimension)
+    create_surface_gap_common(p, points, dimension)
     create_surface_slot(p, p1p, p2p, -r_cut - slot_ellipse_b - burn_offset, z_list[-1], size)
 
     # 通过排除法确定外表面
@@ -1132,7 +1132,7 @@ def create_part_gap_penult(model, part_name, points, lines, faces, dimension):
         raise NotImplementedError('Unsupported size {}'.format(size))
 
     # 创建面
-    create_gap_surface_common(p, points, dimension)
+    create_surface_gap_common(p, points, dimension)
     create_surface_slot(p, p1p, p2p, 0.0, z_list[-1], size)
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
 
@@ -1701,7 +1701,7 @@ def create_part_gap_behind(model, part_name, points, lines, faces, dimension):
     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
     # 创建面
-    create_gap_surface_common(p, points, dimension)
+    create_surface_gap_common(p, points, dimension)
 
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
@@ -1829,14 +1829,14 @@ def create_part_shell(model, part_name, dimension):
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
 
     # 创建面
-    create_rotation_part_surface_common(p, rotate_angle_deg)
+    create_surface_rotation_part_common(p, rotate_angle_deg)
 
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_front)
     create_surface_on_cylinder(p, cylinder, 'SURFACE-RIN-FRONT')
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_r_in_behind)
     create_surface_on_cylinder(p, cylinder, 'SURFACE-RIN-BEHIND')
 
-    create_rotation_part_surface_common(p, rotate_angle_deg)
+    create_surface_rotation_part_common(p, rotate_angle_deg)
     point_middle_in = ((p_front_in_1[0] + p_behind_in_1[0]) / 2.0, (p_front_in_1[1] + p_behind_in_1[1]) / 2.0, 0)
     point_middle_in_rot = rotate_point_around_axis(point_middle_in, (0, 0, 0), (1, 0, 0), rotate_angle_deg / 2.0)
     p_face_middle = p.faces.findAt((point_middle_in_rot,))[0]
@@ -1931,7 +1931,7 @@ def create_part_skirt_front(model, part_name, dimension):
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-SHELL'], angle=360.0, flipRevolveDirection=OFF)
 
     # 创建面
-    create_rotation_part_surface_common(p, rotate_angle_deg)
+    create_surface_rotation_part_common(p, rotate_angle_deg)
     # 通过排除法确定内表面
     given_surface_names = list(p.surfaces.keys())
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
@@ -2008,7 +2008,7 @@ def create_part_skirt_behind(model, part_name, dimension):
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-SHELL'], angle=360.0, flipRevolveDirection=OFF)
 
     # 创建面
-    create_rotation_part_surface_common(p, rotate_angle_deg)
+    create_surface_rotation_part_common(p, rotate_angle_deg)
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -2127,7 +2127,7 @@ def create_part_flange_front(model, part_name, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
 
     # 创建面
-    create_rotation_part_surface_common(p, rotate_angle_deg)
+    create_surface_rotation_part_common(p, rotate_angle_deg)
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
@@ -2239,7 +2239,7 @@ def create_part_flange_behind(model, part_name, dimension):
         p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
 
     # 创建面
-    create_rotation_part_surface_common(p, rotate_angle_deg)
+    create_surface_rotation_part_common(p, rotate_angle_deg)
     # 通过排除法确定外表面
     given_surface_names = list(p.surfaces.keys())
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
@@ -2430,7 +2430,7 @@ def create_part_insulation(model, part_name, dimension):
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-BEHIND'], angle=360.0, flipRevolveDirection=OFF)
 
     # 创建面
-    create_rotation_part_surface_common(p, rotate_angle_deg)
+    create_surface_rotation_part_common(p, rotate_angle_deg)
     point_middle_in = ((p_front_in_1[0] + p_behind_in_1[0]) / 2.0, (p_front_in_1[1] + p_behind_in_1[1]) / 2.0, 0)
     point_middle_in_rot = rotate_point_around_axis(point_middle_in, (0, 0, 0), (1, 0, 0), rotate_angle_deg / 2.0)
     p_face_middle = p.faces.findAt((point_middle_in_rot,))[0]
@@ -2608,7 +2608,7 @@ def create_part_cover_front(model, part_name, dimension):
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
 
     # 创建面
-    create_rotation_part_surface_common(p, rotate_angle_deg)
+    create_surface_rotation_part_common(p, rotate_angle_deg)
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -2659,7 +2659,7 @@ def create_part_cover_behind(model, part_name, dimension):
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
 
     # 创建面
-    create_rotation_part_surface_common(p, rotate_angle_deg)
+    create_surface_rotation_part_common(p, rotate_angle_deg)
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -2838,6 +2838,59 @@ def create_sets_block_same_volume(p):
             p.Set(cells=p_cells, name=set_name)
 
 
+def create_sets_z_t_face(p, points, dimension, nz, nt, set_name):
+    z_list = dimension['z_list']
+    index_r = dimension['index_r']
+    index_t = dimension['index_t']
+    slot_deep = dimension['slot_deep']
+    burn_offset = dimension['burn_offset']
+    length = z_list[-1 - nz] * 2.0
+
+    p1 = (points[0, 0][0], points[0, 0][1], length / 2.0)
+    p2 = (points[0, 1][0], points[0, 1][1], length / 2.0)
+    p3 = (points[1, 0][0], points[1, 0][1], length / 2.0)
+    plane = Plane(p1, p2, p3)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Set(faces=p_faces, name=set_name + '-Z1')
+
+    p1 = (points[0, 0][0], points[0, 0][1], -length / 2.0)
+    p2 = (points[0, 1][0], points[0, 1][1], -length / 2.0)
+    p3 = (points[1, 0][0], points[1, 0][1], -length / 2.0)
+    plane = Plane(p1, p2, p3)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Set(faces=p_faces, name=set_name + '-Z-1')
+
+    p1 = (points[0, index_t - nt][0], points[0, index_t - nt][1], 0.0)
+    p2 = (points[index_r, index_t - nt][0], points[index_r, index_t - nt][1], 0.0)
+    p3 = (points[0, index_t - nt][0], points[0, index_t - nt][1], length / 2.0)
+    plane = Plane(p1, p2, p3)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Set(faces=p_faces, name=set_name + '-T1')
+
+    p1 = (points[0, index_t - nt][0], -points[0, index_t - nt][1], 0.0)
+    p2 = (points[index_r, index_t - nt][0], -points[index_r, index_t - nt][1], 0.0)
+    p3 = (points[0, index_t - nt][0], -points[0, index_t - nt][1], length / 2.0)
+    plane = Plane(p1, p2, p3)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Set(faces=p_faces, name=set_name + '-T-1')
+
+
 def create_surface_slot(p, ref_point_1, ref_point_2, z_begin, z_end, size):
     x1 = ref_point_2[0]
     y1 = ref_point_2[1]
@@ -2944,60 +2997,7 @@ def create_surface_block_common(p, points, dimension):
         p.Surface(side1Faces=p_faces, name='SURFACE-OUTER')
 
 
-def create_sets_z_t_face(p, points, dimension, nz, nt, set_name):
-    z_list = dimension['z_list']
-    index_r = dimension['index_r']
-    index_t = dimension['index_t']
-    slot_deep = dimension['slot_deep']
-    burn_offset = dimension['burn_offset']
-    length = z_list[-1 - nz] * 2.0
-
-    p1 = (points[0, 0][0], points[0, 0][1], length / 2.0)
-    p2 = (points[0, 1][0], points[0, 1][1], length / 2.0)
-    p3 = (points[1, 0][0], points[1, 0][1], length / 2.0)
-    plane = Plane(p1, p2, p3)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Set(faces=p_faces, name=set_name + '-Z1')
-
-    p1 = (points[0, 0][0], points[0, 0][1], -length / 2.0)
-    p2 = (points[0, 1][0], points[0, 1][1], -length / 2.0)
-    p3 = (points[1, 0][0], points[1, 0][1], -length / 2.0)
-    plane = Plane(p1, p2, p3)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Set(faces=p_faces, name=set_name + '-Z-1')
-
-    p1 = (points[0, index_t - nt][0], points[0, index_t - nt][1], 0.0)
-    p2 = (points[index_r, index_t - nt][0], points[index_r, index_t - nt][1], 0.0)
-    p3 = (points[0, index_t - nt][0], points[0, index_t - nt][1], length / 2.0)
-    plane = Plane(p1, p2, p3)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Set(faces=p_faces, name=set_name + '-T1')
-
-    p1 = (points[0, index_t - nt][0], -points[0, index_t - nt][1], 0.0)
-    p2 = (points[index_r, index_t - nt][0], -points[index_r, index_t - nt][1], 0.0)
-    p3 = (points[0, index_t - nt][0], -points[0, index_t - nt][1], length / 2.0)
-    plane = Plane(p1, p2, p3)
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and is_face_in_set(p.faces[face_id], p.sets[set_name]):
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Set(faces=p_faces, name=set_name + '-T-1')
-
-
-def create_gap_surface_common(p, points, dimension):
+def create_surface_gap_common(p, points, dimension):
     z_list = dimension['z_list']
     index_r = dimension['index_r']
     index_t = dimension['index_t']
@@ -3134,7 +3134,7 @@ def create_gap_surface_common(p, points, dimension):
         p.Surface(side1Faces=faces, name='SURFACE-OUTER')
 
 
-def create_rotation_part_surface_common(p, rotate_angle_deg):
+def create_surface_rotation_part_common(p, rotate_angle_deg):
     if rotate_angle_deg < 360.0:
         p1 = (0.0, 0.0, 0.0)
         p2 = (1.0, 0.0, 0.0)
