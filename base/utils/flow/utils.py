@@ -8,6 +8,8 @@ import sys
 from collections import Counter
 
 import numpy as np
+import scipy as sp
+import scipy.interpolate
 
 # 兼容 Python 2 和 3
 if sys.version_info[0] == 2:
@@ -2072,6 +2074,64 @@ def get_faces_of_p_remove_given_surface_names(p, given_surface_names):
         if is_surface_outer and len(p.faces[face_id].getCells()) == 1:
             p_faces += p.faces[face_id:face_id + 1]
     return p_faces
+
+
+def part_partition_by_cylinder(p, cylinder, p_cells):
+    # 找到存在于圆柱面上的面，用这个面进行PartitionCellByExtendFace
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells)
+
+
+def create_surface_on_cylinder(p, cylinder, surface_name):
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0], tolerance=1e-4) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name=surface_name)
+
+
+def create_surface_on_plane(p, plane, surface_name):
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name=surface_name)
+
+
+def create_surface_by_intersection(p, p_face_1, p_face_2, surface_name):
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p_face_1:
+        if face in p_face_2:
+            face_id = face.index
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name=surface_name)
+
+
+def get_cells_by_remove(p, p_cell_origin, p_cell_remove):
+    p_cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for cell in p_cell_origin:
+        if cell not in p_cell_remove:
+            cell_id = cell.index
+            p_cells += p.cells[cell_id:cell_id + 1]
+    return p_cells
+
+
+def add_spline(s, points):
+    points = np.array(points)
+    f = sp.interpolate.interp1d(points[:, 0], points[:, 1], kind='cubic', fill_value='extrapolate')
+    point_list = []
+    x = np.linspace(points[0, 0], points[-1, 0], 100)
+    y = f(x)
+    for i in range(len(x)):
+        point_list.append((x[i], y[i]))
+    s.Spline(points=point_list)
 
 
 if __name__ == "__main__":
