@@ -2236,6 +2236,27 @@ def create_contact_of_instance_surface(model, instance_name_1, instance_name_2, 
         pass
 
 
+def get_mirror_faces(p, p_faces, size):
+    for face in p_faces:
+        point = face.pointOn[0]
+
+        point_mirror_y = [point[0], -point[1], point[2]]
+        point_mirror_z = [point[0], point[1], -point[2]]
+        point_mirror_yz = [point[0], -point[1], -point[2]]
+
+        if size == "1/2":
+            p_faces += p.faces.findAt((point_mirror_z,))
+        elif size == "1":
+            p_faces += p.faces.findAt((point_mirror_y,))
+            p_faces += p.faces.findAt((point_mirror_z,))
+            p_faces += p.faces.findAt((point_mirror_yz,))
+
+    if p_faces:
+        return p_faces
+    else:
+        return None
+
+
 if __name__ == "__main__":
 
     if not ABAQUS_ENV:
