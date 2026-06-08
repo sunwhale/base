@@ -43,10 +43,11 @@ except:
 
 sys.path.insert(0, FLOW_PATH)
 
-from utils import ABAQUS_ENV, Circle3D, Ellipse, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, line_circle_intersection, \
-    load_json, min_difference, mirror_y_axis, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, \
-    combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_face_in_set, is_cell_in_set, \
-    get_faces_of_p_remove_given_surface_names, get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces, rotate_point_around_axis, move_along_direction
+from utils import ABAQUS_ENV, Circle3D, Ellipse, Cylinder, Line2D, Plane, calc_arc, degrees_to_radians, find_duplicates, geometries, geometries_hex, geometries_circle, get_direction, get_same_volume_cells, get_z_list, is_unicode_all_uppercase, \
+    line_circle_intersection, load_json, min_difference, mirror_y_axis, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, radians_to_degrees, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, \
+    solve_three_arcs, combine_surfaces, major_version, get_common_faces_between_sets, get_same_area_faces, generate_part_mesh, create_face_set_from_surface, insert_COH3D8_at_face_set, vertices_in_cells, is_face_in_set, is_cell_in_set, \
+    get_faces_of_p_remove_given_surface_names, get_cells_adjacent_to_set_and_remove_set_names, ignore_common_edges_of_faces, rotate_point_around_axis, move_along_direction, part_partition_by_cylinder, create_surface_on_cylinder, create_surface_on_plane, \
+    create_surface_by_intersection, get_cells_by_remove, add_spline
 
 PEN = 1e4
 TOL = 1e-6
@@ -918,6 +919,20 @@ def create_part_block_front(model, part_name, points, lines, faces, dimension):
 
     combine_surfaces(p, ['SURFACE-T1', 'SURFACE-T-1', 'SURFACE-Z1', 'SURFACE-Z-1'], 'SURFACE-TIE')
     combine_surfaces(p, ['SURFACE-X0', 'SURFACE-SLOT'], 'SURFACE-INNER')
+
+    # 创建集合（体），SET-CELL-GLUE-B
+    cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p.surfaces['SURFACE-OUTER'].faces:
+        face_cells = face.getCells()
+        if face_cells:
+            for cell_id in face_cells:
+                cells += p.cells[cell_id:cell_id + 1]
+    if cells:
+        p.Set(cells=cells, name='SET-CELL-GLUE-B')
+
+    p_cells = get_cells_by_remove(p, p.sets['SET-CELL-GLUE-A'].cells, p.sets['SET-CELL-GLUE-B'].cells)
+    if p_cells:
+        p.Set(cells=p_cells, name='SET-CELL-GLUE-A')
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -3442,126 +3457,6 @@ def print_assembly(session, model, viewport):
     viewport.view.setValues(session.views['Iso'])
     viewport.view.rotate(xAngle=0, yAngle=0, zAngle=-90, mode=MODEL)
     session.printToFile(fileName='assembly_iso.png', format=PNG, canvasObjects=(viewport,))
-
-
-def part_partition_by_cylinder(p, cylinder, p_cells):
-    # 找到存在于圆柱面上的面，用这个面进行PartitionCellByExtendFace
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p_cells)
-
-
-def create_surface_on_cylinder(p, cylinder, surface_name):
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0], tolerance=1e-4) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name=surface_name)
-
-
-def create_surface_on_plane(p, plane, surface_name):
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face_id in range(len(p.faces)):
-        if plane.is_point_on_plane(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name=surface_name)
-
-
-def create_surface_by_intersection(p, p_face_1, p_face_2, surface_name):
-    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for face in p_face_1:
-        if face in p_face_2:
-            face_id = face.index
-            p_faces += p.faces[face_id:face_id + 1]
-    if p_faces:
-        p.Surface(side1Faces=p_faces, name=surface_name)
-
-
-def add_spline(s, points):
-    points = np.array(points)
-    f = sp.interpolate.interp1d(points[:, 0], points[:, 1], kind='cubic', fill_value='extrapolate')
-    point_list = []
-    x = np.linspace(points[0, 0], points[-1, 0], 100)
-    y = f(x)
-    for i in range(len(x)):
-        point_list.append((x[i], y[i]))
-    s.Spline(points=point_list)
-
-
-def geometries_circle(d, x0, beta, intercept, rt, tt):
-    nr = len(rt)
-    nt = len(tt)
-
-    r = [0.0 for _ in range(nr)]
-    b = [0.0 for _ in range(nt)]
-
-    for i in range(nr):
-        r[i] = d / 2.0 - sum(rt[0:nr - i])
-
-    for i in range(nt):
-        b[i] = -sum(tt[0:nt - i]) / np.cos(beta) + intercept
-
-    points = np.zeros([nr + 1, nt + 1, 2])
-
-    k = np.tan(beta)
-
-    # 遍历所有点
-    for j in range(nt + 1):
-        for i in range(nr + 1):
-            if j == 0:  # 第一列
-                if i == 0:  # 第一行，第一列
-                    points[i, j] = np.array([x0, 0])
-                else:  # 其他行，第一列
-                    points[i, j] = np.array([r[i - 1], 0])
-            else:  # 其他列
-                if i == 0:  # 第一行，其他列
-                    points[i, j] = line_circle_intersection(k, b[j - 1], x0)[0]
-                else:  # 其他行，其他列
-                    points[i, j] = line_circle_intersection(k, b[j - 1], r[i - 1])[0]
-
-    lines = {}
-    center = (0, 0)
-    for i in range(points.shape[0]):
-        for j in range(points.shape[1]):
-            point1 = points[i, j]
-            if i - 1 > 0:
-                point2 = points[i - 1, j]
-                mid_point = 0.5 * (point1 + point2)
-                lines['%s%s-%s%s' % (i, j, i - 1, j)] = ['line', point1, point2, mid_point]
-            if i + 1 < points.shape[0]:
-                point2 = points[i + 1, j]
-                mid_point = 0.5 * (point1 + point2)
-                lines['%s%s-%s%s' % (i, j, i + 1, j)] = ['line', point1, point2, mid_point]
-            if j - 1 > 0:
-                point2 = points[i, j - 1]
-                if i == 0:
-                    mid_point = 0.5 * (point1 + point2)
-                    lines['%s%s-%s%s' % (i, j, i, j - 1)] = ['line', point1, point2, mid_point]
-                else:
-                    theta1, theta2, radius, mid_point = calc_arc(center, point2, point1)
-                    lines['%s%s-%s%s' % (i, j, i, j - 1)] = ['arc', point1, point2, mid_point]
-            if j + 1 < points.shape[1]:
-                point2 = points[i, j + 1]
-                if i == 0:
-                    mid_point = 0.5 * (point1 + point2)
-                    lines['%s%s-%s%s' % (i, j, i, j + 1)] = ['arc', point1, point2, mid_point]
-                else:
-                    theta1, theta2, radius, mid_point = calc_arc(center, point1, point2)
-                    lines['%s%s-%s%s' % (i, j, i, j + 1)] = ['arc', point1, point2, mid_point]
-
-    faces = np.zeros([nr, nt, 2])
-    for i in range(faces.shape[0]):
-        for j in range(faces.shape[1]):
-            point = (np.array(lines['%s%s-%s%s' % (i, j, i, j + 1)][3]) + np.array(lines['%s%s-%s%s' % (i + 1, j, i + 1, j + 1)][3])) / 2.0
-            faces[i, j, 0] = point[0]
-            faces[i, j, 1] = point[1]
-
-    return points, lines, faces
 
 
 if __name__ == "__main__":
