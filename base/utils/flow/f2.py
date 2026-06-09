@@ -1918,13 +1918,14 @@ def create_part_shell(model, part_name, dimension):
     compositeLayup = p.CompositeLayup(name='COMPOSITELAYUP-1', description='', elementType=SOLID, symmetric=False, thicknessAssignment=FROM_SECTION)
 
     material_name = 'MATERIAL-SHELL-COMPOSITE'
-    num_int_points = 1
+    num_int_points = 3
+    region = p.sets['SET-CELL-SHELL']
     shell_composite_layup = np.genfromtxt('shell_composite_layup.csv', delimiter=',')
     for i, layup_data in enumerate(shell_composite_layup):
         ply_name = 'PLY-' + str(i)
         orientation = layup_data[0]
         thickness = layup_data[1]
-        compositeLayup.CompositePly(suppressed=False, plyName=ply_name, region=p.sets['SET-CELL-SHELL'],
+        compositeLayup.CompositePly(suppressed=False, plyName=ply_name, region=region,
                                     material=material_name, thicknessType=SPECIFY_THICKNESS, thickness=thickness,
                                     orientationType=SPECIFY_ORIENT, orientationValue=orientation,
                                     additionalRotationType=ROTATION_NONE, additionalRotationField='',
@@ -3420,13 +3421,13 @@ if __name__ == "__main__":
     is_assemble = False
 
     is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
     # is_create_p_block = True
     # is_create_p_block_penult = True
     # is_create_p_block_front = True
@@ -3438,7 +3439,7 @@ if __name__ == "__main__":
     # is_create_p_gap_behind = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
-    # is_assemble = True
+    is_assemble = True
 
     n = 9
     d = 3529.0
@@ -3696,7 +3697,7 @@ if __name__ == "__main__":
 
     nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
-    block[:, 0] = True
+    # block[:, 0] = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -4257,19 +4258,19 @@ if __name__ == "__main__":
             surface_name_2 = 'SURFACE-OUTER'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            for instance_name in rotation_part_dict.keys():
-                set_name = 'SET-SURFACE-T0'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            # for instance_name in rotation_part_dict.keys():
+            #     set_name = 'SET-SURFACE-T0'
+            #     bc_name = 'BC-' + instance_name + '-' + set_name
+            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            #
+            #     set_name = 'SET-SURFACE-T1'
+            #     bc_name = 'BC-' + instance_name + '-' + set_name
+            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-                set_name = 'SET-SURFACE-T1'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-            # instance_name = 'INSULATION'
-            # surface_name = 'SURFACE-INNER'
-            # load_name = 'LOAD-' + instance_name + '-' + surface_name
-            # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=1.0, amplitude=UNSET)
+            instance_name = 'INSULATION'
+            surface_name = 'SURFACE-INNER'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=10.8, amplitude=UNSET)
 
             instance_name = 'SKIRT-FRONT'
             set_name = 'SET-SURFACE-X0'
