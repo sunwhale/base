@@ -54,7 +54,7 @@ from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Ellipse, Line2D, Plan
     create_surface_on_plane, create_tie_of_instance_surface, degrees_to_radians, find_duplicates, generate_part_mesh, geometries, geometries_circle, geometries_hex, get_block_types, get_cells_adjacent_to_set_and_remove_set_names, get_cells_by_remove, \
     get_common_faces_between_sets, get_direction, get_faces_of_p_remove_given_surface_names, get_same_area_faces, get_same_volume_cells, get_tie_types, get_z_list, ignore_common_edges_of_faces, insert_COH3D8_at_face_set, is_cell_in_set, is_face_in_set, \
     is_unicode_all_uppercase, json, line_circle_intersection, load_json, major_version, math, min_difference, mirror_y_axis, move_along_direction, part_partition_by_cylinder, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, \
-    radians_to_degrees, rotate_point_around_axis, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, string_types, text_type, vertices_in_cells, get_mirror_faces, get_cells_from_faces
+    radians_to_degrees, rotate_point_around_axis, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, string_types, text_type, vertices_in_cells, get_mirror_faces, get_cells_from_faces, get_edges_from_faces
 
 PEN = 1e4
 TOL = 1e-6
@@ -1902,6 +1902,15 @@ def create_part_shell(model, part_name, dimension):
     set_name = 'SET-CELL-SHELL'
     p.Set(cells=p.cells, name=set_name)
 
+    # 创建集合（边）
+    p_edges = get_edges_from_faces(p, p.surfaces['SURFACE-OUTER'].faces)
+    p_edges_x0 = p.edges.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for edge in p_edges:
+        edge_id = edge.index
+        if edge.pointOn[0][0] == 0.0:
+            p_edges_x0 += p.edges[edge_id:edge_id + 1]
+    p.Set(edges=p_edges_x0, name='SET-EDGE-X0')
+
     # 赋予SECTION属性
     set_section_common(p)
 
@@ -3387,25 +3396,25 @@ if __name__ == "__main__":
     is_assemble = False
 
     is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
-    is_create_p_block_front = True
-    is_create_p_block_behind = True
-    is_create_p_block_behind_ab = True
-    is_create_p_gap = True
-    is_create_p_gap_penult = True
-    is_create_p_gap_front = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_block_behind_ab = True
+    # is_create_p_gap = True
+    # is_create_p_gap_penult = True
+    # is_create_p_gap_front = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     n = 9
     d = 3529.0
@@ -3663,7 +3672,7 @@ if __name__ == "__main__":
 
     nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
-    block[:, :] = True
+    block[:, 0] = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -4222,14 +4231,14 @@ if __name__ == "__main__":
             surface_name_2 = 'SURFACE-OUTER'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            # for instance_name in rotation_part_dict.keys():
-            #     set_name = 'SET-SURFACE-T0'
-            #     bc_name = 'BC-' + instance_name + '-' + set_name
-            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-            #
-            #     set_name = 'SET-SURFACE-T1'
-            #     bc_name = 'BC-' + instance_name + '-' + set_name
-            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            for instance_name in rotation_part_dict.keys():
+                set_name = 'SET-SURFACE-T0'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                set_name = 'SET-SURFACE-T1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             # instance_name = 'INSULATION'
             # surface_name = 'SURFACE-INNER'
@@ -4331,17 +4340,17 @@ if __name__ == "__main__":
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
-                # if i == 0:
-                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                #     set_name = 'SET-SURFACE-T-1'
-                #     bc_name = 'BC-' + instance_name + '-' + set_name
-                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-                #
-                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                #     set_name = 'SET-SURFACE-T1'
-                #     bc_name = 'BC-' + instance_name + '-' + set_name
-                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-                #
+                if i == 0:
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    set_name = 'SET-SURFACE-T-1'
+                    bc_name = 'BC-' + instance_name + '-' + set_name
+                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                    instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                    set_name = 'SET-SURFACE-T1'
+                    bc_name = 'BC-' + instance_name + '-' + set_name
+                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
                 #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                 #     set_name = 'SET-SURFACE-T-1'
                 #     bc_name = 'BC-' + instance_name + '-' + set_name

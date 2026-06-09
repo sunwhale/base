@@ -2273,6 +2273,21 @@ def get_cells_from_faces(p, p_faces):
     return p_cells
 
 
+def get_edges_from_faces(p, p_faces):
+    p_edges_ids = []
+    for face in p_faces:
+        face_edges = face.getEdges()
+        if face_edges:
+            for edge_id in face_edges:
+                p_edges_ids.append(edge_id)
+
+    p_edges = p.edges.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for edge_id in p_edges_ids:
+        p_edges += p.edges[edge_id:edge_id + 1]
+
+    return p_edges
+
+
 if __name__ == "__main__":
 
     if not ABAQUS_ENV:
