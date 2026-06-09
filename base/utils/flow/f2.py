@@ -1912,7 +1912,30 @@ def create_part_shell(model, part_name, dimension):
     p.Set(edges=p_edges_x0, name='SET-EDGE-X0')
 
     # 赋予SECTION属性
-    set_section_common(p)
+    # set_section_common(p)
+    normalAxisRegion = p.surfaces['SURFACE-OUTER']
+    primaryAxisRegion = p.sets['SET-EDGE-X0']
+
+    compositeLayup = mdb.models['Model-1'].parts['PART-SHELL'].CompositeLayup(
+        name='CompositeLayup-1', description='', elementType=SOLID,
+        symmetric=False, thicknessAssignment=FROM_SECTION)
+    compositeLayup.CompositePly(suppressed=False, plyName='Ply-1', region=p.sets['SET-CELL-SHELL'],
+                                material='MATERIAL-SHELL-COMPOSITE', thicknessType=SPECIFY_THICKNESS, thickness=0.3,
+                                orientationType=SPECIFY_ORIENT, orientationValue=90.0,
+                                additionalRotationType=ROTATION_NONE, additionalRotationField='',
+                                axis=AXIS_3, angle=0.0, numIntPoints=3)
+    compositeLayup.CompositePly(suppressed=False, plyName='Ply-2', region=p.sets['SET-CELL-SHELL'],
+                                material='MATERIAL-SHELL-COMPOSITE', thicknessType=SPECIFY_THICKNESS, thickness=0.3,
+                                orientationType=SPECIFY_ORIENT, orientationValue=90.0,
+                                additionalRotationType=ROTATION_NONE, additionalRotationField='',
+                                axis=AXIS_3, angle=0.0, numIntPoints=3)
+    compositeLayup.ReferenceOrientation(orientationType=DISCRETE, localCsys=None,
+                                        additionalRotationType=ROTATION_NONE, angle=0.0,
+                                        additionalRotationField='', axis=AXIS_3, stackDirection=STACK_3,
+                                        normalAxisDefinition=SURFACE, normalAxisRegion=normalAxisRegion,
+                                        normalAxisDirection=AXIS_3, flipNormalDirection=False,
+                                        primaryAxisDefinition=EDGE, primaryAxisRegion=primaryAxisRegion,
+                                        primaryAxisDirection=AXIS_2, flipPrimaryDirection=False)
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
@@ -3748,6 +3771,8 @@ if __name__ == "__main__":
         set_material(model.Material(name='MATERIAL-STEEL'), load_json('material_steel.json'))
         set_material(model.Material(name='MATERIAL-CZM'), load_json('material_czm.json'))
         set_material(model.Material(name='MATERIAL-GLUE-WALL'), load_json('material_glue_wall.json'))
+        set_material(model.Material(name='MATERIAL-SHELL-COMPOSITE'), load_json('material_shell_composite.json'))
+        set_material(model.Material(name='MATERIAL-SKIRT-COMPOSITE'), load_json('material_skirt_composite.json'))
 
         model.HomogeneousSolidSection(name='SECTION-GRAIN', material='MATERIAL-GRAIN', thickness=None)
         model.HomogeneousSolidSection(name='SECTION-INSULATION', material='MATERIAL-INSULATION', thickness=None)
