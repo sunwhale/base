@@ -348,7 +348,7 @@ def create_sketch_gap_z(model, sketch_name, points):
 
 
 def create_sketch_gap_t_front_behind(model, sketch_name, t, points):
-    s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, gridSpacing=100.0, transform=t)
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0, gridSpacing=100.0, transform=t)
 
     center = (0, 0)
     geom_list = []
@@ -361,7 +361,7 @@ def create_sketch_gap_t_front_behind(model, sketch_name, t, points):
 
 
 def create_sketch_gap_t(model, sketch_name, t, points):
-    s = model.ConstrainedSketch(name=sketch_name, sheetSize=4000.0, gridSpacing=100.0, transform=t)
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0, gridSpacing=100.0, transform=t)
 
     center = (0, 0)
     geom_list = []
@@ -370,6 +370,25 @@ def create_sketch_gap_t(model, sketch_name, t, points):
     geom_list.append(s.Line(point1=points[2, 3], point2=points[0, 3]))
     geom_list.append(s.Line(point1=points[0, 3], point2=points[0, 0]))
 
+    return s
+
+
+def create_sketch_polygon(model, sketch_name, t, x0, n):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0, gridSpacing=100.0, transform=t)
+
+    angel = 360.0 / n / 2.0
+
+    l1 = Line2D((0.0, 0.0), math.tan(degrees_to_radians(angel)))
+    l2 = Line2D((0.0, 0.0), -math.tan(degrees_to_radians(angel)))
+    l3 = Line2D((x0, 0.0), math.tan(degrees_to_radians(90)))
+
+    point1 = l1.get_intersection(l3)
+    point2 = l2.get_intersection(l3)
+
+    line = s.Line(point1=point1, point2=point2)
+    s.rotate(centerPoint=(0.0, 0.0), angle=90.0 + angel, objectList=(s.geometry[line.id],))
+
+    s.radialPattern(geomList=(s.geometry[line.id],), vertexList=(), number=n, totalAngle=360.0, centerPoint=(0.0, 0.0))
     return s
 
 
@@ -2522,6 +2541,12 @@ def create_part_insulation(model, part_name, dimension):
     p_faces_2 = p.surfaces['SURFACE-FLANGE'].faces
     create_surface_by_intersection(p, p_faces_1, p_faces_2, 'SURFACE-FLANGE-BEHIND')
 
+    polygon_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p0_front[0])
+    t = p.MakeSketchTransform(sketchPlane=d[polygon_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, origin=(p0_front[0], 0.0, 0.0))
+    s_polygon = create_sketch_polygon(model, 'SKETCH-POLYGON', t, x0, n)
+    p_faces = p.faces.findAt((p0_front[0], p0_front[1] - TOL, 0.0,))
+    p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_polygon)
+
     # 截面剖分
     if rotate_angle_deg == 360.0:
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
@@ -2579,8 +2604,17 @@ def create_part_insulation(model, part_name, dimension):
             p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # 截面剖分
-    if rotate_angle_deg == 360.0:
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    # if rotate_angle_deg == 360.0:
+    #     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+
+    # 偏移角度切割
+    for i in range(1, n):
+        angle = i * 360.0 / n
+        cut_plane = p.DatumPlaneByRotation(plane=d[xy_plane.id], axis=d[x_axis.id], angle=angle)
+        try:
+            p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
+        except:
+            pass
 
     # 截面剖分
     cut_planes = [
@@ -2617,10 +2651,10 @@ def create_part_insulation(model, part_name, dimension):
 
     # 生成网格
     # 切割后的体在前后法兰切处存在一些边被打断，导致网格划分失败，因此先进行虚拟拓扑合并处理
-    p.createVirtualTopology(mergeShortEdges=True, shortEdgeThreshold=100.0,
-                            mergeSmallFaces=False, mergeSliverFaces=False, mergeSmallAngleFaces=False,
-                            mergeThinStairFaces=False, ignoreRedundantEntities=False,
-                            cornerAngleTolerance=30.0, applyBlendControls=False)
+    # p.createVirtualTopology(mergeShortEdges=True, shortEdgeThreshold=1000.0,
+    #                         mergeSmallFaces=False, mergeSliverFaces=False, mergeSmallAngleFaces=False,
+    #                         mergeThinStairFaces=False, ignoreRedundantEntities=False,
+    #                         cornerAngleTolerance=30.0, applyBlendControls=False)
     generate_part_mesh(p, element_size=element_size)
 
     # 创建集合（面）
@@ -3428,15 +3462,15 @@ if __name__ == "__main__":
     is_create_p_insulation = True
     is_create_p_cover_front = True
     is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_block_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_block_behind_ab = True
-    # is_create_p_gap = True
-    # is_create_p_gap_penult = True
-    # is_create_p_gap_front = True
-    # is_create_p_gap_behind = True
+    is_create_p_block = True
+    is_create_p_block_penult = True
+    is_create_p_block_front = True
+    is_create_p_block_behind = True
+    is_create_p_block_behind_ab = True
+    is_create_p_gap = True
+    is_create_p_gap_penult = True
+    is_create_p_gap_front = True
+    is_create_p_gap_behind = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
     is_assemble = True
@@ -3697,7 +3731,7 @@ if __name__ == "__main__":
 
     nl, nt = 12, n
     block = np.zeros((nl, nt), dtype=bool)
-    # block[:, 0] = True
+    block[:, 0] = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
