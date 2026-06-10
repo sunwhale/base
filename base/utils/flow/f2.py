@@ -427,8 +427,8 @@ def create_sketch_gap_front(model, sketch_name, p0_front, theta0_deg_front, p3_f
     point2 = s.geometry[16].getVertices()[1].coords
 
     if gap_front_r > r1:
-        s.breakCurve(curve1=s.geometry[13], point1=point1, curve2=s.geometry[16], point2=point2)
         s.breakCurve(curve1=s.geometry[9], point1=point1, curve2=s.geometry[16], point2=point2)
+        s.breakCurve(curve1=s.geometry[13], point1=point1, curve2=s.geometry[16], point2=point2)
 
     elif r1 > gap_front_r > r2:
         s.breakCurve(curve1=s.geometry[8], point1=point1, curve2=s.geometry[16], point2=point2)
@@ -442,7 +442,6 @@ def create_sketch_gap_front(model, sketch_name, p0_front, theta0_deg_front, p3_f
         s.breakCurve(curve1=s.geometry[6], point1=point1, curve2=s.geometry[16], point2=point2)
         s.breakCurve(curve1=s.geometry[10], point1=point1, curve2=s.geometry[16], point2=point2)
 
-    TOL = 1e-6
     geom_list = []
     for geo_item in s.geometry.values():
         if geo_item.pointOn[1] > gap_front_r + TOL:
@@ -456,7 +455,7 @@ def create_sketch_gap_front(model, sketch_name, p0_front, theta0_deg_front, p3_f
 
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
-    return
+    return s
 
 
 def get_local_variables_common(dimension):
@@ -2608,11 +2607,11 @@ def create_part_insulation(model, part_name, dimension):
     create_surface_by_intersection(p, p_faces_1, p_faces_2, 'SURFACE-FLANGE-BEHIND')
 
     # 头部多边形切割
-    polygon_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p0_front[0])
-    t = p.MakeSketchTransform(sketchPlane=d[polygon_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, origin=(p0_front[0], 0.0, 0.0))
-    s_polygon = create_sketch_polygon(model, 'SKETCH-POLYGON', t, x0, n)
-    p_faces = p.faces.findAt((p0_front[0], p0_front[1] - TOL, 0.0,))
-    p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_polygon)
+    # polygon_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p0_front[0])
+    # t = p.MakeSketchTransform(sketchPlane=d[polygon_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, origin=(p0_front[0], 0.0, 0.0))
+    # s_polygon = create_sketch_polygon(model, 'SKETCH-POLYGON', t, x0, n)
+    # p_faces = p.faces.findAt((p0_front[0], p0_front[1] - TOL, 0.0,))
+    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_polygon)
 
     # 截面剖分
     if rotate_angle_deg == 360.0:
