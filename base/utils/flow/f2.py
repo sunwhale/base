@@ -2093,8 +2093,43 @@ def create_part_skirt_front(model, part_name, dimension):
     set_name = 'SET-CELL-SKIRT'
     p.Set(cells=p.cells, name=set_name)
 
+    # 创建集合（边）
+    p_edges = get_edges_from_faces(p, p.surfaces['SURFACE-R1'].faces)
+    p_edges_x0 = p.edges.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    x_low = p.cells.getBoundingBox()['low'][0]
+    for edge in p_edges:
+        edge_id = edge.index
+        if edge.pointOn[0][0] == x_low:
+            p_edges_x0 += p.edges[edge_id:edge_id + 1]
+    p.Set(edges=p_edges_x0, name='SET-EDGE-X0')
+
     # 赋予SECTION属性
-    set_section_common(p)
+    # set_section_common(p)
+    normalAxisRegion = p.surfaces['SURFACE-R1']
+    primaryAxisRegion = p.sets['SET-EDGE-X0']
+    compositeLayup = p.CompositeLayup(name='COMPOSITELAYUP-1', description='', elementType=SOLID, symmetric=False, thicknessAssignment=FROM_SECTION)
+
+    material_name = 'MATERIAL-SKIRT-COMPOSITE'
+    num_int_points = 3
+    region = p.sets['SET-CELL-SKIRT']
+    shell_composite_layup = np.genfromtxt('skirt_composite_layup.csv', delimiter=',')
+    for i, layup_data in enumerate(shell_composite_layup):
+        ply_name = 'PLY-' + str(i)
+        orientation = layup_data[0]
+        thickness = layup_data[1]
+        compositeLayup.CompositePly(suppressed=False, plyName=ply_name, region=region,
+                                    material=material_name, thicknessType=SPECIFY_THICKNESS, thickness=thickness,
+                                    orientationType=SPECIFY_ORIENT, orientationValue=orientation,
+                                    additionalRotationType=ROTATION_NONE, additionalRotationField='',
+                                    axis=AXIS_3, angle=0.0, numIntPoints=num_int_points)
+
+    compositeLayup.ReferenceOrientation(orientationType=DISCRETE, localCsys=None,
+                                        additionalRotationType=ROTATION_NONE, angle=0.0,
+                                        additionalRotationField='', axis=AXIS_3, stackDirection=STACK_3,
+                                        normalAxisDefinition=SURFACE, normalAxisRegion=normalAxisRegion,
+                                        normalAxisDirection=AXIS_3, flipNormalDirection=False,
+                                        primaryAxisDefinition=EDGE, primaryAxisRegion=primaryAxisRegion,
+                                        primaryAxisDirection=AXIS_2, flipPrimaryDirection=False)
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
@@ -2168,8 +2203,43 @@ def create_part_skirt_behind(model, part_name, dimension):
     set_name = 'SET-CELL-SKIRT'
     p.Set(cells=p.cells, name=set_name)
 
+    # 创建集合（边）
+    p_edges = get_edges_from_faces(p, p.surfaces['SURFACE-R1'].faces)
+    p_edges_x0 = p.edges.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    x_low = p.cells.getBoundingBox()['low'][0]
+    for edge in p_edges:
+        edge_id = edge.index
+        if edge.pointOn[0][0] == x_low:
+            p_edges_x0 += p.edges[edge_id:edge_id + 1]
+    p.Set(edges=p_edges_x0, name='SET-EDGE-X0')
+
     # 赋予SECTION属性
-    set_section_common(p)
+    # set_section_common(p)
+    normalAxisRegion = p.surfaces['SURFACE-R1']
+    primaryAxisRegion = p.sets['SET-EDGE-X0']
+    compositeLayup = p.CompositeLayup(name='COMPOSITELAYUP-1', description='', elementType=SOLID, symmetric=False, thicknessAssignment=FROM_SECTION)
+
+    material_name = 'MATERIAL-SKIRT-COMPOSITE'
+    num_int_points = 3
+    region = p.sets['SET-CELL-SKIRT']
+    shell_composite_layup = np.genfromtxt('skirt_composite_layup.csv', delimiter=',')
+    for i, layup_data in enumerate(shell_composite_layup):
+        ply_name = 'PLY-' + str(i)
+        orientation = layup_data[0]
+        thickness = layup_data[1]
+        compositeLayup.CompositePly(suppressed=False, plyName=ply_name, region=region,
+                                    material=material_name, thicknessType=SPECIFY_THICKNESS, thickness=thickness,
+                                    orientationType=SPECIFY_ORIENT, orientationValue=orientation,
+                                    additionalRotationType=ROTATION_NONE, additionalRotationField='',
+                                    axis=AXIS_3, angle=0.0, numIntPoints=num_int_points)
+
+    compositeLayup.ReferenceOrientation(orientationType=DISCRETE, localCsys=None,
+                                        additionalRotationType=ROTATION_NONE, angle=0.0,
+                                        additionalRotationField='', axis=AXIS_3, stackDirection=STACK_3,
+                                        normalAxisDefinition=SURFACE, normalAxisRegion=normalAxisRegion,
+                                        normalAxisDirection=AXIS_3, flipNormalDirection=False,
+                                        primaryAxisDefinition=EDGE, primaryAxisRegion=primaryAxisRegion,
+                                        primaryAxisDirection=AXIS_2, flipPrimaryDirection=False)
 
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
@@ -4378,10 +4448,10 @@ if __name__ == "__main__":
                 bc_name = 'BC-' + instance_name + '-' + set_name
                 model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-            instance_name = 'INSULATION'
-            surface_name = 'SURFACE-INNER'
-            load_name = 'LOAD-' + instance_name + '-' + surface_name
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=10.8, amplitude=UNSET)
+            # instance_name = 'INSULATION'
+            # surface_name = 'SURFACE-INNER'
+            # load_name = 'LOAD-' + instance_name + '-' + surface_name
+            # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=10.8, amplitude=UNSET)
 
             instance_name = 'SKIRT-FRONT'
             set_name = 'SET-SURFACE-X0'
