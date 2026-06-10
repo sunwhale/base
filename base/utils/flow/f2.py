@@ -2099,7 +2099,7 @@ def create_part_skirt_front(model, part_name, dimension):
     x_low = p.cells.getBoundingBox()['low'][0]
     for edge in p_edges:
         edge_id = edge.index
-        if edge.pointOn[0][0] == x_low:
+        if abs(edge.pointOn[0][0] - x_low) < TOL:
             p_edges_x0 += p.edges[edge_id:edge_id + 1]
     p.Set(edges=p_edges_x0, name='SET-EDGE-X0')
 
@@ -2209,7 +2209,7 @@ def create_part_skirt_behind(model, part_name, dimension):
     x_low = p.cells.getBoundingBox()['low'][0]
     for edge in p_edges:
         edge_id = edge.index
-        if edge.pointOn[0][0] == x_low:
+        if abs(edge.pointOn[0][0] - x_low) < TOL:
             p_edges_x0 += p.edges[edge_id:edge_id + 1]
     p.Set(edges=p_edges_x0, name='SET-EDGE-X0')
 
