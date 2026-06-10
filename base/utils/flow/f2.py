@@ -386,10 +386,77 @@ def create_sketch_polygon(model, sketch_name, t, x0, n):
     point2 = l2.get_intersection(l3)
 
     line = s.Line(point1=point1, point2=point2)
-    s.rotate(centerPoint=(0.0, 0.0), angle=90.0 + angel, objectList=(s.geometry[line.id],))
 
+    s.rotate(centerPoint=(0.0, 0.0), angle=90.0 + angel, objectList=(s.geometry[line.id],))
     s.radialPattern(geomList=(s.geometry[line.id],), vertexList=(), number=n, totalAngle=360.0, centerPoint=(0.0, 0.0))
     return s
+
+
+def create_sketch_gap_front(model, sketch_name, p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front, shell_l_c1_out, gap_front_r, gap_front_l1, gap_front_l2):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0, gridSpacing=100.0)
+
+    arcs_front = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
+    s.ArcByCenterEnds(center=arcs_front['c1'], point1=p0_front, point2=arcs_front['p1'], direction=get_direction(arcs_front['delta1']))
+    s.ArcByCenterEnds(center=arcs_front['c2'], point1=arcs_front['p1'], point2=arcs_front['p2'], direction=get_direction(arcs_front['delta2']))
+    s.ArcByCenterEnds(center=arcs_front['c3'], point1=arcs_front['p2'], point2=p3_front, direction=get_direction(arcs_front['delta3']))
+    s.Line(point1=p0_front, point2=(p0_front[0], 0.0))
+
+    geom_list = []
+    for g in s.geometry.values():
+        geom_list.append(g)
+
+    s.offset(distance=gap_front_l1, objectList=geom_list, side=LEFT)
+    s.offset(distance=gap_front_l1 + gap_front_l2, objectList=geom_list, side=LEFT)
+    s.delete(objectList=geom_list)
+
+    # 水平线
+    s.Line(point1=(-shell_l_c1_out, gap_front_r), point2=(0.0, gap_front_r))
+
+    curve = s.geometry.findAt((-shell_l_c1_out, gap_front_r))
+    s.autoTrimCurve(curve1=curve, point1=(shell_l_c1_out, gap_front_r))
+
+    curve = s.geometry.findAt((0.0, gap_front_r))
+    s.autoTrimCurve(curve1=curve, point1=(0.0, gap_front_r))
+
+    # 区间分类
+    r1 = s.geometry[8].getVertices()[1].coords[1]
+    r2 = s.geometry[8].getVertices()[0].coords[1]
+    r3 = s.geometry[11].getVertices()[0].coords[1]
+    # 水平线打断交点
+    point1 = s.geometry[16].getVertices()[0].coords
+    point2 = s.geometry[16].getVertices()[1].coords
+
+    if gap_front_r > r1:
+        s.breakCurve(curve1=s.geometry[13], point1=point1, curve2=s.geometry[16], point2=point2)
+        s.breakCurve(curve1=s.geometry[9], point1=point1, curve2=s.geometry[16], point2=point2)
+
+    elif r1 > gap_front_r > r2:
+        s.breakCurve(curve1=s.geometry[8], point1=point1, curve2=s.geometry[16], point2=point2)
+        s.breakCurve(curve1=s.geometry[12], point1=point1, curve2=s.geometry[16], point2=point2)
+
+    elif r2 > gap_front_r > r3:
+        s.breakCurve(curve1=s.geometry[7], point1=point1, curve2=s.geometry[16], point2=point2)
+        s.breakCurve(curve1=s.geometry[11], point1=point1, curve2=s.geometry[16], point2=point2)
+
+    elif gap_front_r < r3:
+        s.breakCurve(curve1=s.geometry[6], point1=point1, curve2=s.geometry[16], point2=point2)
+        s.breakCurve(curve1=s.geometry[10], point1=point1, curve2=s.geometry[16], point2=point2)
+
+    TOL = 1e-6
+    geom_list = []
+    for geo_item in s.geometry.values():
+        if geo_item.pointOn[1] > gap_front_r + TOL:
+            geom_list.append(s.geometry[geo_item.id])
+
+    s.delete(objectList=geom_list)
+
+    point1 = [p0_front[0] - gap_front_l1 - gap_front_l2, 0.0]
+    point2 = [p0_front[0] - gap_front_l1, 0.0]
+    s.Line(point1=point1, point2=point2)
+
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+
+    return
 
 
 def get_local_variables_common(dimension):
@@ -2387,6 +2454,10 @@ def create_part_insulation(model, part_name, dimension):
     r2_behind = dimension['r2_behind']
     r3_behind = dimension['r3_behind']
 
+    shell_insulation_gap_front_r = dimension['shell_insulation_gap_front_r']
+    shell_insulation_gap_front_l1 = dimension['shell_insulation_gap_front_l1']
+    shell_insulation_gap_front_l2 = dimension['shell_insulation_gap_front_l2']
+
     front_points = [[-shell_l_c1_out, shell_insulation_r_out_front],
                     [-shell_l_c1_out, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
                     [-shell_l_c1_out + cover_thickness_front, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
@@ -2489,8 +2560,12 @@ def create_part_insulation(model, part_name, dimension):
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
 
+    s_insulation_gap_front = create_sketch_gap_front(model, 'SKETCH-INSULATION-GAP-FRONT', p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front, shell_l_c1_out,
+                                                     shell_insulation_gap_front_r, shell_insulation_gap_front_l1, shell_insulation_gap_front_l2)
+
     # 切割前接头
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-FRONT'], angle=360.0, flipRevolveDirection=OFF)
+    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-INSULATION-GAP-FRONT'], angle=360.0, flipRevolveDirection=OFF)
 
     # 切割后接头
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-BEHIND'], angle=360.0, flipRevolveDirection=OFF)
@@ -2533,11 +2608,11 @@ def create_part_insulation(model, part_name, dimension):
     create_surface_by_intersection(p, p_faces_1, p_faces_2, 'SURFACE-FLANGE-BEHIND')
 
     # 头部多边形切割
-    # polygon_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p0_front[0])
-    # t = p.MakeSketchTransform(sketchPlane=d[polygon_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, origin=(p0_front[0], 0.0, 0.0))
-    # s_polygon = create_sketch_polygon(model, 'SKETCH-POLYGON', t, x0, n)
-    # p_faces = p.faces.findAt((p0_front[0], p0_front[1] - TOL, 0.0,))
-    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_polygon)
+    polygon_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p0_front[0])
+    t = p.MakeSketchTransform(sketchPlane=d[polygon_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, origin=(p0_front[0], 0.0, 0.0))
+    s_polygon = create_sketch_polygon(model, 'SKETCH-POLYGON', t, x0, n)
+    p_faces = p.faces.findAt((p0_front[0], p0_front[1] - TOL, 0.0,))
+    p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_polygon)
 
     # 截面剖分
     if rotate_angle_deg == 360.0:
@@ -2632,10 +2707,10 @@ def create_part_insulation(model, part_name, dimension):
 
     # 生成网格
     # 切割后的体在前后法兰切处存在一些边被打断，导致网格划分失败，因此先进行虚拟拓扑合并处理
-    p.createVirtualTopology(mergeShortEdges=True, shortEdgeThreshold=1000.0,
-                            mergeSmallFaces=False, mergeSliverFaces=False, mergeSmallAngleFaces=False,
-                            mergeThinStairFaces=False, ignoreRedundantEntities=False,
-                            cornerAngleTolerance=30.0, applyBlendControls=False)
+    # p.createVirtualTopology(mergeShortEdges=True, shortEdgeThreshold=1000.0,
+    #                         mergeSmallFaces=False, mergeSliverFaces=False, mergeSmallAngleFaces=False,
+    #                         mergeThinStairFaces=False, ignoreRedundantEntities=False,
+    #                         cornerAngleTolerance=30.0, applyBlendControls=False)
     generate_part_mesh(p, element_size=element_size)
 
     # 创建集合（面）
@@ -3455,20 +3530,20 @@ if __name__ == "__main__":
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
     is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
-    is_create_p_block_front = True
-    is_create_p_block_behind = True
-    is_create_p_block_behind_ab = True
-    is_create_p_gap = True
-    is_create_p_gap_penult = True
-    is_create_p_gap_front = True
-    is_create_p_gap_behind = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_block_behind_ab = True
+    # is_create_p_gap = True
+    # is_create_p_gap_penult = True
+    # is_create_p_gap_front = True
+    # is_create_p_gap_behind = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
-    is_assemble = True
+    # is_assemble = True
 
     n = 9
     d = 3529.0
@@ -3547,6 +3622,10 @@ if __name__ == "__main__":
     shell_insulation_r_in_behind = 775.0
     shell_insulation_thickness_at_flange_front = 2.5
     shell_insulation_thickness_at_flange_behind = 2.5
+
+    shell_insulation_gap_front_r = 850.0
+    shell_insulation_gap_front_l1 = 3.0
+    shell_insulation_gap_front_l2 = 3.0
 
     cover_r_out_front = 560.0
     cover_thickness_front = 68.0
@@ -3977,6 +4056,10 @@ if __name__ == "__main__":
             'r1_behind': r1_behind,
             'r2_behind': r2_behind,
             'r3_behind': r3_behind,
+
+            'shell_insulation_gap_front_r': shell_insulation_gap_front_r,
+            'shell_insulation_gap_front_l1': shell_insulation_gap_front_l1,
+            'shell_insulation_gap_front_l2': shell_insulation_gap_front_l2,
 
             'rotate_angle_deg': rotate_angle_deg,
         }
