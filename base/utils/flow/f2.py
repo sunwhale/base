@@ -2676,6 +2676,22 @@ def create_part_insulation(model, part_name, dimension):
     p_faces_2 = p.surfaces['SURFACE-FLANGE'].faces
     create_surface_by_intersection(p, p_faces_1, p_faces_2, 'SURFACE-FLANGE-BEHIND')
 
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p.surfaces['SURFACE-INNER'].faces:
+        if face.pointOn[0][0] <= 0:
+            face_id = face.index
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-INNER-FRONT')
+
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p.surfaces['SURFACE-INNER'].faces:
+        if face.pointOn[0][0] >= l_c1_c2:
+            face_id = face.index
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-INNER-BEHIND')
+
     # 头部多边形切割
     # polygon_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p0_front[0])
     # t = p.MakeSketchTransform(sketchPlane=d[polygon_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, origin=(p0_front[0], 0.0, 0.0))
@@ -4399,7 +4415,7 @@ if __name__ == "__main__":
             # 1. 定义坐标范围
             x = np.arange(-2000, 2000, 10)
             y = np.arange(-2000, 2000, 10)
-            z = np.linspace(-10000, 20000, 3)
+            z = np.linspace(0, 200000, 5)
             # 2. 生成完整三维网格坐标
             X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
             # 3. 计算 value（只依赖于 x, y 是否在圆内）
@@ -4412,7 +4428,7 @@ if __name__ == "__main__":
             # 1. 定义坐标范围
             x = np.arange(-2000, 2000, 10)
             y = np.arange(-2000, 2000, 10)
-            z = np.linspace(-10000, 20000, 3)
+            z = np.linspace(0, 200000, 5)
             # 2. 生成完整三维网格坐标
             X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
             # 3. 计算 value（只依赖于 x, y 是否在圆内）
@@ -4425,7 +4441,7 @@ if __name__ == "__main__":
             # 1. 定义坐标范围
             x = np.arange(-1000, 1000, 10)
             y = np.arange(-1000, 1000, 10)
-            z = np.linspace(-10000, 20000, 3)
+            z = np.linspace(0, 200000, 5)
             # 2. 生成完整三维网格坐标
             X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
             # 3. 计算 value（只依赖于 x, y 是否在圆内）
@@ -4491,6 +4507,31 @@ if __name__ == "__main__":
             # surface_name = 'SURFACE-INNER'
             # load_name = 'LOAD-' + instance_name + '-' + surface_name
             # model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=10.8, amplitude=UNSET)
+
+            instance_name = 'INSULATION'
+            surface_name = 'SURFACE-INNER-FRONT'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE-INSULATION-FRONT', magnitude=8.6, amplitude='AMP-PRESSURE')
+
+            instance_name = 'INSULATION'
+            surface_name = 'SURFACE-RIN-FRONT'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude='AMP-PRESSURE')
+
+            instance_name = 'INSULATION'
+            surface_name = 'SURFACE-INNER-BEHIND'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE-INSULATION-BEHIND', magnitude=7.1, amplitude='AMP-PRESSURE')
+
+            instance_name = 'INSULATION'
+            surface_name = 'SURFACE-RIN-BEHIND'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=7.1, amplitude='AMP-PRESSURE')
+
+            instance_name = 'COVER-FRONT'
+            surface_name = 'SURFACE-X1'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE-COVER-FRONT', magnitude=8.6, amplitude='AMP-PRESSURE')
 
             instance_name = 'SKIRT-FRONT'
             set_name = 'SET-SURFACE-X0'
