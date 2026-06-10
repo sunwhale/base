@@ -3593,24 +3593,24 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
-    is_create_p_block_front = True
-    is_create_p_block_behind = True
-    is_create_p_block_behind_ab = True
-    is_create_p_gap = True
-    is_create_p_gap_penult = True
-    is_create_p_gap_front = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_block_behind = True
+    # is_create_p_block_behind_ab = True
+    # is_create_p_gap = True
+    # is_create_p_gap_penult = True
+    # is_create_p_gap_front = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
     is_open_parts_cae = True
     is_assemble = True
 
@@ -4395,6 +4395,32 @@ if __name__ == "__main__":
 
             model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
             model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=a.datums[cylindrical_datum.id], description='', expression='8.6-1.5*(Z+1037.75)/19263.21')
+
+            # 1. 定义坐标范围
+            x = np.arange(-2000, 2000, 10)
+            y = np.arange(-2000, 2000, 10)
+            z = np.linspace(0, 20000, 3)
+            # 2. 生成完整三维网格坐标
+            X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+            # 3. 计算 value（只依赖于 x, y 是否在圆内）
+            value = (X ** 2 + Y ** 2 <= 900 ** 2).astype(int)
+            # 4. 将四维数据展平为表格式（每行一个点）
+            xyz_data = np.column_stack((X.ravel(), Y.ravel(), Z.ravel(), value.ravel()))
+            model.MappedField(name='ANALYTICALFIELD-PRESSURE-FRONT', description='', regionType=POINT, partLevelData=False, localCsys=None, pointDataFormat=XYZ, fieldDataType=SCALAR,
+                              xyzPointData=xyz_data)
+
+            # 1. 定义坐标范围
+            x = np.arange(-2000, 2000, 10)
+            y = np.arange(-2000, 2000, 10)
+            z = np.linspace(0, 20000, 3)
+            # 2. 生成完整三维网格坐标
+            X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+            # 3. 计算 value（只依赖于 x, y 是否在圆内）
+            value = (X ** 2 + Y ** 2 <= 1306 ** 2).astype(int)
+            # 4. 将四维数据展平为表格式（每行一个点）
+            xyz_data = np.column_stack((X.ravel(), Y.ravel(), Z.ravel(), value.ravel()))
+            model.MappedField(name='ANALYTICALFIELD-PRESSURE-BEHIND', description='', regionType=POINT, partLevelData=False, localCsys=None, pointDataFormat=XYZ, fieldDataType=SCALAR,
+                              xyzPointData=xyz_data)
 
             # 壳体内表面与绝热层外表面绑定
             instance_name_1 = 'SHELL'
