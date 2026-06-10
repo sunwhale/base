@@ -144,11 +144,19 @@ def dump_json(file_path, data, encoding='utf-8'):
 # Elastic(table=((30.0, 0.495), ))
 # Expansion(table=((8.6e-05, ), ))
 # """
+# input_code = """
+# Density(table=((1.6e-09, ), ))
+# Elastic(type=ENGINEERING_CONSTANTS, table=((134000.0, 9650.0, 9650.0, 0.28, 0.02, 0.34, 6500.0, 3400.0, 6500.0), ))
+# Expansion(table=((1.1e-06, ), ))
+# """
 input_code = """
-Density(table=((1.6e-09, ), ))
-Elastic(type=ENGINEERING_CONSTANTS, table=((134000.0, 9650.0, 9650.0, 0.28, 0.02, 0.34, 6500.0, 3400.0, 6500.0), ))
-Expansion(table=((1.1e-06, ), ))
+Elastic(type=TRACTION, table=((3000.0, 3000.0, 3000.0), ))
+MaxsDamageInitiation(table=((3.0, 3.0, 3.0), ))
+maxsDamageInitiation.DamageEvolution(type=ENERGY, table=((5e-05, ), ))
 """
+
+# 注意二级目录要手动修改，增加.在关键字的开头
+
 material_dict = parse_material_code(input_code)
 dump_json('material.json', material_dict)
 from pprint import pprint
