@@ -4399,27 +4399,40 @@ if __name__ == "__main__":
             # 1. 定义坐标范围
             x = np.arange(-2000, 2000, 10)
             y = np.arange(-2000, 2000, 10)
-            z = np.linspace(0, 20000, 3)
+            z = np.linspace(-10000, 20000, 3)
             # 2. 生成完整三维网格坐标
             X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
             # 3. 计算 value（只依赖于 x, y 是否在圆内）
             value = (X ** 2 + Y ** 2 <= 900 ** 2).astype(int)
             # 4. 将四维数据展平为表格式（每行一个点）
             xyz_data = np.column_stack((X.ravel(), Y.ravel(), Z.ravel(), value.ravel()))
-            model.MappedField(name='ANALYTICALFIELD-PRESSURE-FRONT', description='', regionType=POINT, partLevelData=False, localCsys=None, pointDataFormat=XYZ, fieldDataType=SCALAR,
+            model.MappedField(name='ANALYTICALFIELD-PRESSURE-INSULATION-FRONT', description='', regionType=POINT, partLevelData=False, localCsys=None, pointDataFormat=XYZ, fieldDataType=SCALAR,
                               xyzPointData=xyz_data)
 
             # 1. 定义坐标范围
             x = np.arange(-2000, 2000, 10)
             y = np.arange(-2000, 2000, 10)
-            z = np.linspace(0, 20000, 3)
+            z = np.linspace(-10000, 20000, 3)
             # 2. 生成完整三维网格坐标
             X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
             # 3. 计算 value（只依赖于 x, y 是否在圆内）
             value = (X ** 2 + Y ** 2 <= 1306 ** 2).astype(int)
             # 4. 将四维数据展平为表格式（每行一个点）
             xyz_data = np.column_stack((X.ravel(), Y.ravel(), Z.ravel(), value.ravel()))
-            model.MappedField(name='ANALYTICALFIELD-PRESSURE-BEHIND', description='', regionType=POINT, partLevelData=False, localCsys=None, pointDataFormat=XYZ, fieldDataType=SCALAR,
+            model.MappedField(name='ANALYTICALFIELD-PRESSURE-INSULATION-BEHIND', description='', regionType=POINT, partLevelData=False, localCsys=None, pointDataFormat=XYZ, fieldDataType=SCALAR,
+                              xyzPointData=xyz_data)
+
+            # 1. 定义坐标范围
+            x = np.arange(-1000, 1000, 10)
+            y = np.arange(-1000, 1000, 10)
+            z = np.linspace(-10000, 20000, 3)
+            # 2. 生成完整三维网格坐标
+            X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+            # 3. 计算 value（只依赖于 x, y 是否在圆内）
+            value = (X ** 2 + Y ** 2 <= 425 ** 2).astype(int)
+            # 4. 将四维数据展平为表格式（每行一个点）
+            xyz_data = np.column_stack((X.ravel(), Y.ravel(), Z.ravel(), value.ravel()))
+            model.MappedField(name='ANALYTICALFIELD-PRESSURE-COVER-FRONT', description='', regionType=POINT, partLevelData=False, localCsys=None, pointDataFormat=XYZ, fieldDataType=SCALAR,
                               xyzPointData=xyz_data)
 
             # 壳体内表面与绝热层外表面绑定
