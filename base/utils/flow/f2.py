@@ -2564,7 +2564,7 @@ def create_part_insulation(model, part_name, dimension):
 
     # 切割前接头
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-FRONT'], angle=360.0, flipRevolveDirection=OFF)
-    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-INSULATION-GAP-FRONT'], angle=360.0, flipRevolveDirection=OFF)
+    # p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-INSULATION-GAP-FRONT'], angle=360.0, flipRevolveDirection=OFF)
 
     # 切割后接头
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-BEHIND'], angle=360.0, flipRevolveDirection=OFF)
@@ -3529,20 +3529,20 @@ if __name__ == "__main__":
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
     is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_block_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_block_behind_ab = True
-    # is_create_p_gap = True
-    # is_create_p_gap_penult = True
-    # is_create_p_gap_front = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
+    is_create_p_block = True
+    is_create_p_block_penult = True
+    is_create_p_block_front = True
+    is_create_p_block_behind = True
+    is_create_p_block_behind_ab = True
+    is_create_p_gap = True
+    is_create_p_gap_penult = True
+    is_create_p_gap_front = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     n = 9
     d = 3529.0
@@ -4369,14 +4369,14 @@ if __name__ == "__main__":
             surface_name_2 = 'SURFACE-OUTER'
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-            # for instance_name in rotation_part_dict.keys():
-            #     set_name = 'SET-SURFACE-T0'
-            #     bc_name = 'BC-' + instance_name + '-' + set_name
-            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-            #
-            #     set_name = 'SET-SURFACE-T1'
-            #     bc_name = 'BC-' + instance_name + '-' + set_name
-            #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+            for instance_name in rotation_part_dict.keys():
+                set_name = 'SET-SURFACE-T0'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+
+                set_name = 'SET-SURFACE-T1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             instance_name = 'INSULATION'
             surface_name = 'SURFACE-INNER'
