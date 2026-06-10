@@ -1910,9 +1910,7 @@ def create_part_shell(model, part_name, dimension):
         except:
             pass
 
-    if rotate_angle_deg == 360.0:
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    part_partition_rotation(p, d, n, xy_plane, x_axis)
 
     # 创建集合（面）
     create_face_set_from_surface(p)
@@ -2023,9 +2021,7 @@ def create_part_skirt_front(model, part_name, dimension):
     for plane in cut_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
 
-    if rotate_angle_deg == 360.0:
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    part_partition_rotation(p, d, n, xy_plane, x_axis)
 
     # 创建集合（体）
     set_name = 'SET-CELL-SKIRT'
@@ -2100,9 +2096,7 @@ def create_part_skirt_behind(model, part_name, dimension):
     for plane in cut_planes:
         p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
 
-    if rotate_angle_deg == 360.0:
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    part_partition_rotation(p, d, n, xy_plane, x_axis)
 
     # 创建集合（体）
     set_name = 'SET-CELL-SKIRT'
@@ -2197,9 +2191,8 @@ def create_part_flange_front(model, part_name, dimension):
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), cover_r_out_front)
     part_partition_by_cylinder(p, cylinder, p.cells)
 
-    if rotate_angle_deg == 360.0:
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    # 截面剖分
+    part_partition_rotation(p, d, n, xy_plane, x_axis)
 
     # 创建面
     create_surface_rotation_part_common(p, rotate_angle_deg)
@@ -2309,9 +2302,7 @@ def create_part_flange_behind(model, part_name, dimension):
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), cover_r_out_behind)
     part_partition_by_cylinder(p, cylinder, p.cells)
 
-    if rotate_angle_deg == 360.0:
-        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
-        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    part_partition_rotation(p, d, n, xy_plane, x_axis)
 
     # 创建面
     create_surface_rotation_part_common(p, rotate_angle_deg)
@@ -2541,11 +2532,12 @@ def create_part_insulation(model, part_name, dimension):
     p_faces_2 = p.surfaces['SURFACE-FLANGE'].faces
     create_surface_by_intersection(p, p_faces_1, p_faces_2, 'SURFACE-FLANGE-BEHIND')
 
-    polygon_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p0_front[0])
-    t = p.MakeSketchTransform(sketchPlane=d[polygon_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, origin=(p0_front[0], 0.0, 0.0))
-    s_polygon = create_sketch_polygon(model, 'SKETCH-POLYGON', t, x0, n)
-    p_faces = p.faces.findAt((p0_front[0], p0_front[1] - TOL, 0.0,))
-    p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_polygon)
+    # 头部多边形切割
+    # polygon_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p0_front[0])
+    # t = p.MakeSketchTransform(sketchPlane=d[polygon_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, origin=(p0_front[0], 0.0, 0.0))
+    # s_polygon = create_sketch_polygon(model, 'SKETCH-POLYGON', t, x0, n)
+    # p_faces = p.faces.findAt((p0_front[0], p0_front[1] - TOL, 0.0,))
+    # p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_polygon)
 
     # 截面剖分
     if rotate_angle_deg == 360.0:
@@ -2603,18 +2595,7 @@ def create_part_insulation(model, part_name, dimension):
                     partition_edges.append(edge_sequence)
             p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
-    # 截面剖分
-    # if rotate_angle_deg == 360.0:
-    #     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
-
-    # 偏移角度切割
-    for i in range(1, n):
-        angle = i * 360.0 / n
-        cut_plane = p.DatumPlaneByRotation(plane=d[xy_plane.id], axis=d[x_axis.id], angle=angle)
-        try:
-            p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
-        except:
-            pass
+    part_partition_rotation(p, d, n, xy_plane, x_axis)
 
     # 截面剖分
     cut_planes = [
@@ -2651,10 +2632,10 @@ def create_part_insulation(model, part_name, dimension):
 
     # 生成网格
     # 切割后的体在前后法兰切处存在一些边被打断，导致网格划分失败，因此先进行虚拟拓扑合并处理
-    # p.createVirtualTopology(mergeShortEdges=True, shortEdgeThreshold=1000.0,
-    #                         mergeSmallFaces=False, mergeSliverFaces=False, mergeSmallAngleFaces=False,
-    #                         mergeThinStairFaces=False, ignoreRedundantEntities=False,
-    #                         cornerAngleTolerance=30.0, applyBlendControls=False)
+    p.createVirtualTopology(mergeShortEdges=True, shortEdgeThreshold=1000.0,
+                            mergeSmallFaces=False, mergeSliverFaces=False, mergeSmallAngleFaces=False,
+                            mergeThinStairFaces=False, ignoreRedundantEntities=False,
+                            cornerAngleTolerance=30.0, applyBlendControls=False)
     generate_part_mesh(p, element_size=element_size)
 
     # 创建集合（面）
@@ -2843,6 +2824,20 @@ def part_partition_p1p(p, d, p1p):
     if offset >= p.cells.getBoundingBox()['low'][0]:
         yz_plane_slot = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
         p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_slot.id], cells=p.cells)
+
+
+def part_partition_rotation(p, d, n, xy_plane, x_axis):
+    # if rotate_angle_deg == 360.0:
+    #     p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    #     p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+
+    for i in range(0, n):
+        angle = i * 360.0 / n
+        cut_plane = p.DatumPlaneByRotation(plane=d[xy_plane.id], axis=d[x_axis.id], angle=angle)
+        try:
+            p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
+        except:
+            pass
 
 
 def create_sets_block_common(p, faces, dimension):
