@@ -2761,7 +2761,7 @@ def create_part_insulation(model, part_name, dimension):
                     partition_edges.append(edge_sequence)
             p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
-    part_partition_rotation(p, d, n, xy_plane, x_axis)
+    # part_partition_rotation(p, d, n, xy_plane, x_axis)
 
     # 截面剖分
     cut_planes = [
@@ -3621,18 +3621,18 @@ if __name__ == "__main__":
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
     is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_block_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_block_behind = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
+    is_create_p_block = True
+    is_create_p_block_penult = True
+    is_create_p_block_front = True
+    is_create_p_block_behind = True
     # is_create_p_block_behind_ab = True
-    # is_create_p_gap = True
-    # is_create_p_gap_penult = True
-    # is_create_p_gap_front = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
+    is_create_p_gap = True
+    is_create_p_gap_penult = True
+    is_create_p_gap_front = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
     # is_open_parts_cae = True
     # is_assemble = True
 
@@ -3714,7 +3714,7 @@ if __name__ == "__main__":
     shell_insulation_thickness_at_flange_front = 2.5
     shell_insulation_thickness_at_flange_behind = 2.5
 
-    shell_insulation_gap_front_r = 850.0
+    shell_insulation_gap_front_r = 1356.0
     shell_insulation_gap_front_l1 = 3.0
     shell_insulation_gap_front_l2 = 3.0
 
@@ -4418,6 +4418,7 @@ if __name__ == "__main__":
 
             model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
             model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=a.datums[cylindrical_datum.id], description='', expression='8.6-1.5*(Z+1037.75)/19263.21')
+            model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=a.datums[cylindrical_datum.id], description='', expression='8.02-0.07*(Z+1037.75)/19263.21')
 
             # 1. 定义坐标范围
             x = np.arange(-2000, 2000, 20)
@@ -4518,12 +4519,17 @@ if __name__ == "__main__":
             instance_name = 'INSULATION'
             surface_name = 'SURFACE-INNER-FRONT'
             load_name = 'LOAD-' + instance_name + '-' + surface_name
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE-INSULATION-FRONT', magnitude=8.6, amplitude='AMP-PRESSURE')
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE-INSULATION-FRONT', magnitude=8.02, amplitude='AMP-PRESSURE')
 
             instance_name = 'INSULATION'
             surface_name = 'SURFACE-RIN-FRONT'
             load_name = 'LOAD-' + instance_name + '-' + surface_name
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=8.6, amplitude='AMP-PRESSURE')
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
+
+            instance_name = 'INSULATION'
+            surface_name = 'SURFACE-GAP-FRONT'
+            load_name = 'LOAD-' + instance_name + '-' + surface_name
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
 
             instance_name = 'INSULATION'
             surface_name = 'SURFACE-INNER-BEHIND'
@@ -4533,12 +4539,12 @@ if __name__ == "__main__":
             instance_name = 'INSULATION'
             surface_name = 'SURFACE-RIN-BEHIND'
             load_name = 'LOAD-' + instance_name + '-' + surface_name
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=7.1, amplitude='AMP-PRESSURE')
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE', magnitude=1.0, amplitude='AMP-PRESSURE')
 
             instance_name = 'COVER-FRONT'
             surface_name = 'SURFACE-X1'
             load_name = 'LOAD-' + instance_name + '-' + surface_name
-            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE-COVER-FRONT', magnitude=8.6, amplitude='AMP-PRESSURE')
+            model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=FIELD, field='ANALYTICALFIELD-PRESSURE-COVER-FRONT', magnitude=7.95, amplitude='AMP-PRESSURE')
 
             instance_name = 'SKIRT-FRONT'
             set_name = 'SET-SURFACE-X0'
