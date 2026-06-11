@@ -2685,13 +2685,18 @@ def create_part_insulation(model, part_name, dimension):
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER-BEHIND')
 
-    # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    # for face in p.surfaces['SURFACE-FLANGE-FRONT'].faces:
-    #     if face.pointOn[0][0] >= l_c1_c2:
-    #         face_id = face.index
-    #         p_faces += p.faces[face_id:face_id + 1]
-    # if p_faces:
-    #     p.Surface(side1Faces=p_faces, name='SURFACE-INNER-BEHIND')
+    p_faces_1 = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    p_faces_2 = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p.surfaces['SURFACE-FLANGE-FRONT'].faces:
+        face_id = face.index
+        if face.pointOn[0][0] >= p0_front[0] - shell_insulation_gap_front_l1 - shell_insulation_gap_front_l2:
+            p_faces_1 += p.faces[face_id:face_id + 1]
+        else:
+            p_faces_2 += p.faces[face_id:face_id + 1]
+    if p_faces_1:
+        p.Surface(side1Faces=p_faces_1, name='SURFACE-GAP-FRONT')
+    if p_faces_2:
+        p.Surface(side1Faces=p_faces_2, name='SURFACE-FLANGE-FRONT')
 
     # 头部多边形切割
     # polygon_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p0_front[0])
@@ -3616,20 +3621,20 @@ if __name__ == "__main__":
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
     is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
-    is_create_p_block_front = True
-    is_create_p_block_behind = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_block_behind = True
     # is_create_p_block_behind_ab = True
-    is_create_p_gap = True
-    is_create_p_gap_penult = True
-    is_create_p_gap_front = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_create_p_gap = True
+    # is_create_p_gap_penult = True
+    # is_create_p_gap_front = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     n = 9
     d = 3529.0
@@ -4415,9 +4420,9 @@ if __name__ == "__main__":
             model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=a.datums[cylindrical_datum.id], description='', expression='8.6-1.5*(Z+1037.75)/19263.21')
 
             # 1. 定义坐标范围
-            x = np.arange(-2000, 2000, 10)
-            y = np.arange(-2000, 2000, 10)
-            z = np.linspace(0, 200000, 5)
+            x = np.arange(-2000, 2000, 20)
+            y = np.arange(-2000, 2000, 20)
+            z = np.linspace(0, 200000, 2)
             # 2. 生成完整三维网格坐标
             X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
             # 3. 计算 value（只依赖于 x, y 是否在圆内）
@@ -4428,9 +4433,9 @@ if __name__ == "__main__":
                               xyzPointData=xyz_data)
 
             # 1. 定义坐标范围
-            x = np.arange(-2000, 2000, 10)
-            y = np.arange(-2000, 2000, 10)
-            z = np.linspace(0, 200000, 5)
+            x = np.arange(-2000, 2000, 20)
+            y = np.arange(-2000, 2000, 20)
+            z = np.linspace(0, 200000, 2)
             # 2. 生成完整三维网格坐标
             X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
             # 3. 计算 value（只依赖于 x, y 是否在圆内）
@@ -4443,7 +4448,7 @@ if __name__ == "__main__":
             # 1. 定义坐标范围
             x = np.arange(-1000, 1000, 10)
             y = np.arange(-1000, 1000, 10)
-            z = np.linspace(0, 200000, 5)
+            z = np.linspace(0, 200000, 2)
             # 2. 生成完整三维网格坐标
             X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
             # 3. 计算 value（只依赖于 x, y 是否在圆内）
