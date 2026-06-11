@@ -112,6 +112,9 @@ class FigureSettingFrom(FlaskForm):
     contourType = SelectField('contourType', coerce=str)
     contourStyle = SelectField('contourStyle', coerce=str)
 
+    symbolDensity = FloatField('symbolDensity', default=0.8)
+    arrowSymbolSize = IntegerField('arrowSymbolSize', default=8)
+
     translucency = SelectField('translucency', coerce=str)
     translucencyFactor = FloatField('translucencyFactor', default=0.3)
     xAngle = FloatField('xAngle', default=0.0)
@@ -147,7 +150,7 @@ class FigureSettingFrom(FlaskForm):
         self.removeElementSet.choices = ['']
         self.replaceElementSet.choices = ['']
 
-        self.plotState.choices = ['(CONTOURS_ON_DEF, )', '(CONTOURS_ON_UNDEF, )', '(UNDEFORMED, )', '(DEFORMED, )']
+        self.plotState.choices = ['(CONTOURS_ON_DEF, )', '(CONTOURS_ON_UNDEF, )', '(UNDEFORMED, )', '(DEFORMED, )', '(SYMBOLS_ON_DEF, )', '(SYMBOLS_ON_UNDEF, )']
         self.step.choices = ['Step-1']
         self.variableLabel.choices = ['S']
         self.refinement.choices = ["(INVARIANT, 'Mises')"]

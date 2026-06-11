@@ -732,6 +732,8 @@ def print_figure(project_id, job_id):
                     'views': form.views.data,
                     'contourType': form.contourType.data,
                     'contourStyle': form.contourStyle.data,
+                    'symbolDensity': form.symbolDensity.data,
+                    'arrowSymbolSize': form.arrowSymbolSize.data,
                     'translucency': form.translucency.data,
                     'translucencyFactor': form.translucencyFactor.data,
                     'xAngle': form.xAngle.data,
@@ -796,7 +798,9 @@ def print_figure(project_id, job_id):
                 form.views.data = message['views']
                 form.contourType.data = message['contourType']
                 form.contourStyle.data = message['contourStyle']
-                form.translucency.data = message['translucency']
+                form.contourType.data = message['contourType']
+                form.symbolDensity.data = message['symbolDensity']
+                form.arrowSymbolSize.data = message['arrowSymbolSize']
                 form.translucencyFactor.data = message['translucencyFactor']
                 form.xAngle.data = message['xAngle']
                 form.yAngle.data = message['yAngle']

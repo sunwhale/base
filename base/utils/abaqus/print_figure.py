@@ -140,6 +140,9 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
     display.display.setValues(plotState=setting['plotState'])
     display.contourOptions.setValues(contourType=setting['contourType'], contourStyle=setting['contourStyle'])
 
+    display.symbolOptions.setValues(symbolDensity=setting['symbolDensity'],
+                                    arrowSymbolSize=setting['arrowSymbolSize'])
+
     viewport.view.fitView()
 
     viewport.odbDisplay.commonOptions.setValues(translucency=setting['translucency'], translucencyFactor=setting['translucencyFactor'])
