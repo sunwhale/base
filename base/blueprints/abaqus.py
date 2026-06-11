@@ -738,6 +738,8 @@ def print_figure(project_id, job_id):
                     'yAngle': form.yAngle.data,
                     'zAngle': form.zAngle.data,
                     'zoomFactor': form.zoomFactor.data,
+                    'xFraction': form.xFraction.data,
+                    'yFraction': form.yFraction.data,
                     'useStatus': form.useStatus.data,
                     'statusLabel': form.statusLabel.data,
                     'statusPosition': form.statusPosition.data,
@@ -800,6 +802,8 @@ def print_figure(project_id, job_id):
                 form.yAngle.data = message['yAngle']
                 form.zAngle.data = message['zAngle']
                 form.zoomFactor.data = message['zoomFactor']
+                form.xFraction.data = message['xFraction']
+                form.yFraction.data = message['yFraction']
                 form.useStatus.data = message['useStatus']
                 form.statusLabel.data = message['statusLabel']
                 form.statusPosition.data = message['statusPosition']

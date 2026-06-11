@@ -118,6 +118,8 @@ class FigureSettingFrom(FlaskForm):
     yAngle = FloatField('yAngle', default=0.0)
     zAngle = FloatField('zAngle', default=0.0)
     zoomFactor = FloatField('zoomFactor', default=1.0)
+    xFraction = FloatField('xFraction', default=0.0)
+    yFraction = FloatField('yFraction', default=0.0)
 
     useStatus = SelectField('useStatus', coerce=str)
     statusLabel = SelectField('statusLabel', coerce=str)

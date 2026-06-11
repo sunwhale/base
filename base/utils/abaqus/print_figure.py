@@ -145,6 +145,7 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
     viewport.odbDisplay.commonOptions.setValues(translucency=setting['translucency'], translucencyFactor=setting['translucencyFactor'])
     viewport.view.zoom(zoomFactor=setting['zoomFactor'], mode=ABSOLUTE)
     viewport.view.rotate(xAngle=setting['xAngle'], yAngle=setting['yAngle'], zAngle=setting['zAngle'], mode=MODEL)
+    viewport.view.pan(xFraction=setting['xFraction'], yFraction=setting['yFraction'])
 
     frames_len = len(odb.steps[setting['step']].frames)
     if setting['animate'] == "OFF":
