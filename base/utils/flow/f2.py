@@ -2538,13 +2538,6 @@ def create_part_insulation(model, part_name, dimension):
                      [l_c1_c2 + shell_l_c2_out - cover_thickness_behind, flange_r_in_behind],
                      [l_c1_c2 + shell_l_c2_out - cover_thickness_behind, shell_insulation_r_in_behind]]
 
-    # front_points = [[-shell_l_c1_out, shell_insulation_r_out_front],
-    #                 [-shell_l_c1_out, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front],
-    #                 [-131.32, shell_insulation_r_out_front - shell_insulation_thickness_at_flange_front], [-131.32, 100], [-131.32, 88.5]]
-    # behind_points = [[l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind],
-    #                  [l_c1_c2 + shell_l_c2_out, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind],
-    #                  [809.07, shell_insulation_r_out_behind - shell_insulation_thickness_at_flange_behind], [809.07, 105], [809.07, 96]]
-
     # 基本参数
     c1 = [0.0, 0.0]
     c2 = [l_c1_c2, 0.0]
@@ -2634,7 +2627,7 @@ def create_part_insulation(model, part_name, dimension):
 
     # 切割前接头
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-FRONT'], angle=360.0, flipRevolveDirection=OFF)
-    # p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-INSULATION-GAP-FRONT'], angle=360.0, flipRevolveDirection=OFF)
+    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-INSULATION-GAP-FRONT'], angle=360.0, flipRevolveDirection=OFF)
 
     # 切割后接头
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-BEHIND'], angle=360.0, flipRevolveDirection=OFF)
@@ -2691,6 +2684,14 @@ def create_part_insulation(model, part_name, dimension):
             p_faces += p.faces[face_id:face_id + 1]
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER-BEHIND')
+
+    # p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    # for face in p.surfaces['SURFACE-FLANGE-FRONT'].faces:
+    #     if face.pointOn[0][0] >= l_c1_c2:
+    #         face_id = face.index
+    #         p_faces += p.faces[face_id:face_id + 1]
+    # if p_faces:
+    #     p.Surface(side1Faces=p_faces, name='SURFACE-INNER-BEHIND')
 
     # 头部多边形切割
     # polygon_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=p0_front[0])
@@ -3609,24 +3610,24 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
-    # is_create_p_block = True
-    # is_create_p_block_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_block_behind = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
+    is_create_p_block = True
+    is_create_p_block_penult = True
+    is_create_p_block_front = True
+    is_create_p_block_behind = True
     # is_create_p_block_behind_ab = True
-    # is_create_p_gap = True
-    # is_create_p_gap_penult = True
-    # is_create_p_gap_front = True
-    # is_create_p_gap_behind = True
-    # is_save_parts_cae = True
+    is_create_p_gap = True
+    is_create_p_gap_penult = True
+    is_create_p_gap_front = True
+    is_create_p_gap_behind = True
+    is_save_parts_cae = True
     is_open_parts_cae = True
     is_assemble = True
 
@@ -3642,7 +3643,7 @@ if __name__ == "__main__":
     block_insulation_thickness_z = 3.0
     block_insulation_thickness_t = 3.0
     block_insulation_thickness_r = 3.0
-    wall_insulation_thickness = 8.0
+    wall_insulation_thickness = 3.0
     block_gap_z = 8.0
     block_gap_t = 8.0
     slot_deep = 380.0
@@ -3760,6 +3761,7 @@ if __name__ == "__main__":
         block_insulation_thickness_z = message['block_insulation_thickness_z']
         block_insulation_thickness_t = message['block_insulation_thickness_t']
         block_insulation_thickness_r = message['block_insulation_thickness_r']
+        wall_insulation_thickness = message['wall_insulation_thickness']
         block_gap_z = message['block_gap_z']
         block_gap_t = message['block_gap_t']
         slot_deep = message['slot_deep']
