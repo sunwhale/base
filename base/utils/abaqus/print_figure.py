@@ -94,6 +94,22 @@ def print_figure(setting_file, odb_name='Job-1.odb'):
         viewport.odbDisplay.displayGroup.replace(leaf=leaf)
         region_name = 'replace_' + setting['replaceElementSet']
 
+    removeElementSets_str = setting['removeElementSets']
+    if removeElementSets_str != '':
+        remove_element_set_list = [item.strip() for item in removeElementSets_str.split(',') if item != '']
+        leaf = dgo.LeafFromElementSets(elementSets=(remove_element_set_list))
+        viewport.odbDisplay.displayGroup.remove(leaf=leaf)
+        region_name = 'remove_'
+
+    replaceElementSets_str = setting['replaceElementSets']
+    if replaceElementSets_str != '':
+        replace_element_set_list = [item.strip() for item in replaceElementSets_str.split(',') if item != '']
+        leaf = dgo.LeafFromElementSets(elementSets=(replace_element_set_list))
+        viewport.odbDisplay.displayGroup.replace(leaf=leaf)
+        region_name = 'replace_'
+
+    region_name += setting['given_name']
+
     viewport.enableMultipleColors()
     viewport.setColor(initialColor='#BDBDBD')
     cmap = viewport.colorMappings[setting['colorMappings']]

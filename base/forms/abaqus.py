@@ -88,6 +88,10 @@ class FigureSettingFrom(FlaskForm):
 
     removeElementSet = SelectField('removeElementSet', coerce=str)
     replaceElementSet = SelectField('replaceElementSet', coerce=str)
+    removeElementSets = StringField('removeElementSets', default='')
+    replaceElementSets = StringField('replaceElementSets', default='')
+
+    given_name = StringField('附加后缀名', default='')
 
     plotState = SelectField('plotState', coerce=str)
     uniformScaleFactor = FloatField('uniformScaleFactor', default=1.0, validators=[DataRequired()])

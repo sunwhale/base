@@ -682,6 +682,13 @@ def print_figure(project_id, job_id):
                     for elset_key, elset in instances['elementSets'].items():
                         element_set_list.append(str(instances['name']) + '.' + str(elset['name']))
 
+                element_sets_file = os.path.join(job_path, 'element_sets.txt')
+                txt = ''
+                for element_set in sorted(element_set_list):
+                    txt += f'{element_set},\n'
+                with open(element_sets_file, 'w', encoding='utf-8') as f:
+                    f.write(txt)
+
                 form.step.choices = list(prescan_odb_dict['steps'].keys())
                 form.variableLabel.choices = sorted(list(set(variableLabel_list)))
                 form.refinement.choices = sorted(list(set(refinement_list)))
@@ -705,6 +712,9 @@ def print_figure(project_id, job_id):
                     'mirrorAboutYzPlane': form.mirrorAboutYzPlane.data,
                     'removeElementSet': form.removeElementSet.data,
                     'replaceElementSet': form.replaceElementSet.data,
+                    'removeElementSets': form.removeElementSets.data,
+                    'replaceElementSets': form.replaceElementSets.data,
+                    'given_name': form.given_name.data,
                     'plotState': form.plotState.data,
                     'uniformScaleFactor': form.uniformScaleFactor.data,
                     'step': form.step.data,
@@ -764,6 +774,9 @@ def print_figure(project_id, job_id):
                 form.mirrorAboutYzPlane.data = message['mirrorAboutYzPlane']
                 form.removeElementSet.data = message['removeElementSet']
                 form.replaceElementSet.data = message['replaceElementSet']
+                form.removeElementSets.data = message['removeElementSets']
+                form.replaceElementSets.data = message['replaceElementSets']
+                form.given_name.data = message['given_name']
                 form.plotState.data = message['plotState']
                 form.uniformScaleFactor.data = message['uniformScaleFactor']
                 form.step.data = message['step']
