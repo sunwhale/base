@@ -24,62 +24,135 @@
           <div class="col-6">
             <div class="column">
               <div class="col-12">
-                <div class="card card-primary" data-card-id="card-1">
-                  <div class="card-header">
-                    <h3 class="card-title">{{ project_id }}号ABAQUS项目：{{ job_id }}号算例</h3>
-                  </div>
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col-12">
-                        <form action="" method="post" class="form" role="form">
-                          {{ form.csrf_token() }}
-                          <h5 class="text-primary">基本设置</h5><hr/>
-                          {{ render_form_row([form.width, form.height]) }}
-                          {{ render_form_row([form.imageSize, form.legend]) }}
-                          {{ render_form_row([form.legendPosition, form.triad]) }}
-                          {{ render_form_row([form.projection, form.views]) }}
-                          {{ render_form_row([form.plotState, form.uniformScaleFactor]) }}
-                          {{ render_form_row([form.step, form.frame]) }}
-                          {{ render_form_row([form.variableLabel, form.refinement]) }}
-                          {{ render_form_row([form.outputPosition, form.visibleEdges]) }}
-                          {{ render_form_row([form.maxAutoCompute, form.maxValue]) }}
-                          {{ render_form_row([form.minAutoCompute, form.minValue]) }}
-                          {{ render_form_row([form.colorMappings, form.mirrorAboutXyPlane]) }}
-                          {{ render_form_row([form.mirrorAboutXzPlane, form.mirrorAboutYzPlane]) }}
-                          {{ render_form_row([form.contourType, form.contourStyle]) }}
-                          {{ render_form_row([form.symbolDensity, form.arrowSymbolSize]) }}
-                          <h5 class="text-primary">视角调整</h5><hr/>
-                          {{ render_form_row([form.translucency, form.translucencyFactor]) }}
-                          {{ render_form_row([form.xAngle, form.yAngle]) }}
-                          {{ render_form_row([form.zAngle, form.zoomFactor]) }}
-                          {{ render_form_row([form.xFraction, form.yFraction]) }}
-                          <h5 class="text-primary">单元集合</h5><hr/>
-                          {{ render_form_row([form.removeElementSet, form.replaceElementSet]) }}
-                          {{ render_form_row([form.removeElementSets, form.replaceElementSets]) }}
-                          {{ render_form_row([form.given_name]) }}
-                          <h5 class="text-primary">状态变量</h5><hr/>
-                          {{ render_form_row([form.useStatus, form.statusLabel]) }}
-                          {{ render_form_row([form.statusPosition, form.statusRefinement]) }}
-                          {{ render_form_row([form.statusMinimum, form.statusMaximum]) }}
-                          <h5 class="text-primary">批量输出</h5><hr/>
-                          {{ render_form_row([form.animate, form.frameInterval]) }}
-                          {{ render_form_row([form.startFrame, form.endFrame]) }}
-                          <h5 class="text-primary">动图帧率</h5><hr/>
-                          {{ render_form_row([form.fps]) }}
+                <form action="" method="post" class="form" role="form">
+                  {{ form.csrf_token() }}
+                  <div class="card card-primary" data-card-id="card-1">
+                    <div class="card-header">
+                      <h3 class="card-title">基本设置</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
                           {{ render_field(form.submit, button_style='btn btn-primary') }}
                           <a href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename='print_figure.json') }}" class="btn btn-info">默认设置</a>
-                        </form>
+                          <hr/>
+                          {{ render_form_row([form.width, form.height, form.imageSize]) }}
+                          {{ render_form_row([form.step, form.frame]) }}
+                          {{ render_form_row([form.legend, form.legendPosition]) }}
+                          {{ render_form_row([form.triad, form.colorMappings]) }}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                  <div class="card card-primary" data-card-id="card-2">
+                    <div class="card-header">
+                      <h3 class="card-title">显示设置</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.plotState, form.uniformScaleFactor]) }}
+                          {{ render_form_row([form.outputPosition, form.visibleEdges]) }}
+                          {{ render_form_row([form.translucency, form.translucencyFactor]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card card-primary" data-card-id="card-3">
+                    <div class="card-header">
+                      <h3 class="card-title">变量控制</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.variableLabel, form.refinement]) }}
+                          {{ render_form_row([form.maxAutoCompute, form.maxValue]) }}
+                          {{ render_form_row([form.minAutoCompute, form.minValue]) }}
+                          {{ render_form_row([form.contourType, form.contourStyle]) }}
+                          {{ render_form_row([form.symbolDensity, form.arrowSymbolSize]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card card-primary" data-card-id="card-4">
+                    <div class="card-header">
+                      <h3 class="card-title">视角与镜像</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.views, form.projection]) }}
+                          {{ render_form_row([form.xAngle, form.yAngle, form.zAngle]) }}
+                          {{ render_form_row([form.zoomFactor, form.xFraction, form.yFraction]) }}
+                          {{ render_form_row([form.mirrorAboutXyPlane, form.mirrorAboutXzPlane, form.mirrorAboutYzPlane]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card card-primary" data-card-id="card-5">
+                    <div class="card-header">
+                      <h3 class="card-title">单元集合</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.removeElementSet, form.replaceElementSet]) }}
+                          {{ render_form_row([form.removeElementSets, form.replaceElementSets]) }}
+                          {{ render_form_row([form.given_name]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card card-primary" data-card-id="card-6">
+                    <div class="card-header">
+                      <h3 class="card-title">状态变量</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.useStatus, form.statusLabel]) }}
+                          {{ render_form_row([form.statusPosition, form.statusRefinement]) }}
+                          {{ render_form_row([form.statusMinimum, form.statusMaximum]) }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="card card-primary" data-card-id="card-7">
+                    <div class="card-header">
+                      <h3 class="card-title">动图输出</h3>
+                    </div>
+                    <div class="card-body">
+                      <div class="row">
+                        <div class="col-12">
+                          {{ render_form_row([form.animate, form.frameInterval]) }}
+                          {{ render_form_row([form.startFrame, form.endFrame]) }}
+                          {{ render_form_row([form.fps]) }}
+                          <hr/>
+                          {{ render_field(form.submit, button_style='btn btn-primary') }}
+                          <a href="{{ url_for('abaqus.delete_job_file', project_id=project_id, job_id=job_id, filename='print_figure.json') }}" class="btn btn-info">默认设置</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </form>
               </div>
             </div>
           </div>
           <div class="col-6">
             <div class="column">
               <div class="col-12">
-                <div class="card card-primary" data-card-id="card-2">
+                <div class="card card-primary" data-card-id="card-8">
+                  <div class="card-header">
+                    <h3 class="card-title">日志文件</h3>
+                  </div>
+                  <div class="card-body">
+                    <h5 class="text-primary">print_figure.log</h5>
+                    <textarea id="textarea_log" class="form-control" style="height: 150px;">{{ logs }}</textarea>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="card card-primary" data-card-id="card-9">
                   <div class="card-header">
                     <h3 class="card-title">图片列表</h3>
                   </div>
@@ -120,15 +193,7 @@
                 </div>
               </div>
               <div class="col-12">
-                <div class="card card-primary" data-card-id="card-3">
-                  <div class="card-body">
-                    <h5 class="text-primary">日志文件 print_figure.log</h5>
-                    <textarea id="textarea_log" class="form-control" style="height: 150px;">{{ logs }}</textarea>
-                  </div>
-                </div>
-              </div>
-              <div class="col-12">
-                <div class="card card-primary" data-card-id="card-4">
+                <div class="card card-primary" data-card-id="card-10">
                   <div class="card-header">
                     <h3 class="card-title">odb结构</h3>
                   </div>
