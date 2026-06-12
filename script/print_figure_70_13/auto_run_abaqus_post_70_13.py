@@ -8,7 +8,9 @@ import requests
 from tqdm import tqdm
 
 host = 'https://www.sunjingyu.com:8010'
-host = 'http://127.0.0.1:5000'
+
+
+# host = 'http://127.0.0.1:5000'
 
 
 # host = 'http://127.0.0.1:5000'
@@ -163,17 +165,17 @@ if __name__ == '__main__':
             given_time_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             print_figure(host, session, project_id, job_id, data)
             time.sleep(2)
-            job_status = get_job_status(host, session, project_id, 13)
+            job_status = get_job_status(host, session, project_id, job_id)
             png_items = [item for item in job_status['files'] if item['name'].lower().endswith('.png')]
             print(given_time_str)
             download_png_items = filter_later_than(png_items, given_time_str)
+            print(download_png_items)
 
             for download_png_item in download_png_items:
                 png_name = download_png_item['name']
                 file_url = f'{host}/abaqus/get_job_file/{project_id}/{job_id}/{png_name}'
                 destination = os.path.join('../downloads', f'{project_id}-{job_id}-{png_name}')
                 get_job_file(session, file_url, destination)
-
 
     # for job_id in job_ids:
     #     data = load_json(f'print_figure_template_1.json')
