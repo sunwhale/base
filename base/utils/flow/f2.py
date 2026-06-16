@@ -2069,6 +2069,15 @@ def create_part_skirt_front(model, part_name, dimension):
     # 切割壳体
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-SHELL'], angle=360.0, flipRevolveDirection=OFF)
 
+    # 截面剖分
+    cut_planes = [
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=point_5[0]),
+    ]
+    for plane in cut_planes:
+        p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+
+    part_partition_rotation(p, d, n, xy_plane, x_axis)
+
     # 创建面
     create_surface_rotation_part_common(p, rotate_angle_deg)
     # 通过排除法确定内表面
@@ -2079,15 +2088,6 @@ def create_part_skirt_front(model, part_name, dimension):
 
     # 创建集合（面）
     create_face_set_from_surface(p)
-
-    # 截面剖分
-    cut_planes = [
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=point_5[0]),
-    ]
-    for plane in cut_planes:
-        p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
-
-    part_partition_rotation(p, d, n, xy_plane, x_axis)
 
     # 创建集合（体）
     set_name = 'SET-CELL-SKIRT'
@@ -2179,6 +2179,15 @@ def create_part_skirt_behind(model, part_name, dimension):
     # 切割壳体
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-SHELL'], angle=360.0, flipRevolveDirection=OFF)
 
+    # 截面剖分
+    cut_planes = [
+        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=point_5[0]),
+    ]
+    for plane in cut_planes:
+        p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
+
+    part_partition_rotation(p, d, n, xy_plane, x_axis)
+
     # 创建面
     create_surface_rotation_part_common(p, rotate_angle_deg)
 
@@ -2189,15 +2198,6 @@ def create_part_skirt_behind(model, part_name, dimension):
     p_faces = get_faces_of_p_remove_given_surface_names(p, given_surface_names)
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
-
-    # 截面剖分
-    cut_planes = [
-        p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=point_5[0]),
-    ]
-    for plane in cut_planes:
-        p.PartitionCellByDatumPlane(datumPlane=d[plane.id], cells=p.cells)
-
-    part_partition_rotation(p, d, n, xy_plane, x_axis)
 
     # 创建集合（体）
     set_name = 'SET-CELL-SKIRT'
@@ -2762,6 +2762,16 @@ def create_part_insulation(model, part_name, dimension):
             p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # part_partition_rotation(p, d, n, xy_plane, x_axis)
+
+    cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_insulation_gap_front_r)
+    p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face_id in range(len(p.faces)):
+        if cylinder.is_point_on_cylinder(p.faces[face_id].pointOn[0]) and len(p.faces[face_id].getCells()) == 1:
+            p_faces += p.faces[face_id:face_id + 1]
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-GAP-FRONT-R')
+
+    p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p.cells.getByBoundingBox(-PEN, -PEN, -PEN, 0.0, PEN, PEN))
 
     # 截面剖分
     cut_planes = [
@@ -3415,7 +3425,7 @@ def create_surface_rotation_part_common(p, rotate_angle_deg):
     plane = Plane(p1, p2, p3)
     create_surface_on_plane(p, plane, 'SURFACE-X1')
 
-    p_faces = p.faces.getByBoundingBox(x_low, -PEN, 0.0, x_high, PEN, TOL)
+    p_faces = p.faces.getByBoundingBox(x_low, 0.0, 0.0, x_high, PEN, TOL)
     r_low = p_faces.getBoundingBox()['low'][1]
     r_high = p_faces.getBoundingBox()['high'][1]
 
@@ -3621,18 +3631,18 @@ if __name__ == "__main__":
     is_create_p_flange_front = True
     is_create_p_flange_behind = True
     is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
-    is_create_p_block = True
-    is_create_p_block_penult = True
-    is_create_p_block_front = True
-    is_create_p_block_behind = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
+    # is_create_p_block = True
+    # is_create_p_block_penult = True
+    # is_create_p_block_front = True
+    # is_create_p_block_behind = True
     # is_create_p_block_behind_ab = True
-    is_create_p_gap = True
-    is_create_p_gap_penult = True
-    is_create_p_gap_front = True
-    is_create_p_gap_behind = True
-    is_save_parts_cae = True
+    # is_create_p_gap = True
+    # is_create_p_gap_penult = True
+    # is_create_p_gap_front = True
+    # is_create_p_gap_behind = True
+    # is_save_parts_cae = True
     # is_open_parts_cae = True
     # is_assemble = True
 
