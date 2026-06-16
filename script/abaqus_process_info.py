@@ -63,12 +63,12 @@ def get_abaqus_processes_info():
     abaqus_procs_info.sort(key=lambda x: x['cpu_percent'], reverse=True)
 
     # 定义截断长度（可根据需要调整）
-    CMD_MAX_LEN = 80
+    CMD_MAX_LEN = 800
 
     print("\n找到以下Abaqus相关进程：")
     # 表头增加了 Command 列
     print("-" * (120 + CMD_MAX_LEN))
-    header = (f"{'PID':>5} | {'Process Name':<25} | {'CPU%':>6} | {'MEM%':>6} | {'MEM(MB)':>10} | "
+    header = (f"{'PID':>8} | {'Process Name':<25} | {'CPU%':>6} | {'MEM%':>6} | {'MEM(MB)':>10} | "
               f"{'Threads':>8} | {'Cores':>8} | {'Status':<10} | {'Command':<{CMD_MAX_LEN}}")
     print(header)
     print("-" * (120 + CMD_MAX_LEN))
@@ -77,7 +77,7 @@ def get_abaqus_processes_info():
         cmd_display = proc['cmdline']
         if len(cmd_display) > CMD_MAX_LEN:
             cmd_display = cmd_display[:CMD_MAX_LEN-3] + "..."
-        print(f"{proc['pid']:>5} | {proc['name']:<25} | {proc['cpu_percent']:>6.1f} | "
+        print(f"{proc['pid']:>8} | {proc['name']:<25} | {proc['cpu_percent']:>6.1f} | "
               f"{proc['memory_percent']:>6.1f} | {proc['memory_rss_mb']:>10.1f} | "
               f"{proc['num_threads']:>8} | {proc['cpu_core_count']:>8} | {proc['status']:<10} | "
               f"{cmd_display:<{CMD_MAX_LEN}}")
