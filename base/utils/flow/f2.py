@@ -3724,7 +3724,7 @@ if __name__ == "__main__":
     shell_insulation_thickness_at_flange_front = 2.5
     shell_insulation_thickness_at_flange_behind = 2.5
 
-    shell_insulation_gap_front_r = 0.0
+    shell_insulation_gap_front_r = 1356.0
     shell_insulation_gap_front_l1 = 3.0
     shell_insulation_gap_front_l2 = 3.0
 
