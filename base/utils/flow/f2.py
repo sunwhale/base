@@ -2622,12 +2622,13 @@ def create_part_insulation(model, part_name, dimension):
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
 
-    s_insulation_gap_front = create_sketch_gap_front(model, 'SKETCH-INSULATION-GAP-FRONT', p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front, shell_l_c1_out,
-                                                     shell_insulation_gap_front_r, shell_insulation_gap_front_l1, shell_insulation_gap_front_l2)
-
     # 切割前接头
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-FRONT'], angle=360.0, flipRevolveDirection=OFF)
-    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-INSULATION-GAP-FRONT'], angle=360.0, flipRevolveDirection=OFF)
+
+    if shell_insulation_gap_front_r > shell_insulation_r_in_front:
+        s_insulation_gap_front = create_sketch_gap_front(model, 'SKETCH-INSULATION-GAP-FRONT', p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front, shell_l_c1_out,
+                                                         shell_insulation_gap_front_r, shell_insulation_gap_front_l1, shell_insulation_gap_front_l2)
+        p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-INSULATION-GAP-FRONT'], angle=360.0, flipRevolveDirection=OFF)
 
     # 切割后接头
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-FLANGE-BEHIND'], angle=360.0, flipRevolveDirection=OFF)
@@ -2761,7 +2762,7 @@ def create_part_insulation(model, part_name, dimension):
                     partition_edges.append(edge_sequence)
             p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
-    # part_partition_rotation(p, d, n, xy_plane, x_axis)
+    part_partition_rotation(p, d, n, xy_plane, x_axis)
 
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), shell_insulation_gap_front_r)
     p_faces = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
@@ -2770,8 +2771,7 @@ def create_part_insulation(model, part_name, dimension):
             p_faces += p.faces[face_id:face_id + 1]
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-GAP-FRONT-R')
-
-    p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p.cells.getByBoundingBox(-PEN, -PEN, -PEN, 0.0, PEN, PEN))
+        p.PartitionCellByExtendFace(extendFace=p_faces[0], cells=p.cells.getByBoundingBox(-PEN, -PEN, -PEN, 0.0, PEN, PEN))
 
     # 截面剖分
     cut_planes = [
@@ -3724,7 +3724,7 @@ if __name__ == "__main__":
     shell_insulation_thickness_at_flange_front = 2.5
     shell_insulation_thickness_at_flange_behind = 2.5
 
-    shell_insulation_gap_front_r = 1356.0
+    shell_insulation_gap_front_r = 0.0
     shell_insulation_gap_front_l1 = 3.0
     shell_insulation_gap_front_l2 = 3.0
 
