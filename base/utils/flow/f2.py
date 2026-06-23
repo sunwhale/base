@@ -3816,6 +3816,28 @@ def sketch_break_curve(s, geo1, geo2):
     return find_common_vertices([s.geometry[index] for index in added_geo_ids], 'shared')
 
 
+def sketch_split_and_delete(s, given_x_0, given_y_0, given_x_1, given_y_1, x_min=None, x_max=None):
+    geo_list = s.geometry.values()
+    split_line = s.Line(point1=[given_x_0, given_y_0], point2=[given_x_1, given_y_1])
+    touch_geos = find_geos_relative_to_x(geo_list, given_x_0, mode='touch')
+
+    if len(touch_geos) >= 1:
+        break_curve_dict_2 = sketch_break_curve(s, split_line, touch_geos[0])
+        remove_geo_list = find_geos_in_xy_interval(break_curve_dict_2.values()[0], y_min=break_curve_dict_2.keys()[0][1], y_max=None, include_min_y=True, include_max_y=True)
+        s.delete(objectList=remove_geo_list)
+    else:
+        intersect_geos = find_geos_relative_to_x(geo_list, given_x_0, mode='intersect')
+        if len(intersect_geos) == 1:
+            break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
+            break_curve_dict_2 = sketch_break_curve(s, split_line, break_curve_dict_1.values()[0][0])
+            remove_geo_list = find_geos_in_xy_interval(break_curve_dict_2.values()[0], y_min=break_curve_dict_2.keys()[0][1], y_max=None, include_min_y=True, include_max_y=True)
+            s.delete(objectList=remove_geo_list)
+
+    replace_geo_list = find_geos_in_xy_interval(s.geometry.values(), x_min=x_min, x_max=x_max, include_min_x=True, include_max_x=True)
+    remove_geo_list = [geo for geo in s.geometry.values() if geo not in replace_geo_list]
+    s.delete(objectList=remove_geo_list)
+
+
 def create_sketch_test(model):
     # execfile('F:/GitHub/base/base/utils/flow/f2.py', __main__.__dict__)
 
@@ -3826,47 +3848,8 @@ def create_sketch_test(model):
     for i in range(10):
         geo_list.append(s.Line(point1=[i, 5], point2=[i + 1, 5]))
 
-    geo_list = s.geometry.values()
-    given_x = 2.0
-    split_line = s.Line(point1=[given_x, 0], point2=[given_x, 10])
-    touch_geos = find_geos_relative_to_x(geo_list, given_x, mode='touch')
-
-    if len(touch_geos) >= 1:
-        break_curve_dict_2 = sketch_break_curve(s, split_line, touch_geos[0])
-        remove_geo_list = find_geos_in_xy_interval(break_curve_dict_2.values()[0], y_min=break_curve_dict_2.keys()[0][1], y_max=None, include_min_y=True, include_max_y=True)
-        s.delete(objectList=remove_geo_list)
-    else:
-        intersect_geos = find_geos_relative_to_x(geo_list, given_x, mode='intersect')
-        if len(intersect_geos) == 1:
-            break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
-            break_curve_dict_2 = sketch_break_curve(s, split_line, break_curve_dict_1.values()[0][0])
-            remove_geo_list = find_geos_in_xy_interval(break_curve_dict_2.values()[0], y_min=break_curve_dict_2.keys()[0][1], y_max=None, include_min_y=True, include_max_y=True)
-            s.delete(objectList=remove_geo_list)
-
-    replace_geo_list = find_geos_in_xy_interval(s.geometry.values(), x_min=given_x, x_max=None, include_min_x=True, include_max_x=True)
-    remove_geo_list = [geo for geo in s.geometry.values() if geo not in replace_geo_list]
-    s.delete(objectList=remove_geo_list)
-
-    geo_list = s.geometry.values()
-    given_x = 5.0
-    split_line = s.Line(point1=[given_x, 0], point2=[given_x, 10])
-    touch_geos = find_geos_relative_to_x(geo_list, given_x, mode='touch')
-
-    if len(touch_geos) >= 1:
-        break_curve_dict_2 = sketch_break_curve(s, split_line, touch_geos[0])
-        remove_geo_list = find_geos_in_xy_interval(break_curve_dict_2.values()[0], y_min=break_curve_dict_2.keys()[0][1], y_max=None, include_min_y=True, include_max_y=True)
-        s.delete(objectList=remove_geo_list)
-    else:
-        intersect_geos = find_geos_relative_to_x(geo_list, given_x, mode='intersect')
-        if len(intersect_geos) == 1:
-            break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
-            break_curve_dict_2 = sketch_break_curve(s, split_line, break_curve_dict_1.values()[0][0])
-            remove_geo_list = find_geos_in_xy_interval(break_curve_dict_2.values()[0], y_min=break_curve_dict_2.keys()[0][1], y_max=None, include_min_y=True, include_max_y=True)
-            s.delete(objectList=remove_geo_list)
-
-    replace_geo_list = find_geos_in_xy_interval(s.geometry.values(), x_min=None, x_max=given_x, include_min_x=True, include_max_x=True)
-    remove_geo_list = [geo for geo in s.geometry.values() if geo not in replace_geo_list]
-    s.delete(objectList=remove_geo_list)
+    sketch_split_and_delete(s, given_x_0=1.5, given_y_0=1.0, given_x_1=1.5, given_y_1=10.0, x_min=1.5, x_max=None)
+    sketch_split_and_delete(s, given_x_0=5.5, given_y_0=1.0, given_x_1=5.5, given_y_1=10.0, x_min=None, x_max=5.5)
 
     s.setPrimaryObject(option=STANDALONE)
 
