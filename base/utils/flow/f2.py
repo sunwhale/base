@@ -3648,55 +3648,84 @@ def find_geos_relative_to_x(geo_list, x_val, mode='intersect'):
     return result
 
 
-def find_geos_in_x_interval(geo_list, x_min=None, x_max=None, include_min=True, include_max=True, use_tol=True):
+def find_geos_in_xy_interval(geo_list, x_min=None, x_max=None, y_min=None, y_max=None, include_min_x=True, include_max_x=True, include_min_y=True, include_max_y=True, use_tol=True):
     """
-    查找 geo_list 中，其 x 坐标范围与指定区间有交集的几何对象。
-    区间可以是开区间或闭区间，端点可为正负无穷。
+    查找 geo_list 中，其 x 坐标范围与指定 x 区间有交集，且 y 坐标范围与指定 y 区间有交集的几何对象。
+    区间可为开或闭，端点可为正负无穷（None 表示无限制）。
 
     参数:
         geo_list: 几何对象列表，每个对象需实现 getVertices() 方法，
-                  顶点需有 coords[0] 作为 x 坐标。
-        x_min:    区间左端点，None 表示负无穷。
-        x_max:    区间右端点，None 表示正无穷。
-        include_min: bool，是否包含左端点（True 为闭，False 为开）。
-        include_max: bool，是否包含右端点（True 为闭，False 为开）。
-        use_tol=False 时进行严格的数学比较（无容差）。
+                  顶点需有 coords[0] 作为 x 坐标，coords[1] 作为 y 坐标（二维或三维点）。
+        x_min:         x 区间左端点，None 表示负无穷。
+        x_max:         x 区间右端点，None 表示正无穷。
+        y_min:         y 区间左端点，None 表示负无穷。
+        y_max:         y 区间右端点，None 表示正无穷。
+        include_min_x: bool，x 区间是否包含左端点（True 为闭，False 为开）。
+        include_max_x: bool，x 区间是否包含右端点（True 为闭，False 为开）。
+        include_min_y: bool，y 区间是否包含左端点（True 为闭，False 为开）。
+        include_max_y: bool，y 区间是否包含右端点（True 为闭，False 为开）。
+        use_tol:       bool，是否使用容差（1e-10）进行比较，False 则为严格数学比较。
 
     返回:
-        与给定区间有 x 范围交集的几何对象列表。
+        同时满足 x、y 区间交集条件的几何对象列表。
     """
     result = []
     tol = 1e-10 if use_tol else 0.0
 
+    # 无效区间检查（仅当 x_min 和 x_max 均非 None 时）
     if x_min is not None and x_max is not None and x_min > x_max:
+        return result
+    if y_min is not None and y_max is not None and y_min > y_max:
         return result
 
     for geo in geo_list:
         vertices = geo.getVertices()
-        x_coords = [v.coords[0] for v in vertices]
-        if not x_coords:
+        if not vertices:
             continue
 
-        xmin = min(x_coords)
-        xmax = max(x_coords)
+        # 提取 x 和 y 坐标
+        try:
+            x_coords = [v.coords[0] for v in vertices]
+            y_coords = [v.coords[1] for v in vertices]
+        except (IndexError, AttributeError):
+            # 若顶点缺少坐标或无法索引，跳过该几何
+            continue
 
-        # 左边界：几何的最小 x 必须满足
-        left_ok = True
+        xmin, xmax = min(x_coords), max(x_coords)
+        ymin, ymax = min(y_coords), max(y_coords)
+
+        # ---- x 边界条件 ----
+        left_ok_x = True
         if x_min is not None:
-            if include_min:
-                left_ok = xmin >= x_min - tol  # 闭：最小 >= 左端点
+            if include_min_x:
+                left_ok_x = xmin >= x_min - tol
             else:
-                left_ok = xmin > x_min + tol  # 开：最小 > 左端点
+                left_ok_x = xmin > x_min + tol
 
-        # 右边界：几何的最大 x 必须满足
-        right_ok = True
+        right_ok_x = True
         if x_max is not None:
-            if include_max:
-                right_ok = xmax <= x_max + tol  # 闭：最大 <= 右端点
+            if include_max_x:
+                right_ok_x = xmax <= x_max + tol
             else:
-                right_ok = xmax < x_max - tol  # 开：最大 < 右端点
+                right_ok_x = xmax < x_max - tol
 
-        if left_ok and right_ok:
+        # ---- y 边界条件 ----
+        left_ok_y = True
+        if y_min is not None:
+            if include_min_y:
+                left_ok_y = ymin >= y_min - tol
+            else:
+                left_ok_y = ymin > y_min + tol
+
+        right_ok_y = True
+        if y_max is not None:
+            if include_max_y:
+                right_ok_y = ymax <= y_max + tol
+            else:
+                right_ok_y = ymax < y_max - tol
+
+        # 同时满足 x 和 y 条件
+        if left_ok_x and right_ok_x and left_ok_y and right_ok_y:
             result.append(geo)
 
     return result
@@ -3787,7 +3816,6 @@ def sketch_break_curve(s, geo1, geo2):
     return find_common_vertices([s.geometry[index] for index in added_geo_ids], 'shared')
 
 
-
 def create_sketch_test(model):
     # execfile('F:/GitHub/base/base/utils/flow/f2.py', __main__.__dict__)
 
@@ -3808,7 +3836,7 @@ def create_sketch_test(model):
         break_curve_dict = sketch_break_curve(s, crossing_geos[0], split_line)
         sketch_break_curve(s, split_line, break_curve_dict.values()[0][0])
 
-    replace_geo_list = find_geos_in_x_interval(s.geometry.values(), x_min=given_x, x_max=None, include_min=True, include_max=True)
+    replace_geo_list = find_geos_in_xy_interval(s.geometry.values(), x_min=given_x, x_max=None, include_min_x=True, include_max_x=True)
     remove_geo_list = [geo for geo in s.geometry.values() if geo not in replace_geo_list]
     s.delete(objectList=remove_geo_list)
 
@@ -3821,10 +3849,9 @@ def create_sketch_test(model):
         break_curve_dict = sketch_break_curve(s, crossing_geos[0], split_line)
         sketch_break_curve(s, split_line, break_curve_dict.values()[0][0])
 
-    replace_geo_list = find_geos_in_x_interval(s.geometry.values(), x_min=None, x_max=given_x, include_min=True, include_max=True)
+    replace_geo_list = find_geos_in_xy_interval(s.geometry.values(), x_min=None, x_max=given_x, include_min_x=True, include_max_x=True)
     remove_geo_list = [geo for geo in s.geometry.values() if geo not in replace_geo_list]
     s.delete(objectList=remove_geo_list)
-
 
     s.setPrimaryObject(option=STANDALONE)
 
