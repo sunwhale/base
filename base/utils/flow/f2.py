@@ -3603,6 +3603,234 @@ def print_assembly(session, model, viewport):
     session.printToFile(fileName='assembly_iso.png', format=PNG, canvasObjects=(viewport,))
 
 
+def find_geos_relative_to_x(geo_list, x_val, mode='intersect'):
+    """
+    查找 geo_list 中与垂直线 x = x_val 有特定位置关系的几何对象。
+
+    参数:
+        geo_list: 几何对象列表
+        x_val:    给定的 x 坐标
+        mode:     判定模式
+                  - 'strict'   : 严格两侧（左< x <右），端点恰好在线上不算。
+                  - 'intersect': 相交或接触（默认）。包含端点在线上且另一侧有点的情况，
+                                 适用于 breakCurve 分割，不包含完全与线重叠的退化情况。
+                  - 'touch'    : 专门筛选出有顶点恰好在 x_val 上的几何。
+    """
+    result = []
+    tol = 1e-10  # 浮点数容差
+
+    for geo in geo_list:
+        vertices = geo.getVertices()
+        x_coords = [v.coords[0] for v in vertices]
+
+        # 判断三个状态
+        has_left = any(x < x_val - tol for x in x_coords)
+        has_right = any(x > x_val + tol for x in x_coords)
+        has_on = any(abs(x - x_val) <= tol for x in x_coords)
+
+        if mode == 'strict':
+            # 必须严格一左一右，忽略端点恰好在上的情况
+            if has_left and has_right:
+                result.append(geo)
+
+        elif mode == 'touch':
+            # 只要某个端点刚好在这条线上（常用于寻找切点或交点）
+            if has_on:
+                result.append(geo)
+
+        else:  # mode == 'intersect'
+            # 条件：1. 左右各有点；2. 或者端点在上，且另外还有点在左边或右边
+            # 这样既包含跨越，也包含从一侧接触上来的情况。
+            # 特别注意：排除所有顶点都在线上（即完全重叠）的退化几何。
+            if (has_left and has_right) or (has_on and (has_left or has_right)):
+                result.append(geo)
+
+    return result
+
+
+def find_geos_in_x_interval(geo_list, x_min=None, x_max=None, include_min=True, include_max=True, use_tol=True):
+    """
+    查找 geo_list 中，其 x 坐标范围与指定区间有交集的几何对象。
+    区间可以是开区间或闭区间，端点可为正负无穷。
+
+    参数:
+        geo_list: 几何对象列表，每个对象需实现 getVertices() 方法，
+                  顶点需有 coords[0] 作为 x 坐标。
+        x_min:    区间左端点，None 表示负无穷。
+        x_max:    区间右端点，None 表示正无穷。
+        include_min: bool，是否包含左端点（True 为闭，False 为开）。
+        include_max: bool，是否包含右端点（True 为闭，False 为开）。
+        use_tol=False 时进行严格的数学比较（无容差）。
+
+    返回:
+        与给定区间有 x 范围交集的几何对象列表。
+    """
+    result = []
+    tol = 1e-10 if use_tol else 0.0
+
+    if x_min is not None and x_max is not None and x_min > x_max:
+        return result
+
+    for geo in geo_list:
+        vertices = geo.getVertices()
+        x_coords = [v.coords[0] for v in vertices]
+        if not x_coords:
+            continue
+
+        xmin = min(x_coords)
+        xmax = max(x_coords)
+
+        # 左边界：几何的最小 x 必须满足
+        left_ok = True
+        if x_min is not None:
+            if include_min:
+                left_ok = xmin >= x_min - tol  # 闭：最小 >= 左端点
+            else:
+                left_ok = xmin > x_min + tol  # 开：最小 > 左端点
+
+        # 右边界：几何的最大 x 必须满足
+        right_ok = True
+        if x_max is not None:
+            if include_max:
+                right_ok = xmax <= x_max + tol  # 闭：最大 <= 右端点
+            else:
+                right_ok = xmax < x_max - tol  # 开：最大 < 右端点
+
+        if left_ok and right_ok:
+            result.append(geo)
+
+    return result
+
+
+def compare_lists(old_list, new_list):
+    """
+    对比两个列表中的元素，返回减少的元素和增加的元素。
+    假设列表中的元素是唯一的（如 ID）。
+    """
+    old_set = set(old_list)
+    new_set = set(new_list)
+
+    removed = old_set - new_set  # 旧有而新无
+    added = new_set - old_set  # 新有而旧无
+
+    return sorted(removed), sorted(added)
+
+
+def find_common_vertices(geo_list, mode='all', tol=1e-6):
+    """
+    查找几何列表中的共同顶点。
+
+    参数:
+        geo_list: 几何对象列表（应有 getVertices() 方法）
+        mode:     'all'  → 返回所有几何都共有的顶点（交集）
+                  'shared' → 返回被两个及以上几何共享的顶点（及对应的几何列表）
+        tol:      浮点容差，用于坐标比较
+
+    返回:
+        mode='all' : list of tuple (x, y) 共有的顶点坐标（可能为空）
+        mode='shared': dict { (x,y): [geo1, geo2, ...] } 仅包含共享次数≥2的项
+    """
+    # 第一步：收集所有几何的顶点坐标集合（已去重）
+    geo_vertex_sets = []  # 每个几何的顶点坐标集合（元组列表）
+    for geo in geo_list:
+        verts = geo.getVertices()
+        # 将坐标转为元组，并按容差分组去重（同一几何内可能重复，但通常不会）
+        coords_set = []
+        for v in verts:
+            # 粗略去重：如果该坐标已存在于该几何的集合中则跳过
+            # 更严谨可遍历比较容差
+            coord = (v.coords[0], v.coords[1])  # 假设2D
+            # 检查是否已存在（容差内）
+            exists = False
+            for c in coords_set:
+                if abs(c[0] - coord[0]) <= tol and abs(c[1] - coord[1]) <= tol:
+                    exists = True
+                    break
+            if not exists:
+                coords_set.append(coord)
+        geo_vertex_sets.append(set(coords_set))  # 转为集合以便求交
+
+    if mode == 'all':
+        # 求所有集合的交集
+        common = set.intersection(*geo_vertex_sets) if geo_vertex_sets else set()
+        return list(common)
+
+    elif mode == 'shared':
+        # 统计每个顶点出现在哪些几何中
+        vertex_geo_map = {}  # coord_tuple -> list of geo indices or geo objects
+        for idx, geo in enumerate(geo_list):
+            verts = geo.getVertices()
+            for v in verts:
+                coord = (v.coords[0], v.coords[1])
+                # 使用容差查找已有的键（因为浮点数可能微小差异）
+                found_key = None
+                for key in vertex_geo_map.keys():
+                    if abs(key[0] - coord[0]) <= tol and abs(key[1] - coord[1]) <= tol:
+                        found_key = key
+                        break
+                if found_key is None:
+                    vertex_geo_map[coord] = [geo]
+                else:
+                    # 避免同一个几何在该顶点重复添加（如果getVertices返回重复端点？）
+                    if geo not in vertex_geo_map[found_key]:
+                        vertex_geo_map[found_key].append(geo)
+        # 过滤出共享次数≥2的
+        shared = {k: v for k, v in vertex_geo_map.items() if len(v) >= 2}
+        return shared
+
+
+def sketch_break_curve(s, geo1, geo2):
+    old_geo_ids = s.geometry.keys()
+    s.breakCurve(curve1=geo1, point1=geo1.getVertices()[0].coords, curve2=geo2, point2=geo2.getVertices()[0].coords)
+    new_geo_ids = s.geometry.keys()
+    removed_geo_id, added_geo_ids = compare_lists(old_geo_ids, new_geo_ids)
+    return find_common_vertices([s.geometry[index] for index in added_geo_ids], 'shared')
+
+
+
+def create_sketch_test(model):
+    # execfile('F:/GitHub/base/base/utils/flow/f2.py', __main__.__dict__)
+
+    s = model.ConstrainedSketch(name='SKETCH-1', sheetSize=200.0)
+
+    geo_list = []
+
+    for i in range(10):
+        geo_list.append(s.Line(point1=[i, 5], point2=[i + 1, 5]))
+
+    geo_list.append(s.ArcByCenterEnds(center=(0, 0), point1=(0, 1), point2=(1, 0), direction=COUNTERCLOCKWISE))
+
+    given_x = 1.5
+    split_line = s.Line(point1=[given_x, 0], point2=[given_x, 10])
+    crossing_geos = find_geos_relative_to_x(geo_list, given_x, mode='intersect')
+
+    if len(crossing_geos) == 1:
+        break_curve_dict = sketch_break_curve(s, crossing_geos[0], split_line)
+        sketch_break_curve(s, split_line, break_curve_dict.values()[0][0])
+
+    replace_geo_list = find_geos_in_x_interval(s.geometry.values(), x_min=given_x, x_max=None, include_min=True, include_max=True)
+    remove_geo_list = [geo for geo in s.geometry.values() if geo not in replace_geo_list]
+    s.delete(objectList=remove_geo_list)
+
+    geo_list = s.geometry.values()
+    given_x = 5.0
+    split_line = s.Line(point1=[given_x, 0], point2=[given_x, 10])
+    crossing_geos = find_geos_relative_to_x(geo_list, given_x, mode='intersect')
+
+    if len(crossing_geos) == 1:
+        break_curve_dict = sketch_break_curve(s, crossing_geos[0], split_line)
+        sketch_break_curve(s, split_line, break_curve_dict.values()[0][0])
+
+    replace_geo_list = find_geos_in_x_interval(s.geometry.values(), x_min=None, x_max=given_x, include_min=True, include_max=True)
+    remove_geo_list = [geo for geo in s.geometry.values() if geo not in replace_geo_list]
+    s.delete(objectList=remove_geo_list)
+
+
+    s.setPrimaryObject(option=STANDALONE)
+
+    return s
+
+
 if __name__ == "__main__":
     is_create_p_shell = False
     is_create_p_skirt_front = False
@@ -3975,6 +4203,10 @@ if __name__ == "__main__":
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
         # model.setValues(globalJob='/home/dell/www/base/files/abaqus/70/5/Job-1.odb')
+
+        s = create_sketch_test(model)
+
+        exit()
 
         set_material(model.Material(name='MATERIAL-GRAIN'), load_json('material_grain_prony.json'))
         set_material(model.Material(name='MATERIAL-INSULATION'), load_json('material_insulation.json'))
