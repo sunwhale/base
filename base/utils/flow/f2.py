@@ -3726,6 +3726,7 @@ def find_geos_in_xy_interval(geo_list, x_min=None, x_max=None, y_min=None, y_max
         # 提取 x 和 y 坐标
         try:
             if geo.curveType == LINE:
+                # 对于x_coords保留6位有效数字
                 x_coords = [round(v.coords[0], 6) for v in vertices]
                 y_coords = [v.coords[1] for v in vertices]
             elif geo.curveType == ARC:
@@ -3892,10 +3893,10 @@ def create_sketch_test(model):
 
     s.retrieveSketch(sketch=model.sketches['SKETCH-INSULATION-INNER'])
 
-    x = -500.0
+    x = 16000.0
     sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=x, x_max=None)
 
-    x = 500.0
+    x = 17800.0
     sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=None, x_max=x)
 
     s.setPrimaryObject(option=STANDALONE)
