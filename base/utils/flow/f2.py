@@ -3850,6 +3850,12 @@ def find_common_vertices(geo_list, mode='all', tol=1e-6):
     geo_vertex_sets = []  # 每个几何的顶点坐标集合（元组列表）
     for geo in geo_list:
         verts = geo.getVertices()
+        if geo.curveType == LINE:
+            pass
+        elif geo.curveType == ARC:
+            verts = verts[:2]
+        else:
+            pass
         # 将坐标转为元组，并按容差分组去重（同一几何内可能重复，但通常不会）
         coords_set = []
         for v in verts:
@@ -3876,6 +3882,12 @@ def find_common_vertices(geo_list, mode='all', tol=1e-6):
         vertex_geo_map = {}  # coord_tuple -> list of geo indices or geo objects
         for idx, geo in enumerate(geo_list):
             verts = geo.getVertices()
+            if geo.curveType == LINE:
+                pass
+            elif geo.curveType == ARC:
+                verts = verts[:2]
+            else:
+                pass
             for v in verts:
                 coord = (v.coords[0], v.coords[1])
                 # 使用容差查找已有的键（因为浮点数可能微小差异）
@@ -3892,6 +3904,7 @@ def find_common_vertices(geo_list, mode='all', tol=1e-6):
                         vertex_geo_map[found_key].append(geo)
         # 过滤出共享次数≥2的
         shared = {k: v for k, v in vertex_geo_map.items() if len(v) >= 2}
+
         return shared
 
 
@@ -3907,27 +3920,25 @@ def sketch_split_and_delete(s, given_x_0, given_y_0, given_x_1, given_y_1, x_min
     geo_list = s.geometry.values()
     split_line = s.Line(point1=[given_x_0, given_y_0], point2=[given_x_1, given_y_1])
     touch_geos = find_geos_relative_to_x(geo_list, given_x_0, mode='touch')
+    intersect_geos = find_geos_relative_to_x(geo_list, given_x_0, mode='strict')
 
-    if len(touch_geos) >= 1:
-        break_curve_dict_1 = sketch_break_curve(s, split_line, touch_geos[0])
-        remove_geo_list = find_geos_in_xy_interval(break_curve_dict_1.values()[0], y_min=break_curve_dict_1.keys()[0][1], y_max=None)
-        s.delete(objectList=remove_geo_list)
-    else:
-        intersect_geos = find_geos_relative_to_x(geo_list, given_x_0, mode='intersect')
-        if len(intersect_geos) == 1:
-            break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
-            break_curve_dict_2 = sketch_break_curve(s, split_line, break_curve_dict_1.values()[0][0])
-            remove_geo_list = find_geos_in_xy_interval(break_curve_dict_2.values()[0], y_min=break_curve_dict_2.keys()[0][1], y_max=None)
-            s.delete(objectList=remove_geo_list)
+    print(touch_geos)
+    print(intersect_geos)
 
-        elif len(intersect_geos) == 2:
-            break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
-            break_curve_dict_2 = sketch_break_curve(s, intersect_geos[1], split_line)
-            break_point_1 = break_curve_dict_1.keys()[0]
-            break_point_2 = break_curve_dict_2.keys()[0]
-            s.Line(point1=break_point_1, point2=break_point_2)
+    if len(touch_geos) == 2 and len(intersect_geos) == 1:
+        break_point_1 = find_common_vertices(touch_geos, mode='shared').keys()[0]
+        break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
+        break_point_2 = break_curve_dict_1.keys()[0]
+        s.Line(point1=break_point_1, point2=break_point_2)
+    elif len(touch_geos) == 0 and len(intersect_geos) == 2:
+        break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
+        break_curve_dict_2 = sketch_break_curve(s, intersect_geos[1], split_line)
+        break_point_1 = break_curve_dict_1.keys()[0]
+        break_point_2 = break_curve_dict_2.keys()[0]
+        s.Line(point1=break_point_1, point2=break_point_2)
 
     s.delete(objectList=[split_line])
+
     replace_geo_list = find_geos_in_xy_interval(s.geometry.values(), x_min=x_min, x_max=x_max, include_x_min=True, include_x_max=True)
     remove_geo_list = [geo for geo in s.geometry.values() if geo not in replace_geo_list]
     s.delete(objectList=remove_geo_list)
@@ -3941,10 +3952,10 @@ def create_sketch_test(model):
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-INNER'])
 
-    x = 16000.0
+    x = 17300.0
     sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=x, x_max=None)
 
-    x = 19000.0
+    x = 17800.0
     sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=None, x_max=x)
 
     s.setPrimaryObject(option=STANDALONE)
@@ -3974,12 +3985,12 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
     # is_create_p_cover_front = True
     # is_create_p_cover_behind = True
     # is_create_p_block = True
