@@ -294,8 +294,6 @@ def create_sketch_penult_inner(model, sketch_name, t, x0, slot_deep, block_lengt
     s.Line(point1=p4, point2=p5)
     s.Line(point1=p5, point2=p0)
 
-    s.Spot(point=p3)
-
     center_line = s.ConstructionLine(point1=(0.0, 0.0), point2=(PEN, 0.0))
     s.assignCenterline(line=center_line)
 
@@ -482,6 +480,31 @@ def create_sketch_insulation_inner(model, sketch_name,
     s.Line(point1=p_front_in_1, point2=p_behind_in_1)
     s.Line(point1=p_front_in_1, point2=p_front_in_2)
     s.Line(point1=p_behind_in_1, point2=p_behind_in_2)
+
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+
+    return s
+
+
+def create_sketch_block_inner(model, sketch_name, x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
+    r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
+    r_front = x0 + burn_offset
+
+    p1 = [p0_behind[0] + l_c1_c2, r_behind]
+    p2 = [p0_behind[0] + l_c1_c2 - l_block_behind, r_behind]
+    l1 = Line2D(p2, np.tan(degrees_to_radians(22.5)))
+    l2 = Line2D([p2[0] - 2.0 * slot_ellipse_b, 0.0], [p2[0] - 2.0 * slot_ellipse_b, 1.0])
+    p3 = l1.get_intersection(l2)
+    l3 = Line2D(p3, np.tan(degrees_to_radians(45.0)))
+    l4 = Line2D([0.0, r_front], [1.0, r_front])
+    p4 = l3.get_intersection(l4)
+    p5 = [p0_front[0], r_front]
+
+    s.Line(point1=p1, point2=p2)
+    s.Line(point1=p2, point2=p3)
+    s.Line(point1=p3, point2=p4)
+    s.Line(point1=p4, point2=p5)
 
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
@@ -3899,6 +3922,11 @@ def create_sketch_test(model):
     x = 17800.0
     sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=None, x_max=x)
 
+    s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-INNER'])
+
+    x = 16000.0
+    sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=x, x_max=None)
+    
     s.setPrimaryObject(option=STANDALONE)
 
     return s
@@ -3935,7 +3963,7 @@ if __name__ == "__main__":
     # is_create_p_cover_front = True
     # is_create_p_cover_behind = True
     # is_create_p_block = True
-    # is_create_p_block_penult = True
+    is_create_p_block_penult = True
     # is_create_p_block_front = True
     # is_create_p_block_behind = True
     # is_create_p_block_behind_ab = True
@@ -4300,6 +4328,9 @@ if __name__ == "__main__":
         model.interactionProperties['IntProp-1'].CohesiveBehavior(defaultPenalties=OFF, table=((1000000.0, 1000000.0, 1000000.0),))
         model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
+        l_block_behind = 3000.0
+        s_block_inner = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind)
+
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
             'ellipse_ratio': ellipse_ratio,
@@ -4470,9 +4501,7 @@ if __name__ == "__main__":
             p_insulation = create_part_insulation(model, 'PART-INSULATION', insulation_dimension)
             print('CREATE PART-INSULATION DONE.')
 
-        s = create_sketch_test(model)
-
-        exit()
+        s_test = create_sketch_test(model)
 
         z_list_with_gap = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
         index_t_with_gap = 3
