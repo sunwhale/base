@@ -3922,9 +3922,6 @@ def sketch_split_and_delete(s, given_x_0, given_y_0, given_x_1, given_y_1, x_min
     touch_geos = find_geos_relative_to_x(geo_list, given_x_0, mode='touch')
     intersect_geos = find_geos_relative_to_x(geo_list, given_x_0, mode='strict')
 
-    print(touch_geos)
-    print(intersect_geos)
-
     if len(touch_geos) == 2 and len(intersect_geos) == 1:
         break_point_1 = find_common_vertices(touch_geos, mode='shared').keys()[0]
         break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
