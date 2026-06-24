@@ -456,25 +456,46 @@ def create_sketch_gap_front(model, sketch_name, p0_front, theta0_deg_front, p3_f
     return s
 
 
-def create_sketch_insulation_inner(model, sketch_name,
-                                   p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front,
-                                   p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind,
-                                   shell_insulation_r_in_front, shell_insulation_r_in_behind, p_front_in_1, p_behind_in_1, p_front_in_2, p_behind_in_2):
+def create_sketch_block_outer(model, sketch_name, x0, burn_offset, slot_deep, slot_ellipse_b, shell_insulation_r_in,
+                              p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front,
+                              p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind,
+                              shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
+
+    c1 = [0.0, 0.0]
+    c2 = [l_c1_c2, 0.0]
+
+    p0_behind = (p0_behind[0] + l_c1_c2, p0_behind[1])
+    p3_behind = (p3_behind[0] + l_c1_c2, p3_behind[1])
+
+    r_front = x0 + burn_offset
+    r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
+
+    # 前封头内轮廓
+    line1 = Line2D((0, shell_insulation_r_in_at_a_front), math.tan(degrees_to_radians(shell_insulation_theta_in_deg_front)))
+    line2 = Line2D((0, shell_insulation_r_in), (1, shell_insulation_r_in))
+    p_front_in_1 = line1.get_intersection(line2)
+    p_front_in_2 = [c1[0], shell_insulation_r_in_at_a_front]
+
+    # 后封头内轮廓
+    line1 = Line2D((c2[0], shell_insulation_r_in_at_a_behind), -math.tan(degrees_to_radians(shell_insulation_theta_in_deg_behind)))
+    line2 = Line2D((0, shell_insulation_r_in), (1, shell_insulation_r_in))
+    p_behind_in_1 = line1.get_intersection(line2)
+    p_behind_in_2 = [c2[0], shell_insulation_r_in_at_a_behind]
 
     # 前封头
     arcs_front = solve_three_arcs(p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front)
     s.ArcByCenterEnds(center=arcs_front['c1'], point1=p0_front, point2=arcs_front['p1'], direction=get_direction(arcs_front['delta1']))
     s.ArcByCenterEnds(center=arcs_front['c2'], point1=arcs_front['p1'], point2=arcs_front['p2'], direction=get_direction(arcs_front['delta2']))
     s.ArcByCenterEnds(center=arcs_front['c3'], point1=arcs_front['p2'], point2=p3_front, direction=get_direction(arcs_front['delta3']))
-    s.Line(point1=[p0_front[0], shell_insulation_r_in_front], point2=p0_front)
+    s.Line(point1=[p0_front[0], r_front], point2=p0_front)
 
     # 后封头
     arcs_behind = solve_three_arcs(p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind)
     s.ArcByCenterEnds(center=arcs_behind['c1'], point1=p0_behind, point2=arcs_behind['p1'], direction=get_direction(arcs_behind['delta1']))
     s.ArcByCenterEnds(center=arcs_behind['c2'], point1=arcs_behind['p1'], point2=arcs_behind['p2'], direction=get_direction(arcs_behind['delta2']))
     s.ArcByCenterEnds(center=arcs_behind['c3'], point1=arcs_behind['p2'], point2=p3_behind, direction=get_direction(arcs_behind['delta3']))
-    s.Line(point1=[p0_behind[0], shell_insulation_r_in_behind], point2=p0_behind)
+    s.Line(point1=[p0_behind[0], r_behind], point2=p0_behind)
 
     # 中段内侧
     s.Line(point1=p_front_in_1, point2=p_behind_in_1)
@@ -2672,11 +2693,6 @@ def create_part_insulation(model, part_name, dimension):
 
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
-    create_sketch_insulation_inner(model, 'SKETCH-INSULATION-INNER',
-                                   p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front,
-                                   p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind,
-                                   shell_insulation_r_in_front, shell_insulation_r_in_behind, p_front_in_1, p_behind_in_1, p_front_in_2, p_behind_in_2)
-
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
 
@@ -3904,6 +3920,14 @@ def sketch_split_and_delete(s, given_x_0, given_y_0, given_x_1, given_y_1, x_min
             remove_geo_list = find_geos_in_xy_interval(break_curve_dict_2.values()[0], y_min=break_curve_dict_2.keys()[0][1], y_max=None)
             s.delete(objectList=remove_geo_list)
 
+        elif len(intersect_geos) == 2:
+            break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
+            break_curve_dict_2 = sketch_break_curve(s, intersect_geos[1], split_line)
+            break_point_1 = break_curve_dict_1.keys()[0]
+            break_point_2 = break_curve_dict_2.keys()[0]
+            s.Line(point1=break_point_1, point2=break_point_2)
+
+    s.delete(objectList=[split_line])
     replace_geo_list = find_geos_in_xy_interval(s.geometry.values(), x_min=x_min, x_max=x_max, include_x_min=True, include_x_max=True)
     remove_geo_list = [geo for geo in s.geometry.values() if geo not in replace_geo_list]
     s.delete(objectList=remove_geo_list)
@@ -3914,19 +3938,15 @@ def create_sketch_test(model):
 
     s = model.ConstrainedSketch(name='SKETCH-1', sheetSize=2000.0)
 
-    s.retrieveSketch(sketch=model.sketches['SKETCH-INSULATION-INNER'])
-
-    x = 16000.0
-    sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=x, x_max=None)
-
-    x = 17800.0
-    sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=None, x_max=x)
-
+    s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-INNER'])
 
     x = 16000.0
     sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=x, x_max=None)
-    
+
+    x = 19000.0
+    sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=None, x_max=x)
+
     s.setPrimaryObject(option=STANDALONE)
 
     return s
@@ -3963,7 +3983,7 @@ if __name__ == "__main__":
     # is_create_p_cover_front = True
     # is_create_p_cover_behind = True
     # is_create_p_block = True
-    is_create_p_block_penult = True
+    # is_create_p_block_penult = True
     # is_create_p_block_front = True
     # is_create_p_block_behind = True
     # is_create_p_block_behind_ab = True
@@ -4331,6 +4351,10 @@ if __name__ == "__main__":
         l_block_behind = 3000.0
         s_block_inner = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind)
 
+        s_block_outer = create_sketch_block_outer(model, 'SKETCH-BLOCK-OUTER', x0, burn_offset, slot_deep, slot_ellipse_b, shell_insulation_r_in,
+                                                  p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front,
+                                                  p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind,
+                                                  shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
             'ellipse_ratio': ellipse_ratio,
