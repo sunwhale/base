@@ -3656,7 +3656,12 @@ def find_geos_relative_to_x(geo_list, x_val, mode='intersect'):
 
     for geo in geo_list:
         vertices = geo.getVertices()
-        x_coords = [v.coords[0] for v in vertices]
+        if geo.curveType == LINE:
+            x_coords = [v.coords[0] for v in vertices]
+        elif geo.curveType == ARC:
+            x_coords = [v.coords[0] for v in vertices[0:2]]
+        else:
+            x_coords = []
 
         # 判断三个状态
         has_left = any(x < x_val - tol for x in x_coords)
@@ -3720,8 +3725,15 @@ def find_geos_in_xy_interval(geo_list, x_min=None, x_max=None, y_min=None, y_max
 
         # 提取 x 和 y 坐标
         try:
-            x_coords = [v.coords[0] for v in vertices]
-            y_coords = [v.coords[1] for v in vertices]
+            if geo.curveType == LINE:
+                x_coords = [round(v.coords[0], 6) for v in vertices]
+                y_coords = [v.coords[1] for v in vertices]
+            elif geo.curveType == ARC:
+                x_coords = [round(v.coords[0], 6) for v in vertices[:2]]
+                y_coords = [v.coords[1] for v in vertices[:2]]
+            else:
+                x_coords = []
+                y_coords = []
         except (IndexError, AttributeError):
             # 若顶点缺少坐标或无法索引，跳过该几何
             continue
@@ -3862,16 +3874,15 @@ def sketch_split_and_delete(s, given_x_0, given_y_0, given_x_1, given_y_1, x_min
         s.delete(objectList=remove_geo_list)
     else:
         intersect_geos = find_geos_relative_to_x(geo_list, given_x_0, mode='intersect')
-        print(intersect_geos)
         if len(intersect_geos) == 1:
             break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
             break_curve_dict_2 = sketch_break_curve(s, split_line, break_curve_dict_1.values()[0][0])
             remove_geo_list = find_geos_in_xy_interval(break_curve_dict_2.values()[0], y_min=break_curve_dict_2.keys()[0][1], y_max=None)
             s.delete(objectList=remove_geo_list)
 
-    replace_geo_list = find_geos_in_xy_interval(s.geometry.values(), x_min=x_min, x_max=x_max)
+    replace_geo_list = find_geos_in_xy_interval(s.geometry.values(), x_min=x_min, x_max=x_max, include_x_min=True, include_x_max=True)
     remove_geo_list = [geo for geo in s.geometry.values() if geo not in replace_geo_list]
-    # s.delete(objectList=remove_geo_list)
+    s.delete(objectList=remove_geo_list)
 
 
 def create_sketch_test(model):
