@@ -3945,24 +3945,13 @@ def sketch_split_and_delete(s, given_x_0, given_y_0, given_x_1, given_y_1, x_min
     s.delete(objectList=remove_geo_list)
 
 
-def create_sketch_block(model):
-    # execfile('F:/GitHub/base/base/utils/flow/f2.py', __main__.__dict__)
-
-    s = model.ConstrainedSketch(name='SKETCH-1', sheetSize=2000.0)
-
+def create_sketch_block(model, sketch_name, x_min, x_max):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-INNER'])
-
-    x = -1000.0
-    sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=x, x_max=None)
-
-    x = 800.0
-    sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=None, x_max=x)
-
+    sketch_split_and_delete(s, given_x_0=x_min, given_y_0=100.0, given_x_1=x_min, given_y_1=2000.0, x_min=x_min, x_max=None)
+    sketch_split_and_delete(s, given_x_0=x_max, given_y_0=100.0, given_x_1=x_max, given_y_1=2000.0, x_min=None, x_max=x_max)
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
-
-    # s.setPrimaryObject(option=STANDALONE)
-
     return s
 
 
@@ -4001,14 +3990,19 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list):
     return s, traction_geos, normal_geos
 
 
-def create_part_block_common(model, part_name):
-    s_block = create_sketch_block(model)
-    s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', -800.0, 800.0, [0, 20, 40, 60])
+def create_part_block_common(model, part_name, dimension):
+    n = dimension['n']
+    x_min = dimension['x_min']
+    x_max = dimension['x_max']
+    r_list = dimension['r_list']
+
+    s_block = create_sketch_block(model, 'SKETCH-BLOCK', x_min, x_max)
+    s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_list)
 
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
 
-    p.BaseSolidRevolve(sketch=s_block, angle=20.0, flipRevolveDirection=OFF)
+    p.BaseSolidRevolve(sketch=s_block, angle=360.0 / n / 2.0, flipRevolveDirection=OFF)
 
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
@@ -4452,8 +4446,14 @@ if __name__ == "__main__":
                                                   p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front,
                                                   p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind,
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
+        block_dimension = {
+            'n': n,
+            'x_min': -900.0,
+            'x_max': 800.0,
+            'r_list': [0, 20, 40, 60]
+        }
 
-        create_part_block_common(model, 'PART-BLOCK-1')
+        create_part_block_common(model, 'PART-BLOCK-1', block_dimension)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
