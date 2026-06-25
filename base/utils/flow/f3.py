@@ -3954,11 +3954,10 @@ def create_sketch_block(model, sketch_name, x_min, x_max):
     return s
 
 
-def get_sketch_block_outer_offset_side(model, sketch_name, x_min, x_max, r_list):
-    s = model.ConstrainedSketch(name='S1', sheetSize=2000.0)
+def get_sketch_block_outer_offset_side(model, x_min, x_max):
+    s = model.ConstrainedSketch(name='__profile__', sheetSize=2000.0)
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
-    x_min -= 10.0
-    x_max += 10.0
+
     sketch_split_and_delete(s, given_x_0=x_min, given_y_0=100.0, given_x_1=x_min, given_y_1=2000.0, x_min=x_min, x_max=None)
     sketch_split_and_delete(s, given_x_0=x_max, given_y_0=100.0, given_x_1=x_max, given_y_1=2000.0, x_min=None, x_max=x_max)
 
@@ -3969,9 +3968,7 @@ def get_sketch_block_outer_offset_side(model, sketch_name, x_min, x_max, r_list)
     s.offset(distance=10.0, objectList=origin_geo_list, side=LEFT)
     y_max_1 = max([v.coords[1] for v in s.vertices.values()])
 
-    # del model.sketches['__profile__']
-
-    print(y_max_0, y_max_1)
+    del model.sketches['__profile__']
 
     if y_max_1 < y_max_0:
         return LEFT
@@ -3979,11 +3976,11 @@ def get_sketch_block_outer_offset_side(model, sketch_name, x_min, x_max, r_list)
         return RIGHT
 
 
-def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list):
+def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, zoom=10.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
-    x_min -= 10.0
-    x_max += 10.0
+    x_min -= zoom
+    x_max += zoom
     sketch_split_and_delete(s, given_x_0=x_min, given_y_0=0.0, given_x_1=x_min, given_y_1=2000.0, x_min=x_min, x_max=None)
     sketch_split_and_delete(s, given_x_0=x_max, given_y_0=0.0, given_x_1=x_max, given_y_1=2000.0, x_min=None, x_max=x_max)
 
@@ -3993,7 +3990,7 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list):
     n = len(origin_geo_ids)
 
     # 确保朝内侧平移
-    side = get_sketch_block_outer_offset_side(model, sketch_name, x_min, x_max, r_list)
+    side = get_sketch_block_outer_offset_side(model, x_min, x_max)
 
     for r in r_list:
         s.offset(distance=r, objectList=origin_geo_list, side=side)
@@ -4028,11 +4025,11 @@ def create_part_block_common(model, part_name, dimension):
 
     x_list = z_list
 
+    print(burn_offset)
+
     x_min = dimension['x_min']
     x_max = dimension['x_max']
     r_list = dimension['r_list']
-
-    burn_offset = 0.0
 
     s_block = create_sketch_block(model, 'SKETCH-BLOCK', x_min, x_max)
     s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_list)
@@ -4082,9 +4079,7 @@ def create_part_block_common(model, part_name, dimension):
 
     part_partition_block_theta(p, d, n, xy_plane, x_axis, [5, 10, 15])
 
-
-
-    part_partition_block_x(p, d, [x_min + 5, x_min + 10, x_min + 15, x_max - 5, x_max - 10, x_max - 15])
+    # part_partition_block_x(p, d, [x_min + 5, x_min + 10, x_min + 15, x_max - 5, x_max - 10, x_max - 15])
 
     # 星槽切割
     r_cut = x0 + slot_deep
@@ -4536,8 +4531,8 @@ if __name__ == "__main__":
             'element_size': element_size,
             'insert_czm': insert_czm,
             'beta': beta,
-            'burn_offset': burn_offset,
-            'x_min': 10,
+            'burn_offset': 300,
+            'x_min': -1000,
             'x_max': 1800.0,
             'r_list': [0, 5, 10, 15]
         }
