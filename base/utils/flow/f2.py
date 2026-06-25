@@ -3966,36 +3966,27 @@ def create_sketch_block(model):
     return s
 
 
-def create_sketch_block_outer_offset(model):
-    s = model.ConstrainedSketch(name='SKETCH-2', sheetSize=2000.0)
-
+def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
+    sketch_split_and_delete(s, given_x_0=x_min, given_y_0=100.0, given_x_1=x_min, given_y_1=2000.0, x_min=x_min, x_max=None)
+    sketch_split_and_delete(s, given_x_0=x_max, given_y_0=100.0, given_x_1=x_max, given_y_1=2000.0, x_min=None, x_max=x_max)
 
-    x = -1000.0
-    sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=x, x_max=None)
+    origin_geo_ids = s.geometry.keys()
+    origin_geo_list = s.geometry.values()
+    m = len(r_list) + 1
+    n = len(origin_geo_ids)
 
-    x = 800.0
-    sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=None, x_max=x)
+    for r in r_list:
+        s.offset(distance=r, objectList=origin_geo_list, side=RIGHT)
 
-    geo_ids = s.geometry.keys()
-    geo_list = s.geometry.values()
-
-    l_list = [0, 10, 20, 30]
-    m = len(l_list) + 1
-    n = len(geo_ids)
-
-    for l in l_list:
-        s.offset(distance=l, objectList=geo_list, side=RIGHT)
-
-    # 列表推导式切分
-    geo_group_ids = [s.geometry.keys()[i * n:(i + 1) * n] for i in range(1, m)]
-
+    traction_geo_group_ids = [s.geometry.keys()[i * n:(i + 1) * n] for i in range(1, m)]
     for i in range(m - 2):
         for j in range(n - 1):
-            index_11 = geo_group_ids[i][j]
-            index_12 = geo_group_ids[i][j + 1]
-            index_21 = geo_group_ids[i + 1][j]
-            index_22 = geo_group_ids[i + 1][j + 1]
+            index_11 = traction_geo_group_ids[i][j]
+            index_12 = traction_geo_group_ids[i][j + 1]
+            index_21 = traction_geo_group_ids[i + 1][j]
+            index_22 = traction_geo_group_ids[i + 1][j + 1]
             v1 = find_common_vertices([s.geometry[index_11], s.geometry[index_12]])
             v2 = find_common_vertices([s.geometry[index_21], s.geometry[index_22]])
             if v1 != [] and v2 != []:
@@ -4008,6 +3999,54 @@ def create_sketch_block_outer_offset(model):
     s.delete(objectList=delete_geo_list)
 
     return s, traction_geos, normal_geos
+
+
+def create_part_block_common(model, part_name):
+    s_block = create_sketch_block(model)
+    s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', -800.0, 800.0, [0, 20, 40, 60])
+
+    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    d = p.datums
+
+    p.BaseSolidRevolve(sketch=s_block, angle=20.0, flipRevolveDirection=OFF)
+
+    xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+    yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
+    xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
+    x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
+    y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
+    z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
+
+    # 面剖分OUTER-OFFSET
+    p_faces = p.faces.getByBoundingBox(-PEN, -PEN, 0, PEN, PEN, TOL)
+    p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_outer_offset)
+
+    right_top_vertex = max(s_block.vertices.values(), key=lambda v: (v.coords[0], v.coords[1]))
+    right_top = right_top_vertex.coords
+    point = [right_top_vertex.coords[0], right_top_vertex.coords[1], 0.0]
+    point_rot = rotate_point_around_axis(point, [0, 0, 0], [1, 0, 0], TOL)
+
+    # 外轮廓切线剖分
+    sweep_edge = p.edges.findAt(point_rot)
+    partition_edges = []
+    for traction_geo in traction_geos:
+        x, y = traction_geo.pointOn
+        edge_sequence = p.edges.findAt((x, y, 0.0))
+        if edge_sequence is not None:
+            partition_edges.append(edge_sequence)
+    p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
+
+    # 外轮廓法线剖分
+    sweep_edge = p.edges.findAt(point_rot)
+    partition_edges = []
+    for normal_geo in normal_geos:
+        x, y = normal_geo.pointOn
+        edge_sequence = p.edges.findAt((x, y, 0.0))
+        if edge_sequence is not None:
+            partition_edges.append(edge_sequence)
+    p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
+
+    p.setValues(geometryRefinement=EXTRA_FINE)
 
 
 if __name__ == "__main__":
@@ -4414,51 +4453,7 @@ if __name__ == "__main__":
                                                   p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind,
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
 
-        s_block = create_sketch_block(model)
-        s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model)
-
-        p = model.Part(name='PART-1', dimensionality=THREE_D, type=DEFORMABLE_BODY)
-        d = p.datums
-
-        p.BaseSolidRevolve(sketch=s_block, angle=20.0, flipRevolveDirection=OFF)
-
-        xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
-        yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
-        xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
-        x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
-        y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
-        z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
-
-        # 面剖分OUTER-OFFSET
-        p_faces = p.faces.getByBoundingBox(-PEN, -PEN, 0, PEN, PEN, TOL)
-        p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_outer_offset)
-
-        right_top_vertex = max(s_block.vertices.values(), key=lambda v: (v.coords[0], v.coords[1]))
-        right_top = right_top_vertex.coords
-        point = [right_top_vertex.coords[0], right_top_vertex.coords[1], 0.0]
-        point_rot = rotate_point_around_axis(point, [0, 0, 0], [1, 0, 0], TOL)
-
-        # 外轮廓切线剖分
-        sweep_edge = p.edges.findAt(point_rot)
-        partition_edges = []
-        for traction_geo in traction_geos:
-            x, y = traction_geo.pointOn
-            edge_sequence = p.edges.findAt((x, y, 0.0))
-            if edge_sequence is not None:
-                partition_edges.append(edge_sequence)
-        p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
-
-        # 外轮廓法线剖分
-        sweep_edge = p.edges.findAt(point_rot)
-        partition_edges = []
-        for normal_geo in normal_geos:
-            x, y = normal_geo.pointOn
-            edge_sequence = p.edges.findAt((x, y, 0.0))
-            if edge_sequence is not None:
-                partition_edges.append(edge_sequence)
-        p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
-
-        p.setValues(geometryRefinement=EXTRA_FINE)
+        create_part_block_common(model, 'PART-BLOCK-1')
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
