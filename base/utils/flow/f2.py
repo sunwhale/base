@@ -3933,6 +3933,10 @@ def sketch_split_and_delete(s, given_x_0, given_y_0, given_x_1, given_y_1, x_min
         break_point_1 = break_curve_dict_1.keys()[0]
         break_point_2 = break_curve_dict_2.keys()[0]
         s.Line(point1=break_point_1, point2=break_point_2)
+    elif len(touch_geos) == 0 and len(intersect_geos) == 1:
+        break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
+    elif len(touch_geos) == 2 and len(intersect_geos) == 0:
+        break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
 
     s.delete(objectList=[split_line])
 
@@ -3941,7 +3945,7 @@ def sketch_split_and_delete(s, given_x_0, given_y_0, given_x_1, given_y_1, x_min
     s.delete(objectList=remove_geo_list)
 
 
-def create_sketch_test(model):
+def create_sketch_block(model):
     # execfile('F:/GitHub/base/base/utils/flow/f2.py', __main__.__dict__)
 
     s = model.ConstrainedSketch(name='SKETCH-1', sheetSize=2000.0)
@@ -3949,15 +3953,48 @@ def create_sketch_test(model):
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-INNER'])
 
-    x = 17300.0
+    x = -1000.0
     sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=x, x_max=None)
 
-    x = 17800.0
+    x = 800.0
     sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=None, x_max=x)
+
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+
+    # s.setPrimaryObject(option=STANDALONE)
+
+    return s
+
+
+def create_sketch_block_outer_offset(model):
+    s = model.ConstrainedSketch(name='SKETCH-2', sheetSize=2000.0)
+
+    s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
+
+    x = -1000.0
+    sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=x, x_max=None)
+
+    x = 800.0
+    sketch_split_and_delete(s, given_x_0=x, given_y_0=100.0, given_x_1=x, given_y_1=2000.0, x_min=None, x_max=x)
+
+    geo_ids = s.geometry.keys()
+    geo_list = s.geometry.values()
+
+    for l in [10, 20, 30]:
+        s.offset(distance=l, objectList=geo_list, side=RIGHT)
+
+    n = len(geo_ids)
+    geo_ids = s.geometry.keys()
+    # 计算每份的大小（这里整除）
+    chunk_size = len(geo_ids) // n
+    # 列表推导式切分
+    result = [geo_ids[i * chunk_size:(i + 1) * chunk_size] for i in range(n)]
+
+    print(result)
 
     s.setPrimaryObject(option=STANDALONE)
 
-    return s
+    return s, result
 
 
 if __name__ == "__main__":
@@ -4363,6 +4400,40 @@ if __name__ == "__main__":
                                                   p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front,
                                                   p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind,
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
+
+        s_block = create_sketch_block(model)
+        s_block_outer_offset, _ = create_sketch_block_outer_offset(model)
+
+        p = model.Part(name='PART-1', dimensionality=THREE_D, type=DEFORMABLE_BODY)
+        d = p.datums
+
+        p.BaseSolidRevolve(sketch=s_block, angle=rotate_angle_deg, flipRevolveDirection=OFF)
+
+        xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
+        yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
+        xz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=0.0)
+        x_axis = p.DatumAxisByPrincipalAxis(principalAxis=XAXIS)
+        y_axis = p.DatumAxisByPrincipalAxis(principalAxis=YAXIS)
+        z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
+
+        # 面剖分OUTER-OFFSET
+        # g = s_block_outer_offset.geometry
+        # faces_xz_plane = {}
+        # for i in range(1, index_r):
+        #     faces_xz_plane[i] = []
+        #     for j in range(2, num_geometry + 1):
+        #         pa = (np.array(g[j + num_geometry * (i - 1)].pointOn) + np.array(g[j + num_geometry * i].pointOn)) / 2.0
+        #         faces_xz_plane[i].append(pa)
+        #         s_front_outer_offset.Spot(point=pa)
+        # for i in range(1, index_r):
+        #     for j in range(3, num_geometry + 1):
+        #         pa = g[num_geometry * (i - 1) + j].getVertices()[0].coords
+        #         pb = g[num_geometry * i + j].getVertices()[0].coords
+        #         s_front_outer_offset.Line(point1=pa, point2=pb)
+
+        p_faces = p.faces.getByBoundingBox(-PEN, -PEN, 0, PEN, PEN, TOL)
+        p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_outer_offset)
+
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
             'ellipse_ratio': ellipse_ratio,
@@ -4532,8 +4603,6 @@ if __name__ == "__main__":
         if is_create_p_insulation:
             p_insulation = create_part_insulation(model, 'PART-INSULATION', insulation_dimension)
             print('CREATE PART-INSULATION DONE.')
-
-        s_test = create_sketch_test(model)
 
         z_list_with_gap = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
         index_t_with_gap = 3
