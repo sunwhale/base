@@ -3980,21 +3980,33 @@ def create_sketch_block_outer_offset(model):
     geo_ids = s.geometry.keys()
     geo_list = s.geometry.values()
 
-    for l in [10, 20, 30]:
+    l_list = [0, 10, 20, 30]
+    m = len(l_list) + 1
+    n = len(geo_ids)
+
+    for l in l_list:
         s.offset(distance=l, objectList=geo_list, side=RIGHT)
 
-    n = len(geo_ids)
-    geo_ids = s.geometry.keys()
-    # 计算每份的大小（这里整除）
-    chunk_size = len(geo_ids) // n
     # 列表推导式切分
-    result = [geo_ids[i * chunk_size:(i + 1) * chunk_size] for i in range(n)]
+    geo_group_ids = [s.geometry.keys()[i * n:(i + 1) * n] for i in range(1, m)]
 
-    print(result)
+    from pprint import pprint
+    pprint(geo_group_ids)
+
+    for i in range(m - 2):
+        for j in range(n - 1):
+            index_11 = geo_group_ids[i][j]
+            index_12 = geo_group_ids[i][j + 1]
+            index_21 = geo_group_ids[i + 1][j]
+            index_22 = geo_group_ids[i + 1][j + 1]
+            v1 = find_common_vertices([s.geometry[index_11], s.geometry[index_12]])
+            v2 = find_common_vertices([s.geometry[index_21], s.geometry[index_22]])
+            if v1 != [] and v2 !=[]:
+                s.Line(point1=v1[0], point2=v2[0])
 
     s.setPrimaryObject(option=STANDALONE)
 
-    return s, result
+    return s, geo_group_ids
 
 
 if __name__ == "__main__":
@@ -4407,7 +4419,7 @@ if __name__ == "__main__":
         p = model.Part(name='PART-1', dimensionality=THREE_D, type=DEFORMABLE_BODY)
         d = p.datums
 
-        p.BaseSolidRevolve(sketch=s_block, angle=rotate_angle_deg, flipRevolveDirection=OFF)
+        p.BaseSolidRevolve(sketch=s_block, angle=20.0, flipRevolveDirection=OFF)
 
         xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
         yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
@@ -4433,6 +4445,8 @@ if __name__ == "__main__":
 
         p_faces = p.faces.getByBoundingBox(-PEN, -PEN, 0, PEN, PEN, TOL)
         p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_outer_offset)
+
+        p.setValues(geometryRefinement=EXTRA_FINE)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
