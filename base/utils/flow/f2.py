@@ -3993,6 +3993,7 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list):
     m = len(r_list) + 1
     n = len(origin_geo_ids)
 
+    # 确保朝内侧平移
     side = get_sketch_block_outer_offset_side(model, sketch_name, x_min, x_max, r_list)
 
     for r in r_list:
@@ -4010,8 +4011,12 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list):
             if v1 != [] and v2 != []:
                 s.Line(point1=v1[0], point2=v2[0])
 
-    traction_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * 2] and index < s.geometry.keys()[n * m]]
-    normal_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * m]]
+    if len(s.geometry.keys()) > n * m:
+        traction_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * 2] and index < s.geometry.keys()[n * m]]
+        normal_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * m]]
+    else:
+        traction_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * 2]]
+        normal_geos = []
 
     delete_geo_list = [s.geometry[index] for index in s.geometry.keys() if index < s.geometry.keys()[n * 2]]
     s.delete(objectList=delete_geo_list)
@@ -4052,24 +4057,26 @@ def create_part_block_common(model, part_name, dimension):
     point_rot = rotate_point_around_axis(point, [0, 0, 0], [1, 0, 0], TOL)
 
     # 外轮廓切线剖分
-    sweep_edge = p.edges.findAt(point_rot)
-    partition_edges = []
-    for traction_geo in traction_geos:
-        x, y = traction_geo.pointOn
-        edge_sequence = p.edges.findAt((x, y, 0.0))
-        if edge_sequence is not None:
-            partition_edges.append(edge_sequence)
-    p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
+    if traction_geos != []:
+        sweep_edge = p.edges.findAt(point_rot)
+        partition_edges = []
+        for traction_geo in traction_geos:
+            x, y = traction_geo.pointOn
+            edge_sequence = p.edges.findAt((x, y, 0.0))
+            if edge_sequence is not None:
+                partition_edges.append(edge_sequence)
+        p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # 外轮廓法线剖分
-    sweep_edge = p.edges.findAt(point_rot)
-    partition_edges = []
-    for normal_geo in normal_geos:
-        x, y = normal_geo.pointOn
-        edge_sequence = p.edges.findAt((x, y, 0.0))
-        if edge_sequence is not None:
-            partition_edges.append(edge_sequence)
-    p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
+    if normal_geos != []:
+        sweep_edge = p.edges.findAt(point_rot)
+        partition_edges = []
+        for normal_geo in normal_geos:
+            x, y = normal_geo.pointOn
+            edge_sequence = p.edges.findAt((x, y, 0.0))
+            if edge_sequence is not None:
+                partition_edges.append(edge_sequence)
+        p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     part_partition_block_theta(p, d, n, xy_plane, x_axis, [10, 20, 40])
 
