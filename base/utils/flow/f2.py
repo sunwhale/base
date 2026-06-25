@@ -4040,7 +4040,25 @@ def create_part_block_common(model, part_name, dimension):
             partition_edges.append(edge_sequence)
     p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
+    part_partition_block_theta(p, d, n, xy_plane, x_axis, [10, 20, 40])
+
+    part_partition_block_x(p, d, [10, 20, 40])
+
     p.setValues(geometryRefinement=EXTRA_FINE)
+
+
+def part_partition_block_theta(p, d, n, xy_plane, x_axis, thickness_list):
+    angle = 360.0 / n / 2.0
+    xy_plane_rot = p.DatumPlaneByRotation(plane=d[xy_plane.id], axis=d[x_axis.id], angle=angle)
+    for thickness in thickness_list:
+        cut_plane = p.DatumPlaneByOffset(plane=d[xy_plane_rot.id], flip=SIDE2, offset=thickness)
+        p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
+
+
+def part_partition_block_x(p, d, x_list):
+    for x in x_list:
+        cut_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=x)
+        p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
 
 
 if __name__ == "__main__":
