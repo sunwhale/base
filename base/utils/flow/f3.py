@@ -89,8 +89,8 @@ def create_sketch_cross_section_behind(model, sketch_name, points, index_r, inde
     return s
 
 
-def create_sketch_burn_x0(model, sketch_name, x0, burn_offset=0.0):
-    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0)
+def create_sketch_burn_x0(model, sketch_name, t, x0, burn_offset=0.0):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0, transform=t)
 
     p1 = [0.0, 0.0]
     p2 = [x0 + burn_offset, 0.0]
@@ -101,6 +101,8 @@ def create_sketch_burn_x0(model, sketch_name, x0, burn_offset=0.0):
     s.Line(point1=p2, point2=p3)
     s.Line(point1=p3, point2=p4)
     s.Line(point1=p4, point2=p1)
+
+    s.rotate(centerPoint=(0.0, 0.0), angle=90.0, objectList=s.geometry.values())
 
     return s
 
@@ -3067,12 +3069,10 @@ def part_partition_z(p, d, z_list, is_minus=False):
 
 
 def part_partition_p1p(p, d, p1p):
-    # p1 = [x0 + slot_deep, -slot_ellipse_a]
-    # offset = p1[0] * np.cos(degrees_to_radians(180.0 / n)) - p1[1] * np.sin(degrees_to_radians(180.0 / n))
-    offset = p1p[0]
-    if offset >= p.cells.getBoundingBox()['low'][0]:
-        yz_plane_slot = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=offset)
-        p.PartitionCellByDatumPlane(datumPlane=d[yz_plane_slot.id], cells=p.cells)
+    offset = p1p[1]
+    if offset >= p.cells.getBoundingBox()['low'][1]:
+        xz_plane_slot = p.DatumPlaneByPrincipalPlane(principalPlane=XZPLANE, offset=offset)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane_slot.id], cells=p.cells)
 
 
 def part_partition_rotation(p, d, n, xy_plane, x_axis):
@@ -3935,7 +3935,7 @@ def sketch_split_and_delete(s, given_x_0, given_y_0, given_x_1, given_y_1, x_min
     elif len(touch_geos) == 0 and len(intersect_geos) == 1:
         break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
     elif len(touch_geos) == 2 and len(intersect_geos) == 0:
-        break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
+        pass
 
     s.delete(objectList=[split_line])
 
@@ -3955,7 +3955,7 @@ def create_sketch_block(model, sketch_name, x_min, x_max):
 
 
 def get_sketch_block_outer_offset_side(model, sketch_name, x_min, x_max, r_list):
-    s = model.ConstrainedSketch(name='__profile__', sheetSize=2000.0)
+    s = model.ConstrainedSketch(name='S1', sheetSize=2000.0)
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
     x_min -= 10.0
     x_max += 10.0
@@ -3964,13 +3964,14 @@ def get_sketch_block_outer_offset_side(model, sketch_name, x_min, x_max, r_list)
 
     origin_geo_ids = s.geometry.keys()
     origin_geo_list = s.geometry.values()
-    m = len(r_list) + 1
-    n = len(origin_geo_ids)
+
     y_max_0 = max([v.coords[1] for v in s.vertices.values()])
-    s.offset(distance=1.0, objectList=origin_geo_list, side=LEFT)
+    s.offset(distance=10.0, objectList=origin_geo_list, side=LEFT)
     y_max_1 = max([v.coords[1] for v in s.vertices.values()])
 
-    del model.sketches['__profile__']
+    # del model.sketches['__profile__']
+
+    print(y_max_0, y_max_1)
 
     if y_max_1 < y_max_0:
         return LEFT
@@ -3983,8 +3984,8 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list):
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
     x_min -= 10.0
     x_max += 10.0
-    sketch_split_and_delete(s, given_x_0=x_min, given_y_0=100.0, given_x_1=x_min, given_y_1=2000.0, x_min=x_min, x_max=None)
-    sketch_split_and_delete(s, given_x_0=x_max, given_y_0=100.0, given_x_1=x_max, given_y_1=2000.0, x_min=None, x_max=x_max)
+    sketch_split_and_delete(s, given_x_0=x_min, given_y_0=0.0, given_x_1=x_min, given_y_1=2000.0, x_min=x_min, x_max=None)
+    sketch_split_and_delete(s, given_x_0=x_max, given_y_0=0.0, given_x_1=x_max, given_y_1=2000.0, x_min=None, x_max=x_max)
 
     origin_geo_ids = s.geometry.keys()
     origin_geo_list = s.geometry.values()
@@ -4024,6 +4025,8 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list):
 
 def create_part_block_common(model, part_name, dimension):
     n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
+
+    x_list = z_list
 
     x_min = dimension['x_min']
     x_max = dimension['x_max']
@@ -4077,21 +4080,26 @@ def create_part_block_common(model, part_name, dimension):
                 partition_edges.append(edge_sequence)
         p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
-    part_partition_block_theta(p, d, n, xy_plane, x_axis, [10, 20, 40])
+    part_partition_block_theta(p, d, n, xy_plane, x_axis, [5, 10, 15])
 
-    part_partition_block_x(p, d, [x_min + 10, x_min + 20, x_min + 40, x_max - 10, x_max - 20, x_max - 40])
+
+
+    part_partition_block_x(p, d, [x_min + 5, x_min + 10, x_min + 15, x_max - 5, x_max - 10, x_max - 15])
 
     # 星槽切割
     r_cut = x0 + slot_deep
     t = p.MakeSketchTransform(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
     s_slot, p1p, p2p = create_sketch_slot(model, 'SKETCH-SLOT', t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
-    p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
+    p.CutExtrude(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
     # p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
-    #
-    # # 燃面退移x0
-    # s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, burn_offset)
-    # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
+
+    # 燃面退移x0
+    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', t, x0, burn_offset)
+    p.CutExtrude(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
     # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
+
+    # 星槽剖分
+    part_partition_p1p(p, d, p1p)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -4529,9 +4537,9 @@ if __name__ == "__main__":
             'insert_czm': insert_czm,
             'beta': beta,
             'burn_offset': burn_offset,
-            'x_min': 1000,
+            'x_min': 10,
             'x_max': 1800.0,
-            'r_list': [0, 20, 40, 60]
+            'r_list': [0, 5, 10, 15]
         }
 
         create_part_block_common(model, 'PART-BLOCK-1', block_dimension)
