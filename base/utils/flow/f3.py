@@ -3970,7 +3970,7 @@ def get_sketch_block_outer_offset_side(model, x_min, x_max):
 
     del model.sketches['__profile__']
 
-    if y_max_1 < y_max_0:
+    if y_max_1 <= y_max_0:
         return LEFT
     else:
         return RIGHT
@@ -4025,14 +4025,17 @@ def create_part_block_common(model, part_name, dimension):
 
     x_list = z_list
 
-    print(burn_offset)
-
     x_min = dimension['x_min']
     x_max = dimension['x_max']
     r_list = dimension['r_list']
 
+    x_min = -900
+    x_max = 500
+
+    zoom = 2.0
+
     s_block = create_sketch_block(model, 'SKETCH-BLOCK', x_min, x_max)
-    s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_list)
+    s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_list, zoom)
 
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
@@ -4050,8 +4053,7 @@ def create_part_block_common(model, part_name, dimension):
     p_faces = p.faces.getByBoundingBox(-PEN, -PEN, 0, PEN, PEN, TOL)
     p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_outer_offset)
 
-    right_top_vertex = max(s_block.vertices.values(), key=lambda v: (v.coords[0], v.coords[1]))
-    right_top = right_top_vertex.coords
+    right_top_vertex = max(s_block.vertices.values(), key=lambda v: (v.coords[1], v.coords[0]))
     point = [right_top_vertex.coords[0], right_top_vertex.coords[1], 0.0]
     point_rot = rotate_point_around_axis(point, [0, 0, 0], [1, 0, 0], TOL)
 
@@ -4531,9 +4533,9 @@ if __name__ == "__main__":
             'element_size': element_size,
             'insert_czm': insert_czm,
             'beta': beta,
-            'burn_offset': 300,
-            'x_min': -1000,
-            'x_max': 1800.0,
+            'burn_offset': 0.0,
+            'x_min': -900.0,
+            'x_max': 500.0,
             'r_list': [0, 5, 10, 15]
         }
 
