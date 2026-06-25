@@ -3990,9 +3990,6 @@ def create_sketch_block_outer_offset(model):
     # 列表推导式切分
     geo_group_ids = [s.geometry.keys()[i * n:(i + 1) * n] for i in range(1, m)]
 
-    from pprint import pprint
-    pprint(geo_group_ids)
-
     for i in range(m - 2):
         for j in range(n - 1):
             index_11 = geo_group_ids[i][j]
@@ -4001,12 +3998,16 @@ def create_sketch_block_outer_offset(model):
             index_22 = geo_group_ids[i + 1][j + 1]
             v1 = find_common_vertices([s.geometry[index_11], s.geometry[index_12]])
             v2 = find_common_vertices([s.geometry[index_21], s.geometry[index_22]])
-            if v1 != [] and v2 !=[]:
+            if v1 != [] and v2 != []:
                 s.Line(point1=v1[0], point2=v2[0])
 
-    s.setPrimaryObject(option=STANDALONE)
+    traction_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * 2] and index < s.geometry.keys()[n * m]]
+    normal_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * m]]
 
-    return s, geo_group_ids
+    delete_geo_list = [s.geometry[index] for index in s.geometry.keys() if index < s.geometry.keys()[n * 2]]
+    s.delete(objectList=delete_geo_list)
+
+    return s, traction_geos, normal_geos
 
 
 if __name__ == "__main__":
@@ -4414,7 +4415,7 @@ if __name__ == "__main__":
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
 
         s_block = create_sketch_block(model)
-        s_block_outer_offset, _ = create_sketch_block_outer_offset(model)
+        s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model)
 
         p = model.Part(name='PART-1', dimensionality=THREE_D, type=DEFORMABLE_BODY)
         d = p.datums
@@ -4429,22 +4430,33 @@ if __name__ == "__main__":
         z_axis = p.DatumAxisByPrincipalAxis(principalAxis=ZAXIS)
 
         # 面剖分OUTER-OFFSET
-        # g = s_block_outer_offset.geometry
-        # faces_xz_plane = {}
-        # for i in range(1, index_r):
-        #     faces_xz_plane[i] = []
-        #     for j in range(2, num_geometry + 1):
-        #         pa = (np.array(g[j + num_geometry * (i - 1)].pointOn) + np.array(g[j + num_geometry * i].pointOn)) / 2.0
-        #         faces_xz_plane[i].append(pa)
-        #         s_front_outer_offset.Spot(point=pa)
-        # for i in range(1, index_r):
-        #     for j in range(3, num_geometry + 1):
-        #         pa = g[num_geometry * (i - 1) + j].getVertices()[0].coords
-        #         pb = g[num_geometry * i + j].getVertices()[0].coords
-        #         s_front_outer_offset.Line(point1=pa, point2=pb)
-
         p_faces = p.faces.getByBoundingBox(-PEN, -PEN, 0, PEN, PEN, TOL)
         p.PartitionFaceBySketch(sketchUpEdge=d[y_axis.id], faces=p_faces, sketch=s_block_outer_offset)
+
+        right_top_vertex = max(s_block.vertices.values(), key=lambda v: (v.coords[0], v.coords[1]))
+        right_top = right_top_vertex.coords
+        point = [right_top_vertex.coords[0], right_top_vertex.coords[1], 0.0]
+        point_rot = rotate_point_around_axis(point, [0, 0, 0], [1, 0, 0], TOL)
+
+        # 外轮廓切线剖分
+        sweep_edge = p.edges.findAt(point_rot)
+        partition_edges = []
+        for traction_geo in traction_geos:
+            x, y = traction_geo.pointOn
+            edge_sequence = p.edges.findAt((x, y, 0.0))
+            if edge_sequence is not None:
+                partition_edges.append(edge_sequence)
+        p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
+
+        # 外轮廓法线剖分
+        sweep_edge = p.edges.findAt(point_rot)
+        partition_edges = []
+        for normal_geo in normal_geos:
+            x, y = normal_geo.pointOn
+            edge_sequence = p.edges.findAt((x, y, 0.0))
+            if edge_sequence is not None:
+                partition_edges.append(edge_sequence)
+        p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
         p.setValues(geometryRefinement=EXTRA_FINE)
 
