@@ -5,6 +5,7 @@
 import os
 import sys
 from copy import deepcopy
+from token import LEFTSHIFT
 
 import numpy as np
 
@@ -56,7 +57,7 @@ from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Ellipse, Line2D, Plan
     is_unicode_all_uppercase, json, line_circle_intersection, load_json, major_version, math, min_difference, mirror_y_axis, move_along_direction, part_partition_by_cylinder, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, \
     radians_to_degrees, rotate_point_around_axis, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, string_types, text_type, vertices_in_cells, get_mirror_faces, get_cells_from_faces, get_edges_from_faces
 
-PEN = 1e4
+PEN = 1e5
 TOL = 1e-6
 PENULT_CORRECTION = 1.0
 
@@ -3955,9 +3956,35 @@ def create_sketch_block(model, sketch_name, x_min, x_max):
     return s
 
 
+def get_sketch_block_outer_offset_side(model, sketch_name, x_min, x_max, r_list):
+    s = model.ConstrainedSketch(name='__profile__', sheetSize=2000.0)
+    s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
+    x_min -= 10.0
+    x_max += 10.0
+    sketch_split_and_delete(s, given_x_0=x_min, given_y_0=100.0, given_x_1=x_min, given_y_1=2000.0, x_min=x_min, x_max=None)
+    sketch_split_and_delete(s, given_x_0=x_max, given_y_0=100.0, given_x_1=x_max, given_y_1=2000.0, x_min=None, x_max=x_max)
+
+    origin_geo_ids = s.geometry.keys()
+    origin_geo_list = s.geometry.values()
+    m = len(r_list) + 1
+    n = len(origin_geo_ids)
+    y_max_0 = max([v.coords[1] for v in s.vertices.values()])
+    s.offset(distance=1.0, objectList=origin_geo_list, side=LEFT)
+    y_max_1 = max([v.coords[1] for v in s.vertices.values()])
+
+    del model.sketches['__profile__']
+
+    if y_max_1 < y_max_0:
+        return LEFT
+    else:
+        return RIGHT
+
+
 def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
+    x_min -= 10.0
+    x_max += 10.0
     sketch_split_and_delete(s, given_x_0=x_min, given_y_0=100.0, given_x_1=x_min, given_y_1=2000.0, x_min=x_min, x_max=None)
     sketch_split_and_delete(s, given_x_0=x_max, given_y_0=100.0, given_x_1=x_max, given_y_1=2000.0, x_min=None, x_max=x_max)
 
@@ -3966,8 +3993,10 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list):
     m = len(r_list) + 1
     n = len(origin_geo_ids)
 
+    side = get_sketch_block_outer_offset_side(model, sketch_name, x_min, x_max, r_list)
+
     for r in r_list:
-        s.offset(distance=r, objectList=origin_geo_list, side=RIGHT)
+        s.offset(distance=r, objectList=origin_geo_list, side=side)
 
     traction_geo_group_ids = [s.geometry.keys()[i * n:(i + 1) * n] for i in range(1, m)]
     for i in range(m - 2):
@@ -3995,6 +4024,8 @@ def create_part_block_common(model, part_name, dimension):
     x_min = dimension['x_min']
     x_max = dimension['x_max']
     r_list = dimension['r_list']
+
+    burn_offset = 0.0
 
     s_block = create_sketch_block(model, 'SKETCH-BLOCK', x_min, x_max)
     s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_list)
@@ -4042,7 +4073,12 @@ def create_part_block_common(model, part_name, dimension):
 
     part_partition_block_theta(p, d, n, xy_plane, x_axis, [10, 20, 40])
 
-    part_partition_block_x(p, d, [10, 20, 40])
+    part_partition_block_x(p, d, [x_max - 10, x_max - 20, x_max - 40])
+
+    # # 燃面退移x0
+    # s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', x0, burn_offset)
+    # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
+    # p.CutExtrude(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -4466,11 +4502,10 @@ if __name__ == "__main__":
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
         block_dimension = {
             'n': n,
-            'x_min': -900.0,
-            'x_max': 800.0,
+            'x_min': 1000,
+            'x_max': 1800.0,
             'r_list': [0, 20, 40, 60]
         }
-
         create_part_block_common(model, 'PART-BLOCK-1', block_dimension)
 
         shell_dimension = {
