@@ -3837,22 +3837,63 @@ def compare_lists(old_list, new_list):
     return sorted(removed), sorted(added)
 
 
-def find_common_vertices(geo_list, mode='all', tol=1e-6):
+def find_common_vertices(geo_list1, mode='all', tol=1e-6, geo_list2=None):
     """
     查找几何列表中的共同顶点。
 
     参数:
-        geo_list: 几何对象列表（应有 getVertices() 方法）
-        mode:     'all'  → 返回所有几何都共有的顶点（交集）
-                  'shared' → 返回被两个及以上几何共享的顶点（及对应的几何列表）
-        tol:      浮点容差，用于坐标比较
+        geo_list1: 几何对象列表（应有 getVertices() 方法）
+        mode:     当仅传入一个列表时有效：
+                   'all'    → 返回所有几何都共有的顶点（交集）
+                   'shared' → 返回被两个及以上几何共享的顶点（及对应的几何列表）
+        tol:       浮点容差，用于坐标比较
+        geo_list2: 可选，第二个几何对象列表。若提供，则返回两个列表顶点集合的交集
 
     返回:
-        mode='all' : list of tuple (x, y) 共有的顶点坐标（可能为空）
-        mode='shared': dict { (x,y): [geo1, geo2, ...] } 仅包含共享次数≥2的项
+        两个列表时：list of tuple (x, y) 共同顶点坐标（去重，按容差合并）
+        单列表时：根据 mode 返回相应结果
     """
+    # ---------- 两个列表的情况 ----------
+    if geo_list2 is not None:
+        def collect_vertices(geo_list):
+            """收集列表中所有几何的顶点，按容差去重"""
+            vertices = []  # 存储去重后的坐标元组
+            for geo in geo_list:
+                verts = geo.getVertices()
+                if geo.curveType == LINE:
+                    pass
+                elif geo.curveType == ARC:
+                    verts = verts[:2]  # 只取端点
+                else:
+                    pass
+                for v in verts:
+                    coord = (v.coords[0], v.coords[1])
+                    # 检查是否已存在（容差内）
+                    exists = False
+                    for c in vertices:
+                        if abs(c[0] - coord[0]) <= tol and abs(c[1] - coord[1]) <= tol:
+                            exists = True
+                            break
+                    if not exists:
+                        vertices.append(coord)
+            return vertices
+
+        list1_verts = collect_vertices(geo_list1)
+        list2_verts = collect_vertices(geo_list2)
+
+        # 求交集（容差比较）
+        common = []
+        for p1 in list1_verts:
+            for p2 in list2_verts:
+                if abs(p1[0] - p2[0]) <= tol and abs(p1[1] - p2[1]) <= tol:
+                    common.append(p1)  # 使用 p1 作为代表坐标
+                    break
+        return common
+
+    # ---------- 原有单列表逻辑 ----------
+    geo_list = geo_list1
     # 第一步：收集所有几何的顶点坐标集合（已去重）
-    geo_vertex_sets = []  # 每个几何的顶点坐标集合（元组列表）
+    geo_vertex_sets = []  # 每个几何的顶点坐标集合（set of tuples）
     for geo in geo_list:
         verts = geo.getVertices()
         if geo.curveType == LINE:
@@ -3861,13 +3902,9 @@ def find_common_vertices(geo_list, mode='all', tol=1e-6):
             verts = verts[:2]
         else:
             pass
-        # 将坐标转为元组，并按容差分组去重（同一几何内可能重复，但通常不会）
         coords_set = []
         for v in verts:
-            # 粗略去重：如果该坐标已存在于该几何的集合中则跳过
-            # 更严谨可遍历比较容差
-            coord = (v.coords[0], v.coords[1])  # 假设2D
-            # 检查是否已存在（容差内）
+            coord = (v.coords[0], v.coords[1])
             exists = False
             for c in coords_set:
                 if abs(c[0] - coord[0]) <= tol and abs(c[1] - coord[1]) <= tol:
@@ -3875,16 +3912,14 @@ def find_common_vertices(geo_list, mode='all', tol=1e-6):
                     break
             if not exists:
                 coords_set.append(coord)
-        geo_vertex_sets.append(set(coords_set))  # 转为集合以便求交
+        geo_vertex_sets.append(set(coords_set))
 
     if mode == 'all':
-        # 求所有集合的交集
         common = set.intersection(*geo_vertex_sets) if geo_vertex_sets else set()
         return list(common)
 
     elif mode == 'shared':
-        # 统计每个顶点出现在哪些几何中
-        vertex_geo_map = {}  # coord_tuple -> list of geo indices or geo objects
+        vertex_geo_map = {}
         for idx, geo in enumerate(geo_list):
             verts = geo.getVertices()
             if geo.curveType == LINE:
@@ -3895,7 +3930,6 @@ def find_common_vertices(geo_list, mode='all', tol=1e-6):
                 pass
             for v in verts:
                 coord = (v.coords[0], v.coords[1])
-                # 使用容差查找已有的键（因为浮点数可能微小差异）
                 found_key = None
                 for key in vertex_geo_map.keys():
                     if abs(key[0] - coord[0]) <= tol and abs(key[1] - coord[1]) <= tol:
@@ -3904,12 +3938,9 @@ def find_common_vertices(geo_list, mode='all', tol=1e-6):
                 if found_key is None:
                     vertex_geo_map[coord] = [geo]
                 else:
-                    # 避免同一个几何在该顶点重复添加（如果getVertices返回重复端点？）
                     if geo not in vertex_geo_map[found_key]:
                         vertex_geo_map[found_key].append(geo)
-        # 过滤出共享次数≥2的
         shared = {k: v for k, v in vertex_geo_map.items() if len(v) >= 2}
-
         return shared
 
 
@@ -4055,12 +4086,27 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
     else:
         middle_geos_traction_ids = []
 
-    traction_geos = [s.geometry[index] for index in front_geos_traction_ids] + [s.geometry[index] for index in behind_geos_traction_ids] + [s.geometry[index] for index in middle_geos_traction_ids]
-    normal_geos = [s.geometry[index] for index in front_geos_normal_ids] + [s.geometry[index] for index in behind_geos_normal_ids]
+    if front_geos != [] and middle_geos != []:
+        length_2 = len(s.geometry.keys())
+        vertice = []
+        for i in range(m):
+            geo_list1 = [s.geometry[index] for index in front_geos_traction_group_ids[i]]
+            geo_list2 = [s.geometry[index] for index in middle_geos_traction_group_ids[i]]
+            v = find_common_vertices(geo_list1=geo_list1, geo_list2=geo_list2)
+            if len(v) == 1:
+                vertice.append(v[0])
+        for i in range(len(vertice) - 1):
+            s.Line(point1=vertice[i], point2=vertice[i + 1])
+        inter_geos_normal_ids = s.geometry.keys()[length_2:]
 
-    delete_geo_list = [s.geometry[index] for index in s.geometry.keys() if index not in front_geos_traction_ids + behind_geos_traction_ids + middle_geos_traction_ids + front_geos_normal_ids + behind_geos_normal_ids]
+    traction_geos = [s.geometry[index] for index in front_geos_traction_ids] + [s.geometry[index] for index in behind_geos_traction_ids] + [s.geometry[index] for index in middle_geos_traction_ids]
+    normal_geos = [s.geometry[index] for index in front_geos_normal_ids] + [s.geometry[index] for index in behind_geos_normal_ids] + [s.geometry[index] for index in inter_geos_normal_ids]
+
+    delete_geo_list = [geo for geo in s.geometry.values() if geo not in traction_geos + normal_geos]
     s.delete(objectList=delete_geo_list)
+
     s.setPrimaryObject(option=STANDALONE)
+
     return s, traction_geos, normal_geos
 
 
