@@ -4086,6 +4086,7 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
     else:
         middle_geos_traction_ids = []
 
+    # 头部和中部相邻点增加法向连接线段
     if front_geos != [] and middle_geos != []:
         length_2 = len(s.geometry.keys())
         vertice = []
@@ -4097,10 +4098,28 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
                 vertice.append(v[0])
         for i in range(len(vertice) - 1):
             s.Line(point1=vertice[i], point2=vertice[i + 1])
-        inter_geos_normal_ids = s.geometry.keys()[length_2:]
+        front_middle_geos_normal_ids = s.geometry.keys()[length_2:]
+    else:
+        front_middle_geos_normal_ids = []
 
-    traction_geos = [s.geometry[index] for index in front_geos_traction_ids] + [s.geometry[index] for index in behind_geos_traction_ids] + [s.geometry[index] for index in middle_geos_traction_ids]
-    normal_geos = [s.geometry[index] for index in front_geos_normal_ids] + [s.geometry[index] for index in behind_geos_normal_ids] + [s.geometry[index] for index in inter_geos_normal_ids]
+    # 尾部和中部相邻点增加法向连接线段
+    if behind_geos != [] and middle_geos != []:
+        length_2 = len(s.geometry.keys())
+        vertice = []
+        for i in range(m):
+            geo_list1 = [s.geometry[index] for index in behind_geos_traction_group_ids[i]]
+            geo_list2 = [s.geometry[index] for index in middle_geos_traction_group_ids[i]]
+            v = find_common_vertices(geo_list1=geo_list1, geo_list2=geo_list2)
+            if len(v) == 1:
+                vertice.append(v[0])
+        for i in range(len(vertice) - 1):
+            s.Line(point1=vertice[i], point2=vertice[i + 1])
+        behind_middle_geos_normal_ids = s.geometry.keys()[length_2:]
+    else:
+        behind_middle_geos_normal_ids = []
+
+    traction_geos = [s.geometry[index] for index in front_geos_traction_ids + behind_geos_traction_ids + middle_geos_traction_ids]
+    normal_geos = [s.geometry[index] for index in front_geos_normal_ids + behind_geos_normal_ids + front_middle_geos_normal_ids + behind_middle_geos_normal_ids]
 
     delete_geo_list = [geo for geo in s.geometry.values() if geo not in traction_geos + normal_geos]
     s.delete(objectList=delete_geo_list)
@@ -4123,7 +4142,7 @@ def create_part_block_common(model, part_name, dimension):
     print(r_cut)
 
     x_min = -900
-    x_max = 1000
+    x_max = 18000
     r_list = [0, 5, 10, 300]
 
     zoom = 2.0
