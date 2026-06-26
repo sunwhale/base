@@ -541,6 +541,38 @@ def create_sketch_block_inner(model, sketch_name, x0, slot_deep, slot_ellipse_b,
     return s, p3
 
 
+def create_sketch_block_inner_burn(model, sketch_name, x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
+    r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
+    r_front = x0 + burn_offset
+
+    p1 = [p0_behind[0] + l_c1_c2, r_behind]
+    p2 = [l_c1_c2 - l_block_behind, r_behind]
+    l1 = Line2D(p2, np.tan(degrees_to_radians(22.5)))
+    l2 = Line2D([p2[0] - 2.0 * slot_ellipse_b, 0.0], [p2[0] - 2.0 * slot_ellipse_b, 1.0])
+    p3 = l1.get_intersection(l2)
+    l3 = Line2D(p3, np.tan(degrees_to_radians(45.0)))
+    l4 = Line2D([0.0, r_front], [1.0, r_front])
+    p4 = l3.get_intersection(l4)
+    p5 = [p0_front[0], r_front]
+    p0 = [p1[0], 0.0]
+    p6 = [p5[0], 0.0]
+
+    s.Line(point1=p0, point2=p1)
+    s.Line(point1=p1, point2=p2)
+    s.Line(point1=p2, point2=p3)
+    s.Line(point1=p3, point2=p4)
+    s.Line(point1=p4, point2=p5)
+    s.Line(point1=p5, point2=p6)
+    s.Line(point1=p6, point2=p0)
+
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+
+    s.Spot(point=p3)
+
+    return s, p3
+
+
 def get_local_variables_common(dimension):
     n = dimension['n']
     z_list = dimension['z_list']
@@ -4235,6 +4267,8 @@ def create_part_block_common(model, part_name, dimension):
     part_partition_block_x(p, d, [ref_point[0], l_c1_c2 - l_block_behind])
     # part_partition_block_x(p, d, [x_min + 5, x_min + 10, x_min + 15, x_max - 5, x_max - 10, x_max - 15])
 
+    p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-INNER-BURN'], angle=360.0, flipRevolveDirection=OFF)
+
     p.setValues(geometryRefinement=EXTRA_FINE)
 
 
@@ -4649,12 +4683,14 @@ if __name__ == "__main__":
         model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
         l_block_behind = 2000.0
-        s_block_inner, ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind)
+        s_block_inner, ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, 0.0, l_c1_c2, l_block_behind, p0_front, p0_behind)
 
-        s_block_outer = create_sketch_block_outer(model, 'SKETCH-BLOCK-OUTER', x0, burn_offset, slot_deep, slot_ellipse_b, shell_insulation_r_in,
+        s_block_outer = create_sketch_block_outer(model, 'SKETCH-BLOCK-OUTER', x0, 0.0, slot_deep, slot_ellipse_b, shell_insulation_r_in,
                                                   p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front,
                                                   p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind,
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
+
+        s_block_inner_burn, ref_point_burn = create_sketch_block_inner_burn(model, 'SKETCH-BLOCK-INNER-BURN', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind)
 
         block_dimension = {
             'n': n,
@@ -4670,7 +4706,7 @@ if __name__ == "__main__":
             'element_size': element_size,
             'insert_czm': insert_czm,
             'beta': beta,
-            'burn_offset': 100.0,
+            'burn_offset': burn_offset,
             'x_min': -900.0,
             'x_max': 500.0,
             'r_list': [0, 5, 10, 15],
