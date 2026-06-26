@@ -3996,8 +3996,9 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
     front_geos = find_geos_in_xy_interval(s.geometry.values(), x_min=None, x_max=0, include_x_min=True, include_x_max=True)
     behind_geos = find_geos_in_xy_interval(s.geometry.values(), x_min=l_c1_c2, x_max=None, include_x_min=True, include_x_max=True)
 
-    length_1 = len(s.geometry.keys())
+    # 头部
     if front_geos != []:
+        length_1 = len(s.geometry.keys())
         for r in r_list:
             s.offset(distance=r, objectList=front_geos, side=RIGHT)
         n = len(front_geos)
@@ -4019,6 +4020,7 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
         front_geos_traction_ids = []
         front_geos_normal_ids = []
 
+    # 尾部
     if behind_geos != []:
         length_1 = len(s.geometry.keys())
         for r in r_list:
@@ -4042,11 +4044,14 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
         behind_geos_traction_ids = []
         behind_geos_normal_ids = []
 
+    # 中部
     if middle_geos != []:
         length_1 = len(s.geometry.keys())
         for r in r_list:
             s.copyMove(vector=(0.0, -r), objectList=middle_geos)
+        n = len(middle_geos)
         middle_geos_traction_ids = s.geometry.keys()[length_1:]
+        middle_geos_traction_group_ids = [middle_geos_traction_ids[i * n:(i + 1) * n] for i in range(0, m)]
     else:
         middle_geos_traction_ids = []
 
