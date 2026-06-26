@@ -4141,6 +4141,7 @@ def create_part_block_common(model, part_name, dimension):
     x_max = dimension['x_max']
     r_list = dimension['r_list']
     r_cut = dimension['r_cut']
+    l_block_behind = dimension['l_block_behind']
     ref_point = dimension['ref_point']
 
     print(r_cut)
@@ -4231,7 +4232,7 @@ def create_part_block_common(model, part_name, dimension):
         p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
     part_partition_block_x(p, d, [v[0] for v in middle_common_vertices])
-    part_partition_block_x(p, d, [ref_point[0], l_c1_c2-3000])
+    part_partition_block_x(p, d, [ref_point[0], l_c1_c2 - l_block_behind])
     # part_partition_block_x(p, d, [x_min + 5, x_min + 10, x_min + 15, x_max - 5, x_max - 10, x_max - 15])
 
     p.setValues(geometryRefinement=EXTRA_FINE)
@@ -4647,7 +4648,7 @@ if __name__ == "__main__":
         model.interactionProperties['IntProp-1'].CohesiveBehavior(defaultPenalties=OFF, table=((1000000.0, 1000000.0, 1000000.0),))
         model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
-        l_block_behind = 3000.0
+        l_block_behind = 2000.0
         s_block_inner, ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind)
 
         s_block_outer = create_sketch_block_outer(model, 'SKETCH-BLOCK-OUTER', x0, burn_offset, slot_deep, slot_ellipse_b, shell_insulation_r_in,
@@ -4669,11 +4670,12 @@ if __name__ == "__main__":
             'element_size': element_size,
             'insert_czm': insert_czm,
             'beta': beta,
-            'burn_offset': 0.0,
+            'burn_offset': 100.0,
             'x_min': -900.0,
             'x_max': 500.0,
             'r_list': [0, 5, 10, 15],
             'r_cut': r_cut_front,
+            'l_block_behind': l_block_behind,
             'ref_point': ref_point
         }
 
