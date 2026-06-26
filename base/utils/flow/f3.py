@@ -520,7 +520,7 @@ def create_sketch_block_inner(model, sketch_name, x0, slot_deep, slot_ellipse_b,
     r_front = x0 + burn_offset
 
     p1 = [p0_behind[0] + l_c1_c2, r_behind]
-    p2 = [p0_behind[0] + l_c1_c2 - l_block_behind, r_behind]
+    p2 = [l_c1_c2 - l_block_behind, r_behind]
     l1 = Line2D(p2, np.tan(degrees_to_radians(22.5)))
     l2 = Line2D([p2[0] - 2.0 * slot_ellipse_b, 0.0], [p2[0] - 2.0 * slot_ellipse_b, 1.0])
     p3 = l1.get_intersection(l2)
@@ -536,7 +536,9 @@ def create_sketch_block_inner(model, sketch_name, x0, slot_deep, slot_ellipse_b,
 
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
 
-    return s
+    s.Spot(point=p3)
+
+    return s, p3
 
 
 def get_local_variables_common(dimension):
@@ -4026,6 +4028,7 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
     middle_geos = find_geos_in_xy_interval(s.geometry.values(), x_min=0, x_max=l_c1_c2, include_x_min=True, include_x_max=True)
     front_geos = find_geos_in_xy_interval(s.geometry.values(), x_min=None, x_max=0, include_x_min=True, include_x_max=True)
     behind_geos = find_geos_in_xy_interval(s.geometry.values(), x_min=l_c1_c2, x_max=None, include_x_min=True, include_x_max=True)
+    middle_common_vertices = find_common_vertices(middle_geos, mode='shared').keys()
 
     # 头部
     if front_geos != []:
@@ -4126,7 +4129,7 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
 
     s.setPrimaryObject(option=STANDALONE)
 
-    return s, traction_geos, normal_geos
+    return s, traction_geos, normal_geos, middle_common_vertices
 
 
 def create_part_block_common(model, part_name, dimension):
@@ -4138,17 +4141,17 @@ def create_part_block_common(model, part_name, dimension):
     x_max = dimension['x_max']
     r_list = dimension['r_list']
     r_cut = dimension['r_cut']
+    ref_point = dimension['ref_point']
 
     print(r_cut)
 
-    x_min = -900
-    x_max = 18000
+    x_min = -849.5
+    x_max = 20000
     r_list = [0, 5, 10, 300]
-
     zoom = 2.0
 
     s_block = create_sketch_block(model, 'SKETCH-BLOCK', x_min, x_max)
-    s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_list, l_c1_c2, zoom)
+    s_block_outer_offset, traction_geos, normal_geos, middle_common_vertices = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_list, l_c1_c2, zoom)
 
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
@@ -4195,8 +4198,6 @@ def create_part_block_common(model, part_name, dimension):
     part_partition_block_theta(p, d, n, xy_plane, x_axis, [5, 10, 15])
     front_offset = 350.0
 
-    # part_partition_block_x(p, d, [x_min + 5, x_min + 10, x_min + 15, x_max - 5, x_max - 10, x_max - 15])
-
     # 星槽切割
     yz_plane_front_offset = p.DatumPlaneByOffset(plane=d[yz_plane.id], flip=SIDE1, offset=front_offset)
     t = p.MakeSketchTransform(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(front_offset, 0.0, 0.0))
@@ -4228,6 +4229,10 @@ def create_part_block_common(model, part_name, dimension):
         p_edges.append(edge)
     if p_edges:
         p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
+
+    part_partition_block_x(p, d, [v[0] for v in middle_common_vertices])
+    part_partition_block_x(p, d, [ref_point[0], l_c1_c2-3000])
+    # part_partition_block_x(p, d, [x_min + 5, x_min + 10, x_min + 15, x_max - 5, x_max - 10, x_max - 15])
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -4643,7 +4648,7 @@ if __name__ == "__main__":
         model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
         l_block_behind = 3000.0
-        s_block_inner = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind)
+        s_block_inner, ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind)
 
         s_block_outer = create_sketch_block_outer(model, 'SKETCH-BLOCK-OUTER', x0, burn_offset, slot_deep, slot_ellipse_b, shell_insulation_r_in,
                                                   p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front,
@@ -4668,7 +4673,8 @@ if __name__ == "__main__":
             'x_min': -900.0,
             'x_max': 500.0,
             'r_list': [0, 5, 10, 15],
-            'r_cut': r_cut_front
+            'r_cut': r_cut_front,
+            'ref_point': ref_point
         }
 
         create_part_block_common(model, 'PART-BLOCK-1', block_dimension)
