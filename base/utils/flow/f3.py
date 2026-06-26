@@ -3982,7 +3982,7 @@ def get_sketch_block_outer_offset_side(model, x_min, x_max):
         return RIGHT
 
 
-def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, zoom=10.0):
+def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l_c1_c2, zoom=10.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
     x_min -= zoom
@@ -3992,36 +3992,58 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, z
 
     origin_geo_ids = s.geometry.keys()
     origin_geo_list = s.geometry.values()
-    m = len(r_list) + 1
-    n = len(origin_geo_ids)
+    m = len(r_list)
 
-    # 确保朝内侧平移
-    side = get_sketch_block_outer_offset_side(model, x_min, x_max)
+    translate_geos = find_geos_in_xy_interval(s.geometry.values(), x_min=0, x_max=l_c1_c2, include_x_min=True, include_x_max=True)
+    front_geos = find_geos_in_xy_interval(s.geometry.values(), x_min=None, x_max=0, include_x_min=True, include_x_max=True)
+    behind_geos = find_geos_in_xy_interval(s.geometry.values(), x_min=l_c1_c2, x_max=None, include_x_min=True, include_x_max=True)
 
+    length_1 = len(s.geometry.keys())
     for r in r_list:
-        s.offset(distance=r, objectList=origin_geo_list, side=side)
-
-    traction_geo_group_ids = [s.geometry.keys()[i * n:(i + 1) * n] for i in range(1, m)]
-    for i in range(m - 2):
+        s.offset(distance=r, objectList=front_geos, side=RIGHT)
+    n = len(front_geos)
+    front_geos_traction_group_ids = [s.geometry.keys()[length_1:][i * n:(i + 1) * n] for i in range(0, m)]
+    for i in range(m - 1):
         for j in range(n - 1):
-            index_11 = traction_geo_group_ids[i][j]
-            index_12 = traction_geo_group_ids[i][j + 1]
-            index_21 = traction_geo_group_ids[i + 1][j]
-            index_22 = traction_geo_group_ids[i + 1][j + 1]
+            index_11 = front_geos_traction_group_ids[i][j]
+            index_12 = front_geos_traction_group_ids[i][j + 1]
+            index_21 = front_geos_traction_group_ids[i + 1][j]
+            index_22 = front_geos_traction_group_ids[i + 1][j + 1]
             v1 = find_common_vertices([s.geometry[index_11], s.geometry[index_12]])
             v2 = find_common_vertices([s.geometry[index_21], s.geometry[index_22]])
             if v1 != [] and v2 != []:
                 s.Line(point1=v1[0], point2=v2[0])
 
-    if len(s.geometry.keys()) > n * m:
-        traction_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * 2] and index < s.geometry.keys()[n * m]]
-        normal_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * m]]
-    else:
-        traction_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * 2]]
-        normal_geos = []
+    # if len(s.geometry.keys()) > n * m:
+    #     traction_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * 2] and index < s.geometry.keys()[n * m]]
+    #     normal_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * m]]
+    # else:
+    #     traction_geos = [s.geometry[index] for index in s.geometry.keys() if index >= s.geometry.keys()[n * 2]]
+    #     normal_geos = []
+    #
+    # delete_geo_list = [s.geometry[index] for index in s.geometry.keys() if index < s.geometry.keys()[n * 2]]
+    # s.delete(objectList=delete_geo_list)
 
-    delete_geo_list = [s.geometry[index] for index in s.geometry.keys() if index < s.geometry.keys()[n * 2]]
-    s.delete(objectList=delete_geo_list)
+    length_1 = len(s.geometry.keys())
+    for r in r_list:
+        s.offset(distance=r, objectList=behind_geos, side=LEFT)
+    n = len(behind_geos)
+    behind_geos_traction_group_ids = [s.geometry.keys()[length_1:][i * n:(i + 1) * n] for i in range(0, m)]
+    for i in range(m - 1):
+        for j in range(n - 1):
+            index_11 = behind_geos_traction_group_ids[i][j]
+            index_12 = behind_geos_traction_group_ids[i][j + 1]
+            index_21 = behind_geos_traction_group_ids[i + 1][j]
+            index_22 = behind_geos_traction_group_ids[i + 1][j + 1]
+            v1 = find_common_vertices([s.geometry[index_11], s.geometry[index_12]])
+            v2 = find_common_vertices([s.geometry[index_21], s.geometry[index_22]])
+            if v1 != [] and v2 != []:
+                s.Line(point1=v1[0], point2=v2[0])
+
+    for r in r_list:
+        s.copyMove(vector=(0.0, -r), objectList=translate_geos)
+
+    s.setPrimaryObject(option=STANDALONE)
 
     return s, traction_geos, normal_geos
 
@@ -4039,13 +4061,13 @@ def create_part_block_common(model, part_name, dimension):
     print(r_cut)
 
     x_min = -900
-    x_max = 500
+    x_max = 19500
     r_list = [0, 5, 10, 300]
 
     zoom = 2.0
 
     s_block = create_sketch_block(model, 'SKETCH-BLOCK', x_min, x_max)
-    s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_list, zoom)
+    s_block_outer_offset, traction_geos, normal_geos = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_list, l_c1_c2, zoom)
 
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
