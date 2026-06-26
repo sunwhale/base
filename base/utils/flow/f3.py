@@ -4176,10 +4176,8 @@ def create_part_block_common(model, part_name, dimension):
     l_block_behind = dimension['l_block_behind']
     ref_point = dimension['ref_point']
 
-    print(r_cut)
-
-    x_min = -1000
-    x_max = 20000
+    x_min = 14000
+    x_max = 16000
     r_list = [0, 5, 10, 300]
     zoom = 2.0
 
@@ -4243,31 +4241,25 @@ def create_part_block_common(model, part_name, dimension):
     p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
     p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
 
-    # 星槽剖分
-    # part_partition_p1p(p, d, p1p)
 
     # 星槽剖分
-    # 拾取星槽切割后的轮廓曲线
     p_edges = []
-    edge = p.edges.findAt((front_offset + 1.0, p1p[1], -p1p[0]))
+    edge = p.edges.findAt((x_max-1.0, p1p[1], -p1p[0]))
     if edge is not None:
         p_edges.append(edge)
-    p.DatumPointByCoordinate(coords=(front_offset + 1.0, p1p[1], -p1p[0]))
 
     point = rotate_point_around_axis((front_offset, p1p[1], -p1p[0]), (front_offset, p3p[1], -p3p[0]), (front_offset, p4p[1], -p4p[0]), 1.0)
     p.DatumPointByCoordinate(coords=point)
-
     edge = p.edges.findAt(point)
     if edge is not None:
         p_edges.append(edge)
+
     if p_edges:
         p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
     x_list = [v[0] for v in middle_common_vertices] + [front_offset, ref_point[0], l_c1_c2 - l_block_behind]
     x_list = [x for x in x_list if x_min <= x <= x_max]
     part_partition_block_x(p, d, x_list)
-
-    # part_partition_block_x(p, d, [x_min + 5, x_min + 10, x_min + 15, x_max - 5, x_max - 10, x_max - 15])
 
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-INNER-BURN'], angle=360.0, flipRevolveDirection=OFF)
 
