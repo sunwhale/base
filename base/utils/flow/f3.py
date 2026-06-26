@@ -4178,7 +4178,7 @@ def create_part_block_common(model, part_name, dimension):
 
     print(r_cut)
 
-    x_min = -849.5
+    x_min = -1000
     x_max = 20000
     r_list = [0, 5, 10, 300]
     zoom = 2.0
@@ -4263,8 +4263,10 @@ def create_part_block_common(model, part_name, dimension):
     if p_edges:
         p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
-    part_partition_block_x(p, d, [v[0] for v in middle_common_vertices])
-    part_partition_block_x(p, d, [ref_point[0], l_c1_c2 - l_block_behind])
+    x_list = [v[0] for v in middle_common_vertices] + [front_offset, ref_point[0], l_c1_c2 - l_block_behind]
+    x_list = [x for x in x_list if x_min <= x <= x_max]
+    part_partition_block_x(p, d, x_list)
+
     # part_partition_block_x(p, d, [x_min + 5, x_min + 10, x_min + 15, x_max - 5, x_max - 10, x_max - 15])
 
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-INNER-BURN'], angle=360.0, flipRevolveDirection=OFF)
@@ -4283,7 +4285,10 @@ def part_partition_block_theta(p, d, n, xy_plane, x_axis, thickness_list):
 def part_partition_block_x(p, d, x_list):
     for x in x_list:
         cut_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=x)
-        p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
+        try:
+            p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
+        except:
+            print('Failed of function part_partition_block_x with x=%s' % x)
 
 
 if __name__ == "__main__":
