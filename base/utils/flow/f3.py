@@ -4123,19 +4123,21 @@ def create_part_block_common(model, part_name, dimension):
         p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     part_partition_block_theta(p, d, n, xy_plane, x_axis, [5, 10, 15])
+    front_offset = 350.0
 
     # part_partition_block_x(p, d, [x_min + 5, x_min + 10, x_min + 15, x_max - 5, x_max - 10, x_max - 15])
 
     # 星槽切割
-    t = p.MakeSketchTransform(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(0.0, 0.0, 0.0))
+    yz_plane_front_offset = p.DatumPlaneByOffset(plane=d[yz_plane.id], flip=SIDE1, offset=front_offset)
+    t = p.MakeSketchTransform(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(front_offset, 0.0, 0.0))
     s_slot, p1p, p2p, p3p, p4p = create_sketch_slot(model, 'SKETCH-SLOT', t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
-    p.CutExtrude(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
-    p.CutRevolve(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
+    p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
+    p.CutRevolve(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
 
     # 燃面退移x0
     s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', t, x0, burn_offset)
-    p.CutExtrude(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
-    p.CutExtrude(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
+    p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
+    p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
 
     # 星槽剖分
     # part_partition_p1p(p, d, p1p)
@@ -4143,12 +4145,12 @@ def create_part_block_common(model, part_name, dimension):
     # 星槽剖分
     # 拾取星槽切割后的轮廓曲线
     p_edges = []
-    edge = p.edges.findAt((1.0, p1p[1], -p1p[0]))
+    edge = p.edges.findAt((front_offset + 1.0, p1p[1], -p1p[0]))
     if edge is not None:
         p_edges.append(edge)
-    p.DatumPointByCoordinate(coords=(1.0, p1p[1], -p1p[0]))
+    p.DatumPointByCoordinate(coords=(front_offset + 1.0, p1p[1], -p1p[0]))
 
-    point = rotate_point_around_axis((0.0, p1p[1], -p1p[0]), (0.0, p3p[1], -p3p[0]), (0.0, p4p[1], -p4p[0]), 1.0)
+    point = rotate_point_around_axis((front_offset, p1p[1], -p1p[0]), (front_offset, p3p[1], -p3p[0]), (front_offset, p4p[1], -p4p[0]), 1.0)
     p.DatumPointByCoordinate(coords=point)
 
     edge = p.edges.findAt(point)
