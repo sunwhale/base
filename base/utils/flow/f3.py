@@ -4167,8 +4167,7 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
 def create_part_block_common(model, part_name, dimension):
     n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
-    x_list = z_list
-
+    x_list = dimension['x_list']
     x_min = dimension['x_min']
     x_max = dimension['x_max']
     r_list = dimension['r_list']
@@ -4176,9 +4175,10 @@ def create_part_block_common(model, part_name, dimension):
     l_block_behind = dimension['l_block_behind']
     ref_point = dimension['ref_point']
 
-    x_min = 14000
-    x_max = 16000
+    x_min = 8000
+    x_max = 9000
     r_list = [0, 5, 10, 300]
+    x_list = [1000, 1008, 1010]
     zoom = 2.0
 
     s_block = create_sketch_block(model, 'SKETCH-BLOCK', x_min, x_max)
@@ -4244,26 +4244,30 @@ def create_part_block_common(model, part_name, dimension):
 
     # 星槽剖分
     p_edges = []
-    edge = p.edges.findAt((x_max-1.0, p1p[1], -p1p[0]))
+    # edge = p.edges.findAt((front_offset + 1.0, p1p[1], -p1p[0]))
+    edge  = p.edges.getByBoundingBox(front_offset - 1.0, p1p[1], -p1p[0], l_c1_c2, p1p[1], -p1p[0])[0]
     if edge is not None:
         p_edges.append(edge)
 
-    point = rotate_point_around_axis((front_offset, p1p[1], -p1p[0]), (front_offset, p3p[1], -p3p[0]), (front_offset, p4p[1], -p4p[0]), 1.0)
-    p.DatumPointByCoordinate(coords=point)
-    edge = p.edges.findAt(point)
-    if edge is not None:
-        p_edges.append(edge)
+    if x_min <= front_offset <= x_max:
+        point = rotate_point_around_axis((front_offset, p1p[1], -p1p[0]), (front_offset, p3p[1], -p3p[0]), (front_offset, p4p[1], -p4p[0]), 1.0)
+        p.DatumPointByCoordinate(coords=point)
+        edge = p.edges.findAt(point)
+        if edge is not None:
+            p_edges.append(edge)
 
     if p_edges:
         p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
-    x_list = [v[0] for v in middle_common_vertices] + [front_offset, ref_point[0], l_c1_c2 - l_block_behind]
+    x_list += [v[0] for v in middle_common_vertices] + [front_offset, ref_point[0], l_c1_c2 - l_block_behind]
     x_list = [x for x in x_list if x_min <= x <= x_max]
     part_partition_block_x(p, d, x_list)
 
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-INNER-BURN'], angle=360.0, flipRevolveDirection=OFF)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
+
+    return p
 
 
 def part_partition_block_theta(p, d, n, xy_plane, x_axis, thickness_list):
@@ -4692,6 +4696,7 @@ if __name__ == "__main__":
         block_dimension = {
             'n': n,
             'z_list': [],
+            'x_list': [10, 20],
             'slot_deep': slot_deep,
             'x0': x0,
             'angle_demolding_1': angle_demolding_1,
@@ -4711,8 +4716,7 @@ if __name__ == "__main__":
             'l_block_behind': l_block_behind,
             'ref_point': ref_point
         }
-
-        create_part_block_common(model, 'PART-BLOCK-1', block_dimension)
+        p_block_1 = create_part_block_common(model, 'PART-BLOCK-1', block_dimension)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
