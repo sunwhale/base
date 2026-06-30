@@ -4173,13 +4173,36 @@ def create_part_block_common(model, part_name, dimension):
     r_list = dimension['r_list']
     r_cut = dimension['r_cut']
     l_block_behind = dimension['l_block_behind']
-    ref_point = dimension['ref_point']
+    inner_ref_point = dimension['inner_ref_point']
 
-    x_min = 8000
-    x_max = 9000
-    r_list = [0, 5, 10, 300]
-    x_list = [1000, 1008, 1010]
+    print(inner_ref_point)
+
+    # x_min = -849.5
+    # x_max = -849.5 + 1300.0
+
+    x_min = -1000
+    x_max = 20000
+
+    r_list = [0, 3.2, 6.2, 300]
+    theta_list = []
+
     zoom = 2.0
+
+    p0_x_front = -849.5
+    block_insulation_thickness_z = 3.0
+    block_length = [1300, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 955, 1045, 990]
+    gap_length = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 30]
+
+    x_list = [p0_x_front]
+    for i in range(len(block_length)):
+        ref_x = x_list[-1]
+        x_list.append(ref_x + block_insulation_thickness_z)
+        x_list.append(ref_x + block_length[i] - block_insulation_thickness_z)
+        x_list.append(ref_x + block_length[i])
+
+        if i < len(gap_length):
+            x_list.append(ref_x + block_length[i] + gap_length[i])
+    x_list = x_list[2:-2]
 
     s_block = create_sketch_block(model, 'SKETCH-BLOCK', x_min, x_max)
     s_block_outer_offset, traction_geos, normal_geos, middle_common_vertices = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_list, l_c1_c2, zoom)
@@ -4226,7 +4249,7 @@ def create_part_block_common(model, part_name, dimension):
                 partition_edges.append(edge_sequence)
         p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
-    part_partition_block_theta(p, d, n, xy_plane, x_axis, [5, 10, 15])
+    part_partition_block_theta(p, d, n, xy_plane, x_axis, theta_list)
     front_offset = 350.0
 
     # 星槽切割
@@ -4259,7 +4282,7 @@ def create_part_block_common(model, part_name, dimension):
     if p_edges:
         p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
-    x_list += [v[0] for v in middle_common_vertices] + [front_offset, ref_point[0], l_c1_c2 - l_block_behind]
+    x_list += [v[0] for v in middle_common_vertices] + [front_offset, inner_ref_point[0]]
     x_list = [x for x in x_list if x_min <= x <= x_max]
     part_partition_block_x(p, d, x_list)
 
@@ -4309,7 +4332,7 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
+    is_create_p_shell = True
     # is_create_p_skirt_front = True
     # is_create_p_skirt_behind = True
     # is_create_p_flange_front = True
@@ -4683,8 +4706,9 @@ if __name__ == "__main__":
         model.interactionProperties['IntProp-1'].CohesiveBehavior(defaultPenalties=OFF, table=((1000000.0, 1000000.0, 1000000.0),))
         model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
-        l_block_behind = 2000.0
-        s_block_inner, ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, 0.0, l_c1_c2, l_block_behind, p0_front, p0_behind)
+        l_block_behind = 1393.5
+        # 15909.5
+        s_block_inner, inner_ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, 0.0, l_c1_c2, l_block_behind, p0_front, p0_behind)
 
         s_block_outer = create_sketch_block_outer(model, 'SKETCH-BLOCK-OUTER', x0, 0.0, slot_deep, slot_ellipse_b, shell_insulation_r_in,
                                                   p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front,
@@ -4714,7 +4738,7 @@ if __name__ == "__main__":
             'r_list': [0, 5, 10, 15],
             'r_cut': r_cut_front,
             'l_block_behind': l_block_behind,
-            'ref_point': ref_point
+            'inner_ref_point': inner_ref_point
         }
         p_block_1 = create_part_block_common(model, 'PART-BLOCK-1', block_dimension)
 
