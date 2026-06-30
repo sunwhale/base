@@ -4168,44 +4168,27 @@ def create_part_block_common(model, part_name, dimension):
     n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
 
     x_list = dimension['x_list']
+    r_list = dimension['r_list']
+    t_list = dimension['t_list']
     x_min = dimension['x_min']
     x_max = dimension['x_max']
-    r_list = dimension['r_list']
     r_cut = dimension['r_cut']
     l_block_behind = dimension['l_block_behind']
     inner_ref_point = dimension['inner_ref_point']
 
-    print(inner_ref_point)
-
-    # x_min = -849.5
-    # x_max = -849.5 + 1300.0
-
-    x_min = -1000
-    x_max = 20000
-
-    r_list = [0, 3.2, 6.2, 300]
-    theta_list = []
-
+    front_offset = 350.0
     zoom = 2.0
 
-    p0_x_front = -849.5
-    block_insulation_thickness_z = 3.0
-    block_length = [1300, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 955, 1045, 990]
-    gap_length = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 30]
+    r_offset_list = [0]
+    for r in r_list[1:]:
+        r_offset_list.append(r_offset_list[-1] + r)
 
-    x_list = [p0_x_front]
-    for i in range(len(block_length)):
-        ref_x = x_list[-1]
-        x_list.append(ref_x + block_insulation_thickness_z)
-        x_list.append(ref_x + block_length[i] - block_insulation_thickness_z)
-        x_list.append(ref_x + block_length[i])
-
-        if i < len(gap_length):
-            x_list.append(ref_x + block_length[i] + gap_length[i])
-    x_list = x_list[2:-2]
+    t_offset_list = [0]
+    for t in t_list[1:]:
+        t_offset_list.append(t_offset_list[-1] + t)
 
     s_block = create_sketch_block(model, 'SKETCH-BLOCK', x_min, x_max)
-    s_block_outer_offset, traction_geos, normal_geos, middle_common_vertices = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_list, l_c1_c2, zoom)
+    s_block_outer_offset, traction_geos, normal_geos, middle_common_vertices = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_offset_list, l_c1_c2, zoom)
 
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
@@ -4249,8 +4232,7 @@ def create_part_block_common(model, part_name, dimension):
                 partition_edges.append(edge_sequence)
         p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
-    part_partition_block_theta(p, d, n, xy_plane, x_axis, theta_list)
-    front_offset = 350.0
+    part_partition_block_theta(p, d, n, xy_plane, x_axis, t_offset_list[1:])
 
     # 星槽切割
     yz_plane_front_offset = p.DatumPlaneByOffset(plane=d[yz_plane.id], flip=SIDE1, offset=front_offset)
@@ -4264,11 +4246,10 @@ def create_part_block_common(model, part_name, dimension):
     p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
     p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
 
-
     # 星槽剖分
     p_edges = []
     # edge = p.edges.findAt((front_offset + 1.0, p1p[1], -p1p[0]))
-    edge  = p.edges.getByBoundingBox(front_offset - 1.0, p1p[1], -p1p[0], l_c1_c2, p1p[1], -p1p[0])[0]
+    edge = p.edges.getByBoundingBox(front_offset - 1.0, p1p[1], -p1p[0], l_c1_c2, p1p[1], -p1p[0])[0]
     if edge is not None:
         p_edges.append(edge)
 
@@ -4332,7 +4313,7 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
+    # is_create_p_shell = True
     # is_create_p_skirt_front = True
     # is_create_p_skirt_behind = True
     # is_create_p_flange_front = True
@@ -4707,7 +4688,7 @@ if __name__ == "__main__":
         model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
         l_block_behind = 1393.5
-        # 15909.5
+
         s_block_inner, inner_ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, 0.0, l_c1_c2, l_block_behind, p0_front, p0_behind)
 
         s_block_outer = create_sketch_block_outer(model, 'SKETCH-BLOCK-OUTER', x0, 0.0, slot_deep, slot_ellipse_b, shell_insulation_r_in,
@@ -4716,11 +4697,35 @@ if __name__ == "__main__":
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
 
         s_block_inner_burn, ref_point_burn = create_sketch_block_inner_burn(model, 'SKETCH-BLOCK-INNER-BURN', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind)
+        x_min = -1000
+        x_max = 1000
+
+        front_offset = 350.0
+
+        zoom = 2.0
+        r_list = [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset]
+        t_list = [0, block_gap_z / 2.0, block_insulation_thickness_t]
+        p0_x_front = -849.5
+        block_insulation_thickness_z = 3.0
+
+        block_length_list = [1300, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 955, 1045, 990]
+        gap_length_list = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 30]
+
+        x_list = [p0_x_front]
+        for i in range(len(block_length_list)):
+            ref_x = x_list[-1]
+            x_list.append(ref_x + block_insulation_thickness_z)
+            x_list.append(ref_x + block_length_list[i] - block_insulation_thickness_z)
+            x_list.append(ref_x + block_length_list[i])
+            if i < len(gap_length_list):
+                x_list.append(ref_x + block_length_list[i] + gap_length_list[i])
+        x_list = x_list[2:-2]
+
+        points, lines, faces = geometries(d, x0, beta, r_list, t_list)
 
         block_dimension = {
             'n': n,
             'z_list': [],
-            'x_list': [10, 20],
             'slot_deep': slot_deep,
             'x0': x0,
             'angle_demolding_1': angle_demolding_1,
@@ -4733,9 +4738,11 @@ if __name__ == "__main__":
             'insert_czm': insert_czm,
             'beta': beta,
             'burn_offset': burn_offset,
-            'x_min': -900.0,
+            'x_min': -849.5,
             'x_max': 500.0,
-            'r_list': [0, 5, 10, 15],
+            'x_list': x_list,
+            'r_list': r_list,
+            't_list': t_list,
             'r_cut': r_cut_front,
             'l_block_behind': l_block_behind,
             'inner_ref_point': inner_ref_point
