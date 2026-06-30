@@ -4232,40 +4232,43 @@ def create_part_block_common(model, part_name, dimension):
                 partition_edges.append(edge_sequence)
         p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
+    # 环向平移剖分
     part_partition_block_theta(p, d, n, xy_plane, x_axis, t_offset_list[1:])
 
-    # 星槽切割
-    yz_plane_front_offset = p.DatumPlaneByOffset(plane=d[yz_plane.id], flip=SIDE1, offset=front_offset)
-    t = p.MakeSketchTransform(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(front_offset, 0.0, 0.0))
-    s_slot, p1p, p2p, p3p, p4p = create_sketch_slot(model, 'SKETCH-SLOT', t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
-    p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
-    p.CutRevolve(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
-
-    # 燃面退移x0
-    s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', t, x0, burn_offset)
-    p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
-    p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
-
-    # 星槽剖分
-    p_edges = []
-    # edge = p.edges.findAt((front_offset + 1.0, p1p[1], -p1p[0]))
-    edge = p.edges.getByBoundingBox(front_offset - 1.0, p1p[1], -p1p[0], l_c1_c2, p1p[1], -p1p[0])[0]
-    if edge is not None:
-        p_edges.append(edge)
-
-    if x_min <= front_offset <= x_max:
-        point = rotate_point_around_axis((front_offset, p1p[1], -p1p[0]), (front_offset, p3p[1], -p3p[0]), (front_offset, p4p[1], -p4p[0]), 1.0)
-        p.DatumPointByCoordinate(coords=point)
-        edge = p.edges.findAt(point)
-        if edge is not None:
-            p_edges.append(edge)
-
-    if p_edges:
-        p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
-
-    x_list += [v[0] for v in middle_common_vertices] + [front_offset, inner_ref_point[0]]
+    # 轴向平移剖分
     x_list = [x for x in x_list if x_min <= x <= x_max]
     part_partition_block_x(p, d, x_list)
+
+    # # 星槽切割
+    # yz_plane_front_offset = p.DatumPlaneByOffset(plane=d[yz_plane.id], flip=SIDE1, offset=front_offset)
+    # t = p.MakeSketchTransform(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(front_offset, 0.0, 0.0))
+    # s_slot, p1p, p2p, p3p, p4p = create_sketch_slot(model, 'SKETCH-SLOT', t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
+    # p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
+    # p.CutRevolve(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
+    #
+    # # 燃面退移x0
+    # s_burn_x0 = create_sketch_burn_x0(model, 'SKETCH-BURN-X0', t, x0, burn_offset)
+    # p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=ON)
+    # p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_burn_x0, flipExtrudeDirection=OFF)
+    #
+    # # 星槽剖分
+    # p_edges = []
+    # edge = p.edges.getByBoundingBox(front_offset - 1.0, p1p[1], -p1p[0], l_c1_c2, p1p[1], -p1p[0])[0]
+    # if edge is not None:
+    #     p_edges.append(edge)
+    # if x_min <= front_offset <= x_max:
+    #     point = rotate_point_around_axis((front_offset, p1p[1], -p1p[0]), (front_offset, p3p[1], -p3p[0]), (front_offset, p4p[1], -p4p[0]), 1.0)
+    #     p.DatumPointByCoordinate(coords=point)
+    #     edge = p.edges.findAt(point)
+    #     if edge is not None:
+    #         p_edges.append(edge)
+    # if p_edges:
+    #     p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
+
+    # 轴向平移剖分
+    # x_list = [v[0] for v in middle_common_vertices] + [front_offset, inner_ref_point[0]]
+    # x_list = [x for x in x_list if x_min <= x <= x_max]
+    # part_partition_block_x(p, d, x_list)
 
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-INNER-BURN'], angle=360.0, flipRevolveDirection=OFF)
 
@@ -4697,8 +4700,8 @@ if __name__ == "__main__":
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
 
         s_block_inner_burn, ref_point_burn = create_sketch_block_inner_burn(model, 'SKETCH-BLOCK-INNER-BURN', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind)
-        x_min = -1000
-        x_max = 1000
+        x_min = -849.5
+        x_max = 20000
 
         front_offset = 350.0
 
@@ -4738,8 +4741,8 @@ if __name__ == "__main__":
             'insert_czm': insert_czm,
             'beta': beta,
             'burn_offset': burn_offset,
-            'x_min': -849.5,
-            'x_max': 500.0,
+            'x_min': x_min,
+            'x_max': x_max,
             'x_list': x_list,
             'r_list': r_list,
             't_list': t_list,
