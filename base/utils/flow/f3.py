@@ -514,13 +514,13 @@ def create_sketch_block_outer(model, sketch_name, x0, burn_offset, slot_deep, sl
     return s
 
 
-def create_sketch_block_inner(model, sketch_name, x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind):
+def create_sketch_block_inner(model, sketch_name, x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_c2, p0_front, p0_behind):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
     r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
     r_front = x0 + burn_offset
 
     p1 = [p0_behind[0] + l_c1_c2, r_behind]
-    p2 = [l_c1_c2 - l_block_behind, r_behind]
+    p2 = [l_c1_c2 - l_block_c2, r_behind]
     l1 = Line2D(p2, np.tan(degrees_to_radians(22.5)))
     l2 = Line2D([p2[0] - 2.0 * slot_ellipse_b, 0.0], [p2[0] - 2.0 * slot_ellipse_b, 1.0])
     p3 = l1.get_intersection(l2)
@@ -541,13 +541,13 @@ def create_sketch_block_inner(model, sketch_name, x0, slot_deep, slot_ellipse_b,
     return s, p3
 
 
-def create_sketch_block_inner_burn(model, sketch_name, x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind):
+def create_sketch_block_inner_burn(model, sketch_name, x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_c2, p0_front, p0_behind):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
     r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
     r_front = x0 + burn_offset
 
     p1 = [p0_behind[0] + l_c1_c2, r_behind]
-    p2 = [l_c1_c2 - l_block_behind, r_behind]
+    p2 = [l_c1_c2 - l_block_c2, r_behind]
     l1 = Line2D(p2, np.tan(degrees_to_radians(22.5)))
     l2 = Line2D([p2[0] - 2.0 * slot_ellipse_b, 0.0], [p2[0] - 2.0 * slot_ellipse_b, 1.0])
     p3 = l1.get_intersection(l2)
@@ -4171,21 +4171,27 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
 
 
 def create_part_block_common(model, part_name, dimension):
-    n, z_list, slot_deep, x0, angle_demolding_1, slot_ellipse_a, slot_ellipse_b, size, index_r, index_t, element_size, insert_czm, burn_offset = get_local_variables_common(dimension)
-
+    n = dimension['n']
+    slot_deep = dimension['slot_deep']
+    x0 = dimension['x0']
+    angle_demolding_1 = dimension['angle_demolding_1']
+    slot_ellipse_a = dimension['slot_ellipse_a']
+    slot_ellipse_b = dimension['slot_ellipse_b']
+    size = dimension['size']
+    index_r = dimension['index_r']
+    index_t = dimension['index_t']
+    element_size = dimension['element_size']
+    insert_czm = dimension['insert_czm']
+    burn_offset = dimension['burn_offset']
     x_list = dimension['x_list']
     r_list = dimension['r_list']
     t_list = dimension['t_list']
     x_min = dimension['x_min']
     x_max = dimension['x_max']
     r_cut = dimension['r_cut']
-    l_block_behind = dimension['l_block_behind']
     inner_ref_point = dimension['inner_ref_point']
-
     x_interval_materials = dimension['x_interval_materials']
-
-    front_offset = 350.0
-    zoom = 2.0
+    front_offset = dimension['front_offset']
 
     r_offset_list = [0]
     for r in r_list[1:]:
@@ -4196,7 +4202,7 @@ def create_part_block_common(model, part_name, dimension):
         t_offset_list.append(t_offset_list[-1] + t)
 
     s_block = create_sketch_block(model, 'SKETCH-BLOCK', x_min, x_max)
-    s_block_outer_offset, traction_geos, normal_geos, middle_common_vertices = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_offset_list, l_c1_c2, zoom)
+    s_block_outer_offset, traction_geos, normal_geos, middle_common_vertices = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_offset_list, l_c1_c2, 0.0)
 
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
@@ -4339,8 +4345,6 @@ def create_part_block_common(model, part_name, dimension):
     # 生成网格
     generate_part_mesh(p, element_size=element_size)
 
-    insert_czm = True
-
     # 插入内聚力单元
     if insert_czm:
         insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
@@ -4368,6 +4372,35 @@ def part_partition_block_x(p, d, x_list):
             p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
         except:
             print('Failed of function part_partition_block_x with x=%s' % x)
+            
+            
+def create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum):
+    r_list = [0, wall_insulation_thickness, block_insulation_thickness_r]
+    t_list = [0, block_gap_circum / 2.0, block_insulation_thickness_t]
+
+    block_length_list = [1300, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 955, 1045, 990]
+    gap_length_list = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 30]
+    x_list = [p0_x_front]
+    x_interval_materials = []
+    for i in range(len(block_length_list)):
+        x_ref = x_list[-1]
+
+        x_list.append(x_ref + block_insulation_thickness_z)
+        x_interval_materials.append(['INSULATION', x_list[-2], x_list[-1]])
+
+        x_list.append(x_ref + block_length_list[i] - block_insulation_thickness_z)
+        x_interval_materials.append(['GRAIN', x_list[-2], x_list[-1]])
+
+        x_list.append(x_ref + block_length_list[i])
+        x_interval_materials.append(['INSULATION', x_list[-2], x_list[-1]])
+
+        if i < len(gap_length_list):
+            x_list.append(x_ref + block_length_list[i] + gap_length_list[i])
+            x_interval_materials.append(['GLUE-A', x_list[-2], x_list[-1]])
+
+    x_list = x_list[2:-2]
+
+    return x_list, r_list, t_list, x_interval_materials
 
 
 if __name__ == "__main__":
@@ -4426,8 +4459,8 @@ if __name__ == "__main__":
     block_insulation_thickness_t = 3.0
     block_insulation_thickness_r = 3.0
     wall_insulation_thickness = 3.0
-    block_gap_z = 8.0
-    block_gap_t = 8.0
+    block_gap_axial = 8.0
+    block_gap_circum = 8.0
     slot_deep = 380.0
     slot_ellipse_a = 50.0
     slot_ellipse_b = 25.0
@@ -4544,8 +4577,8 @@ if __name__ == "__main__":
         block_insulation_thickness_t = message['block_insulation_thickness_t']
         block_insulation_thickness_r = message['block_insulation_thickness_r']
         wall_insulation_thickness = message['wall_insulation_thickness']
-        block_gap_z = message['block_gap_z']
-        block_gap_t = message['block_gap_t']
+        block_gap_axial = message['block_gap_axial']
+        block_gap_circum = message['block_gap_circum']
         slot_deep = message['slot_deep']
         slot_ellipse_a = message['slot_ellipse_a']
         slot_ellipse_b = message['slot_ellipse_b']
@@ -4679,7 +4712,7 @@ if __name__ == "__main__":
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
         # plot_geometries(points, lines, faces)
-        # points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        # points, lines, faces = geometries(d, x0, beta, [0, block_insulation_thickness_r], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
         # plot_geometries(points, lines, faces)
 
         # r_cut_front = 460.0
@@ -4766,66 +4799,33 @@ if __name__ == "__main__":
         model.interactionProperties['IntProp-1'].CohesiveBehavior(defaultPenalties=OFF, table=((1000000.0, 1000000.0, 1000000.0),))
         model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
-        l_block_behind = 1393.5
+        l_block_c2 = 1393.5
+        x_list, r_list, t_list, x_interval_materials = create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum)
+        points, lines, faces = geometries(d, x0, beta, r_list, t_list)
 
-        s_block_inner, inner_ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, 0.0, l_c1_c2, l_block_behind, p0_front, p0_behind)
+        s_block_inner, inner_ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, 0.0, l_c1_c2, l_block_c2, p0_front, p0_behind)
 
         s_block_outer = create_sketch_block_outer(model, 'SKETCH-BLOCK-OUTER', x0, 0.0, slot_deep, slot_ellipse_b, shell_insulation_r_in,
                                                   p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front,
                                                   p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind,
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
 
-        s_block_inner_burn, ref_point_burn = create_sketch_block_inner_burn(model, 'SKETCH-BLOCK-INNER-BURN', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind)
+        s_block_inner_burn, ref_point_burn = create_sketch_block_inner_burn(model, 'SKETCH-BLOCK-INNER-BURN', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_c2, p0_front, p0_behind)
+
         x_min = -849.5
         x_max = 20000
-
-        x_min = 1000
-        x_max = 2000
-
-        front_offset = 350.0
-
-        zoom = 2.0
-        r_list = [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset]
-        r_list = [0, wall_insulation_thickness, block_insulation_thickness_r]
-        t_list = [0, block_gap_z / 2.0, block_insulation_thickness_t]
-
-        p0_x_front = -849.5
-        block_insulation_thickness_z = 3.0
-        block_length_list = [1300, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 955, 1045, 990]
-        gap_length_list = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 30]
-
-        x_list = [p0_x_front]
-        x_interval_materials = []
-        for i in range(len(block_length_list)):
-            x_ref = x_list[-1]
-
-            x_list.append(x_ref + block_insulation_thickness_z)
-            x_interval_materials.append(['INSULATION', x_list[-2], x_list[-1]])
-
-            x_list.append(x_ref + block_length_list[i] - block_insulation_thickness_z)
-            x_interval_materials.append(['GRAIN', x_list[-2], x_list[-1]])
-
-            x_list.append(x_ref + block_length_list[i])
-            x_interval_materials.append(['INSULATION', x_list[-2], x_list[-1]])
-
-            if i < len(gap_length_list):
-                x_list.append(x_ref + block_length_list[i] + gap_length_list[i])
-                x_interval_materials.append(['GLUE-A', x_list[-2], x_list[-1]])
-
-        x_list = x_list[2:-2]
-
-        points, lines, faces = geometries(d, x0, beta, r_list, t_list)
+        # x_min = 1000
+        # x_max = 2000
 
         block_dimension = {
             'n': n,
-            'z_list': [],
             'slot_deep': slot_deep,
             'x0': x0,
             'angle_demolding_1': angle_demolding_1,
             'slot_ellipse_a': slot_ellipse_a,
             'slot_ellipse_b': slot_ellipse_b,
             'size': size,
-            'index_r': 2 + 1,
+            'index_r': 3,
             'index_t': 3,
             'element_size': element_size,
             'insert_czm': insert_czm,
@@ -4838,8 +4838,8 @@ if __name__ == "__main__":
             't_list': t_list,
             'x_interval_materials': x_interval_materials,
             'r_cut': r_cut_front,
-            'l_block_behind': l_block_behind,
-            'inner_ref_point': inner_ref_point
+            'inner_ref_point': inner_ref_point,
+            'front_offset': front_offset
         }
         p_block_1 = create_part_block_common(model, 'PART-BLOCK-1', block_dimension)
 
@@ -5013,7 +5013,7 @@ if __name__ == "__main__":
             p_insulation = create_part_insulation(model, 'PART-INSULATION', insulation_dimension)
             print('CREATE PART-INSULATION DONE.')
 
-        z_list_with_gap = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_z / 2]
+        z_list_with_gap = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_axial / 2]
         index_t_with_gap = 3
         if is_shared_node:
             z_list = z_list_with_gap
@@ -5039,7 +5039,7 @@ if __name__ == "__main__":
             'burn_offset': burn_offset
         }
 
-        points, lines, faces = geometries(d, x0, beta, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        points, lines, faces = geometries(d, x0, beta, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
         if is_create_p_block:
             p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
             print('CREATE PART-BLOCK DONE.')
@@ -5062,9 +5062,9 @@ if __name__ == "__main__":
             p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
             print('CREATE PART-GAP-PENULT DONE.')
 
-        points, lines, faces = geometries(d, x0, beta, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+        points, lines, faces = geometries(d, x0, beta, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
 
-        z_list_with_gap = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_z / 2]
+        z_list_with_gap = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_axial / 2]
         index_t_with_gap = 3
         if is_shared_node:
             z_list = z_list_with_gap
@@ -5098,7 +5098,7 @@ if __name__ == "__main__":
             p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
             print('CREATE PART-GAP-FRONT DONE.')
 
-        z_list_with_gap = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z, behind_ref_length + block_insulation_thickness_z + block_gap_z / 2]
+        z_list_with_gap = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z, behind_ref_length + block_insulation_thickness_z + block_gap_axial / 2]
         index_t_with_gap = 3
         if is_shared_node:
             z_list = z_list_with_gap
@@ -5135,12 +5135,12 @@ if __name__ == "__main__":
             behind_block_a_dimension = deepcopy(behind_block_dimension)
             behind_block_a_dimension['central_angle'] = central_angle_a
             behind_block_a_dimension['index_r'] = 3 + 1
-            points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+            points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
             p_block_behind_1a = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1A', points, lines, faces, behind_block_a_dimension)
             print('CREATE PART-BLOCK-BEHIND-1A DONE.')
 
             behind_block_a_dimension['index_r'] = 2 + 1
-            points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+            points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
             p_block_behind_2a = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2A', points, lines, faces, behind_block_a_dimension)
             print('CREATE PART-BLOCK-BEHIND-2A DONE.')
 
@@ -5149,12 +5149,12 @@ if __name__ == "__main__":
             behind_block_b_dimension = deepcopy(behind_block_dimension)
             behind_block_b_dimension['central_angle'] = central_angle_b
             behind_block_b_dimension['index_r'] = 3 + 1
-            points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+            points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
             p_block_behind_1b = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1B', points, lines, faces, behind_block_b_dimension)
             print('CREATE PART-BLOCK-BEHIND-1B DONE.')
 
             behind_block_b_dimension['index_r'] = 2 + 1
-            points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_z / 2.0, block_insulation_thickness_t])
+            points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
             p_block_behind_2b = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2B', points, lines, faces, behind_block_b_dimension)
             print('CREATE PART-BLOCK-BEHIND-2B DONE.')
 
@@ -5248,11 +5248,11 @@ if __name__ == "__main__":
                 if block_type == 'FRONT':
                     z_shift = front_offset
                 elif block_type == 'MIDDLE':
-                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
+                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_axial / 2 + (l - 1 + 0.5) * (block_gap_axial + block_length)
                 elif block_type == 'PENULT':
-                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1 + 0.5) * (block_gap_z + block_length)
+                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_axial / 2 + (l - 1 + 0.5) * (block_gap_axial + block_length)
                 elif block_type == 'BEHIND':
-                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_z / 2 + (l - 1) * (block_gap_z + block_length) + block_gap_z / 2 + block_insulation_thickness_z + behind_ref_length
+                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_axial / 2 + (l - 1) * (block_gap_axial + block_length) + block_gap_axial / 2 + block_insulation_thickness_z + behind_ref_length
 
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                 if block_part_dict[block_type] is not None:
