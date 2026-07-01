@@ -4307,8 +4307,8 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
         p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
     p_edges = []
-    if x_min <= front_offset <= x_max:
-        point_rot = rotate_point_around_axis((front_offset, p1p[1], -p1p[0]), (front_offset, p3p[1], -p3p[0]), (front_offset, p4p[1], -p4p[0]), 1.0)
+    if x_min <= front_offset <= x_max + r_cut:
+        point_rot = rotate_point_around_axis((front_offset, p1p[1], -p1p[0]), (front_offset, p3p[1], -p3p[0]), (front_offset, p4p[1], -p4p[0]), 45.0)
         p.DatumPointByCoordinate(coords=point_rot)
         edge = p.edges.findAt(point_rot)
         if edge is not None:
@@ -4374,8 +4374,13 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
     p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-INSULATION'], p.sets['SET-CELL-GLUE-A']), name='SET-FACES-INSULATION-GLUE-A')
 
+    # xy_plane_rot = p.DatumPlaneByRotation(plane=d[xy_plane.id], axis=d[x_axis.id], angle=angle_deg / 2.0)
+    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
+    # xy_plane_rot = p.DatumPlaneByRotation(plane=d[xy_plane.id], axis=d[x_axis.id], angle=-angle_deg / 2.0)
+    # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
+
     # 生成网格
-    generate_part_mesh(p, element_size=element_size)
+    # generate_part_mesh(p, element_size=element_size)
 
     # 插入内聚力单元
     if insert_czm:
@@ -4883,7 +4888,7 @@ if __name__ == "__main__":
         }
         # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max)
         # p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0)
-        p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 100, 20.0)
+        p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 500, 20.0)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
