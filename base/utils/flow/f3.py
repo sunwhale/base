@@ -4251,8 +4251,9 @@ def create_part_block_common(model, part_name, dimension):
         for x_interval_material in x_interval_materials:
             if x_interval_material[0] == 'GRAIN':
                 x_interval_middle = (x_interval_material[1] + x_interval_material[2]) / 2.0
-                ref_point = (x_interval_middle, faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1])
-                cells += p.cells.findAt((ref_point,))
+                if x_min <= x_interval_middle <= x_max:
+                    ref_point = (x_interval_middle, faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1])
+                    cells += p.cells.findAt((ref_point,))
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
@@ -4295,6 +4296,8 @@ def create_part_block_common(model, part_name, dimension):
 
     # 创建面
     create_surface_rotation_part_common(p, rotate_angle_deg)
+    if 'SURFACE-R1' in p.surfaces.keys():
+        p.Surface(side1Faces=p.surfaces['SURFACE-R1'].faces[0].getFacesByFaceAngle(20), name='SURFACE-OUTER')
 
     # 轴向平移剖分
     x_list = [v[0] for v in middle_common_vertices] + [front_offset, inner_ref_point[0]]
@@ -4733,6 +4736,9 @@ if __name__ == "__main__":
         s_block_inner_burn, ref_point_burn = create_sketch_block_inner_burn(model, 'SKETCH-BLOCK-INNER-BURN', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_behind, p0_front, p0_behind)
         x_min = -849.5
         x_max = 20000
+
+        # x_min = 1000
+        # x_max = 2000
 
         front_offset = 350.0
 
