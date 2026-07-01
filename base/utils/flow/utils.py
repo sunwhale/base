@@ -2181,7 +2181,7 @@ def get_tie_types(block):
     return edges_dict
 
 
-def get_block_types(block):
+def get_block_types(block, style=''):
     """
     返回每个有块位置的标签。
     参数:
@@ -2192,23 +2192,48 @@ def get_block_types(block):
     nl, nt = block.shape
     labels = {}
 
-    # 第一行
-    for j in np.where(block[0, :])[0]:
-        labels[(0, int(j))] = 'FRONT'
+    if style == '':
+        # 第一行
+        for j in np.where(block[0, :])[0]:
+            labels[(0, int(j))] = 'FRONT'
 
-    # 倒数第二行
-    if nl >= 2:
+        # 倒数第二行
+        if nl >= 2:
+            for j in np.where(block[-2, :])[0]:
+                labels[(nl - 2, int(j))] = 'PENULT'
+
+        # 最后一行
+        for j in np.where(block[-1, :])[0]:
+            labels[(nl - 1, int(j))] = 'BEHIND'
+
+        # 中间行（索引 1 到 nl-3）
+        for i in range(1, nl - 2):
+            for j in np.where(block[i, :])[0]:
+                labels[(i, int(j))] = 'MIDDLE'
+
+    elif style == 'ab':
+        # 第一行
+        for j in np.where(block[0, :])[0]:
+            labels[(0, int(j))] = 'FRONT'
+
+        # 倒数第三行
+        if nl >= 2:
+            for j in np.where(block[-2, :])[0]:
+                labels[(nl - 3, int(j))] = 'PENULT'
+
+        # 最后二行
+        for j in np.where(block[-1, :])[0]:
+            labels[(nl - 1, int(j))] = 'BEHIND-1A-1B'
+
         for j in np.where(block[-2, :])[0]:
-            labels[(nl - 2, int(j))] = 'PENULT'
+            labels[(nl - 2, int(j))] = 'BEHIND-2A-2B'
 
-    # 最后一行
-    for j in np.where(block[-1, :])[0]:
-        labels[(nl - 1, int(j))] = 'BEHIND'
-
-    # 中间行（索引 1 到 nl-3）
-    for i in range(1, nl - 2):
-        for j in np.where(block[i, :])[0]:
-            labels[(i, int(j))] = 'MIDDLE'
+        # 中间行（索引 1 到 nl-3）
+        for i in range(1, nl - 2):
+            for j in np.where(block[i, :])[0]:
+                labels[(i, int(j))] = 'MIDDLE'
+    else:
+        raise KeyError('Wrong style: ' + style)
 
     return labels
 
@@ -2261,6 +2286,24 @@ def get_mirror_faces(p, p_faces, size, is_middle):
         return p_faces
     else:
         return None
+
+
+def get_xy_plane_mirror_cells(p, p_cells):
+    p_cells_mirror = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for cell in p_cells:
+        point = cell.pointOn[0]
+        point_mirror = [point[0], point[1], -point[2]]
+        p_cells_mirror += p.cells.findAt((point_mirror,))
+    return p_cells_mirror
+
+
+def get_xy_plane_mirror_faces(p, p_faces):
+    p_faces_mirror = p.faces.getByBoundingBox(0, 0, 0, 0, 0, 0)
+    for face in p_faces:
+        point = face.pointOn[0]
+        point_mirror = [point[0], point[1], -point[2]]
+        p_faces_mirror += p.faces.findAt((point_mirror,))
+    return p_faces_mirror
 
 
 def get_cells_from_faces(p, p_faces):
