@@ -4263,6 +4263,8 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
     x_list = [x for x in x_list if x_min <= x <= x_max]
     part_partition_block_x(p, d, x_list)
 
+    part_partition_block_z(p, d, [100, 103, 111, 114])
+    
     # 创建集合（体），SET-CELL-GRAIN
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
@@ -4408,6 +4410,15 @@ def part_partition_block_x(p, d, x_list):
             p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
         except:
             print('Failed of function part_partition_block_x with x=%s' % x)
+
+
+def part_partition_block_z(p, d, z_list):
+    for z in z_list:
+        cut_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=z)
+        try:
+            p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
+        except:
+            print('Failed of function part_partition_block_z with x=%s' % z)
 
 
 def create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum):
@@ -4888,7 +4899,8 @@ if __name__ == "__main__":
         }
         # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max)
         # p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0)
-        p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 500, 20.0)
+        # p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 500, 20.0)
+        p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
