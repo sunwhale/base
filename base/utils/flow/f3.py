@@ -108,7 +108,7 @@ def create_sketch_burn_x0(model, sketch_name, t, x0, burn_offset=0.0):
     return s
 
 
-def create_sketch_slot(model, sketch_name, t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset=0.0):
+def create_sketch_slot(model, sketch_name, t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, angle_deg, r_cut, burn_offset=0.0):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=200.0, transform=t)
     center = [x0 + slot_deep, 0.0]
     p1 = [x0 + slot_deep, -slot_ellipse_a]
@@ -132,19 +132,18 @@ def create_sketch_slot(model, sketch_name, t, x0, slot_deep, slot_ellipse_a, slo
         s.delete(objectList=(s.geometry[4], s.geometry[7]))
 
     center_line = s.ConstructionLine(point1=(x0 + slot_deep - r_cut, -1e4), point2=(x0 + slot_deep - r_cut, 1e4))
-    rot_angle = 180.0 / n + 90.0
-    s.rotate(centerPoint=(0.0, 0.0), angle=rot_angle, objectList=s.geometry.values())
+    s.rotate(centerPoint=(0.0, 0.0), angle=angle_deg, objectList=s.geometry.values())
     s.assignCenterline(line=center_line)
 
     if burn_offset > 0:
         p1p = s.vertices[6].coords
         p2p = s.vertices[8].coords
     else:
-        p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(rot_angle))
-        p2p = rotate_point_around_origin_2d(p2, degrees_to_radians(rot_angle))
+        p1p = rotate_point_around_origin_2d(p1, degrees_to_radians(angle_deg))
+        p2p = rotate_point_around_origin_2d(p2, degrees_to_radians(angle_deg))
 
-    p3p = rotate_point_around_origin_2d(p3, degrees_to_radians(rot_angle))
-    p4p = rotate_point_around_origin_2d(p4, degrees_to_radians(rot_angle))
+    p3p = rotate_point_around_origin_2d(p3, degrees_to_radians(angle_deg))
+    p4p = rotate_point_around_origin_2d(p4, degrees_to_radians(angle_deg))
 
     s.Spot(point=p1p)
     s.Spot(point=p2p)
@@ -4206,9 +4205,9 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max):
     p = model.Part(name='PART-BLOCK-' + layer_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
 
-    rotate_angle_deg = 360.0 / n / 2.0
+    angle_deg = 360.0 / n / 2.0
 
-    p.BaseSolidRevolve(sketch=s_block, angle=rotate_angle_deg, flipRevolveDirection=OFF)
+    p.BaseSolidRevolve(sketch=s_block, angle=angle_deg, flipRevolveDirection=OFF)
 
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
@@ -4248,7 +4247,7 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max):
         p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # 环向平移剖分
-    part_partition_block_theta(p, d, n, xy_plane, x_axis, t_offset_list[1:])
+    part_partition_block_theta(p, d, angle_deg, xy_plane, x_axis, t_offset_list[1:])
 
     # 轴向平移剖分
     x_list = [x for x in x_list if x_min <= x <= x_max]
@@ -4375,9 +4374,8 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max):
     return p
 
 
-def part_partition_block_theta(p, d, n, xy_plane, x_axis, thickness_list):
-    angle = 360.0 / n / 2.0
-    xy_plane_rot = p.DatumPlaneByRotation(plane=d[xy_plane.id], axis=d[x_axis.id], angle=angle)
+def part_partition_block_theta(p, d, angle_deg, xy_plane, x_axis, thickness_list):
+    xy_plane_rot = p.DatumPlaneByRotation(plane=d[xy_plane.id], axis=d[x_axis.id], angle=angle_deg)
     for thickness in thickness_list:
         cut_plane = p.DatumPlaneByOffset(plane=d[xy_plane_rot.id], flip=SIDE2, offset=thickness)
         p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
@@ -4869,7 +4867,7 @@ if __name__ == "__main__":
             'front_offset': front_offset
         }
         # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max)
-        p_block_2 = create_part_block_common(model, '2', block_dimension, 1000, 2000)
+        p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
