@@ -4176,7 +4176,7 @@ def create_part_block_common(model, part_name, dimension):
     l_block_behind = dimension['l_block_behind']
     inner_ref_point = dimension['inner_ref_point']
 
-    x_interval_material = dimension['x_interval_material']
+    x_interval_materials = dimension['x_interval_materials']
 
     front_offset = 350.0
     zoom = 2.0
@@ -4246,13 +4246,17 @@ def create_part_block_common(model, part_name, dimension):
     for rtz in [
         [0, 0, 0]
     ]:
-        cells += p.cells.findAt(((faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1], z_centers[rtz[2]]),))
-    for pa in faces_xz_plane[index_r - 1]:
-        if pa[0] < z_list[1]:
-            cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
-        else:
-            # 处理切割面距离中心界面距离非常近的情况
-            cells += p.cells.findAt(((pa[1], 0.0, z_list[1] - TOL * 10),))
+        for x_interval_material in x_interval_materials:
+            x_interval_middle = (x_interval_material[1] + x_interval_material[2]) / 2.0
+            ref_point = (x_interval_middle, faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1])
+            cells += p.cells.findAt((ref_point,))
+
+    # for pa in faces_xz_plane[index_r - 1]:
+    #     if pa[0] < z_list[1]:
+    #         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
+    #     else:
+    #         # 处理切割面距离中心界面距离非常近的情况
+    #         cells += p.cells.findAt(((pa[1], 0.0, z_list[1] - TOL * 10),))
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
 
@@ -4724,6 +4728,7 @@ if __name__ == "__main__":
 
         zoom = 2.0
         r_list = [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset]
+        r_list = [0, wall_insulation_thickness, block_insulation_thickness_r]
         t_list = [0, block_gap_z / 2.0, block_insulation_thickness_t]
 
         p0_x_front = -849.5
@@ -4732,22 +4737,23 @@ if __name__ == "__main__":
         gap_length_list = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 30]
 
         x_list = [p0_x_front]
-        x_interval_material = []
+        x_interval_materials = []
         for i in range(len(block_length_list)):
-            ref_x = x_list[-1]
+            x_ref = x_list[-1]
 
-            x_list.append(ref_x + block_insulation_thickness_z)
-            x_interval_material.append('INSULATION')
+            x_list.append(x_ref + block_insulation_thickness_z)
+            x_interval_materials.append(['INSULATION', x_list[-2], x_list[-1]])
 
-            x_list.append(ref_x + block_length_list[i] - block_insulation_thickness_z)
-            x_interval_material.append('GRAIN')
+            x_list.append(x_ref + block_length_list[i] - block_insulation_thickness_z)
+            x_interval_materials.append(['GRAIN', x_list[-2], x_list[-1]])
 
-            x_list.append(ref_x + block_length_list[i])
-            x_interval_material.append('INSULATION')
+            x_list.append(x_ref + block_length_list[i])
+            x_interval_materials.append(['INSULATION', x_list[-2], x_list[-1]])
 
             if i < len(gap_length_list):
-                x_list.append(ref_x + block_length_list[i] + gap_length_list[i])
-                x_interval_material.append('GLUE-A')
+                x_list.append(x_ref + block_length_list[i] + gap_length_list[i])
+                x_interval_materials.append(['GLUE-A', x_list[-2], x_list[-1]])
+
         x_list = x_list[2:-2]
 
         points, lines, faces = geometries(d, x0, beta, r_list, t_list)
@@ -4772,7 +4778,7 @@ if __name__ == "__main__":
             'x_list': x_list,
             'r_list': r_list,
             't_list': t_list,
-            'x_interval_material': x_interval_material,
+            'x_interval_materials': x_interval_materials,
             'r_cut': r_cut_front,
             'l_block_behind': l_block_behind,
             'inner_ref_point': inner_ref_point
