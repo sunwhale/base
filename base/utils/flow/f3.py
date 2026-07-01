@@ -4170,7 +4170,7 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
     return s, traction_geos, normal_geos, middle_common_vertices
 
 
-def create_part_block_common(model, part_name, dimension):
+def create_part_block_common(model, layer_name, dimension, x_min, x_max):
     n = dimension['n']
     slot_deep = dimension['slot_deep']
     x0 = dimension['x0']
@@ -4186,8 +4186,6 @@ def create_part_block_common(model, part_name, dimension):
     x_list = dimension['x_list']
     r_list = dimension['r_list']
     t_list = dimension['t_list']
-    x_min = dimension['x_min']
-    x_max = dimension['x_max']
     r_cut = dimension['r_cut']
     inner_ref_point = dimension['inner_ref_point']
     x_interval_materials = dimension['x_interval_materials']
@@ -4201,10 +4199,10 @@ def create_part_block_common(model, part_name, dimension):
     for t in t_list[1:]:
         t_offset_list.append(t_offset_list[-1] + t)
 
-    s_block = create_sketch_block(model, 'SKETCH-BLOCK', x_min, x_max)
-    s_block_outer_offset, traction_geos, normal_geos, middle_common_vertices = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET', x_min, x_max, r_offset_list, l_c1_c2, 0.0)
+    s_block = create_sketch_block(model, 'SKETCH-BLOCK-' + layer_name, x_min, x_max)
+    s_block_outer_offset, traction_geos, normal_geos, middle_common_vertices = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET-' + layer_name, x_min, x_max, r_offset_list, l_c1_c2, 0.0)
 
-    p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
+    p = model.Part(name='PART-BLOCK-' + layer_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
 
     rotate_angle_deg = 360.0 / n / 2.0
@@ -4372,8 +4370,8 @@ def part_partition_block_x(p, d, x_list):
             p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
         except:
             print('Failed of function part_partition_block_x with x=%s' % x)
-            
-            
+
+
 def create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum):
     r_list = [0, wall_insulation_thickness, block_insulation_thickness_r]
     t_list = [0, block_gap_circum / 2.0, block_insulation_thickness_t]
@@ -4831,8 +4829,6 @@ if __name__ == "__main__":
             'insert_czm': insert_czm,
             'beta': beta,
             'burn_offset': burn_offset,
-            'x_min': x_min,
-            'x_max': x_max,
             'x_list': x_list,
             'r_list': r_list,
             't_list': t_list,
@@ -4841,7 +4837,8 @@ if __name__ == "__main__":
             'inner_ref_point': inner_ref_point,
             'front_offset': front_offset
         }
-        p_block_1 = create_part_block_common(model, 'PART-BLOCK-1', block_dimension)
+        p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max)
+        p_block_2 = create_part_block_common(model, '2', block_dimension, 1000, 2000)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
