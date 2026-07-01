@@ -4195,7 +4195,9 @@ def create_part_block_common(model, part_name, dimension):
     p = model.Part(name=part_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
 
-    p.BaseSolidRevolve(sketch=s_block, angle=360.0 / n / 2.0, flipRevolveDirection=OFF)
+    rotate_angle_deg = 360.0 / n / 2.0
+
+    p.BaseSolidRevolve(sketch=s_block, angle=rotate_angle_deg, flipRevolveDirection=OFF)
 
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
@@ -4290,6 +4292,9 @@ def create_part_block_common(model, part_name, dimension):
             p_edges.append(edge)
     if p_edges:
         p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
+
+    # 创建面
+    create_surface_rotation_part_common(p, rotate_angle_deg)
 
     # 轴向平移剖分
     x_list = [v[0] for v in middle_common_vertices] + [front_offset, inner_ref_point[0]]
