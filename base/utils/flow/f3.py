@@ -4334,23 +4334,24 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max):
 
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-INNER-BURN'], angle=360.0, flipRevolveDirection=OFF)
 
-    p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
-    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+    if size == '1':
+        p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
+        p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
 
-    for set_name in p.sets.keys():
-        if 'CELL' in set_name:
-            p_cells = p.sets[set_name].cells
-            p_cells_mirror = get_xy_plane_mirror_cells(p, p_cells)
-            p.Set(cells=p_cells + p_cells_mirror, name=set_name)
+        for set_name in p.sets.keys():
+            if 'CELL' in set_name:
+                p_cells = p.sets[set_name].cells
+                p_cells_mirror = get_xy_plane_mirror_cells(p, p_cells)
+                p.Set(cells=p_cells + p_cells_mirror, name=set_name)
 
-    for surface_name in p.surfaces.keys():
-        p_faces = p.surfaces[surface_name].faces
-        if 'SURFACE-T1' in surface_name:
-            p_faces_mirror = get_xy_plane_mirror_faces(p, p_faces)
-            p.Surface(side1Faces=p_faces_mirror, name='SURFACE-T0')
-        else:
-            p_faces_mirror = get_xy_plane_mirror_faces(p, p_faces)
-            p.Surface(side1Faces=p_faces + p_faces_mirror, name=surface_name)
+        for surface_name in p.surfaces.keys():
+            p_faces = p.surfaces[surface_name].faces
+            if 'SURFACE-T1' in surface_name:
+                p_faces_mirror = get_xy_plane_mirror_faces(p, p_faces)
+                p.Surface(side1Faces=p_faces_mirror, name='SURFACE-T0')
+            else:
+                p_faces_mirror = get_xy_plane_mirror_faces(p, p_faces)
+                p.Surface(side1Faces=p_faces + p_faces_mirror, name=surface_name)
 
     # 创建集合（面）
     create_face_set_from_surface(p)
