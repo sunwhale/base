@@ -4423,14 +4423,14 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    # is_create_p_shell = True
-    # is_create_p_skirt_front = True
-    # is_create_p_skirt_behind = True
-    # is_create_p_flange_front = True
-    # is_create_p_flange_behind = True
-    # is_create_p_insulation = True
-    # is_create_p_cover_front = True
-    # is_create_p_cover_behind = True
+    is_create_p_shell = True
+    is_create_p_skirt_front = True
+    is_create_p_skirt_behind = True
+    is_create_p_flange_front = True
+    is_create_p_flange_behind = True
+    is_create_p_insulation = True
+    is_create_p_cover_front = True
+    is_create_p_cover_behind = True
     # is_create_p_block = True
     # is_create_p_block_penult = True
     # is_create_p_block_front = True
@@ -4797,6 +4797,17 @@ if __name__ == "__main__":
         model.interactionProperties['IntProp-1'].CohesiveBehavior(defaultPenalties=OFF, table=((1000000.0, 1000000.0, 1000000.0),))
         model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
+        cmap = session.viewports['Viewport: 1'].colorMappings['Material']
+        cmap.updateOverrides(overrides={'MATERIAL-GRAIN': (True, '#FF0000', 'Default', '#FF0000')})
+        cmap.updateOverrides(overrides={'MATERIAL-INSULATION': (True, '#0099FF', 'Default', '#0099FF')})
+        cmap.updateOverrides(overrides={'MATERIAL-GLUE': (True, '#00FF8C', 'Default', '#00FF8C')})
+        cmap.updateOverrides(overrides={'MATERIAL-SHELL': (True, '#FF7F00', 'Default', '#FF7F00')})
+        cmap.updateOverrides(overrides={'MATERIAL-STEEL': (True, '#FFB200', 'Default', '#FFB200')})
+        cmap.updateOverrides(overrides={'MATERIAL-CZM': (True, '#4B977E', 'Default', '#4B977E')})
+        cmap.updateOverrides(overrides={'MATERIAL-GLUE-WALL': (True, '#F1F1F1', 'Default', '#F1F1F1')})
+        cmap.updateOverrides(overrides={'MATERIAL-SHELL-COMPOSITE': (True, '#FF7F00', 'Default', '#FF7F00')})
+        cmap.updateOverrides(overrides={'MATERIAL-SKIRT-COMPOSITE': (True, '#B2FF00', 'Default', '#B2FF00')})
+
         l_block_c2 = 1393.5
         x_list, r_list, t_list, x_interval_materials = create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum)
         points, lines, faces = geometries(d, x0, beta, r_list, t_list)
@@ -4837,7 +4848,7 @@ if __name__ == "__main__":
             'inner_ref_point': inner_ref_point,
             'front_offset': front_offset
         }
-        p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max)
+        # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max)
         p_block_2 = create_part_block_common(model, '2', block_dimension, 1000, 2000)
 
         shell_dimension = {
