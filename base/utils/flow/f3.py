@@ -4032,6 +4032,14 @@ def create_sketch_block(model, sketch_name, x_min, x_max):
     return s
 
 
+def create_sketch_block_outer_interval(model, sketch_name, x_min, x_max):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
+    s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
+    sketch_split_and_delete(s, given_x_0=x_min, given_y_0=100.0, given_x_1=x_min, given_y_1=2000.0, x_min=x_min, x_max=None)
+    sketch_split_and_delete(s, given_x_0=x_max, given_y_0=100.0, given_x_1=x_max, given_y_1=2000.0, x_min=None, x_max=x_max)
+    return s
+
+
 def get_sketch_block_outer_offset_side(model, x_min, x_max):
     s = model.ConstrainedSketch(name='__profile__', sheetSize=2000.0)
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
@@ -4171,7 +4179,7 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
     return s, traction_geos, normal_geos, middle_common_vertices
 
 
-def create_part_block_common(model, layer_name, dimension, x_min, x_max):
+def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_deg):
     n = dimension['n']
     slot_deep = dimension['slot_deep']
     x0 = dimension['x0']
@@ -4201,12 +4209,13 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max):
         t_offset_list.append(t_offset_list[-1] + t)
 
     s_block = create_sketch_block(model, 'SKETCH-BLOCK-' + layer_name, x_min, x_max)
+    s_block_outer_interval = create_sketch_block_outer_interval(model, 'SKETCH-BLOCK-OUTER-' + layer_name, x_min, x_max)
     s_block_outer_offset, traction_geos, normal_geos, middle_common_vertices = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET-' + layer_name, x_min, x_max, r_offset_list, l_c1_c2, 0.0)
 
     p = model.Part(name='PART-BLOCK-' + layer_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
 
-    angle_deg = 360.0 / n / 2.0
+    # angle_deg = 360.0 / n / 2.0
 
     p.BaseSolidRevolve(sketch=s_block, angle=angle_deg, flipRevolveDirection=OFF)
 
@@ -4299,9 +4308,9 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max):
 
     p_edges = []
     if x_min <= front_offset <= x_max:
-        point = rotate_point_around_axis((front_offset, p1p[1], -p1p[0]), (front_offset, p3p[1], -p3p[0]), (front_offset, p4p[1], -p4p[0]), 1.0)
-        p.DatumPointByCoordinate(coords=point)
-        edge = p.edges.findAt(point)
+        point_rot = rotate_point_around_axis((front_offset, p1p[1], -p1p[0]), (front_offset, p3p[1], -p3p[0]), (front_offset, p4p[1], -p4p[0]), 1.0)
+        p.DatumPointByCoordinate(coords=point_rot)
+        edge = p.edges.findAt(point_rot)
         if edge is not None:
             p_edges.append(edge)
     if p_edges:
@@ -4309,8 +4318,13 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max):
 
     # 创建面
     create_surface_rotation_part_common(p, rotate_angle_deg)
-    if 'SURFACE-R1' in p.surfaces.keys():
-        p.Surface(side1Faces=p.surfaces['SURFACE-R1'].faces[0].getFacesByFaceAngle(20), name='SURFACE-OUTER')
+
+    point = s_block_outer_interval.geometry.values()[0].pointOn
+    point_rot = rotate_point_around_axis((point[0], point[1], 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), 1.0)
+    p_faces = p.faces.findAt((point_rot,))
+    if p_faces:
+        p.Surface(side1Faces=p_faces[0].getFacesByFaceAngle(20), name='SURFACE-OUTER')
+
     p_faces = get_faces_of_p_remove_given_surface_names(p, p.surfaces.keys())
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
@@ -4868,7 +4882,8 @@ if __name__ == "__main__":
             'front_offset': front_offset
         }
         # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max)
-        p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 500)
+        # p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0)
+        p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 100, 20.0)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
