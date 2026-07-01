@@ -4329,6 +4329,25 @@ def create_part_block_common(model, part_name, dimension):
 
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-INNER-BURN'], angle=360.0, flipRevolveDirection=OFF)
 
+    # 创建集合（面）
+    create_face_set_from_surface(p)
+
+    # 创建集合（面），粘接界面
+    p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-GRAIN'], p.sets['SET-CELL-INSULATION']), name='SET-FACES-GRAIN-INSULATION')
+    p.Set(faces=get_common_faces_between_sets(p, p.sets['SET-CELL-INSULATION'], p.sets['SET-CELL-GLUE-A']), name='SET-FACES-INSULATION-GLUE-A')
+
+    # 生成网格
+    generate_part_mesh(p, element_size=element_size)
+
+    insert_czm = True
+
+    # 插入内聚力单元
+    if insert_czm:
+        insert_COH3D8_at_face_set(p, 'SET-FACES-GRAIN-INSULATION', 'COHESIVE-ELEMENTS-GRAIN-INSULATION')
+
+    # 赋予SECTION属性
+    set_section_common(p)
+
     p.setValues(geometryRefinement=EXTRA_FINE)
 
     return p
