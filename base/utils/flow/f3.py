@@ -4251,15 +4251,18 @@ def create_part_block_common(model, part_name, dimension):
                 x_interval_middle = (x_interval_material[1] + x_interval_material[2]) / 2.0
                 ref_point = (x_interval_middle, faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1])
                 cells += p.cells.findAt((ref_point,))
-
-    # for pa in faces_xz_plane[index_r - 1]:
-    #     if pa[0] < z_list[1]:
-    #         cells += p.cells.findAt(((pa[1], 0.0, pa[0]),))
-    #     else:
-    #         # 处理切割面距离中心界面距离非常近的情况
-    #         cells += p.cells.findAt(((pa[1], 0.0, z_list[1] - TOL * 10),))
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
+
+    # 创建集合（体），SET-CELL-INSULATION
+    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-GRAIN', ['SET-CELL-GRAIN'])
+    if cells:
+        p.Set(cells=cells, name='SET-CELL-INSULATION')
+
+    # 创建集合（体），SET-CELL-GLUE-A
+    cells = get_cells_adjacent_to_set_and_remove_set_names(p, 'SET-CELL-INSULATION', ['SET-CELL-GRAIN', 'SET-CELL-INSULATION'])
+    if cells:
+        p.Set(cells=cells, name='SET-CELL-GLUE-A')
 
     # 星槽切割
     yz_plane_front_offset = p.DatumPlaneByOffset(plane=d[yz_plane.id], flip=SIDE1, offset=front_offset)
