@@ -3548,6 +3548,12 @@ def create_surface_rotation_part_common(p, rotate_angle_deg):
     cylinder = Cylinder((0, 0, 0), (1, 0, 0), r_high)
     create_surface_on_cylinder(p, cylinder, 'SURFACE-R1')
 
+    # p1 = (1.0, r_low, 0.0)
+    # p2 = (0.0, r_low, 0.0)
+    # p3 = (0.0, r_low, 1.0)
+    # plane = Plane(p1, p2, p3)
+    # create_surface_on_plane(p, plane, 'SURFACE-Y0')
+
 
 def set_section_common(p):
     set_name = 'SET-CELL-GRAIN'
@@ -4250,7 +4256,9 @@ def create_part_block_common(model, part_name, dimension):
     ]:
         for x_interval_material in x_interval_materials:
             if x_interval_material[0] == 'GRAIN':
-                x_interval_middle = (x_interval_material[1] + x_interval_material[2]) / 2.0
+                x_interval_min = max(x_interval_material[1], x_min)
+                x_interval_max = min(x_interval_material[2], x_max)
+                x_interval_middle = (x_interval_min + x_interval_max) / 2.0
                 if x_min <= x_interval_middle <= x_max:
                     ref_point = (x_interval_middle, faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1])
                     cells += p.cells.findAt((ref_point,))
@@ -4298,6 +4306,21 @@ def create_part_block_common(model, part_name, dimension):
     create_surface_rotation_part_common(p, rotate_angle_deg)
     if 'SURFACE-R1' in p.surfaces.keys():
         p.Surface(side1Faces=p.surfaces['SURFACE-R1'].faces[0].getFacesByFaceAngle(20), name='SURFACE-OUTER')
+    p_faces = get_faces_of_p_remove_given_surface_names(p, p.surfaces.keys())
+    if p_faces:
+        p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
+
+    # 更新集合（体）
+    if faces.shape[0] >= 3 and faces.shape[1] >= 3:
+        # 创建集合（体），SET-CELL-GLUE-B
+        p_cells = get_cells_from_faces(p, p.surfaces['SURFACE-OUTER'].faces)
+        if p_cells:
+            p.Set(cells=p_cells, name='SET-CELL-GLUE-B')
+
+        # 更新集合（体），SET-CELL-GLUE-A
+        p_cells = get_cells_by_remove(p, p.sets['SET-CELL-GLUE-A'].cells, p.sets['SET-CELL-GLUE-B'].cells)
+        if p_cells:
+            p.Set(cells=p_cells, name='SET-CELL-GLUE-A')
 
     # 轴向平移剖分
     x_list = [v[0] for v in middle_common_vertices] + [front_offset, inner_ref_point[0]]
@@ -4737,8 +4760,8 @@ if __name__ == "__main__":
         x_min = -849.5
         x_max = 20000
 
-        # x_min = 1000
-        # x_max = 2000
+        x_min = 1000
+        x_max = 2000
 
         front_offset = 350.0
 
