@@ -132,6 +132,7 @@ def create_sketch_slot(model, sketch_name, t, x0, slot_deep, slot_ellipse_a, slo
         s.delete(objectList=(s.geometry[4], s.geometry[7]))
 
     center_line = s.ConstructionLine(point1=(x0 + slot_deep - r_cut, -1e4), point2=(x0 + slot_deep - r_cut, 1e4))
+    angle_deg += 90.0
     s.rotate(centerPoint=(0.0, 0.0), angle=angle_deg, objectList=s.geometry.values())
     s.assignCenterline(line=center_line)
 
@@ -4282,7 +4283,7 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max):
     # 星槽切割
     yz_plane_front_offset = p.DatumPlaneByOffset(plane=d[yz_plane.id], flip=SIDE1, offset=front_offset)
     t = p.MakeSketchTransform(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, origin=(front_offset, 0.0, 0.0))
-    s_slot, p1p, p2p, p3p, p4p = create_sketch_slot(model, 'SKETCH-SLOT', t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, n, r_cut, burn_offset)
+    s_slot, p1p, p2p, p3p, p4p = create_sketch_slot(model, 'SKETCH-SLOT', t, x0, slot_deep, slot_ellipse_a, slot_ellipse_b, angle_demolding_1, angle_deg, r_cut, burn_offset)
     p.CutExtrude(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, flipExtrudeDirection=ON)
     p.CutRevolve(sketchPlane=d[yz_plane_front_offset.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_slot, angle=90.0, flipRevolveDirection=OFF)
 
@@ -4867,7 +4868,7 @@ if __name__ == "__main__":
             'front_offset': front_offset
         }
         # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max)
-        p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000)
+        p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 500)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
