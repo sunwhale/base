@@ -55,7 +55,8 @@ from utils import ABAQUS_ENV, Circle3D, Counter, Cylinder, Ellipse, Line2D, Plan
     create_surface_on_plane, create_tie_of_instance_surface, degrees_to_radians, find_duplicates, generate_part_mesh, geometries, geometries_circle, geometries_hex, get_block_types, get_cells_adjacent_to_set_and_remove_set_names, get_cells_by_remove, \
     get_common_faces_between_sets, get_direction, get_faces_of_p_remove_given_surface_names, get_same_area_faces, get_same_volume_cells, get_tie_types, get_z_list, ignore_common_edges_of_faces, insert_COH3D8_at_face_set, is_cell_in_set, is_face_in_set, \
     is_unicode_all_uppercase, json, line_circle_intersection, load_json, major_version, math, min_difference, mirror_y_axis, move_along_direction, part_partition_by_cylinder, plot_geometries, plot_geometries_hex, plot_three_arcs, polar_to_cartesian, \
-    radians_to_degrees, rotate_point_around_axis, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, string_types, text_type, vertices_in_cells, get_mirror_faces, get_cells_from_faces, get_edges_from_faces
+    radians_to_degrees, rotate_point_around_axis, rotate_point_around_origin_2d, rotate_point_around_vector, set_material, set_obj, solve_three_arcs, string_types, text_type, vertices_in_cells, get_mirror_faces, get_cells_from_faces, get_edges_from_faces, \
+    get_xy_plane_mirror_cells, get_xy_plane_mirror_faces
 
 PEN = 1e5
 TOL = 1e-6
@@ -4333,6 +4334,24 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max):
 
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-INNER-BURN'], angle=360.0, flipRevolveDirection=OFF)
 
+    p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
+    p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
+
+    for set_name in p.sets.keys():
+        if 'CELL' in set_name:
+            p_cells = p.sets[set_name].cells
+            p_cells_mirror = get_xy_plane_mirror_cells(p, p_cells)
+            p.Set(cells=p_cells + p_cells_mirror, name=set_name)
+
+    for surface_name in p.surfaces.keys():
+        p_faces = p.surfaces[surface_name].faces
+        if 'SURFACE-T1' in surface_name:
+            p_faces_mirror = get_xy_plane_mirror_faces(p, p_faces)
+            p.Surface(side1Faces=p_faces_mirror, name='SURFACE-T0')
+        else:
+            p_faces_mirror = get_xy_plane_mirror_faces(p, p_faces)
+            p.Surface(side1Faces=p_faces + p_faces_mirror, name=surface_name)
+
     # 创建集合（面）
     create_face_set_from_surface(p)
 
@@ -4423,14 +4442,14 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
     # is_create_p_block = True
     # is_create_p_block_penult = True
     # is_create_p_block_front = True
