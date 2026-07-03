@@ -4264,7 +4264,7 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
     part_partition_block_x(p, d, x_list)
 
     part_partition_block_z(p, d, [100, 103, 111, 114])
-    
+
     # 创建集合（体），SET-CELL-GRAIN
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
     for rtz in [
@@ -4277,6 +4277,9 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
                 x_interval_middle = (x_interval_min + x_interval_max) / 2.0
                 if x_min <= x_interval_middle <= x_max:
                     ref_point = (x_interval_middle, faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1])
+                    cells += p.cells.findAt((ref_point,))
+
+                    ref_point = (x_interval_middle, faces[rtz[0], rtz[1]][0], 0.0)
                     cells += p.cells.findAt((ref_point,))
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
@@ -4898,9 +4901,9 @@ if __name__ == "__main__":
             'front_offset': front_offset
         }
         # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max)
-        # p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0)
-        # p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 500, 20.0)
         p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0)
+        # p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 500, 20.0)
+        # p_block_2 = create_part_block_common(model, '2', block_dimension, 0, 20000, 20.0)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
