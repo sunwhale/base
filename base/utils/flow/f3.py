@@ -542,6 +542,16 @@ def create_sketch_block_inner(model, sketch_name, x0, slot_deep, slot_ellipse_b,
     return s, p3
 
 
+def create_sketch_block_inner_y0(model, sketch_name, x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, p0_front, p0_behind):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
+    r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
+    r_front = x0 + burn_offset
+    s.Line(point1=(p0_front[0], r_front), point2=(p0_front[0], 0.0))
+    s.Line(point1=(p0_front[0], 0.0), point2=(l_c1_c2 + p0_behind[0], 0.0))
+    s.Line(point1=(l_c1_c2 + p0_behind[0], 0.0), point2=(l_c1_c2 + p0_behind[0], r_behind))
+    return s
+
+
 def create_sketch_block_inner_burn(model, sketch_name, x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_c2, p0_front, p0_behind):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
     r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
@@ -4026,8 +4036,18 @@ def create_sketch_block(model, sketch_name, x_min, x_max):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
     s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-INNER'])
-    sketch_split_and_delete(s, given_x_0=x_min, given_y_0=100.0, given_x_1=x_min, given_y_1=2000.0, x_min=x_min, x_max=None)
-    sketch_split_and_delete(s, given_x_0=x_max, given_y_0=100.0, given_x_1=x_max, given_y_1=2000.0, x_min=None, x_max=x_max)
+    sketch_split_and_delete(s, given_x_0=x_min, given_y_0=0.0, given_x_1=x_min, given_y_1=PEN, x_min=x_min, x_max=None)
+    sketch_split_and_delete(s, given_x_0=x_max, given_y_0=0.0, given_x_1=x_max, given_y_1=PEN, x_min=None, x_max=x_max)
+    s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
+    return s
+
+
+def create_sketch_block_full(model, sketch_name, x_min, x_max):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0)
+    s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-OUTER'])
+    s.retrieveSketch(sketch=model.sketches['SKETCH-BLOCK-INNER-Y0'])
+    sketch_split_and_delete(s, given_x_0=x_min, given_y_0=0.0, given_x_1=x_min, given_y_1=PEN, x_min=x_min, x_max=None)
+    sketch_split_and_delete(s, given_x_0=x_max, given_y_0=0.0, given_x_1=x_max, given_y_1=PEN, x_min=None, x_max=x_max)
     s.ConstructionLine(point1=(0.0, 0.0), point2=(1.0, 0.0))
     return s
 
@@ -4209,6 +4229,7 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
         t_offset_list.append(t_offset_list[-1] + t)
 
     s_block = create_sketch_block(model, 'SKETCH-BLOCK-' + layer_name, x_min, x_max)
+    create_sketch_block_full(model, 'SKETCH-BLOCK-FULL-' + layer_name, x_min, x_max)
     s_block_outer_interval = create_sketch_block_outer_interval(model, 'SKETCH-BLOCK-OUTER-' + layer_name, x_min, x_max)
     s_block_outer_offset, traction_geos, normal_geos, middle_common_vertices = create_sketch_block_outer_offset(model, 'SKETCH-BLOCK-OUTER-OFFSET-' + layer_name, x_min, x_max, r_offset_list, l_c1_c2, 0.0)
 
@@ -4885,6 +4906,8 @@ if __name__ == "__main__":
 
         s_block_inner, inner_ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, 0.0, l_c1_c2, l_block_c2, p0_front, p0_behind)
 
+        s_block_inner_y0 = create_sketch_block_inner_y0(model, 'SKETCH-BLOCK-INNER-Y0', x0, slot_deep, slot_ellipse_b, 0.0, l_c1_c2, p0_front, p0_behind)
+
         s_block_outer = create_sketch_block_outer(model, 'SKETCH-BLOCK-OUTER', x0, 0.0, slot_deep, slot_ellipse_b, shell_insulation_r_in,
                                                   p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front,
                                                   p0_behind, theta0_deg_behind, p3_behind, theta3_deg_behind, r1_behind, r2_behind, r3_behind,
@@ -4919,8 +4942,8 @@ if __name__ == "__main__":
             'inner_ref_point': inner_ref_point,
             'front_offset': front_offset
         }
-        # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max)
-        p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0)
+        p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max, 20.0)
+        # p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0)
         # p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 500, 20.0)
         # p_block_2 = create_part_block_common(model, '2', block_dimension, 0, 20000, 20.0)
 
