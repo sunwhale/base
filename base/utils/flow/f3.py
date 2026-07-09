@@ -4453,6 +4453,25 @@ def create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, b
     return x_list, r_list, t_list, x_interval_materials
 
 
+def get_ref_point_of_cell(faces, x_interval_materials):
+    x_min = -1000.0
+    x_max = 20000.0
+    for rt in [
+        [0, 0]
+    ]:
+        for x_interval_material in x_interval_materials:
+            if x_interval_material[0] == 'GRAIN':
+                x_interval_min = max(x_interval_material[1], x_min)
+                x_interval_max = min(x_interval_material[2], x_max)
+                x_interval_middle = (x_interval_min + x_interval_max) / 2.0
+                if x_min <= x_interval_middle <= x_max:
+                    ref_point = (x_interval_middle, float(faces[rt[0], rt[1]][0]), float(faces[rt[0], rt[1]][1]))
+                    print(ref_point)
+                    angle = 30.0
+                    point_rot = rotate_point_around_axis(ref_point, (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), angle)
+                    print(point_rot)
+
+
 if __name__ == "__main__":
     is_create_p_shell = False
     is_create_p_skirt_front = False
