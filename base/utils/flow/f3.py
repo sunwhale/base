@@ -4017,8 +4017,8 @@ def sketch_split_and_delete(s, given_x_0, given_y_0, given_x_1, given_y_1, x_min
     elif len(touch_geos) == 0 and len(intersect_geos) == 2:
         break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
         break_curve_dict_2 = sketch_break_curve(s, intersect_geos[1], split_line)
-        break_point_1 = break_curve_dict_1.keys()[0]
-        break_point_2 = break_curve_dict_2.keys()[0]
+        break_point_1 = list(break_curve_dict_1.keys())[0]
+        break_point_2 = list(break_curve_dict_2.keys())[0]
         s.Line(point1=break_point_1, point2=break_point_2)
     elif len(touch_geos) == 0 and len(intersect_geos) == 1:
         break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
@@ -4456,6 +4456,7 @@ def create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, b
     gap_length_list = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 30]
     x_list = [p0_x_front]
     x_interval_materials = []
+    x_block_dividing = []
     for i in range(len(block_length_list)):
         x_ref = x_list[-1]
 
@@ -4471,10 +4472,11 @@ def create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, b
         if i < len(gap_length_list):
             x_list.append(x_ref + block_length_list[i] + gap_length_list[i])
             x_interval_materials.append(['GLUE-A', x_list[-2], x_list[-1]])
+            x_block_dividing.append((x_list[-2] + x_list[-1]) / 2.0)
 
     x_list = x_list[2:-2]
 
-    return x_list, r_list, t_list, x_interval_materials
+    return x_list, r_list, t_list, x_interval_materials, x_block_dividing
 
 
 def get_ref_point_of_cell(faces, x_interval_materials):
@@ -4909,7 +4911,7 @@ if __name__ == "__main__":
         r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
         r_front = x0 + burn_offset
 
-        x_list, r_list, t_list, x_interval_materials = create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum)
+        x_list, r_list, t_list, x_interval_materials, x_block_dividing = create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum)
 
         s_block_inner, inner_ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, 0.0, l_c1_c2, l_block_c2, p0_front, p0_behind)
 
@@ -4922,10 +4924,8 @@ if __name__ == "__main__":
 
         s_block_inner_burn, ref_point_burn = create_sketch_block_inner_burn(model, 'SKETCH-BLOCK-INNER-BURN', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_c2, p0_front, p0_behind)
 
-        x_min = -849.5
-        x_max = 20000
-        # x_min = 1000
-        # x_max = 2000
+        x_min = p0_x_front
+        x_max = l_c1_c2 + p0_x_behind
 
         block_dimension = {
             'n': n,
@@ -4955,9 +4955,14 @@ if __name__ == "__main__":
 
         z_list = [100, 103, 111, 114]
         # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max, 20.0)
-        p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0, z_list)
-        # p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 500, 20.0)
-        # p_block_2 = create_part_block_common(model, '2', block_dimension, 0, 20000, 20.0)
+        # p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0, z_list)
+
+        beta_degree = 360 / n / 2.0
+        p_block = {}
+        p_block[1] = create_part_block_common(model, '1', block_dimension, x_min, x_block_dividing[0], beta_degree)
+        for i in range(1, 15):
+            p_block[i + 1] = create_part_block_common(model, str(i + 1), block_dimension, x_block_dividing[i - 1], x_block_dividing[i], beta_degree)
+        p_block[16] = create_part_block_common(model, '16', block_dimension, x_block_dividing[14], x_max, beta_degree)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
