@@ -4219,6 +4219,10 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
     inner_ref_point = dimension['inner_ref_point']
     x_interval_materials = dimension['x_interval_materials']
     front_offset = dimension['front_offset']
+    r_front = dimension['r_front']
+    r_behind = dimension['r_behind']
+    is_outer_glue = True
+    z_list = [100, 103, 111, 114]
 
     r_offset_list = [0]
     for r in r_list[1:]:
@@ -4284,23 +4288,23 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
     x_list = [x for x in x_list if x_min <= x <= x_max]
     part_partition_block_x(p, d, x_list)
 
-    part_partition_block_z(p, d, [100, 103, 111, 114])
+    # z向平移剖分
+    if z_list:
+        part_partition_block_z(p, d, z_list)
 
     # 创建集合（体），SET-CELL-GRAIN
     cells = p.cells.getByBoundingBox(0, 0, 0, 0, 0, 0)
-    for rtz in [
-        [0, 0, 0]
-    ]:
-        for x_interval_material in x_interval_materials:
-            if x_interval_material[0] == 'GRAIN':
-                x_interval_min = max(x_interval_material[1], x_min)
-                x_interval_max = min(x_interval_material[2], x_max)
-                x_interval_middle = (x_interval_min + x_interval_max) / 2.0
-                if x_min <= x_interval_middle <= x_max:
-                    ref_point = (x_interval_middle, faces[rtz[0], rtz[1]][0], faces[rtz[0], rtz[1]][1])
-                    cells += p.cells.findAt((ref_point,))
 
-                    ref_point = (x_interval_middle, faces[rtz[0], rtz[1]][0], 0.0)
+    for x_interval_material in x_interval_materials:
+        if x_interval_material[0] == 'GRAIN':
+            x_interval_min = max(x_interval_material[1], x_min)
+            x_interval_max = min(x_interval_material[2], x_max)
+            x_interval_middle = (x_interval_min + x_interval_max) / 2.0
+            if x_min <= x_interval_middle <= x_max:
+                ref_point = (x_interval_middle, r_behind, 0.0)
+                cells += p.cells.findAt((ref_point,))
+                if z_list:
+                    ref_point = (x_interval_middle, r_behind, z_list[-1] + TOL)
                     cells += p.cells.findAt((ref_point,))
     if cells:
         p.Set(cells=cells, name='SET-CELL-GRAIN')
@@ -4356,7 +4360,7 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
     # 更新集合（体）
-    if faces.shape[0] >= 3 and faces.shape[1] >= 3:
+    if is_outer_glue:
         # 创建集合（体），SET-CELL-GLUE-B
         p_cells = get_cells_from_faces(p, p.surfaces['SURFACE-OUTER'].faces)
         if p_cells:
@@ -4842,6 +4846,7 @@ if __name__ == "__main__":
         plot_three_arcs(result, p0_behind, p3_behind, is_show=False, save_path='three_arcs_behind.png')
 
         plot_blocks_map(block, is_show=False, save_path='blocks_map.png')
+
     if ABAQUS_ENV:
         # 初始化part对象
         p_insulation = None
@@ -4901,8 +4906,11 @@ if __name__ == "__main__":
         cmap.updateOverrides(overrides={'MATERIAL-SKIRT-COMPOSITE': (True, '#B2FF00', 'Default', '#B2FF00')})
 
         l_block_c2 = 1393.5
+
+        r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
+        r_front = x0 + burn_offset
+
         x_list, r_list, t_list, x_interval_materials = create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum)
-        points, lines, faces = geometries(d, x0, beta, r_list, t_list)
 
         s_block_inner, inner_ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, 0.0, l_c1_c2, l_block_c2, p0_front, p0_behind)
 
@@ -4940,10 +4948,12 @@ if __name__ == "__main__":
             'x_interval_materials': x_interval_materials,
             'r_cut': r_cut_front,
             'inner_ref_point': inner_ref_point,
-            'front_offset': front_offset
+            'front_offset': front_offset,
+            'r_front': r_front,
+            'r_behind': r_behind
         }
-        p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max, 20.0)
-        # p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0)
+        # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max, 20.0)
+        p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0)
         # p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 500, 20.0)
         # p_block_2 = create_part_block_common(model, '2', block_dimension, 0, 20000, 20.0)
 
