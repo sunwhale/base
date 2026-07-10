@@ -4199,7 +4199,7 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
     return s, traction_geos, normal_geos, middle_common_vertices
 
 
-def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_deg):
+def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_deg, z_list=[]):
     n = dimension['n']
     slot_deep = dimension['slot_deep']
     x0 = dimension['x0']
@@ -4221,8 +4221,7 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
     front_offset = dimension['front_offset']
     r_front = dimension['r_front']
     r_behind = dimension['r_behind']
-    is_outer_glue = True
-    z_list = [100, 103, 111, 114]
+    is_outer_glue = dimension['is_outer_glue']
 
     r_offset_list = [0]
     for r in r_list[1:]:
@@ -4950,10 +4949,13 @@ if __name__ == "__main__":
             'inner_ref_point': inner_ref_point,
             'front_offset': front_offset,
             'r_front': r_front,
-            'r_behind': r_behind
+            'r_behind': r_behind,
+            'is_outer_glue': True
         }
+
+        z_list = [100, 103, 111, 114]
         # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max, 20.0)
-        p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0)
+        p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0, z_list)
         # p_block_2 = create_part_block_common(model, '2', block_dimension, -1000, 500, 20.0)
         # p_block_2 = create_part_block_common(model, '2', block_dimension, 0, 20000, 20.0)
 
