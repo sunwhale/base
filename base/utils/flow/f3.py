@@ -4346,7 +4346,7 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
         p.PartitionCellByExtrudeEdge(line=d[z_axis.id], cells=p.cells, edges=p_edges, sense=REVERSE)
 
     # 创建面
-    create_surface_rotation_part_common(p, rotate_angle_deg)
+    create_surface_rotation_part_common(p, angle_deg)
 
     point = s_block_outer_interval.geometry.values()[0].pointOn
     point_rot = rotate_point_around_axis((point[0], point[1], 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), 1.0)
@@ -4792,7 +4792,7 @@ if __name__ == "__main__":
     flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
     flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
 
-    nl, nt = 16, n
+    nl, nt = 14, n
     block = np.zeros((nl, nt), dtype=bool)
     block[:, :] = True
 
@@ -4850,14 +4850,7 @@ if __name__ == "__main__":
         p_flange_behind = None
         p_skirt_behind = None
         p_shell = None
-        p_block_front = None
-        p_block_penult = None
-        p_block_behind = None
         p_block = None
-        p_gap_front = None
-        p_gap_penult = None
-        p_gap_behind = None
-        p_gap = None
 
         Mdb()
         model = mdb.models['Model-1']
@@ -5343,45 +5336,26 @@ if __name__ == "__main__":
                 if is_shared_node:
                     if tie_type == 'down':
                         instance_name_1 = 'BLOCK-%s-%s' % (l1 + 1, i1 + 1)
-                        surface_name_1 = 'SURFACE-Z1'
+                        surface_name_1 = 'SURFACE-X1'
                         instance_name_2 = 'BLOCK-%s-%s' % (l2 + 1, i2 + 1)
-                        surface_name_2 = 'SURFACE-Z-1'
+                        surface_name_2 = 'SURFACE-X0'
                         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
                     elif tie_type == 'right':
                         instance_name_1 = 'BLOCK-%s-%s' % (l1 + 1, i1 + 1)
                         surface_name_1 = 'SURFACE-T1'
                         instance_name_2 = 'BLOCK-%s-%s' % (l2 + 1, i2 + 1)
-                        surface_name_2 = 'SURFACE-T-1'
+                        surface_name_2 = 'SURFACE-T0'
                         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
                     elif tie_type == 'circular':
                         instance_name_1 = 'BLOCK-%s-%s' % (l1 + 1, i1 + 1)
-                        surface_name_1 = 'SURFACE-T-1'
+                        surface_name_1 = 'SURFACE-T0'
                         instance_name_2 = 'BLOCK-%s-%s' % (l2 + 1, i2 + 1)
                         surface_name_2 = 'SURFACE-T1'
                         create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
                 else:
-                    if tie_type == 'down':
-                        instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                        surface_name_1 = 'SURFACE-Z2'
-                        instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                        surface_name_2 = 'SURFACE-Z-2'
-                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-
-                    elif tie_type == 'right':
-                        instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                        surface_name_1 = 'SURFACE-T2'
-                        instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                        surface_name_2 = 'SURFACE-T-2'
-                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-
-                    elif tie_type == 'circular':
-                        instance_name_1 = 'GAP-%s-%s' % (l1 + 1, i1 + 1)
-                        surface_name_1 = 'SURFACE-T-2'
-                        instance_name_2 = 'GAP-%s-%s' % (l2 + 1, i2 + 1)
-                        surface_name_2 = 'SURFACE-T2'
-                        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                    pass
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
@@ -5400,7 +5374,7 @@ if __name__ == "__main__":
                 l, i = block_loc
                 if i == 0:
                     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    set_name = 'SET-SURFACE-T-1'
+                    set_name = 'SET-SURFACE-T0'
                     bc_name = 'BC-' + instance_name + '-' + set_name
                     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
@@ -5408,50 +5382,6 @@ if __name__ == "__main__":
                     set_name = 'SET-SURFACE-T1'
                     bc_name = 'BC-' + instance_name + '-' + set_name
                     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-
-                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                #     set_name = 'SET-SURFACE-T-1'
-                #     bc_name = 'BC-' + instance_name + '-' + set_name
-                #     model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                #                      region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                #                      exteriorTolerance=0.05, intersectionOnly=OFF)
-                #
-                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                #     set_name = 'SET-SURFACE-T1'
-                #     bc_name = 'BC-' + instance_name + '-' + set_name
-                #     model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                #                      region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                #                      exteriorTolerance=0.05, intersectionOnly=OFF)
-                #
-                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                #     set_name = 'SET-SURFACE-Z1'
-                #     bc_name = 'BC-' + instance_name + '-' + set_name
-                #     model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                #                      region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                #                      exteriorTolerance=0.05, intersectionOnly=OFF)
-                #
-                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                #     set_name = 'SET-SURFACE-Z-1'
-                #     bc_name = 'BC-' + instance_name + '-' + set_name
-                #     model.SubmodelBC(name=bc_name, createStepName='Step-1',
-                #                      region=a.instances[instance_name].sets[set_name], globalStep='1', globalIncrement=0, timeScale=OFF, dof=(1, 2, 3), globalDrivingRegion='', absoluteExteriorTolerance=None,
-                #                      exteriorTolerance=0.05, intersectionOnly=OFF)
-                #
-                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                #     set_name = 'SET-SURFACE-T0'
-                #     bc_name = 'BC-' + instance_name + '-' + set_name
-                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-                #
-                # if i == 2:
-                #     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                #     set_name = 'SET-SURFACE-T1'
-                #     bc_name = 'BC-' + instance_name + '-' + set_name
-                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
-                #
-                #     instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                #     set_name = 'SET-SURFACE-T2'
-                #     bc_name = 'BC-' + instance_name + '-' + set_name
-                #     model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             # model.Gravity(name='Load-1', createStepName='Step-1', comp2=-9800.0, distributionType=UNIFORM, field='')
 
@@ -5462,7 +5392,7 @@ if __name__ == "__main__":
                         explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
                         modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
                         scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
-                        multiprocessingMode=DEFAULT, numCpus=16, numDomains=16, numGPUs=0)
+                        multiprocessingMode=DEFAULT, numCpus=8, numDomains=8, numGPUs=0)
             else:
                 mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
                         atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
