@@ -4954,8 +4954,6 @@ if __name__ == "__main__":
         }
 
         z_list = [100, 103, 111, 114]
-        # p_block_1 = create_part_block_common(model, '1', block_dimension, x_min, x_max, 20.0)
-        # p_block_2 = create_part_block_common(model, '2', block_dimension, 16000, 20000, 40.0, z_list)
 
         beta_degree = 360 / n / 2.0
         p_block = {}
@@ -4963,6 +4961,10 @@ if __name__ == "__main__":
         for i in range(1, 15):
             p_block[i + 1] = create_part_block_common(model, str(i + 1), block_dimension, x_block_dividing[i - 1], x_block_dividing[i], beta_degree)
         p_block[16] = create_part_block_common(model, '16', block_dimension, x_block_dividing[14], x_max, beta_degree)
+
+        p_block_3_in_1 = {}
+        p_block_3_in_1[15] = create_part_block_common(model, '15-3-in-1', block_dimension, x_block_dividing[13], x_block_dividing[14], beta_degree * 2.0, z_list)
+        p_block_3_in_1[16] = create_part_block_common(model, '16-3-in-1', block_dimension, x_block_dividing[14], x_max, beta_degree * 2.0, z_list)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
