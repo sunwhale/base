@@ -4529,17 +4529,9 @@ if __name__ == "__main__":
     # is_create_p_cover_front = True
     # is_create_p_cover_behind = True
     # is_create_p_block = True
-    # is_create_p_block_penult = True
-    # is_create_p_block_front = True
-    # is_create_p_block_behind = True
-    # is_create_p_block_behind_ab = True
-    # is_create_p_gap = True
-    # is_create_p_gap_penult = True
-    # is_create_p_gap_front = True
-    # is_create_p_gap_behind = True
     # is_save_parts_cae = True
-    # is_open_parts_cae = True
-    # is_assemble = True
+    is_open_parts_cae = True
+    is_assemble = True
 
     n = 9
     d = 3529.0
@@ -4800,9 +4792,9 @@ if __name__ == "__main__":
     flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
     flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
 
-    nl, nt = 12, n
+    nl, nt = 16, n
     block = np.zeros((nl, nt), dtype=bool)
-    block[:, 0] = True
+    block[:, :] = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -4956,15 +4948,16 @@ if __name__ == "__main__":
         z_list = [100, 103, 111, 114]
 
         beta_degree = 360 / n / 2.0
-        p_block = {}
-        p_block[1] = create_part_block_common(model, '1', block_dimension, x_min, x_block_dividing[0], beta_degree)
-        for i in range(1, 15):
-            p_block[i + 1] = create_part_block_common(model, str(i + 1), block_dimension, x_block_dividing[i - 1], x_block_dividing[i], beta_degree)
-        p_block[16] = create_part_block_common(model, '16', block_dimension, x_block_dividing[14], x_max, beta_degree)
+        if is_create_p_block:
+            p_block = {}
+            p_block[1] = create_part_block_common(model, '1', block_dimension, x_min, x_block_dividing[0], beta_degree)
+            for i in range(1, 15):
+                p_block[i + 1] = create_part_block_common(model, str(i + 1), block_dimension, x_block_dividing[i - 1], x_block_dividing[i], beta_degree)
+            p_block[16] = create_part_block_common(model, '16', block_dimension, x_block_dividing[14], x_max, beta_degree)
 
-        p_block_3_in_1 = {}
-        p_block_3_in_1[15] = create_part_block_common(model, '15-3-in-1', block_dimension, x_block_dividing[13], x_block_dividing[14], beta_degree * 2.0, z_list)
-        p_block_3_in_1[16] = create_part_block_common(model, '16-3-in-1', block_dimension, x_block_dividing[14], x_max, beta_degree * 2.0, z_list)
+            p_block_3_in_1 = {}
+            p_block_3_in_1[15] = create_part_block_common(model, '15-3-in-1', block_dimension, x_block_dividing[13], x_block_dividing[14], beta_degree * 2.0, z_list)
+            p_block_3_in_1[16] = create_part_block_common(model, '16-3-in-1', block_dimension, x_block_dividing[14], x_max, beta_degree * 2.0, z_list)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
@@ -5136,151 +5129,6 @@ if __name__ == "__main__":
             p_insulation = create_part_insulation(model, 'PART-INSULATION', insulation_dimension)
             print('CREATE PART-INSULATION DONE.')
 
-        z_list_with_gap = [0, block_length / 2 - block_insulation_thickness_z, block_length / 2, block_length / 2 + block_gap_axial / 2]
-        index_t_with_gap = 3
-        if is_shared_node:
-            z_list = z_list_with_gap
-            index_t = index_t_with_gap
-        else:
-            z_list = z_list_with_gap[:-1]
-            index_t = index_t_with_gap - 1
-
-        block_dimension = {
-            'n': n,
-            'z_list': z_list,
-            'slot_deep': slot_deep,
-            'x0': x0,
-            'angle_demolding_1': angle_demolding_1,
-            'slot_ellipse_a': slot_ellipse_a,
-            'slot_ellipse_b': slot_ellipse_b,
-            'size': size,
-            'index_r': 2 + 1,
-            'index_t': index_t,
-            'element_size': element_size,
-            'insert_czm': insert_czm,
-            'beta': beta,
-            'burn_offset': burn_offset
-        }
-
-        points, lines, faces = geometries(d, x0, beta, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
-        if is_create_p_block:
-            p_block = create_part_block(model, 'PART-BLOCK', points, lines, faces, block_dimension)
-            print('CREATE PART-BLOCK DONE.')
-
-        gap_dimension = deepcopy(block_dimension)
-        gap_dimension['z_list'] = z_list_with_gap
-        gap_dimension['index_r'] = 2
-        gap_dimension['index_t'] = index_t_with_gap
-        if is_create_p_gap:
-            p_gap = create_part_gap(model, 'PART-GAP', points, lines, faces, gap_dimension)
-            print('CREATE PART-GAP DONE.')
-
-        penult_block_dimension = deepcopy(block_dimension)
-        if is_create_p_block_penult:
-            p_block_penult = create_part_block_penult(model, 'PART-BLOCK-PENULT', points, lines, faces, penult_block_dimension)
-            print('CREATE PART-BLOCK-PENULT DONE.')
-
-        penult_gap_dimension = deepcopy(gap_dimension)
-        if is_create_p_gap_penult:
-            p_gap_penult = create_part_gap_penult(model, 'PART-GAP-PENULT', points, lines, faces, penult_gap_dimension)
-            print('CREATE PART-GAP-PENULT DONE.')
-
-        points, lines, faces = geometries(d, x0, beta, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
-
-        z_list_with_gap = [0, front_ref_length, front_ref_length + block_insulation_thickness_z, front_ref_length + block_insulation_thickness_z + block_gap_axial / 2]
-        index_t_with_gap = 3
-        if is_shared_node:
-            z_list = z_list_with_gap
-            index_t = index_t_with_gap
-        else:
-            z_list = z_list_with_gap[:-1]
-            index_t = index_t_with_gap - 1
-
-        first_block_dimension = deepcopy(block_dimension)
-        first_block_dimension['z_list'] = z_list
-        first_block_dimension['index_r'] = 3 + 1
-        first_block_dimension['index_t'] = index_t
-
-        first_block_dimension['r_cut'] = r_cut_front
-        first_block_dimension['length_front'] = length_front
-        first_block_dimension['p0'] = [p0_front[0] - front_offset, p0_front[1]]
-        first_block_dimension['theta0_deg'] = theta0_deg_front
-        first_block_dimension['p3'] = [p3_front[0] - front_offset, p3_front[1]]
-        first_block_dimension['theta3_deg'] = theta3_deg_front
-        first_block_dimension['r1'] = r1_front
-        first_block_dimension['r2'] = r2_front
-        first_block_dimension['r3'] = r3_front
-        first_block_dimension['theta_in_deg'] = shell_insulation_theta_in_deg_front
-        if is_create_p_block_front:
-            p_block_front = create_part_block_front(model, 'PART-BLOCK-FRONT', points, lines, faces, first_block_dimension)
-            print('CREATE PART-BLOCK-FRONT DONE.')
-
-        first_gap_dimension = deepcopy(first_block_dimension)
-        first_gap_dimension['z_list'] = z_list_with_gap
-        if is_create_p_gap_front:
-            p_gap_front = create_part_gap_front(model, 'PART-GAP-FRONT', points, lines, faces, first_gap_dimension)
-            print('CREATE PART-GAP-FRONT DONE.')
-
-        z_list_with_gap = [0, behind_ref_length, behind_ref_length + block_insulation_thickness_z, behind_ref_length + block_insulation_thickness_z + block_gap_axial / 2]
-        index_t_with_gap = 3
-        if is_shared_node:
-            z_list = z_list_with_gap
-        else:
-            z_list = z_list_with_gap[:-1]
-
-        behind_block_dimension = deepcopy(first_block_dimension)
-        behind_block_dimension['z_list'] = z_list
-        behind_block_dimension['r_cut'] = r_cut_behind
-        behind_block_dimension['length_behind'] = length_behind
-        behind_block_dimension['p0'] = [p0_behind[0] + front_offset, p0_behind[1]]
-        behind_block_dimension['theta0_deg'] = theta0_deg_behind
-        behind_block_dimension['p3'] = [p3_behind[0] + front_offset, p3_behind[1]]
-        behind_block_dimension['theta3_deg'] = theta3_deg_behind
-        behind_block_dimension['r1'] = r1_behind
-        behind_block_dimension['r2'] = r2_behind
-        behind_block_dimension['r3'] = r3_behind
-        behind_block_dimension['theta_in_deg'] = shell_insulation_theta_in_deg_behind
-        if is_create_p_block_behind:
-            p_block_behind = create_part_block_behind(model, 'PART-BLOCK-BEHIND', points, lines, faces, behind_block_dimension)
-            print('CREATE PART-BLOCK-BEHIND DONE.')
-
-        behind_gap_dimension = deepcopy(behind_block_dimension)
-        behind_gap_dimension['z_list'] = z_list_with_gap
-        if is_create_p_gap_behind:
-            p_gap_behind = create_part_gap_behind(model, 'PART-GAP-BEHIND', points, lines, faces, behind_gap_dimension)
-            print('CREATE PART-GAP-BEHIND DONE.')
-
-        if is_create_p_block_behind_ab:
-            r_out = 140.0
-
-            central_angle_a = math.pi / 6
-            intercept_a = -67.55
-            behind_block_a_dimension = deepcopy(behind_block_dimension)
-            behind_block_a_dimension['central_angle'] = central_angle_a
-            behind_block_a_dimension['index_r'] = 3 + 1
-            points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
-            p_block_behind_1a = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1A', points, lines, faces, behind_block_a_dimension)
-            print('CREATE PART-BLOCK-BEHIND-1A DONE.')
-
-            behind_block_a_dimension['index_r'] = 2 + 1
-            points, lines, faces = geometries_circle(d, r_out, central_angle_a, intercept_a, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
-            p_block_behind_2a = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2A', points, lines, faces, behind_block_a_dimension)
-            print('CREATE PART-BLOCK-BEHIND-2A DONE.')
-
-            central_angle_b = 0.0
-            intercept_b = 58.5
-            behind_block_b_dimension = deepcopy(behind_block_dimension)
-            behind_block_b_dimension['central_angle'] = central_angle_b
-            behind_block_b_dimension['index_r'] = 3 + 1
-            points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, wall_insulation_thickness, block_insulation_thickness_r, outer_partition_offset], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
-            p_block_behind_1b = create_part_block_behind_1(model, 'PART-BLOCK-BEHIND-1B', points, lines, faces, behind_block_b_dimension)
-            print('CREATE PART-BLOCK-BEHIND-1B DONE.')
-
-            behind_block_b_dimension['index_r'] = 2 + 1
-            points, lines, faces = geometries_circle(d, r_out, central_angle_b, intercept_b, [0, wall_insulation_thickness, block_insulation_thickness_r], [0, block_gap_axial / 2.0, block_insulation_thickness_t])
-            p_block_behind_2b = create_part_block_behind_2(model, 'PART-BLOCK-BEHIND-2B', points, lines, faces, behind_block_b_dimension)
-            print('CREATE PART-BLOCK-BEHIND-2B DONE.')
-
         if is_save_parts_cae:
             mdb.saveAs(pathName='f2-parts.cae')
 
@@ -5288,14 +5136,6 @@ if __name__ == "__main__":
             Mdb()
             openMdb(pathName='f2-parts.cae')
             model = mdb.models['Model-1']
-            p_block_front = model.parts['PART-BLOCK-FRONT']
-            p_block_penult = model.parts['PART-BLOCK-PENULT']
-            p_block_behind = model.parts['PART-BLOCK-BEHIND']
-            p_block = model.parts['PART-BLOCK']
-            p_gap_front = model.parts['PART-GAP-FRONT']
-            p_gap_penult = model.parts['PART-GAP-PENULT']
-            p_gap_behind = model.parts['PART-GAP-BEHIND']
-            p_gap = model.parts['PART-GAP']
             p_insulation = model.parts['PART-INSULATION']
             p_cover_front = model.parts['PART-COVER-FRONT']
             p_flange_front = model.parts['PART-FLANGE-FRONT']
@@ -5310,22 +5150,6 @@ if __name__ == "__main__":
         if is_assemble:
             block_types = get_block_types(block)
             ties_types = get_tie_types(block)
-
-            # 药块字典
-            block_part_dict = {
-                'FRONT': p_block_front,
-                'PENULT': p_block_penult,
-                'BEHIND': p_block_behind,
-                'MIDDLE': p_block
-            }
-
-            # 缝隙字典
-            gap_part_dict = {
-                'FRONT': p_gap_front,
-                'PENULT': p_gap_penult,
-                'BEHIND': p_gap_behind,
-                'MIDDLE': p_gap
-            }
 
             # 旋转体字典
             rotation_part_dict = {
@@ -5345,50 +5169,22 @@ if __name__ == "__main__":
 
             # 公共旋转参数
             origin = (0.0, 0.0, 0.0)
+            axis_x = (1.0, 0.0, 0.0)
             axis_y = (0.0, 1.0, 0.0)
             axis_z = (0.0, 0.0, 1.0)
-            y_rot_angle = -90.0
-
-            # 根据 size 计算Z轴旋转角度
-            if size == '1/2':
-                z_rot_angle = -90.0
-            elif size == '1':
-                z_rot_angle = -90.0 - 360.0 / n / 2.0
-            else:
-                z_rot_angle = 0.0
+            x_rot_angle = -beta_degree
 
             for name, part in rotation_part_dict.items():
                 if part is not None:
                     a.Instance(name=name, part=part, dependent=ON)
-                    a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_y, angle=y_rot_angle)
-                    a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_z, angle=z_rot_angle)
+                    a.rotate(instanceList=(name,), axisPoint=origin, axisDirection=axis_x, angle=x_rot_angle)
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
-
-                z_shift = front_offset
-
-                if block_type == 'FRONT':
-                    z_shift = front_offset
-                elif block_type == 'MIDDLE':
-                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_axial / 2 + (l - 1 + 0.5) * (block_gap_axial + block_length)
-                elif block_type == 'PENULT':
-                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_axial / 2 + (l - 1 + 0.5) * (block_gap_axial + block_length)
-                elif block_type == 'BEHIND':
-                    z_shift = front_offset + front_ref_length + block_insulation_thickness_z + block_gap_axial / 2 + (l - 1) * (block_gap_axial + block_length) + block_gap_axial / 2 + block_insulation_thickness_z + behind_ref_length
-
+                part_name = 'PART-BLOCK-%s' % (l + 1)
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                if block_part_dict[block_type] is not None:
-                    a.Instance(name=instance_name, part=block_part_dict[block_type], dependent=ON)
-                    a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
-                    a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
-
-                if not is_shared_node:
-                    if gap_part_dict[block_type] is not None:
-                        instance_name = 'GAP-%s-%s' % (l + 1, i + 1)
-                        a.Instance(name=instance_name, part=gap_part_dict[block_type], dependent=ON)
-                        a.translate(instanceList=(instance_name,), vector=(0.0, 0.0, z_shift))
-                        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(0.0, 0.0, 1.0), angle=i * 360.0 / n)
+                a.Instance(name=instance_name, part=model.parts[part_name], dependent=ON)
+                a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=i * 360.0 / n)
 
             model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
@@ -5540,23 +5336,7 @@ if __name__ == "__main__":
                     surface_name_1 = 'SURFACE-INNER'
                     create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
                 else:
-                    instance_name_1 = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    surface_name_1 = 'SURFACE-TIE'
-                    instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
-                    surface_name_2 = 'SURFACE-TIE'
-                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-
-                    instance_name_2 = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                    surface_name_2 = 'SURFACE-OUTER'
-                    instance_name_1 = 'INSULATION'
-                    surface_name_1 = 'SURFACE-INNER'
-                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
-
-                    instance_name_2 = 'GAP-%s-%s' % (l + 1, i + 1)
-                    surface_name_2 = 'SURFACE-OUTER'
-                    instance_name_1 = 'INSULATION'
-                    surface_name_1 = 'SURFACE-INNER'
-                    create_contact_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2, 'Step-1', 'IntProp-1')
+                    pass
 
             for tie_loc, tie_type in ties_types.items():
                 l1, i1, l2, i2 = tie_loc
