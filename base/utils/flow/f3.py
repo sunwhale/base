@@ -3372,10 +3372,6 @@ if __name__ == "__main__":
     skirt_l_2_behind = 1650.0
     skirt_offset_behind = 450.0
 
-    behind_block_z_length = 450.0
-
-    z_list = [behind_block_z_length / 2.0 - block_insulation_thickness_r, behind_block_z_length / 2.0, behind_block_z_length / 2.0 + block_gap_circum, behind_block_z_length / 2.0 + block_gap_circum + block_insulation_thickness_r]
-
     setting_file = 'setting.json'
     # setting_file = 'setting_520.json'
     if os.path.exists(setting_file):
@@ -3486,12 +3482,13 @@ if __name__ == "__main__":
     p0_behind = (p0_x_behind, p0_y_behind)
     p3_behind = (p3_x_behind, p3_y_behind)
 
-    # if p3_front[1] > d / 2.0:
-    #     raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
-    # if p3_behind[1] > d / 2.0:
-    #     raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
+    if p3_front[1] > d / 2.0:
+        raise RuntimeError('The y-coordinate of p3_front exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
+    if p3_behind[1] > d / 2.0:
+        raise RuntimeError('The y-coordinate of p3_behind exceeds d/2, which will cause geometric construction to fail. Please check the parameter settings!')
 
     beta = math.pi / n
+    beta_degree = 180.0 / n
     shell_insulation_r_out_front = shell_r_in_front
     shell_insulation_r_out_behind = shell_r_in_behind
     cover_offset_front = -shell_l_c1_out
@@ -3500,6 +3497,15 @@ if __name__ == "__main__":
     flange_thickness_offset_front = shell_insulation_thickness_at_flange_front
     flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
     flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
+
+    l_block_c2 = 1393.5
+    behind_block_z_length = 450.0
+    r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
+    r_front = x0 + burn_offset
+    x_min = p0_x_front
+    x_max = l_c1_c2 + p0_x_behind
+
+    z_list = [behind_block_z_length / 2.0 - block_insulation_thickness_r, behind_block_z_length / 2.0, behind_block_z_length / 2.0 + block_gap_circum, behind_block_z_length / 2.0 + block_gap_circum + block_insulation_thickness_r]
 
     nl, nt = 14, n
     block = np.zeros((nl, nt), dtype=bool)
@@ -3600,10 +3606,6 @@ if __name__ == "__main__":
         cmap.updateOverrides(overrides={'MATERIAL-SHELL-COMPOSITE': (True, '#FF7F00', 'Default', '#FF7F00')})
         cmap.updateOverrides(overrides={'MATERIAL-SKIRT-COMPOSITE': (True, '#B2FF00', 'Default', '#B2FF00')})
 
-        l_block_c2 = 1393.5
-
-        r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
-        r_front = x0 + burn_offset
 
         x_list, r_list, t_list, x_interval_materials, x_block_dividing = create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum)
 
@@ -3617,11 +3619,6 @@ if __name__ == "__main__":
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
 
         s_block_inner_burn, ref_point_burn = create_sketch_block_inner_burn(model, 'SKETCH-BLOCK-INNER-BURN', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_c2, p0_front, p0_behind)
-
-        x_min = p0_x_front
-        x_max = l_c1_c2 + p0_x_behind
-
-        print(z_list)
 
         block_dimension = {
             'n': n,
@@ -3648,8 +3645,6 @@ if __name__ == "__main__":
             'r_behind': r_behind,
             'is_outer_glue': True
         }
-
-        beta_degree = 360 / n / 2.0
         if is_create_p_block:
             p_block = {}
             p_block[1] = create_part_block_common(model, '1', block_dimension, x_min, x_block_dividing[0], beta_degree)
