@@ -176,6 +176,11 @@ def create_part_outer_shell(model, part_name, s, rotate_angle_deg):
                                         primaryAxisDefinition=EDGE, primaryAxisRegion=primaryAxisRegion,
                                         primaryAxisDirection=AXIS_2, flipPrimaryDirection=False)
 
+    try:
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    except:
+        pass
+
     # 生成网格
     generate_part_mesh(p, element_size=20.0)
 
@@ -191,7 +196,6 @@ def create_part_inner_shell(model, part_name, s, rotate_angle_deg, r, thickness_
     # 创建面
     create_surface_rotation_part_common(p, rotate_angle_deg)
 
-    p.PartitionCellByDatumPlane(datumPlane=d[yz_plane.id], cells=p.cells)
     point = [0, r - thickness_outer_shell, 0.0]
     point_rot = rotate_point_around_axis(point, [0, 0, 0], [1, 0, 0], 1.0)
     point_rot = rotate_point_around_axis(point_rot, [0, 0, 0], [0, 0, 1], 1.0)
@@ -207,6 +211,12 @@ def create_part_inner_shell(model, part_name, s, rotate_angle_deg, r, thickness_
     p.Set(cells=p.cells, name=set_name)
 
     p.SectionAssignment(region=p.sets['SET-CELL-INNER-SHELL'], sectionName='SECTION-TI', offset=0.0, offsetType=MIDDLE_SURFACE, offsetField='', thicknessAssignment=FROM_SECTION)
+
+    try:
+        p.PartitionCellByDatumPlane(datumPlane=d[yz_plane.id], cells=p.cells)
+        p.PartitionCellByDatumPlane(datumPlane=d[xz_plane.id], cells=p.cells)
+    except:
+        pass
 
     # 生成网格
     generate_part_mesh(p, element_size=40.0)
@@ -263,7 +273,7 @@ if __name__ == "__main__":
     r = d / 2.0
     thickness_outer_shell = 12.5
     thickness_inner_shell = 50.0
-    rotate_angle_deg = 45.0
+    rotate_angle_deg = 180.0
 
     if not ABAQUS_ENV:
         pass
