@@ -177,7 +177,7 @@ def create_part_outer_shell(model, part_name, s, rotate_angle_deg):
                                         primaryAxisDirection=AXIS_2, flipPrimaryDirection=False)
 
     # 生成网格
-    generate_part_mesh(p, element_size=40.0)
+    generate_part_mesh(p, element_size=20.0)
 
     p.setValues(geometryRefinement=EXTRA_FINE)
 
@@ -191,20 +191,16 @@ def create_part_inner_shell(model, part_name, s, rotate_angle_deg, r, thickness_
     # 创建面
     create_surface_rotation_part_common(p, rotate_angle_deg)
 
-    # 创建集合（面）
-    create_face_set_from_surface(p)
-
     p.PartitionCellByDatumPlane(datumPlane=d[yz_plane.id], cells=p.cells)
-
     point = [0, r - thickness_outer_shell, 0.0]
     point_rot = rotate_point_around_axis(point, [0, 0, 0], [1, 0, 0], 1.0)
     point_rot = rotate_point_around_axis(point_rot, [0, 0, 0], [0, 0, 1], 1.0)
-
     p.DatumPointByCoordinate(coords=point_rot)
-
     p_faces = p.faces.findAt((point_rot,))
+    p.Surface(side1Faces=p_faces, name='SURFACE-FRONT-INNER')
 
-    p.Set(faces=p_faces, name='SET-FACE-FRONT-OUTER')
+    # 创建集合（面）
+    create_face_set_from_surface(p)
 
     # 创建集合（体）
     set_name = 'SET-CELL-INNER-SHELL'
@@ -262,11 +258,11 @@ def create_surface_rotation_part_common(p, rotate_angle_deg):
 
 
 if __name__ == "__main__":
-    l = 6000
+    l = 2500
     d = 1500
     r = d / 2.0
-    thickness_outer_shell = 5.0
-    thickness_inner_shell = 30.0
+    thickness_outer_shell = 12.5
+    thickness_inner_shell = 50.0
     rotate_angle_deg = 45.0
 
     if not ABAQUS_ENV:
@@ -277,7 +273,7 @@ if __name__ == "__main__":
         model = mdb.models['Model-1']
         model.setValues(absoluteZero=-273.15)
 
-        set_material(model.Material(name='MATERIAL-TI'), load_json('material_steel.json'))
+        set_material(model.Material(name='MATERIAL-TI'), load_json('material_ti.json'))
         set_material(model.Material(name='MATERIAL-CZM'), load_json('material_czm.json'))
         set_material(model.Material(name='MATERIAL-SHELL-COMPOSITE'), load_json('material_shell_composite.json'))
 
@@ -295,11 +291,11 @@ if __name__ == "__main__":
         p_outer_shell = create_part_outer_shell(model, 'PART-OUTER-SHELL', s_outer_shell, rotate_angle_deg)
         p_inner_shell = create_part_inner_shell(model, 'PART-INNER-SHELL', s_inner_shell, rotate_angle_deg, r, thickness_outer_shell)
 
-        model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
+        model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=0.1, minInc=1e-06, maxInc=1.0)
 
         a = model.rootAssembly
         a.DatumCsysByDefault(CARTESIAN)
-        cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0),point1=(0.0, 1.0, 0.0),point2=(0.0, 0.0, 1.0))
+        cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(0.0, 1.0, 0.0), point2=(0.0, 0.0, 1.0))
 
         a.Instance(name='INNER-SHELL', part=p_inner_shell, dependent=ON)
         a.Instance(name='OUTER-SHELL', part=p_outer_shell, dependent=ON)
@@ -313,12 +309,12 @@ if __name__ == "__main__":
         instance_name = 'INNER-SHELL'
         set_name = 'SET-SURFACE-X1'
         bc_name = 'BC-' + instance_name + '-' + set_name
-        model.XsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+        model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
         instance_name = 'OUTER-SHELL'
         set_name = 'SET-SURFACE-X1'
         bc_name = 'BC-' + instance_name + '-' + set_name
-        model.XsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+        model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
         instance_name = 'INNER-SHELL'
         set_name = 'SET-SURFACE-T0'
@@ -350,6 +346,11 @@ if __name__ == "__main__":
         load_name = 'LOAD-' + instance_name + '-' + surface_name
         model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=30.0, amplitude=UNSET)
 
+        instance_name = 'INNER-SHELL'
+        surface_name = 'SURFACE-FRONT-INNER'
+        load_name = 'LOAD-' + instance_name + '-' + surface_name
+        model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=30.0, amplitude=UNSET)
+
         if major_version >= 2022:
             mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
                     atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
@@ -357,12 +358,12 @@ if __name__ == "__main__":
                     explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
                     modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
                     scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
-                    multiprocessingMode=DEFAULT, numCpus=2, numDomains=2, numGPUs=0)
+                    multiprocessingMode=DEFAULT, numCpus=4, numDomains=4, numGPUs=0)
         else:
             mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
                     atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
                     memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
                     explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
                     modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
-                    scratch='', resultsFormat=ODB, multiprocessingMode=DEFAULT, numCpus=2,
-                    numDomains=2, numGPUs=0)
+                    scratch='', resultsFormat=ODB, multiprocessingMode=DEFAULT, numCpus=4,
+                    numDomains=4, numGPUs=0)
