@@ -126,7 +126,7 @@ def create_part_base_rotation(model, part_name, sketch, rotate_angle_deg):
     return p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis
 
 
-def create_part_outer_shell(model, part_name, s, rotate_angle_deg):
+def create_part_outer_shell(model, part_name, s, rotate_angle_deg, layer_number):
     # 生成基础体
     p, d, xy_plane, yz_plane, xz_plane, x_axis, y_axis, z_axis = create_part_base_rotation(model, part_name, s, rotate_angle_deg)
 
@@ -158,7 +158,7 @@ def create_part_outer_shell(model, part_name, s, rotate_angle_deg):
     num_int_points = 3
     region = p.sets['SET-CELL-OUTER-SHELL']
     shell_composite_layup = np.genfromtxt('shell_composite_layup.csv', delimiter=',')
-    for i, layup_data in enumerate(shell_composite_layup):
+    for i, layup_data in enumerate(shell_composite_layup[:layer_number]):
         ply_name = 'PLY-' + str(i)
         orientation = layup_data[0]
         thickness = layup_data[1]
@@ -269,111 +269,121 @@ def create_surface_rotation_part_common(p, rotate_angle_deg):
 
 if __name__ == "__main__":
     l = 2500
-    d = 1500
+    d = 1600
     r = d / 2.0
-    thickness_outer_shell = 12.5
-    thickness_inner_shell = 50.0
+    layer_number = 800
+    thickness_outer_shell = 0.125 * layer_number
+    thickness_inner_shell = 50
     rotate_angle_deg = 180.0
 
-    if not ABAQUS_ENV:
-        pass
+    for layer_number in [200, 400, 800]:
+        for thickness_inner_shell in [20, 40, 80]:
 
-    if ABAQUS_ENV:
-        Mdb()
-        model = mdb.models['Model-1']
-        model.setValues(absoluteZero=-273.15)
+            thickness_outer_shell = 0.125 * layer_number
 
-        set_material(model.Material(name='MATERIAL-TI'), load_json('material_ti.json'))
-        set_material(model.Material(name='MATERIAL-CZM'), load_json('material_czm.json'))
-        set_material(model.Material(name='MATERIAL-SHELL-COMPOSITE'), load_json('material_shell_composite.json'))
+            job_name = 'Job-%s-%s' % (layer_number, thickness_inner_shell)
 
-        model.HomogeneousSolidSection(name='SECTION-TI', material='MATERIAL-TI', thickness=None)
-        model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
+            if not ABAQUS_ENV:
+                pass
 
-        model.ContactProperty('IntProp-1')
-        model.interactionProperties['IntProp-1'].TangentialBehavior(formulation=FRICTIONLESS)
-        model.interactionProperties['IntProp-1'].CohesiveBehavior(defaultPenalties=OFF, table=((1000000.0, 1000000.0, 1000000.0),))
-        model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
+            if ABAQUS_ENV:
+                Mdb()
+                model = mdb.models['Model-1']
+                model.setValues(absoluteZero=-273.15)
 
-        s_outer_shell = create_sketch_outer_shell(model, 'SKETCH-OUTER-SHELL', l, r, thickness_outer_shell)
-        s_inner_shell = create_sketch_inner_shell(model, 'SKETCH-INNER-SHELL', l, r, thickness_outer_shell, thickness_inner_shell)
+                set_material(model.Material(name='MATERIAL-TI'), load_json('material_ti.json'))
+                set_material(model.Material(name='MATERIAL-CZM'), load_json('material_czm.json'))
+                set_material(model.Material(name='MATERIAL-SHELL-COMPOSITE'), load_json('material_shell_composite.json'))
 
-        p_outer_shell = create_part_outer_shell(model, 'PART-OUTER-SHELL', s_outer_shell, rotate_angle_deg)
-        p_inner_shell = create_part_inner_shell(model, 'PART-INNER-SHELL', s_inner_shell, rotate_angle_deg, r, thickness_outer_shell)
+                model.HomogeneousSolidSection(name='SECTION-TI', material='MATERIAL-TI', thickness=None)
+                model.CohesiveSection(name='SECTION-CZM', material='MATERIAL-CZM', response=TRACTION_SEPARATION, outOfPlaneThickness=None)
 
-        model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=0.1, minInc=1e-06, maxInc=1.0)
+                model.ContactProperty('IntProp-1')
+                model.interactionProperties['IntProp-1'].TangentialBehavior(formulation=FRICTIONLESS)
+                model.interactionProperties['IntProp-1'].CohesiveBehavior(defaultPenalties=OFF, table=((1000000.0, 1000000.0, 1000000.0),))
+                model.interactionProperties['IntProp-1'].NormalBehavior(pressureOverclosure=HARD, allowSeparation=OFF, constraintEnforcementMethod=DEFAULT)
 
-        a = model.rootAssembly
-        a.DatumCsysByDefault(CARTESIAN)
-        cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(0.0, 1.0, 0.0), point2=(0.0, 0.0, 1.0))
+                s_outer_shell = create_sketch_outer_shell(model, 'SKETCH-OUTER-SHELL', l, r, thickness_outer_shell)
+                s_inner_shell = create_sketch_inner_shell(model, 'SKETCH-INNER-SHELL', l, r, thickness_outer_shell, thickness_inner_shell)
 
-        a.Instance(name='INNER-SHELL', part=p_inner_shell, dependent=ON)
-        a.Instance(name='OUTER-SHELL', part=p_outer_shell, dependent=ON)
+                p_outer_shell = create_part_outer_shell(model, 'PART-OUTER-SHELL', s_outer_shell, rotate_angle_deg, layer_number)
+                p_inner_shell = create_part_inner_shell(model, 'PART-INNER-SHELL', s_inner_shell, rotate_angle_deg, r, thickness_outer_shell)
 
-        instance_name_1 = 'INNER-SHELL'
-        surface_name_1 = 'SURFACE-R1'
-        instance_name_2 = 'OUTER-SHELL'
-        surface_name_2 = 'SURFACE-R0'
-        create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
+                model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=0.1, minInc=1e-06, maxInc=1.0)
 
-        instance_name = 'INNER-SHELL'
-        set_name = 'SET-SURFACE-X1'
-        bc_name = 'BC-' + instance_name + '-' + set_name
-        model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                a = model.rootAssembly
+                a.DatumCsysByDefault(CARTESIAN)
+                cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(0.0, 1.0, 0.0), point2=(0.0, 0.0, 1.0))
 
-        instance_name = 'OUTER-SHELL'
-        set_name = 'SET-SURFACE-X1'
-        bc_name = 'BC-' + instance_name + '-' + set_name
-        model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                a.Instance(name='INNER-SHELL', part=p_inner_shell, dependent=ON)
+                a.Instance(name='OUTER-SHELL', part=p_outer_shell, dependent=ON)
 
-        instance_name = 'INNER-SHELL'
-        set_name = 'SET-SURFACE-T0'
-        bc_name = 'BC-' + instance_name + '-' + set_name
-        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                instance_name_1 = 'INNER-SHELL'
+                surface_name_1 = 'SURFACE-R1'
+                instance_name_2 = 'OUTER-SHELL'
+                surface_name_2 = 'SURFACE-R0'
+                create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
-        instance_name = 'INNER-SHELL'
-        set_name = 'SET-SURFACE-T1'
-        bc_name = 'BC-' + instance_name + '-' + set_name
-        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                instance_name = 'INNER-SHELL'
+                set_name = 'SET-SURFACE-X1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-        instance_name = 'OUTER-SHELL'
-        set_name = 'SET-SURFACE-T0'
-        bc_name = 'BC-' + instance_name + '-' + set_name
-        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                instance_name = 'OUTER-SHELL'
+                set_name = 'SET-SURFACE-X1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.ZsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-        instance_name = 'OUTER-SHELL'
-        set_name = 'SET-SURFACE-T1'
-        bc_name = 'BC-' + instance_name + '-' + set_name
-        model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                instance_name = 'INNER-SHELL'
+                set_name = 'SET-SURFACE-T0'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-        instance_name = 'OUTER-SHELL'
-        surface_name = 'SURFACE-R1'
-        load_name = 'LOAD-' + instance_name + '-' + surface_name
-        model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=30.0, amplitude=UNSET)
+                instance_name = 'INNER-SHELL'
+                set_name = 'SET-SURFACE-T1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-        instance_name = 'OUTER-SHELL'
-        surface_name = 'SURFACE-X0'
-        load_name = 'LOAD-' + instance_name + '-' + surface_name
-        model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=30.0, amplitude=UNSET)
+                instance_name = 'OUTER-SHELL'
+                set_name = 'SET-SURFACE-T0'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-        instance_name = 'INNER-SHELL'
-        surface_name = 'SURFACE-FRONT-INNER'
-        load_name = 'LOAD-' + instance_name + '-' + surface_name
-        model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=30.0, amplitude=UNSET)
+                instance_name = 'OUTER-SHELL'
+                set_name = 'SET-SURFACE-T1'
+                bc_name = 'BC-' + instance_name + '-' + set_name
+                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-        if major_version >= 2022:
-            mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
-                    atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
-                    memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
-                    explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
-                    modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
-                    scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
-                    multiprocessingMode=DEFAULT, numCpus=4, numDomains=4, numGPUs=0)
-        else:
-            mdb.Job(name='Job-1', model='Model-1', description='', type=ANALYSIS,
-                    atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
-                    memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
-                    explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
-                    modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
-                    scratch='', resultsFormat=ODB, multiprocessingMode=DEFAULT, numCpus=4,
-                    numDomains=4, numGPUs=0)
+                instance_name = 'OUTER-SHELL'
+                surface_name = 'SURFACE-R1'
+                load_name = 'LOAD-' + instance_name + '-' + surface_name
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=30.0, amplitude=UNSET)
+
+                instance_name = 'OUTER-SHELL'
+                surface_name = 'SURFACE-X0'
+                load_name = 'LOAD-' + instance_name + '-' + surface_name
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=30.0, amplitude=UNSET)
+
+                instance_name = 'INNER-SHELL'
+                surface_name = 'SURFACE-FRONT-INNER'
+                load_name = 'LOAD-' + instance_name + '-' + surface_name
+                model.Pressure(name=load_name, createStepName='Step-1', region=a.instances[instance_name].surfaces[surface_name], distributionType=UNIFORM, field='', magnitude=30.0, amplitude=UNSET)
+
+                if major_version >= 2022:
+                    mdb.Job(name=job_name, model='Model-1', description='', type=ANALYSIS,
+                            atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
+                            memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
+                            explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
+                            modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
+                            scratch='', resultsFormat=ODB, numThreadsPerMpiProcess=1,
+                            multiprocessingMode=DEFAULT, numCpus=4, numDomains=4, numGPUs=0)
+                else:
+                    mdb.Job(name=job_name, model='Model-1', description='', type=ANALYSIS,
+                            atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90,
+                            memoryUnits=PERCENTAGE, getMemoryFromAnalysis=True,
+                            explicitPrecision=SINGLE, nodalOutputPrecision=SINGLE, echoPrint=OFF,
+                            modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='',
+                            scratch='', resultsFormat=ODB, multiprocessingMode=DEFAULT, numCpus=4,
+                            numDomains=4, numGPUs=0)
+
+                mdb.jobs[job_name].writeInput(consistencyChecking=OFF)
