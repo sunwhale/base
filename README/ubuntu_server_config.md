@@ -177,15 +177,17 @@ conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/f
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main/
 conda config --add channels https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
 conda config --set show_channel_urls yes
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
-conda create -n flask -y python==3.11
+conda create -n flask -y python==3.12
 conda activate flask
 git clone https://gitee.com/sunwhale/base.git
 cd base
-pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ # -i https://pypi.org/simple #官方源
+pip install -r requirements_mini.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ # -i https://pypi.org/simple #官方源
 pip install gunicorn
 
-conda create -n jupyter -y python==3.11
+conda create -n jupyter -y python==3.12
 conda activate jupyter
 pip install jupyterlab jupyterlab-language-pack-zh-CN
 jupyter lab --generate-config # 生成jupyterlab配置文件
