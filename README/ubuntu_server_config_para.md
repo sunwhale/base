@@ -201,7 +201,7 @@ conda activate jupyter
 pip install jupyterlab jupyterlab-language-pack-zh-CN
 jupyter lab --generate-config # 生成jupyterlab配置文件
 jupyter lab password # 设置密码，输入两次 solidmechanics88888888
-sudo cp /root/base/conf/jupyter/jupyter_lab_config.py /root/.jupyter/jupyter_lab_config.py
+sudo cp /root/base/paratera/conf/jupyter/jupyter_lab_config.py /root/.jupyter/jupyter_lab_config.py
 
 sudo apt install -y supervisor nginx xvfb
 sudo snap install glances
@@ -216,7 +216,7 @@ sudo service supervisor restart
 sudo supervisorctl
 
 sudo apt install -y vsftpd
-sudo cp /www/conf/vsftpd.conf /etc/vsftpd.conf # 注意防火墙打开21和30000-30010端口
+sudo cp /root/base/conf/paratera/vsftpd.conf /etc/vsftpd.conf # 注意防火墙打开21和30000-30010端口
 sudo service vsftpd restart
 sudo adduser sunwhale # 设置密码，输入两次 solidmechanics88888888
 ```
