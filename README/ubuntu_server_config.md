@@ -25,6 +25,8 @@ conda create -n flask -y python==3.9
 
 ## 4. 从git获取网站源代码
 ```shell
+sudo apt update
+sudo apt install git
 git clone https://gitee.com/sunwhale/base.git
 cd base
 conda activate flask
@@ -182,6 +184,8 @@ conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
 conda create -n flask -y python==3.12
 conda activate flask
+sudo apt update
+sudo apt install git
 git clone https://gitee.com/sunwhale/base.git
 cd base
 pip install -r requirements_mini.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ # -i https://pypi.org/simple #官方源
