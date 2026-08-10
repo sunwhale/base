@@ -565,15 +565,9 @@
                   <p>Sharelatex</p>
                 </a>
               </li>
-              <li class="nav-item">
-                <a href="https://nextchat.sunjingyu.com/" class="nav-link" id="chatgpt">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>ChatGPT(API)</p>
-                </a>
-              </li>
               {% if config.JUPYTER_PORT != 0 %}
               <li class="nav-item">
-                <a href="https://www.sunjingyu.com:{{ config.JUPYTER_PORT }}/" target="_blank" class="nav-link" id="jupyter">
+                <a href="//{{ request.host.split(':')[0] }}:{{ config.JUPYTER_PORT }}/" target="_blank" class="nav-link" id="jupyter">
                   <i class="far fa-circle nav-icon"></i>
                   <p>JupyterLab</p>
                 </a>
