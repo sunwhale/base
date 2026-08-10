@@ -1,4 +1,5 @@
 # 服务器配置
+# 并行科技北京二节点
 
 ## 1. 挂载数据盘
 ```shell
@@ -196,17 +197,16 @@ conda activate jupyter
 pip install jupyterlab jupyterlab-language-pack-zh-CN
 jupyter lab --generate-config # 生成jupyterlab配置文件
 jupyter lab password # 设置密码，输入两次 solidmechanics88888888
-sudo cp /home/ubuntu/base/conf/jupyter/jupyter_lab_config.py /home/ubuntu/.jupyter/jupyter_lab_config.py
-sudo cp /root/base/conf/jupyter/jupyter_lab_config.py /root/.jupyter/jupyter_lab_config.py # 并行科技北京二节点
+sudo cp /root/base/conf/jupyter/jupyter_lab_config.py /root/.jupyter/jupyter_lab_config.py
 
 sudo apt install -y supervisor nginx xvfb
 sudo apt install snapd
 sudo snap install glances
 
 sudo rm /etc/nginx/sites-enabled/default
-sudo cp /home/ubuntu/base/conf/nginx/*.conf /etc/nginx/conf.d
-sudo service nginx restart
-sudo cp /home/ubuntu/base/conf/supervisor/*.conf /etc/supervisor/conf.d
+sudo cp /root/base/conf/paratera/nginx/*.conf /etc/nginx/conf.d
+sudo service nginx restart # 注意需要证书文件的存储路径是否存在
+sudo cp /root/base/conf/paratera/supervisor/*.conf /etc/supervisor/conf.d
 sudo service supervisor restart
 sudo supervisorctl
 
