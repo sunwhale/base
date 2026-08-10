@@ -183,10 +183,14 @@ conda config --set show_channel_urls yes
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
 conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
-conda create -n flask -y python==3.12
-conda activate flask
+# init
+
 sudo apt update
 sudo apt install git
+sudo apt install snapd
+
+conda create -n flask -y python==3.12
+conda activate flask
 git clone https://gitee.com/sunwhale/base.git
 cd base
 pip install -r requirements_mini.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/ # -i https://pypi.org/simple #官方源
@@ -200,8 +204,9 @@ jupyter lab password # 设置密码，输入两次 solidmechanics88888888
 sudo cp /root/base/conf/jupyter/jupyter_lab_config.py /root/.jupyter/jupyter_lab_config.py
 
 sudo apt install -y supervisor nginx xvfb
-sudo apt install snapd
 sudo snap install glances
+
+# python
 
 sudo rm /etc/nginx/sites-enabled/default
 sudo cp /root/base/conf/paratera/nginx/*.conf /etc/nginx/conf.d
@@ -211,9 +216,9 @@ sudo service supervisor restart
 sudo supervisorctl
 
 sudo apt install -y vsftpd
-sudo cp /www/conf/vsftpd.conf /etc/vsftpd.conf
+sudo cp /www/conf/vsftpd.conf /etc/vsftpd.conf # 注意防火墙打开21和30000-30010端口
 sudo service vsftpd restart
-sudo adduser sunwhale
+sudo adduser sunwhale # 设置密码，输入两次 solidmechanics88888888
 ```
 
 ps aux | grep nginx
