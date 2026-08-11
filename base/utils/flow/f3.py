@@ -3083,6 +3083,9 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
     if p_faces:
         p.Surface(side1Faces=p_faces, name='SURFACE-INNER')
 
+    if 'SURFACE-R0' in p.surfaces.keys():
+        p.Surface(side1Faces=p.surfaces['SURFACE-R0'].faces, name='SURFACE-INNER')
+
     # 更新集合（体）
     if is_outer_glue:
         # 创建集合（体），SET-CELL-GLUE-B
@@ -3134,7 +3137,7 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
     # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
 
     # 生成网格
-    element_size = 100.0
+    element_size = 60.0
     generate_part_mesh(p, element_size=element_size)
 
     # 插入内聚力单元
@@ -3222,6 +3225,29 @@ def get_ref_point_of_cell(faces, x_interval_materials):
                     angle = 30.0
                     point_rot = rotate_point_around_axis(ref_point, (0.0, 0.0, 0.0), (1.0, 0.0, 0.0), angle)
                     print(point_rot)
+
+
+def inside_regular_9gon(X, Y, r=500):
+    """
+    判断 (X, Y) 是否在中心在原点、内切圆半径为 r 的正九边形内。
+    参数 X, Y : 任意形状的 ndarray（通常为三维网格）
+    返回 : bool 数组，形状与 X 相同，True 表示在内。
+    """
+    n = 9
+    # 顶点角度（9个顶点均匀分布）
+    theta = np.linspace(0, 2 * np.pi, n, endpoint=False) - np.pi / 2 / n
+    # 边法线的角度 = 相邻顶点角度的中点
+    phi = theta + np.pi / n  # 因为 (θ_i + θ_{i+1})/2 = θ_i + π/n
+    # 法向量分量
+    cos_phi = np.cos(phi)
+    sin_phi = np.sin(phi)
+
+    # 为每个点计算 9 个投影值 (广播)
+    # 将 X, Y 扩展最后一维，使其形状为 (*X.shape, 9)
+    proj = X[..., np.newaxis] * cos_phi + Y[..., np.newaxis] * sin_phi
+    # 检查所有投影是否 ≤ r（加上小容差处理浮点误差）
+    inside = np.all(proj <= r + 1e-12, axis=-1)
+    return inside
 
 
 if __name__ == "__main__":
@@ -3500,9 +3526,9 @@ if __name__ == "__main__":
 
     z_list = [behind_block_z_length / 2.0 - block_insulation_thickness_r, behind_block_z_length / 2.0, behind_block_z_length / 2.0 + block_gap_circum, behind_block_z_length / 2.0 + block_gap_circum + block_insulation_thickness_r]
 
-    nl, nt = 14, n
+    nl, nt = 16, n
     block = np.zeros((nl, nt), dtype=bool)
-    block[:, :] = True
+    block[:, 0] = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -3598,7 +3624,6 @@ if __name__ == "__main__":
         cmap.updateOverrides(overrides={'MATERIAL-GLUE-WALL': (True, '#F1F1F1', 'Default', '#F1F1F1')})
         cmap.updateOverrides(overrides={'MATERIAL-SHELL-COMPOSITE': (True, '#FF7F00', 'Default', '#FF7F00')})
         cmap.updateOverrides(overrides={'MATERIAL-SKIRT-COMPOSITE': (True, '#B2FF00', 'Default', '#B2FF00')})
-
 
         x_list, r_list, t_list, x_interval_materials, x_block_dividing = create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum)
 
@@ -3820,11 +3845,11 @@ if __name__ == "__main__":
             print('CREATE PART-INSULATION DONE.')
 
         if is_save_parts_cae:
-            mdb.saveAs(pathName='f2-parts.cae')
+            mdb.saveAs(pathName='f3-parts.cae')
 
         if is_open_parts_cae:
             Mdb()
-            openMdb(pathName='f2-parts.cae')
+            openMdb(pathName='f3-parts.cae')
             model = mdb.models['Model-1']
             p_insulation = model.parts['PART-INSULATION']
             p_cover_front = model.parts['PART-COVER-FRONT']
@@ -3857,7 +3882,7 @@ if __name__ == "__main__":
 
             a = model.rootAssembly
             a.DatumCsysByDefault(CARTESIAN)
-            cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(1.0, 0.0, 0.0), point2=(0.0, 1.0, 0.0))
+            cylindrical_datum = a.DatumCsysByThreePoints(name='Datum csys-2', coordSysType=CYLINDRICAL, origin=(0.0, 0.0, 0.0), point1=(0.0, 1.0, 0.0), point2=(0.0, 0.0, 1.0))
 
             # 公共旋转参数
             origin = (0.0, 0.0, 0.0)
@@ -3878,59 +3903,48 @@ if __name__ == "__main__":
                 a.Instance(name=instance_name, part=model.parts[part_name], dependent=ON)
                 a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=i * 360.0 / n)
 
-            for l in [14, 15]:
-                if l == 14:
-                    additional_angle_deg = -22.5
-                elif l == 15:
-                    additional_angle_deg = 22.5
-                else:
-                    additional_angle_deg = 0.0
-
-                for i in range(9):
-                    if i == 0:
-                        part_name = 'PART-BLOCK-%s-3IN1' % (l + 1)
-                        instance_name = 'BLOCK-%s-3IN1-%s' % (l + 1, i + 1)
-                        a.Instance(name=instance_name, part=model.parts[part_name], dependent=ON)
-                        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=i * 360.0 / n + additional_angle_deg)
-                    elif i == 1:
-                        pass
-                    else:
-                        part_name = 'PART-BLOCK-%s' % (l + 1)
-                        instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                        a.Instance(name=instance_name, part=model.parts[part_name], dependent=ON)
-                        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=(i - 0.5) * 360.0 / n + additional_angle_deg)
+            # for l in [14, 15]:
+            #     if l == 14:
+            #         additional_angle_deg = -22.5
+            #     elif l == 15:
+            #         additional_angle_deg = 22.5
+            #     else:
+            #         additional_angle_deg = 0.0
+            #
+            #     for i in range(9):
+            #         if i == 0:
+            #             part_name = 'PART-BLOCK-%s-3IN1' % (l + 1)
+            #             instance_name = 'BLOCK-%s-3IN1-%s' % (l + 1, i + 1)
+            #             a.Instance(name=instance_name, part=model.parts[part_name], dependent=ON)
+            #             a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=i * 360.0 / n + additional_angle_deg)
+            #         elif i == 1:
+            #             pass
+            #         else:
+            #             part_name = 'PART-BLOCK-%s' % (l + 1)
+            #             instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+            #             a.Instance(name=instance_name, part=model.parts[part_name], dependent=ON)
+            #             a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=(i - 0.5) * 360.0 / n + additional_angle_deg)
 
             model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
 
             model.TabularAmplitude(name='AMP-PRESSURE', timeSpan=STEP, smooth=SOLVER_DEFAULT, data=((0.0, 0.0), (1.0, 1.0)))
-            model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=a.datums[cylindrical_datum.id], description='', expression='8.6-1.5*(Z+1037.75)/19263.21')
+            # model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=a.datums[cylindrical_datum.id], description='', expression='8.6-1.5*(Z+1037.75)/19263.21')
             model.ExpressionField(name='ANALYTICALFIELD-PRESSURE', localCsys=a.datums[cylindrical_datum.id], description='', expression='8.02-0.07*(Z+1037.75)/19263.21')
 
             # 1. 定义坐标范围
-            x = np.arange(-2000, 2000, 20)
-            y = np.arange(-2000, 2000, 20)
+            x = np.arange(-600, 600, 10)
+            y = np.arange(-600, 600, 10)
             z = np.linspace(0, 200000, 2)
             # 2. 生成完整三维网格坐标
             X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
-            # 3. 计算 value（只依赖于 x, y 是否在圆内）
-            value = (X ** 2 + Y ** 2 <= 900 ** 2).astype(int)
+            # 3. 计算 value（只依赖于 y, z 是否在正九边形内）
+            # 生成标记数组 (内部为1，外部为0)
+            inside_bool = inside_regular_9gon(Y, Z, r=500)
+            value = inside_bool.astype(np.int8)  # 形状与 X 相同
             # 4. 将四维数据展平为表格式（每行一个点）
             xyz_data = np.column_stack((X.ravel(), Y.ravel(), Z.ravel(), value.ravel()))
             model.MappedField(name='ANALYTICALFIELD-PRESSURE-INSULATION-FRONT', description='', regionType=POINT, partLevelData=False, localCsys=None, pointDataFormat=XYZ, fieldDataType=SCALAR,
-                              xyzPointData=xyz_data)
-
-            # 1. 定义坐标范围
-            x = np.arange(-2000, 2000, 20)
-            y = np.arange(-2000, 2000, 20)
-            z = np.linspace(0, 200000, 2)
-            # 2. 生成完整三维网格坐标
-            X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
-            # 3. 计算 value（只依赖于 x, y 是否在圆内）
-            value = (X ** 2 + Y ** 2 <= 1306 ** 2).astype(int)
-            # 4. 将四维数据展平为表格式（每行一个点）
-            xyz_data = np.column_stack((X.ravel(), Y.ravel(), Z.ravel(), value.ravel()))
-            model.MappedField(name='ANALYTICALFIELD-PRESSURE-INSULATION-BEHIND', description='', regionType=POINT, partLevelData=False, localCsys=None, pointDataFormat=XYZ, fieldDataType=SCALAR,
                               xyzPointData=xyz_data)
 
             # 1. 定义坐标范围
@@ -3940,7 +3954,20 @@ if __name__ == "__main__":
             # 2. 生成完整三维网格坐标
             X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
             # 3. 计算 value（只依赖于 x, y 是否在圆内）
-            value = (X ** 2 + Y ** 2 <= 425 ** 2).astype(int)
+            value = (Y ** 2 + Z ** 2 <= 906 ** 2).astype(int)
+            # 4. 将四维数据展平为表格式（每行一个点）
+            xyz_data = np.column_stack((X.ravel(), Y.ravel(), Z.ravel(), value.ravel()))
+            model.MappedField(name='ANALYTICALFIELD-PRESSURE-INSULATION-BEHIND', description='', regionType=POINT, partLevelData=False, localCsys=None, pointDataFormat=XYZ, fieldDataType=SCALAR,
+                              xyzPointData=xyz_data)
+
+            # 1. 定义坐标范围
+            x = np.arange(-1000, 1000, 40)
+            y = np.arange(-1000, 1000, 40)
+            z = np.linspace(0, 200000, 2)
+            # 2. 生成完整三维网格坐标
+            X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+            # 3. 计算 value（只依赖于 x, y 是否在圆内）
+            value = (Y ** 2 + Z ** 2 <= 425 ** 2).astype(int)
             # 4. 将四维数据展平为表格式（每行一个点）
             xyz_data = np.column_stack((X.ravel(), Y.ravel(), Z.ravel(), value.ravel()))
             model.MappedField(name='ANALYTICALFIELD-PRESSURE-COVER-FRONT', description='', regionType=POINT, partLevelData=False, localCsys=None, pointDataFormat=XYZ, fieldDataType=SCALAR,
@@ -4079,7 +4106,8 @@ if __name__ == "__main__":
                 else:
                     pass
 
-            if is_shared_node:
+            is_3_in_1 = False
+            if is_3_in_1:
                 # 14-TO-15
                 # 14层所有X1端面
                 instance_surfaces = []
@@ -4208,4 +4236,4 @@ if __name__ == "__main__":
 
             mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
 
-            mdb.saveAs(pathName='f2.cae')
+            mdb.saveAs(pathName='f3.cae')
