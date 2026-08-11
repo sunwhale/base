@@ -66,6 +66,7 @@ PENULT_CORRECTION = 1.0
 # s.setPrimaryObject(option=STANDALONE)
 # p.DatumPointByCoordinate(coords=(0, 0, 0))
 # execfile('/home/dell/base/base/utils/flow/submersible.py', __main__.__dict__)
+# execfile('F:\\GitHub\\base\\base\\utils\\flow\\submersible.py', __main__.__dict__)
 
 
 def create_sketch_outer_shell(model, sketch_name, l, r, thickness_outer_shell):
@@ -276,8 +277,8 @@ if __name__ == "__main__":
     thickness_inner_shell = 50
     rotate_angle_deg = 180.0
 
-    for layer_number in [200, 400, 800]:
-        for thickness_inner_shell in [20, 40, 80]:
+    for layer_number in [400]:
+        for thickness_inner_shell in [80]:
 
             thickness_outer_shell = 0.125 * layer_number
 
