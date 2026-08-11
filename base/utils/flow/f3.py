@@ -3997,13 +3997,14 @@ if __name__ == "__main__":
             create_tie_of_instance_surface(model, instance_name_1, instance_name_2, surface_name_1, surface_name_2)
 
             for instance_name in rotation_part_dict.keys():
-                set_name = 'SET-SURFACE-T0'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                if rotate_angle_deg < 360.0:
+                    set_name = 'SET-SURFACE-T0'
+                    bc_name = 'BC-' + instance_name + '-' + set_name
+                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
-                set_name = 'SET-SURFACE-T1'
-                bc_name = 'BC-' + instance_name + '-' + set_name
-                model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
+                    set_name = 'SET-SURFACE-T1'
+                    bc_name = 'BC-' + instance_name + '-' + set_name
+                    model.YsymmBC(name=bc_name, createStepName='Step-1', region=a.instances[instance_name].sets[set_name], localCsys=a.datums[cylindrical_datum.id])
 
             # instance_name = 'INSULATION'
             # surface_name = 'SURFACE-INNER'
@@ -4100,7 +4101,7 @@ if __name__ == "__main__":
 
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
-                if i == 0:
+                if i == 0 and rotate_angle_deg < 360.0:
                     instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
                     set_name = 'SET-SURFACE-T0'
                     bc_name = 'BC-' + instance_name + '-' + set_name
