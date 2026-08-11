@@ -3887,9 +3887,9 @@ if __name__ == "__main__":
 
             for l in [14, 15]:
                 if l == 14:
-                    additional_angle_deg = 12.0
+                    additional_angle_deg = -22.5
                 elif l == 15:
-                    additional_angle_deg = -12.0
+                    additional_angle_deg = 22.5
                 else:
                     additional_angle_deg = 0.0
 
