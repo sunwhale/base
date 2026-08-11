@@ -3233,14 +3233,6 @@ if __name__ == "__main__":
     is_create_p_cover_front = False
     is_create_p_cover_behind = False
     is_create_p_block = False
-    is_create_p_block_penult = False
-    is_create_p_block_front = False
-    is_create_p_block_behind = False
-    is_create_p_block_behind_ab = False
-    is_create_p_gap = False
-    is_create_p_gap_penult = False
-    is_create_p_gap_front = False
-    is_create_p_gap_behind = False
     is_save_parts_cae = False
     is_open_parts_cae = False
     is_assemble = False
