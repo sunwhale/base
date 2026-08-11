@@ -3134,7 +3134,8 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
     # p.PartitionCellByDatumPlane(datumPlane=d[xy_plane_rot.id], cells=p.cells)
 
     # 生成网格
-    # generate_part_mesh(p, element_size=element_size)
+    element_size = 100.0
+    generate_part_mesh(p, element_size=element_size)
 
     # 插入内聚力单元
     if insert_czm:
@@ -4078,6 +4079,73 @@ if __name__ == "__main__":
                 else:
                     pass
 
+            if is_shared_node:
+                # 14-TO-15
+                # 14层所有X1端面
+                instance_surfaces = []
+                for i in range(1, n + 1):
+                    instance_name = 'BLOCK-14-%s' % i
+                    surface = a.instances[instance_name].surfaces['SURFACE-X1']
+                    instance_surfaces.append(surface)
+                a.SurfaceByBoolean(name='SURFACE-BLOCK-14-X1-ALL', surfaces=tuple(instance_surfaces), operation=UNION)
+
+                # 15所有X0端面
+                instance_surfaces = []
+                instance_surfaces.append(a.instances['BLOCK-15-3IN1-1'].surfaces['SURFACE-X0'])
+                for i in range(3, n + 1):
+                    instance_name = 'BLOCK-15-%s' % i
+                    surface = a.instances[instance_name].surfaces['SURFACE-X0']
+                    instance_surfaces.append(surface)
+                a.SurfaceByBoolean(name='SURFACE-BLOCK-15-X0-ALL', surfaces=tuple(instance_surfaces), operation=UNION)
+
+                model.Tie(name='TIE-BLOCK-14-TO-15', main=a.surfaces['SURFACE-BLOCK-14-X1-ALL'], secondary=a.surfaces['SURFACE-BLOCK-15-X0-ALL'], positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+
+                # 15-TO-16
+                instance_surfaces = []
+                instance_surfaces.append(a.instances['BLOCK-15-3IN1-1'].surfaces['SURFACE-X1'])
+                for i in range(3, n + 1):
+                    instance_name = 'BLOCK-15-%s' % i
+                    surface = a.instances[instance_name].surfaces['SURFACE-X1']
+                    instance_surfaces.append(surface)
+                a.SurfaceByBoolean(name='SURFACE-BLOCK-15-X1-ALL', surfaces=tuple(instance_surfaces), operation=UNION)
+
+                instance_surfaces = []
+                instance_surfaces.append(a.instances['BLOCK-16-3IN1-1'].surfaces['SURFACE-X0'])
+                for i in range(3, n + 1):
+                    instance_name = 'BLOCK-16-%s' % i
+                    surface = a.instances[instance_name].surfaces['SURFACE-X0']
+                    instance_surfaces.append(surface)
+                a.SurfaceByBoolean(name='SURFACE-BLOCK-16-X0-ALL', surfaces=tuple(instance_surfaces), operation=UNION)
+
+                model.Tie(name='TIE-BLOCK-15-TO-16', main=a.surfaces['SURFACE-BLOCK-15-X1-ALL'], secondary=a.surfaces['SURFACE-BLOCK-16-X0-ALL'], positionToleranceMethod=COMPUTED, adjust=OFF, tieRotations=OFF, thickness=ON)
+
+                # 15 周向连接
+                # 3IN1 - BLOCK-15-3
+                create_tie_of_instance_surface(model, 'BLOCK-15-3IN1-1', 'BLOCK-15-3', 'SURFACE-T1', 'SURFACE-T0')
+
+                # BLOCK-15-3 - BLOCK-15-9
+                for i in range(3, n):
+                    instance_name_1 = 'BLOCK-15-%s' % i
+                    instance_name_2 = 'BLOCK-15-%s' % (i + 1)
+                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, 'SURFACE-T1', 'SURFACE-T0')
+
+                # BLOCK-15-9 - 3IN1
+                create_tie_of_instance_surface(model, 'BLOCK-15-%s' % n, 'BLOCK-15-3IN1-1', 'SURFACE-T1', 'SURFACE-T0')
+
+                # 16 周向连接
+                create_tie_of_instance_surface(model, 'BLOCK-16-3IN1-1', 'BLOCK-16-3', 'SURFACE-T1', 'SURFACE-T0')
+
+                # BLOCK-16-3 - BLOCK-16-9
+                for i in range(3, n):
+                    instance_name_1 = 'BLOCK-16-%s' % i
+                    instance_name_2 = 'BLOCK-16-%s' % (i + 1)
+                    create_tie_of_instance_surface(model, instance_name_1, instance_name_2, 'SURFACE-T1', 'SURFACE-T0')
+
+                # BLOCK-16-9 - 3IN1
+                create_tie_of_instance_surface(model, 'BLOCK-16-%s' % n, 'BLOCK-16-3IN1-1', 'SURFACE-T1', 'SURFACE-T0')
+            else:
+                pass
+
             for block_loc, block_type in block_types.items():
                 l, i = block_loc
                 instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
@@ -4130,13 +4198,13 @@ if __name__ == "__main__":
             # session.pngOptions.setValues(imageSize=(1600, 1600))
             session.printOptions.setValues(vpDecorations=OFF)
 
-            print_assembly(session, model, viewport)
-
-            for sketch_name in model.sketches.keys():
-                print_sketch(session, model, viewport, sketch_name)
-
-            for part_name in model.parts.keys():
-                print_part(session, model, viewport, part_name)
+            # print_assembly(session, model, viewport)
+            #
+            # for sketch_name in model.sketches.keys():
+            #     print_sketch(session, model, viewport, sketch_name)
+            #
+            # for part_name in model.parts.keys():
+            #     print_part(session, model, viewport, part_name)
 
             mdb.jobs['Job-1'].writeInput(consistencyChecking=OFF)
 
