@@ -2737,9 +2737,9 @@ def sketch_split_and_delete(s, given_x_0, given_y_0, given_x_1, given_y_1, x_min
     intersect_geos = find_geos_relative_to_x(geo_list, given_x_0, mode='strict')
 
     if len(touch_geos) == 2 and len(intersect_geos) == 1:
-        break_point_1 = find_common_vertices(touch_geos, mode='shared').keys()[0]
+        break_point_1 = list(find_common_vertices(touch_geos, mode='shared').keys())[0]
         break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
-        break_point_2 = break_curve_dict_1.keys()[0]
+        break_point_2 = list(break_curve_dict_1.keys())[0]
         s.Line(point1=break_point_1, point2=break_point_2)
     elif len(touch_geos) == 0 and len(intersect_geos) == 2:
         break_curve_dict_1 = sketch_break_curve(s, intersect_geos[0], split_line)
@@ -3181,8 +3181,10 @@ def create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, b
     r_list = [0, wall_insulation_thickness, block_insulation_thickness_r]
     t_list = [0, block_gap_circum / 2.0, block_insulation_thickness_t]
 
-    block_length_list = [1300, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 955, 1045, 990]
-    gap_length_list = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 30]
+    # block_length_list = [1300, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 955, 1045, 990]
+    # gap_length_list = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 30]
+    block_length_list = [104.99, 119.0, 119.0, 119.0, 119.0, 119.0, 104.99]
+    gap_length_list = [8.0, 8.0, 8.0, 8.0, 8.0, 8.0]
     x_list = [p0_x_front]
     x_interval_materials = []
     x_block_dividing = []
@@ -3391,8 +3393,8 @@ if __name__ == "__main__":
     skirt_l_2_behind = 1650.0
     skirt_offset_behind = 450.0
 
-    setting_file = 'setting.json'
-    # setting_file = 'setting_520.json'
+    # setting_file = 'setting.json'
+    setting_file = 'setting_520.json'
     if os.path.exists(setting_file):
         message = load_json(setting_file)
         n = message['n']
@@ -3517,7 +3519,8 @@ if __name__ == "__main__":
     flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
     flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
 
-    l_block_c2 = 1393.5
+    # l_block_c2 = 1393.5
+    l_block_c2 = 164.45
     behind_block_z_length = 450.0
     r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
     r_front = x0 + burn_offset
