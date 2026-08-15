@@ -3469,6 +3469,7 @@ if __name__ == "__main__":
         shell_insulation_r_in_behind = message['shell_insulation_r_in_behind']
         shell_insulation_thickness_at_flange_front = message['shell_insulation_thickness_at_flange_front']
         shell_insulation_thickness_at_flange_behind = message['shell_insulation_thickness_at_flange_behind']
+        shell_insulation_gap_front_r = message['shell_insulation_gap_front_r']
         cover_r_out_front = message['cover_r_out_front']
         cover_thickness_front = message['cover_thickness_front']
         cover_r_out_behind = message['cover_r_out_behind']
@@ -3671,16 +3672,23 @@ if __name__ == "__main__":
             'r_behind': r_behind,
             'is_outer_glue': True
         }
+        # if is_create_p_block:
+        #     p_block = {}
+        #     p_block[1] = create_part_block_common(model, '1', block_dimension, x_min, x_block_dividing[0], beta_degree)
+        #     for i in range(1, 15):
+        #         p_block[i + 1] = create_part_block_common(model, str(i + 1), block_dimension, x_block_dividing[i - 1], x_block_dividing[i], beta_degree)
+        #     p_block[16] = create_part_block_common(model, '16', block_dimension, x_block_dividing[14], x_max, beta_degree)
+        #
+        #     p_block_3_in_1 = {}
+        #     p_block_3_in_1[15] = create_part_block_common(model, '15-3IN1', block_dimension, x_block_dividing[13], x_block_dividing[14], beta_degree * 2.0, z_list)
+        #     p_block_3_in_1[16] = create_part_block_common(model, '16-3IN1', block_dimension, x_block_dividing[14], x_max, beta_degree * 2.0, z_list)
+
         if is_create_p_block:
             p_block = {}
             p_block[1] = create_part_block_common(model, '1', block_dimension, x_min, x_block_dividing[0], beta_degree)
-            for i in range(1, 15):
+            for i in range(1, 6):
                 p_block[i + 1] = create_part_block_common(model, str(i + 1), block_dimension, x_block_dividing[i - 1], x_block_dividing[i], beta_degree)
-            p_block[16] = create_part_block_common(model, '16', block_dimension, x_block_dividing[14], x_max, beta_degree)
-
-            p_block_3_in_1 = {}
-            p_block_3_in_1[15] = create_part_block_common(model, '15-3IN1', block_dimension, x_block_dividing[13], x_block_dividing[14], beta_degree * 2.0, z_list)
-            p_block_3_in_1[16] = create_part_block_common(model, '16-3IN1', block_dimension, x_block_dividing[14], x_max, beta_degree * 2.0, z_list)
+            p_block[7] = create_part_block_common(model, '7', block_dimension, x_block_dividing[5], x_max, beta_degree)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
