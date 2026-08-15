@@ -419,7 +419,7 @@ def create_sketch_gap_front(model, sketch_name, p0_front, theta0_deg_front, p3_f
     s.Line(point1=(-shell_l_c1_out, gap_front_r), point2=(0.0, gap_front_r))
 
     curve = s.geometry.findAt((-shell_l_c1_out, gap_front_r))
-    s.autoTrimCurve(curve1=curve, point1=(shell_l_c1_out, gap_front_r))
+    s.autoTrimCurve(curve1=curve, point1=(-shell_l_c1_out, gap_front_r))
 
     curve = s.geometry.findAt((0.0, gap_front_r))
     s.autoTrimCurve(curve1=curve, point1=(0.0, gap_front_r))
