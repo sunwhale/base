@@ -4126,8 +4126,8 @@ if __name__ == "__main__":
             # session.pngOptions.setValues(imageSize=(1600, 1600))
             session.printOptions.setValues(vpDecorations=OFF)
 
-            # print_assembly(session, model, viewport)
-            #
+            print_assembly(session, model, viewport)
+
             # for sketch_name in model.sketches.keys():
             #     print_sketch(session, model, viewport, sketch_name)
             #
