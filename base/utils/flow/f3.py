@@ -3177,14 +3177,10 @@ def part_partition_block_z(p, d, z_list):
             print('Failed of function part_partition_block_z with x=%s' % z)
 
 
-def create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum):
+def create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum, block_length_list, gap_length_list):
     r_list = [0, wall_insulation_thickness, block_insulation_thickness_r]
     t_list = [0, block_gap_circum / 2.0, block_insulation_thickness_t]
 
-    # block_length_list = [1300, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 1200, 955, 1045, 990]
-    # gap_length_list = [8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 30]
-    block_length_list = [104.99, 119.0, 119.0, 119.0, 119.0, 119.0, 104.99]
-    gap_length_list = [8.0, 8.0, 8.0, 8.0, 8.0, 8.0]
     x_list = [p0_x_front]
     x_interval_materials = []
     x_block_dividing = []
@@ -3279,125 +3275,13 @@ if __name__ == "__main__":
     is_open_parts_cae = True
     is_assemble = True
 
-    n = 9
-    d = 3529.0
-    x0 = 500.0
-    l_c1_c2 = 17300.0
-    ellipse_ratio = 1.69
-    a_front = 1772.47
-    a_behind = 1772.47
-    rotate_angle_deg = 40.0
-    block_length = 1508.0
-    block_insulation_thickness_x = 3.0
-    block_insulation_thickness_t = 3.0
-    block_insulation_thickness_r = 3.0
-    wall_insulation_thickness = 3.0
-    block_gap_axial = 8.0
-    block_gap_circum = 8.0
-    slot_deep = 380.0
-    slot_ellipse_a = 50.0
-    slot_ellipse_b = 25.0
-    angle_demolding_1 = 1.5
-    burn_offset = 0.0
-    outer_partition_offset = 300.0
-    element_size = 40
-    insert_czm = False
-    is_shared_node = True
-    size = '1'
-
-    front_offset = 350.0
-    front_ref_length = 509.0
-    behind_ref_length = 917.08
-
-    r_cut_front = 460.0
-    length_front = 1500.0
-    p0_x_front = -857.5
-    p0_y_front = 794
-    theta0_deg_front = 90.0
-    p3_x_front = 0.0
-    p3_y_front = 1762.5
-    theta3_deg_front = 0.0
-    r1_front = 829.41
-    r2_front = 1515.05
-    r3_front = 641.21
-
-    r_cut_behind = 460.0
-    length_behind = 1500.0
-    p0_x_behind = 683.73
-    p0_y_behind = 1109.770
-    theta0_deg_behind = -90.0
-    p3_x_behind = 0.0
-    p3_y_behind = 1762.5
-    theta3_deg_behind = 0.0
-    r1_behind = 525.61
-    r2_behind = 1075.96
-    r3_behind = 569.38
-
-    shell_r_in = 1777.5
-    shell_r_out = 1811.5
-    shell_theta_out_deg_front = 0.49
-    shell_theta_out_deg_behind = 0.49
-    shell_r_out_at_a_front = 1797
-    shell_r_out_at_a_behind = 1797
-    shell_theta_in_deg_front = 0.24
-    shell_theta_in_deg_behind = 0.24
-    shell_r_in_front = 562.5
-    shell_r_in_behind = 942.5
-    shell_l_c1_out = 1105.75
-    shell_l_c2_out = 968.46
-
-    shell_insulation_theta_in_deg_front = 0.16
-    shell_insulation_theta_in_deg_behind = 0.16
-    shell_insulation_r_in = 1764.5
-    shell_insulation_r_out = 1777.5
-    shell_insulation_r_in_at_a_front = 1762.5
-    shell_insulation_r_in_at_a_behind = 1762.5
-    shell_insulation_r_in_front = 425.0
-    shell_insulation_r_in_behind = 775.0
-    shell_insulation_thickness_at_flange_front = 2.5
-    shell_insulation_thickness_at_flange_behind = 2.5
-
-    shell_insulation_gap_front_r = 1356.0
-    shell_insulation_gap_front_l1 = 3.0
-    shell_insulation_gap_front_l2 = 3.0
-
-    cover_r_out_front = 560.0
-    cover_thickness_front = 68.0
-
-    cover_r_out_behind = 940.0
-    cover_thickness_behind = 43.0
-
-    flange_r_in_front = 460.0
-    flange_r_out_front = 843.5
-    flange_thickness_front = 145.0
-    flange_slope_deg_front = -84.88
-    flange_fillet_radius_front = 10
-
-    flange_r_in_behind = 815.0
-    flange_r_out_behind = 1258.72
-    flange_thickness_behind = 179.0
-    flange_slope_deg_behind = 92.78
-    flange_fillet_radius_behind = 10
-
-    skirt_r_out_front = 1835.5
-    skirt_r_in_1_front = 1702.5
-    skirt_r_in_2_front = 1797.585372
-    skirt_l_1_front = 23.0
-    skirt_l_2_front = 1650.0
-    skirt_offset_front = -450.0
-
-    skirt_r_out_behind = 1835.5
-    skirt_r_in_1_behind = 1702.5
-    skirt_r_in_2_behind = 1797.585372
-    skirt_l_1_behind = 23.0
-    skirt_l_2_behind = 1650.0
-    skirt_offset_behind = 450.0
-
-    # setting_file = 'setting.json'
-    setting_file = 'setting_520.json'
+    setting_file = 'setting.json'
+    # setting_file = 'setting_520.json'
     if os.path.exists(setting_file):
         message = load_json(setting_file)
         n = message['n']
+        n_layer = message['n_layer']
+        n_behind = message['n_behind']
         d = message['d']
         x0 = message['x0']
         l_c1_c2 = message['l_c1_c2']
@@ -3447,6 +3331,8 @@ if __name__ == "__main__":
         r1_behind = message['r1_behind']
         r2_behind = message['r2_behind']
         r3_behind = message['r3_behind']
+        l_block_c2 = message['l_block_c2']
+        behind_block_z_length = message['behind_block_z_length']
         shell_r_in = message['shell_r_in']
         shell_r_out = message['shell_r_out']
         shell_theta_out_deg_front = message['shell_theta_out_deg_front']
@@ -3470,6 +3356,8 @@ if __name__ == "__main__":
         shell_insulation_thickness_at_flange_front = message['shell_insulation_thickness_at_flange_front']
         shell_insulation_thickness_at_flange_behind = message['shell_insulation_thickness_at_flange_behind']
         shell_insulation_gap_front_r = message['shell_insulation_gap_front_r']
+        shell_insulation_gap_front_l1 = message['shell_insulation_gap_front_l1']
+        shell_insulation_gap_front_l2 = message['shell_insulation_gap_front_l2']
         cover_r_out_front = message['cover_r_out_front']
         cover_thickness_front = message['cover_thickness_front']
         cover_r_out_behind = message['cover_r_out_behind']
@@ -3498,6 +3386,10 @@ if __name__ == "__main__":
         skirt_offset_behind = message['skirt_offset_behind']
         shell_points_front = message['shell_points_front']
         shell_points_behind = message['shell_points_behind']
+        block_length_list = message['block_length_list']
+        gap_length_list = message['gap_length_list']
+    else:
+        raise RuntimeError('No setting file!')
 
     p0_front = (p0_x_front, p0_y_front)
     p3_front = (p3_x_front, p3_y_front)
@@ -3520,9 +3412,6 @@ if __name__ == "__main__":
     flange_offset_behind = l_c1_c2 + shell_l_c2_out - cover_thickness_behind
     flange_thickness_offset_behind = shell_insulation_thickness_at_flange_behind
 
-    # l_block_c2 = 1393.5
-    l_block_c2 = 164.45
-    behind_block_z_length = 450.0
     r_behind = x0 + slot_deep + slot_ellipse_b + burn_offset + PENULT_CORRECTION
     r_front = x0 + burn_offset
     x_min = p0_x_front
@@ -3531,13 +3420,15 @@ if __name__ == "__main__":
     z_list = [behind_block_z_length / 2.0 - block_insulation_thickness_r, behind_block_z_length / 2.0, behind_block_z_length / 2.0 + block_gap_circum, behind_block_z_length / 2.0 + block_gap_circum + block_insulation_thickness_r]
 
     # 单列
-    # nl, nt = 16, n
+    # nl, nt = n_layer, n
     # block = np.zeros((nl, nt), dtype=bool)
     # block[:, 0] = True
 
-    nl, nt = 14, n
+    nl, nt = n_layer, n
     block = np.zeros((nl, nt), dtype=bool)
     block[:, :] = True
+
+    is_3in1 = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -3634,7 +3525,7 @@ if __name__ == "__main__":
         cmap.updateOverrides(overrides={'MATERIAL-SHELL-COMPOSITE': (True, '#FF7F00', 'Default', '#FF7F00')})
         cmap.updateOverrides(overrides={'MATERIAL-SKIRT-COMPOSITE': (True, '#B2FF00', 'Default', '#B2FF00')})
 
-        x_list, r_list, t_list, x_interval_materials, x_block_dividing = create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum)
+        x_list, r_list, t_list, x_interval_materials, x_block_dividing = create_x_r_t_list(wall_insulation_thickness, block_insulation_thickness_r, block_insulation_thickness_t, block_gap_circum, block_length_list, gap_length_list)
 
         s_block_inner, inner_ref_point = create_sketch_block_inner(model, 'SKETCH-BLOCK-INNER', x0, slot_deep, slot_ellipse_b, 0.0, l_c1_c2, l_block_c2, p0_front, p0_behind)
 
@@ -3672,23 +3563,17 @@ if __name__ == "__main__":
             'r_behind': r_behind,
             'is_outer_glue': True
         }
-        # if is_create_p_block:
-        #     p_block = {}
-        #     p_block[1] = create_part_block_common(model, '1', block_dimension, x_min, x_block_dividing[0], beta_degree)
-        #     for i in range(1, 15):
-        #         p_block[i + 1] = create_part_block_common(model, str(i + 1), block_dimension, x_block_dividing[i - 1], x_block_dividing[i], beta_degree)
-        #     p_block[16] = create_part_block_common(model, '16', block_dimension, x_block_dividing[14], x_max, beta_degree)
-        #
-        #     p_block_3_in_1 = {}
-        #     p_block_3_in_1[15] = create_part_block_common(model, '15-3IN1', block_dimension, x_block_dividing[13], x_block_dividing[14], beta_degree * 2.0, z_list)
-        #     p_block_3_in_1[16] = create_part_block_common(model, '16-3IN1', block_dimension, x_block_dividing[14], x_max, beta_degree * 2.0, z_list)
-
         if is_create_p_block:
             p_block = {}
-            p_block[1] = create_part_block_common(model, '1', block_dimension, x_min, x_block_dividing[0], beta_degree)
-            for i in range(1, 6):
-                p_block[i + 1] = create_part_block_common(model, str(i + 1), block_dimension, x_block_dividing[i - 1], x_block_dividing[i], beta_degree)
-            p_block[7] = create_part_block_common(model, '7', block_dimension, x_block_dividing[5], x_max, beta_degree)
+            x_block_dividing_extend = [x_min] + x_block_dividing + [x_max]
+            for i in range(nl):
+                p_block[i + 1] = create_part_block_common(model, str(i + 1), block_dimension, x_block_dividing_extend[i], x_block_dividing_extend[i + 1], beta_degree)
+
+            if is_3in1:
+                p_block_3in1 = {}
+                for i in range(n_behind):
+                    idx = nl - n_behind + i + 1
+                    p_block_3in1[idx] = create_part_block_common(model, str(idx) + '-3IN1', block_dimension, x_block_dividing_extend[idx - 1], x_block_dividing_extend[idx], beta_degree * 2.0, z_list)
 
         shell_dimension = {
             'l_c1_c2': l_c1_c2,
@@ -4122,8 +4007,7 @@ if __name__ == "__main__":
                 else:
                     pass
 
-            is_3_in_1 = True
-            if is_3_in_1:
+            if is_3in1:
 
                 # 14层所有X1端面
                 instance_surfaces = []
