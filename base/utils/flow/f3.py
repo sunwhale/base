@@ -3275,8 +3275,8 @@ if __name__ == "__main__":
     is_open_parts_cae = True
     is_assemble = True
 
-    setting_file = 'setting.json'
-    # setting_file = 'setting_520.json'
+    # setting_file = 'setting.json'
+    setting_file = 'setting_520.json'
     if os.path.exists(setting_file):
         message = load_json(setting_file)
         n = message['n']
@@ -3428,7 +3428,7 @@ if __name__ == "__main__":
     block = np.zeros((nl, nt), dtype=bool)
     block[:, :] = True
 
-    is_3in1 = True
+    is_3in1 = False
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -3804,27 +3804,28 @@ if __name__ == "__main__":
                 a.Instance(name=instance_name, part=model.parts[part_name], dependent=ON)
                 a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=i * 360.0 / n)
 
-            for l in [14, 15]:
-                if l == 14:
-                    additional_angle_deg = -22.5
-                elif l == 15:
-                    additional_angle_deg = 22.5
-                else:
-                    additional_angle_deg = 0.0
-
-                for i in range(9):
-                    if i == 0:
-                        part_name = 'PART-BLOCK-%s-3IN1' % (l + 1)
-                        instance_name = 'BLOCK-%s-3IN1-%s' % (l + 1, i + 1)
-                        a.Instance(name=instance_name, part=model.parts[part_name], dependent=ON)
-                        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=i * 360.0 / n + additional_angle_deg)
-                    elif i == 1:
-                        pass
+            if is_3in1:
+                for l in [14, 15]:
+                    if l == 14:
+                        additional_angle_deg = -22.5
+                    elif l == 15:
+                        additional_angle_deg = 22.5
                     else:
-                        part_name = 'PART-BLOCK-%s' % (l + 1)
-                        instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
-                        a.Instance(name=instance_name, part=model.parts[part_name], dependent=ON)
-                        a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=(i - 0.5) * 360.0 / n + additional_angle_deg)
+                        additional_angle_deg = 0.0
+
+                    for i in range(9):
+                        if i == 0:
+                            part_name = 'PART-BLOCK-%s-3IN1' % (l + 1)
+                            instance_name = 'BLOCK-%s-3IN1-%s' % (l + 1, i + 1)
+                            a.Instance(name=instance_name, part=model.parts[part_name], dependent=ON)
+                            a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=i * 360.0 / n + additional_angle_deg)
+                        elif i == 1:
+                            pass
+                        else:
+                            part_name = 'PART-BLOCK-%s' % (l + 1)
+                            instance_name = 'BLOCK-%s-%s' % (l + 1, i + 1)
+                            a.Instance(name=instance_name, part=model.parts[part_name], dependent=ON)
+                            a.rotate(instanceList=(instance_name,), axisPoint=(0.0, 0.0, 0.0), axisDirection=(1.0, 0.0, 0.0), angle=(i - 0.5) * 360.0 / n + additional_angle_deg)
 
             model.StaticStep(name='Step-1', previous='Initial', nlgeom=OFF, timePeriod=1.0, maxNumInc=10000, initialInc=1.0, minInc=1e-06, maxInc=1.0)
             # model.FrequencyStep(name='Step-1', previous='Initial', numEigen=10)
