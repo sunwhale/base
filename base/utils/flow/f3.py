@@ -398,6 +398,16 @@ def create_sketch_polygon(model, sketch_name, t, x0, n):
     return s
 
 
+def create_sketch_block_cut(model, sketch_name):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0, gridSpacing=100.0)
+
+    s.rectangle(point1=(0.0, 0.0), point2=(-PEN, PEN))
+    s.rotate(centerPoint=(0.0, 0.0), angle=60.0, objectList=s.geometry.values())
+    s.move(vector=(0.0, 20.0), objectList=s.geometry.values())
+
+    return s
+
+
 def create_sketch_gap_front(model, sketch_name, p0_front, theta0_deg_front, p3_front, theta3_deg_front, r1_front, r2_front, r3_front, shell_l_c1_out, gap_front_r, gap_front_l1, gap_front_l2):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0, gridSpacing=100.0)
 
@@ -3105,6 +3115,11 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
 
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-INNER-BURN'], angle=360.0, flipRevolveDirection=OFF)
 
+    try:
+        p.CutExtrude(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-CUT'], flipExtrudeDirection=ON)
+    except:
+        pass
+
     if size == '1':
         p.Mirror(mirrorPlane=d[xy_plane.id], keepOriginal=ON)
         p.PartitionCellByDatumPlane(datumPlane=d[xy_plane.id], cells=p.cells)
@@ -3262,18 +3277,18 @@ if __name__ == "__main__":
     is_open_parts_cae = False
     is_assemble = False
 
-    is_create_p_shell = True
-    is_create_p_skirt_front = True
-    is_create_p_skirt_behind = True
-    is_create_p_flange_front = True
-    is_create_p_flange_behind = True
-    is_create_p_insulation = True
-    is_create_p_cover_front = True
-    is_create_p_cover_behind = True
+    # is_create_p_shell = True
+    # is_create_p_skirt_front = True
+    # is_create_p_skirt_behind = True
+    # is_create_p_flange_front = True
+    # is_create_p_flange_behind = True
+    # is_create_p_insulation = True
+    # is_create_p_cover_front = True
+    # is_create_p_cover_behind = True
     is_create_p_block = True
-    is_save_parts_cae = True
-    is_open_parts_cae = True
-    is_assemble = True
+    # is_save_parts_cae = True
+    # is_open_parts_cae = True
+    # is_assemble = True
 
     # setting_file = 'setting.json'
     setting_file = 'setting_520.json'
@@ -3424,7 +3439,8 @@ if __name__ == "__main__":
     # block = np.zeros((nl, nt), dtype=bool)
     # block[:, 0] = True
 
-    nl, nt = n_layer, n
+    # nl, nt = n_layer, n
+    nl, nt = 3, n
     block = np.zeros((nl, nt), dtype=bool)
     block[:, :] = True
 
@@ -3537,6 +3553,8 @@ if __name__ == "__main__":
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
 
         s_block_inner_burn, ref_point_burn = create_sketch_block_inner_burn(model, 'SKETCH-BLOCK-INNER-BURN', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_c2, p0_front, p0_behind)
+        
+        create_sketch_block_cut(model, 'SKETCH-BLOCK-CUT')
 
         block_dimension = {
             'n': n,
