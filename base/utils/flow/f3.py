@@ -4,8 +4,6 @@
 """
 import os
 import sys
-from copy import deepcopy
-from token import LEFTSHIFT
 
 import numpy as np
 
@@ -398,12 +396,12 @@ def create_sketch_polygon(model, sketch_name, t, x0, n):
     return s
 
 
-def create_sketch_block_cut(model, sketch_name):
-    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0, gridSpacing=100.0)
+def create_sketch_block_cut(model, sketch_name, t):
+    s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0, gridSpacing=100.0, transform=t)
 
-    s.rectangle(point1=(0.0, 0.0), point2=(-PEN, PEN))
+    s.rectangle(point1=(0.0, 0.0), point2=(-200.0, 200.0))
     s.rotate(centerPoint=(0.0, 0.0), angle=60.0, objectList=s.geometry.values())
-    s.move(vector=(0.0, 20.0), objectList=s.geometry.values())
+    s.move(vector=(0.0, 100.0), objectList=s.geometry.values())
 
     return s
 
@@ -3115,6 +3113,10 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
 
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-INNER-BURN'], angle=360.0, flipRevolveDirection=OFF)
 
+    t = p.MakeSketchTransform(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, origin=(0.0, 0.0, 0.0))
+    create_sketch_block_cut(model, 'SKETCH-BLOCK-CUT', t)
+    p.CutExtrude(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-CUT'], flipExtrudeDirection=ON)
+
     try:
         p.CutExtrude(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-CUT'], flipExtrudeDirection=ON)
     except:
@@ -3553,8 +3555,6 @@ if __name__ == "__main__":
                                                   shell_insulation_r_in_at_a_front, shell_insulation_theta_in_deg_front, shell_insulation_r_in_at_a_behind, shell_insulation_theta_in_deg_behind)
 
         s_block_inner_burn, ref_point_burn = create_sketch_block_inner_burn(model, 'SKETCH-BLOCK-INNER-BURN', x0, slot_deep, slot_ellipse_b, burn_offset, l_c1_c2, l_block_c2, p0_front, p0_behind)
-        
-        create_sketch_block_cut(model, 'SKETCH-BLOCK-CUT')
 
         block_dimension = {
             'n': n,
