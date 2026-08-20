@@ -3299,7 +3299,7 @@ if __name__ == "__main__":
     is_create_p_block = True
     # is_save_parts_cae = True
     # is_open_parts_cae = True
-    # is_assemble = True
+    is_assemble = True
 
     # setting_file = 'setting.json'
     setting_file = 'setting_520.json'
@@ -3455,6 +3455,7 @@ if __name__ == "__main__":
     block[:, :] = True
 
     is_3in1 = False
+    is_ab = True
 
     if not ABAQUS_ENV:
         # points, lines, faces = geometries(d, x0, beta, [0, 100, 100, 100], [0, 50, 50])
@@ -3595,13 +3596,13 @@ if __name__ == "__main__":
             for i in range(nl):
                 p_block[i + 1] = create_part_block_common(model, str(i + 1), block_dimension, x_block_dividing_extend[i], x_block_dividing_extend[i + 1], beta_degree)
 
-            if True:
+            if is_ab:
                 p_block_a = {}
                 p_block_b = {}
                 for i in range(n_behind):
                     idx = nl - n_behind + i + 1
-                    p_block_a[idx] = create_part_block_common(model, str(idx) + '-A', block_dimension, x_block_dividing_extend[idx - 1], x_block_dividing_extend[idx], 0.0, is_cut=True, x_shift=-40.0, y_shift=0.0)
-                    p_block_b[idx] = create_part_block_common(model, str(idx) + '-B', block_dimension, x_block_dividing_extend[idx - 1], x_block_dividing_extend[idx], 30.0, is_cut=True, x_shift=0.0, y_shift=40.0)
+                    p_block_a[idx] = create_part_block_common(model, str(idx) + '-A', block_dimension, x_block_dividing_extend[idx - 1], x_block_dividing_extend[idx], 0.0, is_cut=True, x_shift=-53.5, y_shift=0.0)
+                    p_block_b[idx] = create_part_block_common(model, str(idx) + '-B', block_dimension, x_block_dividing_extend[idx - 1], x_block_dividing_extend[idx], 30.0, is_cut=True, x_shift=0.0, y_shift=107.0)
 
             if is_3in1:
                 p_block_3in1 = {}
