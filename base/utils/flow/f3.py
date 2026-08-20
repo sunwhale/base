@@ -396,12 +396,12 @@ def create_sketch_polygon(model, sketch_name, t, x0, n):
     return s
 
 
-def create_sketch_block_cut(model, sketch_name, t):
+def create_sketch_block_cut(model, sketch_name, t, angle_deg, shift_vector):
     s = model.ConstrainedSketch(name=sketch_name, sheetSize=2000.0, gridSpacing=100.0, transform=t)
 
-    s.rectangle(point1=(0.0, 0.0), point2=(-200.0, 200.0))
-    s.rotate(centerPoint=(0.0, 0.0), angle=60.0, objectList=s.geometry.values())
-    s.move(vector=(0.0, 100.0), objectList=s.geometry.values())
+    s.rectangle(point1=(0.0, 0.0), point2=(-PEN, PEN))
+    s.rotate(centerPoint=(0.0, 0.0), angle=angle_deg, objectList=s.geometry.values())
+    s.move(vector=shift_vector, objectList=s.geometry.values())
 
     return s
 
@@ -2934,7 +2934,7 @@ def create_sketch_block_outer_offset(model, sketch_name, x_min, x_max, r_list, l
     return s, traction_geos, normal_geos, middle_common_vertices
 
 
-def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_deg, z_list=[]):
+def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_deg, z_list=[], is_cut=False, x_shift=0.0, y_shift=0.0):
     n = dimension['n']
     slot_deep = dimension['slot_deep']
     x0 = dimension['x0']
@@ -2974,7 +2974,10 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
     p = model.Part(name='PART-BLOCK-' + layer_name, dimensionality=THREE_D, type=DEFORMABLE_BODY)
     d = p.datums
 
-    p.BaseSolidRevolve(sketch=s_block, angle=angle_deg, flipRevolveDirection=OFF)
+    if is_cut:
+        p.BaseSolidRevolve(sketch=s_block, angle=90.0, flipRevolveDirection=OFF)
+    else:
+        p.BaseSolidRevolve(sketch=s_block, angle=angle_deg, flipRevolveDirection=OFF)
 
     xy_plane = p.DatumPlaneByPrincipalPlane(principalPlane=XYPLANE, offset=0.0)
     yz_plane = p.DatumPlaneByPrincipalPlane(principalPlane=YZPLANE, offset=0.0)
@@ -3014,7 +3017,17 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
         p.PartitionCellBySweepEdge(sweepPath=sweep_edge, cells=p.cells, edges=partition_edges)
 
     # 环向平移剖分
-    part_partition_block_theta(p, d, angle_deg, xy_plane, x_axis, t_offset_list[1:])
+    if is_cut:
+        t = p.MakeSketchTransform(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, origin=(0.0, 0.0, 0.0))
+        s_block_cut = create_sketch_block_cut(model, 'SKETCH-BLOCK-CUT', t, angle_deg, (x_shift, y_shift))
+        p.CutExtrude(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=s_block_cut, flipExtrudeDirection=ON)
+
+        xy_plane_rot = p.DatumPlaneByRotation(plane=d[xy_plane.id], axis=d[x_axis.id], angle=angle_deg)
+        for thickness in t_offset_list[1:]:
+            cut_plane = p.DatumPlaneByOffset(plane=d[xy_plane_rot.id], flip=SIDE2, offset=thickness + y_shift * np.sin(degrees_to_radians(angle_deg)) + x_shift / np.cos(degrees_to_radians(angle_deg)))
+            p.PartitionCellByDatumPlane(datumPlane=d[cut_plane.id], cells=p.cells)
+    else:
+        part_partition_block_theta(p, d, angle_deg, xy_plane, x_axis, t_offset_list[1:])
 
     # 轴向平移剖分
     x_list = [x for x in x_list if x_min <= x <= x_max]
@@ -3112,10 +3125,6 @@ def create_part_block_common(model, layer_name, dimension, x_min, x_max, angle_d
     part_partition_block_x(p, d, x_list)
 
     p.CutRevolve(sketchPlane=d[xy_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-INNER-BURN'], angle=360.0, flipRevolveDirection=OFF)
-
-    t = p.MakeSketchTransform(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, origin=(0.0, 0.0, 0.0))
-    create_sketch_block_cut(model, 'SKETCH-BLOCK-CUT', t)
-    p.CutExtrude(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-CUT'], flipExtrudeDirection=ON)
 
     try:
         p.CutExtrude(sketchPlane=d[yz_plane.id], sketchUpEdge=d[y_axis.id], sketchPlaneSide=SIDE1, sketchOrientation=RIGHT, sketch=model.sketches['SKETCH-BLOCK-CUT'], flipExtrudeDirection=ON)
@@ -3441,8 +3450,7 @@ if __name__ == "__main__":
     # block = np.zeros((nl, nt), dtype=bool)
     # block[:, 0] = True
 
-    # nl, nt = n_layer, n
-    nl, nt = 3, n
+    nl, nt = n_layer, n
     block = np.zeros((nl, nt), dtype=bool)
     block[:, :] = True
 
@@ -3586,6 +3594,14 @@ if __name__ == "__main__":
             x_block_dividing_extend = [x_min] + x_block_dividing + [x_max]
             for i in range(nl):
                 p_block[i + 1] = create_part_block_common(model, str(i + 1), block_dimension, x_block_dividing_extend[i], x_block_dividing_extend[i + 1], beta_degree)
+
+            if True:
+                p_block_a = {}
+                p_block_b = {}
+                for i in range(n_behind):
+                    idx = nl - n_behind + i + 1
+                    p_block_a[idx] = create_part_block_common(model, str(idx) + '-A', block_dimension, x_block_dividing_extend[idx - 1], x_block_dividing_extend[idx], 0.0, is_cut=True, x_shift=-40.0, y_shift=0.0)
+                    p_block_b[idx] = create_part_block_common(model, str(idx) + '-B', block_dimension, x_block_dividing_extend[idx - 1], x_block_dividing_extend[idx], 30.0, is_cut=True, x_shift=0.0, y_shift=40.0)
 
             if is_3in1:
                 p_block_3in1 = {}
